@@ -1,6 +1,6 @@
 import nose.tools as nt
 
-from .test_embed_kernel import setup, teardown, setup_kernel
+from .test_embed_kernel import setup_kernel
 
 TIMEOUT = 15
 

@@ -1,15 +1,7 @@
 """test IPython.embed_kernel()"""
 
-#-------------------------------------------------------------------------------
-#  Copyright (C) 2012  The IPython Development Team
-#
-#  Distributed under the terms of the BSD License.  The full license is in
-#  the file COPYING, distributed as part of this software.
-#-------------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------------
-# Imports
-#-------------------------------------------------------------------------------
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
 
 import os
 import shutil
@@ -23,39 +15,14 @@ from subprocess import Popen, PIPE
 import nose.tools as nt
 
 from jupyter_client import BlockingKernelClient
-from IPython.utils import path, py3compat
-from IPython.utils.py3compat import unicode_type
+from jupyter_core import paths
+from IPython.paths import get_ipython_dir
+from ipython_genutils import py3compat
+from ipython_genutils.py3compat import unicode_type
 
-#-------------------------------------------------------------------------------
-# Tests
-#-------------------------------------------------------------------------------
 
 SETUP_TIMEOUT = 60
 TIMEOUT = 15
-
-def setup():
-    """setup temporary IPYTHONDIR for tests"""
-    global IPYTHONDIR
-    global env
-    global save_get_ipython_dir
-
-    IPYTHONDIR = tempfile.mkdtemp()
-
-    env = os.environ.copy()
-    env["IPYTHONDIR"] = IPYTHONDIR
-
-    save_get_ipython_dir = path.get_ipython_dir
-    path.get_ipython_dir = lambda : IPYTHONDIR
-
-
-def teardown():
-    path.get_ipython_dir = save_get_ipython_dir
-
-    try:
-        shutil.rmtree(IPYTHONDIR)
-    except (OSError, IOError):
-        # no such file
-        pass
 
 
 @contextmanager
@@ -66,11 +33,10 @@ def setup_kernel(cmd):
     -------
     kernel_manager: connected KernelManager instance
     """
-    kernel = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE, env=env)
-    connection_file = os.path.join(IPYTHONDIR,
-                                    'profile_default',
-                                    'security',
-                                    'kernel-%i.json' % kernel.pid
+    kernel = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE)
+    connection_file = os.path.join(
+        paths.jupyter_runtime_dir(),
+        'kernel-%i.json' % kernel.pid,
     )
     # wait for connection file to exist, timeout after 5s
     tic = time.time()

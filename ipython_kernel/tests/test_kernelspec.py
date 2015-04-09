@@ -13,6 +13,8 @@ try:
 except ImportError:
     import mock # py2
 
+from jupyter_core.paths import jupyter_data_dir
+
 from ipython_kernel.kernelspec import (
     make_ipkernel_cmd,
     get_kernel_dict,
@@ -56,7 +58,7 @@ def assert_is_spec(path):
     kernel_json = pjoin(path, 'kernel.json')
     assert os.path.exists(kernel_json)
     with io.open(kernel_json, encoding='utf8') as f:
-        d = json.load(f)
+        json.load(f)
 
 
 def test_write_kernel_spec():
@@ -74,12 +76,13 @@ def test_write_kernel_spec_path():
 
 
 def test_install_user():
-    ipydir = tempfile.mkdtemp()
+    tmp = tempfile.mkdtemp()
     
-    with mock.patch.dict(os.environ, {'IPYTHONDIR': ipydir}):
+    with mock.patch.dict(os.environ, {'HOME': tmp}):
         install(user=True)
+        data_dir = jupyter_data_dir()
     
-    assert_is_spec(os.path.join(ipydir, 'kernels', KERNEL_NAME))
+    assert_is_spec(os.path.join(data_dir, 'kernels', KERNEL_NAME))
 
 
 def test_install():

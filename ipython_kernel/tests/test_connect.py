@@ -8,9 +8,9 @@ import os
 
 import nose.tools as nt
 
-from IPython.config import Config
-from IPython.utils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
-from IPython.utils.py3compat import str_to_bytes
+from traitlets.config import Config
+from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
+from ipython_genutils.py3compat import str_to_bytes
 from ipython_kernel import connect
 from ipython_kernel.kernelapp import IPKernelApp
 
@@ -35,7 +35,7 @@ def test_get_connection_file():
         app = DummyKernelApp(config=cfg, connection_file=cf)
         app.initialize()
 
-        profile_cf = os.path.join(app.profile_dir.location, 'security', cf)
+        profile_cf = os.path.join(app.connection_dir, cf)
         nt.assert_equal(profile_cf, app.abs_connection_file)
         with open(profile_cf, 'w') as f:
             f.write("{}")

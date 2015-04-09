@@ -23,7 +23,7 @@ from IPython.core.shellapp import (
     InteractiveShellApp, shell_flags, shell_aliases
 )
 from IPython.utils import io
-from ipython_genutils.path import filefind
+from ipython_genutils.path import filefind, ensure_dir_exists
 from traitlets import (
     Any, Instance, Dict, Unicode, Integer, Bool, DottedObjectName, Type,
 )
@@ -115,7 +115,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     # connection info:
     connection_dir = Unicode()
     def _connection_dir_default(self):
-        return jupyter_runtime_dir()
+        d = jupyter_runtime_dir()
+        ensure_dir_exists(d, 0o700)
+        return d
 
     @property
     def abs_connection_file(self):

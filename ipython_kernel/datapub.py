@@ -12,10 +12,10 @@
 # Imports
 #-----------------------------------------------------------------------------
 
-from IPython.config import Configurable
+from traitlets.config import Configurable
 from ipython_kernel.inprocess.socket import SocketABC
 from jupyter_client.jsonutil import json_clean
-from IPython.utils.traitlets import Instance, Dict, CBytes
+from traitlets import Instance, Dict, CBytes
 from ipython_kernel.serialize import serialize_object
 from ipython_kernel.session import Session, extract_header
 

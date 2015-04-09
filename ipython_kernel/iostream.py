@@ -14,8 +14,8 @@ from zmq.eventloop.ioloop import IOLoop
 
 from .session import extract_header
 
-from IPython.utils import py3compat
-from IPython.utils.py3compat import unicode_type
+from ipython_genutils import py3compat
+from ipython_genutils.py3compat import unicode_type
 from IPython.utils.warn import warn
 
 #-----------------------------------------------------------------------------

@@ -12,7 +12,7 @@ import nose.tools as nt
 from ipython_kernel.serialize import serialize_object, deserialize_object
 from IPython.testing import decorators as dec
 from ipython_kernel.pickleutil import CannedArray, CannedClass
-from IPython.utils.py3compat import iteritems
+from ipython_genutils.py3compat import iteritems
 from IPython.parallel import interactive
 
 #-------------------------------------------------------------------------------

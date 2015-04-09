@@ -5,13 +5,13 @@
 
 import sys
 
-from IPython.config import LoggingConfigurable
+from traitlets.config import LoggingConfigurable
 from IPython.core.prompts import LazyEvaluate
 from IPython.core.getipython import get_ipython
 
-from IPython.utils.importstring import import_item
-from IPython.utils.py3compat import string_types
-from IPython.utils.traitlets import Instance, Unicode, Dict, Any
+from ipython_genutils.importstring import import_item
+from ipython_genutils.py3compat import string_types
+from traitlets import Instance, Unicode, Dict, Any
 
 from .comm import Comm
 

@@ -16,7 +16,7 @@ except ImportError:
 
 # IPython imports
 from IPython.utils.io import raw_print
-from IPython.utils.traitlets import Type
+from traitlets import Type
 
 # Local imports
 from .channels import (

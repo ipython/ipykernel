@@ -13,9 +13,9 @@ This module does not import anything from matplotlib.
 # Imports
 #-----------------------------------------------------------------------------
 
-from IPython.config import Config
-from IPython.config.configurable import SingletonConfigurable
-from IPython.utils.traitlets import (
+from traitlets.config import Config
+from traitlets.config.configurable import SingletonConfigurable
+from traitlets import (
     Dict, Instance, CaselessStrEnum, Set, Bool, Int, TraitError, Unicode
 )
 from IPython.utils.warn import warn

@@ -5,10 +5,9 @@ import sys
 import traceback
 
 from IPython.core import release
-from IPython.utils.py3compat import builtin_mod, PY3
+from ipython_genutils.py3compat import builtin_mod, PY3
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
-from IPython.utils.traitlets import Instance, Type, Any, List
-from IPython.utils.decorators import undoc
+from traitlets import Instance, Type, Any, List
 
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
@@ -359,7 +358,6 @@ class IPythonKernel(KernelBase):
 
 # This exists only for backwards compatibility - use IPythonKernel instead
 
-@undoc
 class Kernel(IPythonKernel):
     def __init__(self, *args, **kwargs):
         import warnings

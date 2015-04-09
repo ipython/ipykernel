@@ -8,11 +8,11 @@ import uuid
 
 from zmq.eventloop.ioloop import IOLoop
 
-from IPython.config import LoggingConfigurable
+from traitlets.config import LoggingConfigurable
 from ipython_kernel.kernelbase import Kernel
 
 from jupyter_client.jsonutil import json_clean
-from IPython.utils.traitlets import Instance, Unicode, Bytes, Bool, Dict, Any
+from traitlets import Instance, Unicode, Bytes, Bool, Dict, Any
 
 
 class Comm(LoggingConfigurable):

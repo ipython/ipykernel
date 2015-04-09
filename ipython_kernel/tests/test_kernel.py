@@ -11,9 +11,9 @@ import sys
 import nose.tools as nt
 
 from IPython.testing import decorators as dec, tools as tt
-from IPython.utils import py3compat
+from ipython_genutils import py3compat
 from IPython.utils.path import locate_profile
-from IPython.utils.tempdir import TemporaryDirectory
+from ipython_genutils.tempdir import TemporaryDirectory
 
 from .utils import (new_kernel, kernel, TIMEOUT, assemble_output, execute,
                     flush_channels, wait_for_idle)

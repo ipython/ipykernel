@@ -22,8 +22,8 @@ except ImportError:
 import zmq
 
 # Local imports.
-from IPython.utils.traitlets import HasTraits, Instance, Int
-from IPython.utils.py3compat import with_metaclass
+from traitlets import HasTraits, Instance, Int
+from ipython_genutils.py3compat import with_metaclass
 
 #-----------------------------------------------------------------------------
 # Generic socket interface

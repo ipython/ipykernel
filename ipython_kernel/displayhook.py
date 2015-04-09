@@ -8,8 +8,8 @@ import sys
 from IPython.core.displayhook import DisplayHook
 from ipython_kernel.inprocess.socket import SocketABC
 from jupyter_client.jsonutil import encode_images
-from IPython.utils.py3compat import builtin_mod
-from IPython.utils.traitlets import Instance, Dict
+from ipython_genutils.py3compat import builtin_mod
+from traitlets import Instance, Dict
 from .session import extract_header, Session
 
 class ZMQDisplayHook(object):

@@ -19,13 +19,13 @@ import zmq
 from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from IPython.config.configurable import SingletonConfigurable
+from traitlets.config.configurable import SingletonConfigurable
 from IPython.core.error import StdinNotImplementedError
 from IPython.core import release
-from IPython.utils import py3compat
-from IPython.utils.py3compat import unicode_type, string_types
+from ipython_genutils import py3compat
+from ipython_genutils.py3compat import unicode_type, string_types
 from jupyter_client.jsonutil import json_clean
-from IPython.utils.traitlets import (
+from traitlets import (
     Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
 )
 

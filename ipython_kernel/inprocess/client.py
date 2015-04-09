@@ -13,7 +13,7 @@
 
 # IPython imports
 from ipython_kernel.inprocess.socket import DummySocket
-from IPython.utils.traitlets import Type, Instance
+from traitlets import Type, Instance
 from jupyter_client.clientabc import KernelClientABC
 from jupyter_client.client import KernelClient
 

@@ -10,8 +10,9 @@ import sys
 from subprocess import Popen, PIPE
 
 from IPython.core.profiledir import ProfileDir
-from IPython.utils.path import filefind, get_ipython_dir
-from IPython.utils.py3compat import str_to_bytes
+from IPython.paths import get_ipython_dir
+from ipython_genutils.path import filefind
+from ipython_genutils.py3compat import str_to_bytes
 
 import jupyter_client
 from jupyter_client import write_connection_file
@@ -32,7 +33,7 @@ def get_connection_file(app=None):
             raise RuntimeError("app not specified, and not in a running Kernel")
 
         app = IPKernelApp.instance()
-    return filefind(app.connection_file, ['.', app.profile_dir.security_dir])
+    return filefind(app.connection_file, ['.', app.connection_dir])
 
 
 def find_connection_file(filename='kernel-*.json', profile=None):

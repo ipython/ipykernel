@@ -41,9 +41,9 @@ from ipython_kernel import (
 from IPython.utils import openpy
 from jupyter_client.jsonutil import json_clean, encode_images
 from IPython.utils.process import arg_split
-from IPython.utils import py3compat
-from IPython.utils.py3compat import unicode_type
-from IPython.utils.traitlets import Instance, Type, Dict, CBool, CBytes, Any
+from ipython_genutils import py3compat
+from ipython_genutils.py3compat import unicode_type
+from traitlets import Instance, Type, Dict, CBool, CBytes, Any
 from IPython.utils.warn import error
 from ipython_kernel.displayhook import ZMQShellDisplayHook
 from ipython_kernel.datapub import ZMQDataPublisher

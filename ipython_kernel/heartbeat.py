@@ -19,7 +19,7 @@ from threading import Thread
 
 import zmq
 
-from IPython.utils.localinterfaces import localhost
+from jupyter_client.localinterfaces import localhost
 
 #-----------------------------------------------------------------------------
 # Code

@@ -3,7 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from IPython.utils.traitlets import Instance, DottedObjectName
+from traitlets import Instance, DottedObjectName
 from jupyter_client.managerabc import KernelManagerABC
 from jupyter_client.manager import KernelManager
 from jupyter_client.session import Session

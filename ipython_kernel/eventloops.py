@@ -9,7 +9,7 @@ import sys
 
 import zmq
 
-from IPython.config.application import Application
+from traitlets.config.application import Application
 from IPython.utils import io
 from IPython.lib.inputhook import _use_appnope
 

@@ -23,11 +23,12 @@ from IPython.core.shellapp import (
     InteractiveShellApp, shell_flags, shell_aliases
 )
 from IPython.utils import io
-from IPython.utils.path import filefind
-from IPython.utils.traitlets import (
+from ipython_genutils.path import filefind
+from traitlets import (
     Any, Instance, Dict, Unicode, Integer, Bool, DottedObjectName, Type,
 )
-from IPython.utils.importstring import import_item
+from ipython_genutils.importstring import import_item
+from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_client import write_connection_file
 from jupyter_client.connect import ConnectionFileMixin
 
@@ -112,11 +113,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     ports = Dict()
 
     # connection info:
+    connection_dir = Unicode()
+    def _connection_dir_default(self):
+        return jupyter_runtime_dir()
 
     @property
     def abs_connection_file(self):
         if os.path.basename(self.connection_file) == self.connection_file:
-            return os.path.join(self.profile_dir.security_dir, self.connection_file)
+            return os.path.join(self.connection_dir, self.connection_file)
         else:
             return self.connection_file
 
@@ -192,7 +196,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if not self.connection_file:
             self.connection_file = "kernel-%s.json"%os.getpid()
         try:
-            self.connection_file = filefind(self.connection_file, ['.', self.profile_dir.security_dir])
+            self.connection_file = filefind(self.connection_file, ['.', self.connection_dir])
         except IOError:
             self.log.debug("Connection file not found: %s", self.connection_file)
             # This means I own it, so I will clean it up:
@@ -245,11 +249,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """display connection info, and store ports"""
         basename = os.path.basename(self.connection_file)
         if basename == self.connection_file or \
-            os.path.dirname(self.connection_file) == self.profile_dir.security_dir:
+            os.path.dirname(self.connection_file) == self.connection_dir:
             # use shortname
             tail = basename
-            if self.profile != 'default':
-                tail += " --profile %s" % self.profile
         else:
             tail = self.connection_file
         lines = [

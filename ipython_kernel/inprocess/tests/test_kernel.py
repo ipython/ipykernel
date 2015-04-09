@@ -12,7 +12,7 @@ from ipython_kernel.inprocess.ipkernel import InProcessKernel
 from ipython_kernel.tests.utils import assemble_output
 from IPython.testing.decorators import skipif_not_matplotlib
 from IPython.utils.io import capture_output
-from IPython.utils import py3compat
+from ipython_genutils import py3compat
 
 if py3compat.PY3:
     from io import StringIO

@@ -14,14 +14,14 @@ try:
 except ImportError:
     import pickle
 
-from IPython.utils import py3compat
-from IPython.utils.importstring import import_item
-from IPython.utils.py3compat import string_types, iteritems, buffer_to_bytes_py2
+from ipython_genutils import py3compat
+from ipython_genutils.importstring import import_item
+from ipython_genutils.py3compat import string_types, iteritems, buffer_to_bytes_py2
 
 from . import codeutil  # This registers a hook when it's imported
 
-from IPython.config import Application
-from IPython.utils.log import get_logger
+from traitlets.config import Application
+from traitlets.log import get_logger
 
 if py3compat.PY3:
     buffer = memoryview
@@ -65,7 +65,7 @@ def use_dill():
     pickle = dill
 
     try:
-        from IPython.kernel.zmq import serialize
+        from ipython_kernel import serialize
     except ImportError:
         pass
     else:
@@ -85,7 +85,7 @@ def use_cloudpickle():
     pickle = cloudpickle
 
     try:
-        from IPython.kernel.zmq import serialize
+        from ipython_kernel import serialize
     except ImportError:
         pass
     else:

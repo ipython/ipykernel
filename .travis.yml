@@ -11,6 +11,6 @@ install:
     - pip install -f travis-wheels/wheelhouse ipython_kernel[test]
     - python -c 'import ipython_kernel.kernelspec; ipython_kernel.kernelspec.install(user=True)'
 script:
-    - nosetests --with-coverage ipython_kernel
+    - nosetests --with-coverage --cover-package ipython_kernel ipython_kernel
 after_success:
     - coveralls

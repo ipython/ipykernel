@@ -12,6 +12,7 @@ except ImportError:
 
 from jupyter_core import paths as jpaths
 from IPython import paths as ipaths
+from ipython_kernel.kernelspec import install
 
 pjoin = os.path.join
 
@@ -27,6 +28,9 @@ def setup():
     ]
     for p in patchers:
         p.start()
+    
+    # install IPython in the temp home:
+    install(user=True)
 
 
 def teardown():

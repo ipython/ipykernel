@@ -36,7 +36,8 @@ def start_new_kernel(**kwargs):
 
     Integrates with our output capturing for tests.
     """
-    kwargs.update(dict(stdout=nose.iptest_stdstreams_fileno(), stderr=STDOUT))
+    stdout = getattr(nose, 'iptest_stdstreams_fileno', open(os.devnull))
+    kwargs.update(dict(stdout=stdout, stderr=STDOUT))
     return manager.start_new_kernel(startup_timeout=STARTUP_TIMEOUT, **kwargs)
 
 def flush_channels(kc=None):
@@ -124,9 +125,8 @@ def new_kernel(argv=None):
     -------
     kernel_client: connected KernelClient instance
     """
-    kwargs = dict(
-        stdout=nose.iptest_stdstreams_fileno(), stderr=STDOUT,
-                  startup_timeout=STARTUP_TIMEOUT)
+    stdout = getattr(nose, 'iptest_stdstreams_fileno', open(os.devnull))
+    kwargs = dict(stdout=stdout, stderr=STDOUT)
     if argv is not None:
         kwargs['extra_arguments'] = argv
     return manager.run_kernel(**kwargs)

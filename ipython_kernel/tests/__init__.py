@@ -1,0 +1,40 @@
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
+import os
+import shutil
+import tempfile
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
+
+from jupyter_core import paths as jpaths
+from IPython import paths as ipaths
+
+pjoin = os.path.join
+
+tmp = None
+patchers = []
+
+def setup():
+    """setup temporary env for tests"""
+    global tmp
+    tmp = tempfile.mkdtemp()
+    patchers[:] = [
+        patch.dict(os.environ, {'HOME': tmp}),
+    ]
+    for p in patchers:
+        p.start()
+
+
+def teardown():
+    for p in patchers:
+        p.stop()
+
+    try:
+        shutil.rmtree(tmp)
+    except (OSError, IOError):
+        # no such file
+        pass

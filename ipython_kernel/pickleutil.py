@@ -282,6 +282,10 @@ class CannedArray(CannedObject):
             # we just pickled it
             return pickle.loads(buffer_to_bytes_py2(data))
         else:
+            if not py3compat.PY3 and isinstance(data, memoryview):
+                # frombuffer doesn't accept memoryviews on Python 2,
+                # so cast to old-style buffer
+                data = buffer(data.tobytes())
             return frombuffer(data, dtype=self.dtype).reshape(self.shape)
 
 
@@ -429,7 +433,7 @@ def can_dependent(obj):
 # These dicts can be extended for custom serialization of new objects
 
 can_map = {
-    'IPython.parallel.dependent' : can_dependent,
+    'ipython_parallel.dependent' : can_dependent,
     'numpy.ndarray' : CannedArray,
     FunctionType : CannedFunction,
     bytes : CannedBytes,

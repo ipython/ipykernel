@@ -37,9 +37,11 @@ def _extract_buffers(obj, threshold=MAX_BYTES):
                 # buffer larger than threshold, prevent pickling
                 obj.buffers[i] = None
                 buffers.append(buf)
+            # buffer too small for separate send, coerce to bytes
+            # because pickling buffer objects just results in broken pointers
+            elif isinstance(buf, memoryview):
+                obj.buffers[i] = buf.tobytes()
             elif isinstance(buf, buffer):
-                # buffer too small for separate send, coerce to bytes
-                # because pickling buffer objects just results in broken pointers
                 obj.buffers[i] = bytes(buf)
     return buffers
 

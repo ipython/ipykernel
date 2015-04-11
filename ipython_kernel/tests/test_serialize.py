@@ -77,7 +77,6 @@ def test_roundtrip_memoryview():
     b = b'asdf' * 1025
     view = memoryview(b)
     bufs = serialize_object(view)
-    print(bufs)
     nt.assert_equal(len(bufs), 2)
     v2, remainder = deserialize_object(bufs)
     nt.assert_equal(remainder, [])
@@ -91,6 +90,7 @@ def test_numpy():
         for dtype in DTYPES:
             A = new_array(shape, dtype=dtype)
             bufs = serialize_object(A)
+            bufs = [memoryview(b) for b in bufs]
             B, r = deserialize_object(bufs)
             nt.assert_equal(r, [])
             nt.assert_equal(A.shape, B.shape)

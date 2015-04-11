@@ -73,6 +73,16 @@ def test_roundtrip_buffered():
         nt.assert_equal(remainder, [])
         nt.assert_equal(obj, obj2)
 
+def test_roundtrip_memoryview():
+    b = b'asdf' * 1025
+    view = memoryview(b)
+    bufs = serialize_object(view)
+    print(bufs)
+    nt.assert_equal(len(bufs), 2)
+    v2, remainder = deserialize_object(bufs)
+    nt.assert_equal(remainder, [])
+    nt.assert_equal(v2.tobytes(), b)
+
 @dec.skip_without('numpy')
 def test_numpy():
     import numpy

@@ -294,8 +294,11 @@ class CannedBytes(CannedObject):
         data = self.buffers[0]
         return self.wrap(data)
 
-def CannedBuffer(CannedBytes):
+class CannedBuffer(CannedBytes):
     wrap = buffer
+
+class CannedMemoryView(CannedBytes):
+    wrap = memoryview
 
 #-------------------------------------------------------------------------------
 # Functions
@@ -430,10 +433,12 @@ can_map = {
     'numpy.ndarray' : CannedArray,
     FunctionType : CannedFunction,
     bytes : CannedBytes,
-    buffer : CannedBuffer,
+    memoryview : CannedMemoryView,
     cell_type : CannedCell,
     class_type : can_class,
 }
+if buffer is not memoryview:
+    can_map[buffer] = CannedBuffer
 
 uncan_map = {
     CannedObject : lambda obj, g: obj.get_object(g),

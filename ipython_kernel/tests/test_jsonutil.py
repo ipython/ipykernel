@@ -4,7 +4,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import datetime
 import json
 from base64 import decodestring
 
@@ -28,9 +27,6 @@ def test():
              (True, None),
              (False, None),
              (None, None),
-             # complex numbers for now just go to strings, as otherwise they
-             # are unserializable
-             (1j, '1j'),
              # Containers
              ([1, 2], None),
              ((1, 2), [1, 2]),
@@ -83,10 +79,8 @@ def test_encode_images():
         nt.assert_equal(decoded, value)
 
 def test_lambda():
-    jc = json_clean(lambda : 1)
-    nt.assert_is_instance(jc, str)
-    nt.assert_in('<lambda>', jc)
-    json.dumps(jc)
+    with nt.assert_raises(ValueError):
+        json_clean(lambda : 1)
 
 
 def test_exception():

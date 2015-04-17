@@ -97,7 +97,7 @@ def use_cloudpickle():
     
     adds support for object methods and closures to serialization.
     """
-    from cloud.serialization import cloudpickle
+    import cloudpickle
     
     global pickle
     pickle = cloudpickle

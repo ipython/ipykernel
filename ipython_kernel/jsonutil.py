@@ -162,8 +162,6 @@ def json_clean(obj):
         for k,v in iteritems(obj):
             out[unicode_type(k)] = json_clean(v)
         return out
-
-    # If we get here, we don't know how to handle the object, so we just get
-    # its repr and return that.  This will catch lambdas, open sockets, class
-    # objects, and any other complicated contraption that json can't encode
-    return repr(obj)
+    
+    # we don't understand it, it's probably an unserializable object
+    raise ValueError("Can't clean for JSON: %r" % obj)

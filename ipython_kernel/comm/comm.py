@@ -11,7 +11,7 @@ from zmq.eventloop.ioloop import IOLoop
 from traitlets.config import LoggingConfigurable
 from ipython_kernel.kernelbase import Kernel
 
-from jupyter_client.jsonutil import json_clean
+from ipython_kernel.jsonutil import json_clean
 from traitlets import Instance, Unicode, Bytes, Bool, Dict, Any
 
 

@@ -1,27 +1,15 @@
 """Publishing native (typically pickled) objects.
 """
 
-#-----------------------------------------------------------------------------
-#  Copyright (C) 2012  The IPython Development Team
-#
-#  Distributed under the terms of the BSD License.  The full license is in
-#  the file COPYING, distributed as part of this software.
-#-----------------------------------------------------------------------------
-
-#-----------------------------------------------------------------------------
-# Imports
-#-----------------------------------------------------------------------------
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
 
 from traitlets.config import Configurable
 from ipython_kernel.inprocess.socket import SocketABC
-from jupyter_client.jsonutil import json_clean
 from traitlets import Instance, Dict, CBytes
+from ipython_kernel.jsonutil import json_clean
 from ipython_kernel.serialize import serialize_object
 from ipython_kernel.session import Session, extract_header
-
-#-----------------------------------------------------------------------------
-# Code
-#-----------------------------------------------------------------------------
 
 
 class ZMQDataPublisher(Configurable):
@@ -49,7 +37,7 @@ class ZMQDataPublisher(Configurable):
             buffer_threshold=session.buffer_threshold,
             item_threshold=session.item_threshold,
         )
-        content = json_clean(dict(keys=data.keys()))
+        content = json_clean(dict(keys=list(data.keys())))
         session.send(self.pub_socket, 'data_message', content=content,
             parent=self.parent_header,
             buffers=buffers,

@@ -39,7 +39,7 @@ from ipython_kernel import (
     get_connection_file, get_connection_info, connect_qtconsole
 )
 from IPython.utils import openpy
-from jupyter_client.jsonutil import json_clean, encode_images
+from ipython_kernel.jsonutil import json_clean, encode_images
 from IPython.utils.process import arg_split
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type

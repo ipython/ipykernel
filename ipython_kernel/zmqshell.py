@@ -47,8 +47,8 @@ from traitlets import Instance, Type, Dict, CBool, CBytes, Any
 from IPython.utils.warn import error
 from ipython_kernel.displayhook import ZMQShellDisplayHook
 from ipython_kernel.datapub import ZMQDataPublisher
-from ipython_kernel.session import extract_header
-from .session import Session
+from jupyter_client.session import extract_header
+from jupyter_client.session import Session
 
 #-----------------------------------------------------------------------------
 # Functions and classes

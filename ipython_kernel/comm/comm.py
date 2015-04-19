@@ -28,7 +28,7 @@ class Comm(LoggingConfigurable):
     iopub_socket = Any()
     def _iopub_socket_default(self):
         return self.kernel.iopub_socket
-    session = Instance('ipython_kernel.session.Session')
+    session = Instance('jupyter_client.session.Session')
     def _session_default(self):
         if self.kernel is not None:
             return self.kernel.session

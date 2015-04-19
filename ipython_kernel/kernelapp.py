@@ -36,7 +36,7 @@ from jupyter_client.connect import ConnectionFileMixin
 from .heartbeat import Heartbeat
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
-from .session import (
+from jupyter_client.session import (
     Session, session_flags, session_aliases,
 )
 from .zmqshell import ZMQInteractiveShell

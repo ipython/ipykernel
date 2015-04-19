@@ -121,7 +121,7 @@ class InProcessKernel(IPythonKernel):
         return logging.getLogger(__name__)
 
     def _session_default(self):
-        from ipython_kernel.session import Session
+        from jupyter_client.session import Session
         return Session(parent=self, key=b'')
 
     def _shell_class_default(self):

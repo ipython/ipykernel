@@ -29,7 +29,7 @@ from traitlets import (
     Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
 )
 
-from .session import Session
+from jupyter_client.session import Session
 
 
 class Kernel(SingletonConfigurable):
@@ -324,7 +324,7 @@ class Kernel(SingletonConfigurable):
              buffers=None, track=False, header=None, metadata=None):
         """Send a response to the message we're currently processing.
 
-        This accepts all the parameters of :meth:`ipython_kernel.session.Session.send`
+        This accepts all the parameters of :meth:`jupyter_client.session.Session.send`
         except ``parent``.
 
         This relies on :meth:`set_parent` having been called for the current

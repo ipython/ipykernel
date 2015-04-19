@@ -10,7 +10,7 @@ from ipython_kernel.inprocess.socket import SocketABC
 from ipython_kernel.jsonutil import encode_images
 from ipython_genutils.py3compat import builtin_mod
 from traitlets import Instance, Dict
-from .session import extract_header, Session
+from jupyter_client.session import extract_header, Session
 
 class ZMQDisplayHook(object):
     """A simple displayhook that publishes the object's repr over a ZeroMQ

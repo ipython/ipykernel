@@ -12,7 +12,7 @@ from io import StringIO, UnsupportedOperation
 import zmq
 from zmq.eventloop.ioloop import IOLoop
 
-from .session import extract_header
+from jupyter_client.session import extract_header
 
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type

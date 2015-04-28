@@ -15,11 +15,6 @@ from .serialize import serialize_object, unpack_apply_message
 from .zmqshell import ZMQInteractiveShell
 
 
-def lazy_import_handle_comm_opened(*args, **kwargs):
-    from IPython.html.widgets import Widget
-    Widget.handle_comm_opened(*args, **kwargs)
-
-
 class IPythonKernel(KernelBase):
     shell = Instance('IPython.core.interactiveshell.InteractiveShellABC',
                      allow_none=True)
@@ -64,7 +59,6 @@ class IPythonKernel(KernelBase):
 
         self.comm_manager = CommManager(shell=self.shell, parent=self,
                                         kernel=self)
-        self.comm_manager.register_target('ipython.widget', lazy_import_handle_comm_opened)
 
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]

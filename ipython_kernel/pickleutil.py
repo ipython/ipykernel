@@ -420,12 +420,6 @@ def uncan_sequence(obj, g=None):
     else:
         return obj
 
-def _uncan_dependent_hook(dep, g=None):
-    dep.check_dependency()
-    
-def can_dependent(obj):
-    return CannedObject(obj, keys=('f', 'df'), hook=_uncan_dependent_hook)
-
 #-------------------------------------------------------------------------------
 # API dictionaries
 #-------------------------------------------------------------------------------
@@ -433,7 +427,6 @@ def can_dependent(obj):
 # These dicts can be extended for custom serialization of new objects
 
 can_map = {
-    'ipython_parallel.dependent' : can_dependent,
     'numpy.ndarray' : CannedArray,
     FunctionType : CannedFunction,
     bytes : CannedBytes,

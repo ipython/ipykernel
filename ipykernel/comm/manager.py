@@ -31,7 +31,7 @@ class CommManager(LoggingConfigurable):
     # If this is instantiated by a non-IPython kernel, shell will be None
     shell = Instance('IPython.core.interactiveshell.InteractiveShellABC',
                      allow_none=True)
-    kernel = Instance('ipython_kernel.kernelbase.Kernel')
+    kernel = Instance('ipykernel.kernelbase.Kernel')
 
     iopub_socket = Any()
     def _iopub_socket_default(self):

@@ -5,10 +5,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 from traitlets.config import Configurable
-from ipython_kernel.inprocess.socket import SocketABC
+from ipykernel.inprocess.socket import SocketABC
 from traitlets import Instance, Dict, CBytes
-from ipython_kernel.jsonutil import json_clean
-from ipython_kernel.serialize import serialize_object
+from ipykernel.jsonutil import json_clean
+from ipykernel.serialize import serialize_object
 from jupyter_client.session import Session, extract_header
 
 
@@ -54,5 +54,5 @@ def publish_data(data):
     data : dict
         The data to be published. Think of it as a namespace.
     """
-    from ipython_kernel.zmqshell import ZMQInteractiveShell
+    from ipykernel.zmqshell import ZMQInteractiveShell
     ZMQInteractiveShell.instance().data_pub.publish_data(data)

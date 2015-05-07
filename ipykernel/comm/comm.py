@@ -9,9 +9,9 @@ import uuid
 from zmq.eventloop.ioloop import IOLoop
 
 from traitlets.config import LoggingConfigurable
-from ipython_kernel.kernelbase import Kernel
+from ipykernel.kernelbase import Kernel
 
-from ipython_kernel.jsonutil import json_clean
+from ipykernel.jsonutil import json_clean
 from traitlets import Instance, Unicode, Bytes, Bool, Dict, Any
 
 
@@ -20,7 +20,7 @@ class Comm(LoggingConfigurable):
     # If this is instantiated by a non-IPython kernel, shell will be None
     shell = Instance('IPython.core.interactiveshell.InteractiveShellABC',
                      allow_none=True)
-    kernel = Instance('ipython_kernel.kernelbase.Kernel')
+    kernel = Instance('ipykernel.kernelbase.Kernel')
     def _kernel_default(self):
         if Kernel.initialized():
             return Kernel.instance()

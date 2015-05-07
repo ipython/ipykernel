@@ -6,10 +6,10 @@ from __future__ import print_function
 import sys
 import unittest
 
-from ipython_kernel.inprocess.blocking import BlockingInProcessKernelClient
-from ipython_kernel.inprocess.manager import InProcessKernelManager
-from ipython_kernel.inprocess.ipkernel import InProcessKernel
-from ipython_kernel.tests.utils import assemble_output
+from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
+from ipykernel.inprocess.manager import InProcessKernelManager
+from ipykernel.inprocess.ipkernel import InProcessKernel
+from ipykernel.tests.utils import assemble_output
 from IPython.testing.decorators import skipif_not_matplotlib
 from IPython.utils.io import capture_output
 from ipython_genutils import py3compat

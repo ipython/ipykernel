@@ -5,8 +5,8 @@ from __future__ import print_function
 
 import unittest
 
-from ipython_kernel.inprocess.blocking import BlockingInProcessKernelClient
-from ipython_kernel.inprocess.manager import InProcessKernelManager
+from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
+from ipykernel.inprocess.manager import InProcessKernelManager
 
 #-----------------------------------------------------------------------------
 # Test case

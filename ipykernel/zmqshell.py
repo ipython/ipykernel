@@ -34,19 +34,19 @@ from IPython.core.magic import magics_class, line_magic, Magics
 from IPython.core import payloadpage
 from IPython.core.usage import default_gui_banner
 from IPython.display import display, Javascript
-from ipython_kernel.inprocess.socket import SocketABC
-from ipython_kernel import (
+from ipykernel.inprocess.socket import SocketABC
+from ipykernel import (
     get_connection_file, get_connection_info, connect_qtconsole
 )
 from IPython.utils import openpy
-from ipython_kernel.jsonutil import json_clean, encode_images
+from ipykernel.jsonutil import json_clean, encode_images
 from IPython.utils.process import arg_split
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type
 from traitlets import Instance, Type, Dict, CBool, CBytes, Any
 from IPython.utils.warn import error
-from ipython_kernel.displayhook import ZMQShellDisplayHook
-from ipython_kernel.datapub import ZMQDataPublisher
+from ipykernel.displayhook import ZMQShellDisplayHook
+from ipykernel.datapub import ZMQDataPublisher
 from jupyter_client.session import extract_header
 from jupyter_client.session import Session
 

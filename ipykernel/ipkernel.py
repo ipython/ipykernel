@@ -355,6 +355,6 @@ class IPythonKernel(KernelBase):
 class Kernel(IPythonKernel):
     def __init__(self, *args, **kwargs):
         import warnings
-        warnings.warn('Kernel is a deprecated alias of ipython_kernel.ipkernel.IPythonKernel',
+        warnings.warn('Kernel is a deprecated alias of ipykernel.ipkernel.IPythonKernel',
                       DeprecationWarning)
         super(Kernel, self).__init__(*args, **kwargs)

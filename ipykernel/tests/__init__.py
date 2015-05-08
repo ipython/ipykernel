@@ -12,7 +12,7 @@ except ImportError:
 
 from jupyter_core import paths as jpaths
 from IPython import paths as ipaths
-from ipython_kernel.kernelspec import install
+from ipykernel.kernelspec import install
 
 pjoin = os.path.join
 

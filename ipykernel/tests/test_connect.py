@@ -11,8 +11,8 @@ import nose.tools as nt
 from traitlets.config import Config
 from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
 from ipython_genutils.py3compat import str_to_bytes
-from ipython_kernel import connect
-from ipython_kernel.kernelapp import IPKernelApp
+from ipykernel import connect
+from ipykernel.kernelapp import IPKernelApp
 
 
 sample_info = dict(ip='1.2.3.4', transport='ipc',

@@ -19,12 +19,12 @@ KERNEL_NAME = 'python%i' % sys.version_info[0]
 RESOURCES = pjoin(os.path.dirname(__file__), 'resources')
 
 
-def make_ipkernel_cmd(mod='ipython_kernel', executable=None, extra_arguments=[], **kw):
+def make_ipkernel_cmd(mod='ipykernel', executable=None, extra_arguments=[], **kw):
     """Build Popen command list for launching an IPython kernel.
 
     Parameters
     ----------
-    mod : str, optional (default 'ipython_kernel')
+    mod : str, optional (default 'ipykernel')
         A string of an IPython module whose __main__ starts an IPython kernel
 
     executable : str, optional (default sys.executable)

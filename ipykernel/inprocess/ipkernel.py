@@ -8,10 +8,10 @@ import logging
 import sys
 
 from IPython.core.interactiveshell import InteractiveShellABC
-from ipython_kernel.jsonutil import json_clean
+from ipykernel.jsonutil import json_clean
 from traitlets import Any, Enum, Instance, List, Type
-from ipython_kernel.ipkernel import IPythonKernel
-from ipython_kernel.zmqshell import ZMQInteractiveShell
+from ipykernel.ipkernel import IPythonKernel
+from ipykernel.zmqshell import ZMQInteractiveShell
 
 from .socket import DummySocket
 
@@ -27,7 +27,7 @@ class InProcessKernel(IPythonKernel):
 
     # The frontends connected to this kernel.
     frontends = List(
-        Instance('ipython_kernel.inprocess.client.InProcessKernelClient',
+        Instance('ipykernel.inprocess.client.InProcessKernelClient',
                  allow_none=True)
     )
 
@@ -128,11 +128,11 @@ class InProcessKernel(IPythonKernel):
         return InProcessInteractiveShell
 
     def _stdout_default(self):
-        from ipython_kernel.iostream import OutStream
+        from ipykernel.iostream import OutStream
         return OutStream(self.session, self.iopub_socket, u'stdout', pipe=False)
 
     def _stderr_default(self):
-        from ipython_kernel.iostream import OutStream
+        from ipykernel.iostream import OutStream
         return OutStream(self.session, self.iopub_socket, u'stderr', pipe=False)
 
 #-----------------------------------------------------------------------------
@@ -141,7 +141,7 @@ class InProcessKernel(IPythonKernel):
 
 class InProcessInteractiveShell(ZMQInteractiveShell):
 
-    kernel = Instance('ipython_kernel.inprocess.ipkernel.InProcessKernel',
+    kernel = Instance('ipykernel.inprocess.ipkernel.InProcessKernel',
                       allow_none=True)
 
     #-------------------------------------------------------------------------
@@ -150,7 +150,7 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
 
     def enable_gui(self, gui=None):
         """Enable GUI integration for the kernel."""
-        from ipython_kernel.eventloops import enable_gui
+        from ipykernel.eventloops import enable_gui
         if not gui:
             gui = self.kernel.gui
         return enable_gui(gui, kernel=self.kernel)

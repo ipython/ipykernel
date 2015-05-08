@@ -15,7 +15,7 @@ except ImportError:
 
 from jupyter_core.paths import jupyter_data_dir
 
-from ipython_kernel.kernelspec import (
+from ipykernel.kernelspec import (
     make_ipkernel_cmd,
     get_kernel_dict,
     write_kernel_spec,
@@ -34,7 +34,7 @@ def test_make_ipkernel_cmd():
     nt.assert_equal(cmd, [
         sys.executable,
         '-m',
-        'ipython_kernel',
+        'ipykernel',
         '-f',
         '{connection_file}'
     ])

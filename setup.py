@@ -7,7 +7,7 @@
 from __future__ import print_function
 
 # the name of the package
-name = 'ipython_kernel'
+name = 'ipykernel'
 
 #-----------------------------------------------------------------------------
 # Minimal Python version sanity check
@@ -42,7 +42,7 @@ for d, _, _ in os.walk(pjoin(here, name)):
         packages.append(d[len(here)+1:].replace(os.path.sep, '.'))
 
 package_data = {
-    'ipython_kernel': ['resources/*.*'],
+    'ipykernel': ['resources/*.*'],
 }
 
 version_ns = {}

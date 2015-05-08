@@ -12,7 +12,7 @@
 #-----------------------------------------------------------------------------
 
 # IPython imports
-from ipython_kernel.inprocess.socket import DummySocket
+from ipykernel.inprocess.socket import DummySocket
 from traitlets import Type, Instance
 from jupyter_client.clientabc import KernelClientABC
 from jupyter_client.client import KernelClient
@@ -44,7 +44,7 @@ class InProcessKernelClient(KernelClient):
     stdin_channel_class = Type(InProcessChannel)
     hb_channel_class = Type(InProcessHBChannel)
 
-    kernel = Instance('ipython_kernel.inprocess.ipkernel.InProcessKernel',
+    kernel = Instance('ipykernel.inprocess.ipkernel.InProcessKernel',
                       allow_none=True)
 
     #--------------------------------------------------------------------------

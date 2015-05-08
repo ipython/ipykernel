@@ -20,10 +20,10 @@ class InProcessKernelManager(KernelManager):
     """
 
     # The kernel process with which the KernelManager is communicating.
-    kernel = Instance('ipython_kernel.inprocess.ipkernel.InProcessKernel',
+    kernel = Instance('ipykernel.inprocess.ipkernel.InProcessKernel',
                       allow_none=True)
     # the client class for KM.client() shortcut
-    client_class = DottedObjectName('ipython_kernel.inprocess.BlockingInProcessKernelClient')
+    client_class = DottedObjectName('ipykernel.inprocess.BlockingInProcessKernelClient')
 
     def _session_default(self):
         # don't sign in-process messages
@@ -34,7 +34,7 @@ class InProcessKernelManager(KernelManager):
     #--------------------------------------------------------------------------
 
     def start_kernel(self, **kwds):
-        from ipython_kernel.inprocess.ipkernel import InProcessKernel
+        from ipykernel.inprocess.ipkernel import InProcessKernel
         self.kernel = InProcessKernel(parent=self, session=self.session)
 
     def shutdown_kernel(self):

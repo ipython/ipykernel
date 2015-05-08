@@ -9,9 +9,9 @@ from collections import namedtuple
 import nose.tools as nt
 
 # from unittest import TestCaes
-from ipython_kernel.serialize import serialize_object, deserialize_object
+from ipykernel.serialize import serialize_object, deserialize_object
 from IPython.testing import decorators as dec
-from ipython_kernel.pickleutil import CannedArray, CannedClass, interactive
+from ipykernel.pickleutil import CannedArray, CannedClass, interactive
 from ipython_genutils.py3compat import iteritems
 
 #-------------------------------------------------------------------------------

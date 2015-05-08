@@ -93,3 +93,12 @@ def install(kernel_spec_manager=None, user=False):
         kernel_name=KERNEL_NAME, user=user, replace=True)
     # cleanup afterward
     shutil.rmtree(path)
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--user', action='store_true',
+        help="Install for the current user instead of system-wide")
+    opts = parser.parse_args()
+    install(user=opts.user)

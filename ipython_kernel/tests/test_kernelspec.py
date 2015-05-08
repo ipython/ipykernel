@@ -86,12 +86,12 @@ def test_install_user():
 
 
 def test_install():
-    system_kernel_dir = tempfile.mkdtemp(suffix='kernels')
+    system_jupyter_dir = tempfile.mkdtemp()
     
-    with mock.patch('jupyter_client.kernelspec.SYSTEM_KERNEL_DIRS',
-            [system_kernel_dir]):
+    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
+            [system_jupyter_dir]):
         install()
     
-    assert_is_spec(os.path.join(system_kernel_dir, KERNEL_NAME))
+    assert_is_spec(os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME))
 
 

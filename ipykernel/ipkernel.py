@@ -65,7 +65,7 @@ class IPythonKernel(KernelBase):
             import ipywidgets
             ipywidgets.handle_kernel(self)
         except:
-            self.log.warn('ipywidgets package not installed.  Widgets will not be available.')
+            self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
         # END HARDCODED WIDGETS HACK
 
         self.shell.configurables.append(self.comm_manager)

@@ -6,6 +6,7 @@
 
 import json
 from base64 import decodestring
+from datetime import datetime
 
 import nose.tools as nt
 
@@ -37,6 +38,7 @@ def test():
              ((x for x in range(3)), [0, 1, 2]),
              (iter([1, 2]), [1, 2]),
              (Int(5), 5),
+             (datetime(1991, 7, 3, 12, 00), "1991-07-03T12:00:00.000000"),
              ]
     
     for val, jval in pairs:

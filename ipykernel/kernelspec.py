@@ -74,7 +74,7 @@ def write_kernel_spec(path=None):
     return path
 
 
-def install(kernel_spec_manager=None, user=False):
+def install(kernel_spec_manager=None, user=False, kernel_name=None):
     """Install the IPython kernelspec for Jupyter
     
     Parameters
@@ -85,20 +85,37 @@ def install(kernel_spec_manager=None, user=False):
         If none provided, a default instance will be created.
     user: bool [default: False]
         Whether to do a user-only install, or system-wide.
+    kernel_name: str, optional
+        Specify a name for the kernelspec.
+        This is needed for having multiple IPython kernels for different environments.
+    
+    Returns
+    -------
+    
+    The path where the kernelspec was installed.
     """
     if kernel_spec_manager is None:
         kernel_spec_manager = KernelSpecManager()
+    if kernel_name is None:
+        kernel_name = KERNEL_NAME
     path = write_kernel_spec()
-    kernel_spec_manager.install_kernel_spec(path,
-        kernel_name=KERNEL_NAME, user=user, replace=True)
+    dest = kernel_spec_manager.install_kernel_spec(path,
+        kernel_name=kernel_name, user=user)
     # cleanup afterward
     shutil.rmtree(path)
+    return dest
 
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Install the IPython kernel spec.")
     parser.add_argument('--user', action='store_true',
         help="Install for the current user instead of system-wide")
+    parser.add_argument('--name', type=str, default=KERNEL_NAME,
+        help="Specify a name for the kernelspec."
+        " This is needed to have multiple IPython kernels at the same time.")
     opts = parser.parse_args()
-    install(user=opts.user)
+    
+    dest = install(user=opts.user, kernel_name=opts.name)
+    print("Installed kernelspec %s in %s" % (opts.name, dest))

@@ -128,6 +128,12 @@ class InProcessKernelClient(KernelClient):
         self._dispatch_to_kernel(msg)
         return msg['header']['msg_id']
 
+    def comm_info(self):
+        """Request a dictionary of valid comms and their targets."""
+        msg = self.session.msg('comm_info_request')
+        self._dispatch_to_kernel(msg)
+        return msg['header']['msg_id']
+
     def input(self, string):
         if self.kernel is None:
             raise RuntimeError('Cannot send input reply. No kernel exists.')

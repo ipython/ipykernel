@@ -119,7 +119,7 @@ class Kernel(SingletonConfigurable):
         # Build dict of handlers for message types
         msg_types = [ 'execute_request', 'complete_request',
                       'inspect_request', 'history_request',
-                      'kernel_info_request',
+                      'comm_info_request', 'kernel_info_request',
                       'connect_request', 'shutdown_request',
                       'apply_request', 'is_complete_request',
                     ]
@@ -427,7 +427,7 @@ class Kernel(SingletonConfigurable):
     def do_inspect(self, code, cursor_pos, detail_level=0):
         """Override in subclasses to allow introspection.
         """
-        return {'status': 'ok', 'data':{}, 'metadata':{}, 'found':False}
+        return {'status': 'ok', 'data': {}, 'metadata': {}, 'found': False}
 
     def history_request(self, stream, ident, parent):
         content = parent['content']
@@ -468,6 +468,21 @@ class Kernel(SingletonConfigurable):
     def kernel_info_request(self, stream, ident, parent):
         msg = self.session.send(stream, 'kernel_info_reply',
                                 self.kernel_info, parent, ident)
+        self.log.debug("%s", msg)
+
+    def comm_info_request(self, stream, ident, parent):
+        content = parent['content']
+
+        # Should this be moved to ipkernel?
+        if hasattr(self, 'comm_manager'):
+            comms = {
+                k: dict(target_name=v.target_name) for (k, v) in self.comm_manager.comms.items()
+            }
+        else:
+            comms = {}
+        reply_content = dict(comms=comms)
+        msg = self.session.send(stream, 'comm_info_reply',
+                                reply_content, parent, ident)
         self.log.debug("%s", msg)
 
     def shutdown_request(self, stream, ident, parent):

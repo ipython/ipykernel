@@ -74,7 +74,7 @@ def write_kernel_spec(path=None):
     return path
 
 
-def install(kernel_spec_manager=None, user=False, kernel_name=None):
+def install(kernel_spec_manager=None, user=False, kernel_name=None, prefix=None):
     """Install the IPython kernelspec for Jupyter
     
     Parameters
@@ -88,6 +88,9 @@ def install(kernel_spec_manager=None, user=False, kernel_name=None):
     kernel_name: str, optional
         Specify a name for the kernelspec.
         This is needed for having multiple IPython kernels for different environments.
+    prefix: str, optional
+        Specify an install prefix for the kernelspec.
+        This is needed to install into a non-default location, such as a conda/virtual-env.
     
     Returns
     -------
@@ -100,7 +103,7 @@ def install(kernel_spec_manager=None, user=False, kernel_name=None):
         kernel_name = KERNEL_NAME
     path = write_kernel_spec()
     dest = kernel_spec_manager.install_kernel_spec(path,
-        kernel_name=kernel_name, user=user)
+        kernel_name=kernel_name, user=user, prefix=prefix)
     # cleanup afterward
     shutil.rmtree(path)
     return dest
@@ -115,7 +118,10 @@ if __name__ == '__main__':
     parser.add_argument('--name', type=str, default=KERNEL_NAME,
         help="Specify a name for the kernelspec."
         " This is needed to have multiple IPython kernels at the same time.")
+    parser.add_argument('--prefix', type=str,
+        help="Specify an install prefix for the kernelspec."
+        " This is needed to install into a non-default location, such as a conda/virtual-env.")
     opts = parser.parse_args()
     
-    dest = install(user=opts.user, kernel_name=opts.name)
+    dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix)
     print("Installed kernelspec %s in %s" % (opts.name, dest))

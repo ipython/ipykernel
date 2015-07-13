@@ -62,9 +62,9 @@ class IPythonKernel(KernelBase):
 
         # BEGIN HARDCODED WIDGETS HACK
         try:
-            import ipywidgets
-            ipywidgets.handle_kernel(self)
-        except:
+            from ipywidgets import handle_kernel
+            handle_kernel(self)
+        except ImportError:
             self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
         # END HARDCODED WIDGETS HACK
 

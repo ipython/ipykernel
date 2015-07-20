@@ -117,14 +117,14 @@ class ExecuteReply(Reference):
 
 
 class ExecuteReplyOkay(Reference):
-    payload = List(Dict)
+    payload = List(Dict())
     user_expressions = Dict()
 
 
 class ExecuteReplyError(Reference):
     ename = Unicode()
     evalue = Unicode()
-    traceback = List(Unicode)
+    traceback = List(Unicode())
 
 
 class InspectReply(MimeBundle):
@@ -132,7 +132,7 @@ class InspectReply(MimeBundle):
 
 
 class ArgSpec(Reference):
-    args = List(Unicode)
+    args = List(Unicode())
     varargs = Unicode()
     varkw = Unicode()
     defaults = List()
@@ -143,7 +143,7 @@ class Status(Reference):
 
 
 class CompleteReply(Reference):
-    matches = List(Unicode)
+    matches = List(Unicode())
     cursor_start = Integer()
     cursor_end = Integer()
     status = Unicode()

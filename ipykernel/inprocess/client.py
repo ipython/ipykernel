@@ -142,6 +142,10 @@ class InProcessKernelClient(KernelClient):
             raise RuntimeError('Cannot send input reply. No kernel exists.')
         self.kernel.raw_input_str = string
 
+    def is_complete(self, code):
+        msg = self.session.msg('is_complete_request', {'code': code})
+        self._dispatch_to_kernel(msg)
+        return msg['header']['msg_id']
 
     def _dispatch_to_kernel(self, msg):
         """ Send a message to the kernel and handle a reply.

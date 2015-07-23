@@ -24,6 +24,9 @@ class InProcessKernelManager(KernelManager):
                       allow_none=True)
     # the client class for KM.client() shortcut
     client_class = DottedObjectName('ipykernel.inprocess.BlockingInProcessKernelClient')
+    def _blocking_class_default(self):
+        from .blocking import BlockingInProcessKernelClient
+        return BlockingInProcessKernelClient
 
     def _session_default(self):
         # don't sign in-process messages

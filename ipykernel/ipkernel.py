@@ -60,14 +60,6 @@ class IPythonKernel(KernelBase):
         self.comm_manager = CommManager(shell=self.shell, parent=self,
                                         kernel=self)
 
-        # BEGIN HARDCODED WIDGETS HACK
-        try:
-            from ipywidgets import handle_kernel
-            handle_kernel(self)
-        except ImportError:
-            self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
-        # END HARDCODED WIDGETS HACK
-
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
         for msg_type in comm_msg_types:

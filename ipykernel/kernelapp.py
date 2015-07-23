@@ -101,13 +101,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     flags = Dict(kernel_flags)
     classes = [IPythonKernel, ZMQInteractiveShell, ProfileDir, Session]
     # the kernel class, as an importstring
-    kernel_class = Type('ipykernel.ipkernel.IPythonKernel', config=True,
+    kernel_class = Type('ipykernel.ipkernel.IPythonKernel', 
                         klass='ipykernel.kernelbase.Kernel',
     help="""The Kernel subclass to be used.
 
     This should allow easy re-use of the IPKernelApp entry point
     to configure and launch kernels other than IPython's own.
-    """)
+    """).tag(config=True)
     kernel = Any()
     poller = Any() # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
@@ -134,23 +134,23 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
 
     # streams, etc.
-    no_stdout = Bool(False, config=True, help="redirect stdout to the null device")
-    no_stderr = Bool(False, config=True, help="redirect stderr to the null device")
+    no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
+    no_stderr = Bool(False, help="redirect stderr to the null device").tag(config=True)
     outstream_class = DottedObjectName('ipykernel.iostream.OutStream',
-        config=True, help="The importstring for the OutStream factory")
+        help="The importstring for the OutStream factory").tag(config=True)
     displayhook_class = DottedObjectName('ipykernel.displayhook.ZMQDisplayHook',
-        config=True, help="The importstring for the DisplayHook factory")
+        help="The importstring for the DisplayHook factory").tag(config=True)
 
     # polling
-    parent_handle = Integer(int(os.environ.get('JPY_PARENT_PID') or 0), config=True,
+    parent_handle = Integer(int(os.environ.get('JPY_PARENT_PID') or 0), 
         help="""kill this process if its parent dies.  On Windows, the argument
         specifies the HANDLE of the parent process, otherwise it is simply boolean.
-        """)
-    interrupt = Integer(int(os.environ.get('JPY_INTERRUPT_EVENT') or 0), config=True,
+        """).tag(config=True)
+    interrupt = Integer(int(os.environ.get('JPY_INTERRUPT_EVENT') or 0), 
         help="""ONLY USED ON WINDOWS
         Interrupt this process when the parent is signaled.
-        """)
-    
+        """).tag(config=True)
+
     def init_crash_handler(self):
         sys.excepthook = self.excepthook
     

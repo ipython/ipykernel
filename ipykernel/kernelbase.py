@@ -70,12 +70,12 @@ class Kernel(SingletonConfigurable):
 
     # Private interface
 
-    _darwin_app_nap = Bool(True, config=True,
+    _darwin_app_nap = Bool(True, 
         help="""Whether to use appnope for compatiblity with OS X App Nap.
 
         Only affects OS X >= 10.9.
         """
-    )
+    ).tag(config=True)
 
     # track associations with current request
     _allow_stdin = Bool(False)
@@ -88,12 +88,12 @@ class Kernel(SingletonConfigurable):
     # Units are in seconds.  The minimum zmq latency on local host is probably
     # ~150 microseconds, set this to 500us for now.  We may need to increase it
     # a little if it's not enough after more interactive testing.
-    _execute_sleep = Float(0.0005, config=True)
+    _execute_sleep = Float(0.0005).tag(config=True)
 
     # Frequency of the kernel's event loop.
     # Units are in seconds, kernel subclasses for GUI toolkits may need to
     # adapt to milliseconds.
-    _poll_interval = Float(0.05, config=True)
+    _poll_interval = Float(0.05).tag(config=True)
 
     # If the shutdown was requested over the network, we leave here the
     # necessary reply message so it can be sent by our registered atexit

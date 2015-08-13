@@ -128,9 +128,13 @@ class InProcessKernelClient(KernelClient):
         self._dispatch_to_kernel(msg)
         return msg['header']['msg_id']
 
-    def comm_info(self):
+    def comm_info(self, target_name=None):
         """Request a dictionary of valid comms and their targets."""
-        msg = self.session.msg('comm_info_request')
+        if target_name is None:
+            content = {}
+        else:
+            content = dict(target_name=target_name)
+        msg = self.session.msg('comm_info_request', content)
         self._dispatch_to_kernel(msg)
         return msg['header']['msg_id']
 

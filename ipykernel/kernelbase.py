@@ -472,11 +472,14 @@ class Kernel(SingletonConfigurable):
 
     def comm_info_request(self, stream, ident, parent):
         content = parent['content']
+        target_name = content.get('target_name', None)
 
         # Should this be moved to ipkernel?
         if hasattr(self, 'comm_manager'):
             comms = {
-                k: dict(target_name=v.target_name) for (k, v) in self.comm_manager.comms.items()
+                k: dict(target_name=v.target_name)
+                for (k, v) in self.comm_manager.comms.items()
+                if v.target_name == target_name or target_name is None
             }
         else:
             comms = {}

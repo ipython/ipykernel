@@ -115,9 +115,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     # connection info:
     connection_dir = Unicode()
     def _connection_dir_default(self):
-        d = jupyter_runtime_dir()
-        ensure_dir_exists(d, 0o700)
-        return d
+        return jupyter_runtime_dir()
 
     @property
     def abs_connection_file(self):
@@ -201,7 +199,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.connection_file = filefind(self.connection_file, ['.', self.connection_dir])
         except IOError:
             self.log.debug("Connection file not found: %s", self.connection_file)
-            # This means I own it, so I will clean it up:
+            # This means I own it, and I'll create it in this directory:
+            ensure_dir_exists(os.path.dirname(self.abs_connection_file), 0o700)
+            # Also, I will clean it up:
             atexit.register(self.cleanup_connection_file)
             return
         try:

@@ -3,6 +3,9 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from __future__ import print_function
+
+import errno
 import json
 import os
 import shutil
@@ -135,8 +138,15 @@ class InstallIPythonKernelSpecApp(Application):
             help="Specify an install prefix for the kernelspec."
             " This is needed to install into a non-default location, such as a conda/virtual-env.")
         opts = parser.parse_args(self.argv)
-    
-        dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix)
+        try:
+            dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix)
+        except OSError as e:
+            if e.errno == errno.EACCES:
+                print(e, file=sys.stderr)
+                if opts.user:
+                    print("Perhaps you want `sudo` or `--user`?", file=sys.stderr)
+                self.exit(1)
+            raise
         print("Installed kernelspec %s in %s" % (opts.name, dest))
 
 

@@ -111,6 +111,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     poller = Any() # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
     ports = Dict()
+    
+    subcommands = {
+        'install': (
+            'ipykernel.kernelspec.InstallIPythonKernelSpecApp',
+            'Install the IPython kernel'
+        ),
+    }
 
     # connection info:
     connection_dir = Unicode()
@@ -358,6 +365,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     @catch_config_error
     def initialize(self, argv=None):
         super(IPKernelApp, self).initialize(argv)
+        if self.subapp is not None:
+            return
         self.init_blackhole()
         self.init_connection_file()
         self.init_poller()
@@ -382,6 +391,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         sys.stderr.flush()
 
     def start(self):
+        if self.subapp is not None:
+            return self.subapp.start()
+        
         if self.poller is not None:
             self.poller.start()
         self.kernel.start()

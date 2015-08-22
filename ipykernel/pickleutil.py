@@ -16,7 +16,7 @@ except ImportError:
 
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
-from ipython_genutils.py3compat import string_types, iteritems, buffer_to_bytes_py2
+from ipython_genutils.py3compat import string_types, iteritems, buffer_to_bytes, buffer_to_bytes_py2
 
 from . import codeutil  # This registers a hook when it's imported
 
@@ -290,7 +290,8 @@ class CannedArray(CannedObject):
 
 
 class CannedBytes(CannedObject):
-    wrap = bytes
+    wrap = staticmethod(buffer_to_bytes)
+
     def __init__(self, obj):
         self.buffers = [obj]
     

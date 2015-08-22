@@ -1,4 +1,5 @@
 
+import os
 import pickle
 
 import nose.tools as nt
@@ -59,4 +60,9 @@ def test_closure():
     bar = loads(pfoo)
     nt.assert_equal(foo(), bar())
 
-    
+def test_uncan_bytes_buffer():
+    data = b'data'
+    canned = can(data)
+    canned.buffers = [memoryview(buf) for buf in canned.buffers]
+    out = uncan(canned)
+    nt.assert_equal(out, data)

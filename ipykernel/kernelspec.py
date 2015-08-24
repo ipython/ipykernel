@@ -3,6 +3,9 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from __future__ import print_function
+
+import errno
 import json
 import os
 import shutil
@@ -108,20 +111,44 @@ def install(kernel_spec_manager=None, user=False, kernel_name=None, prefix=None)
     shutil.rmtree(path)
     return dest
 
+# Entrypoint
+
+from traitlets.config import Application
+
+
+class InstallIPythonKernelSpecApp(Application):
+    """Dummy app wrapping argparse"""
+    name = 'ipython-kernel-install'
+    
+    def initialize(self, argv=None):
+        if argv is None:
+            argv = sys.argv[1:]
+        self.argv = argv
+    
+    def start(self):
+        import argparse
+        parser = argparse.ArgumentParser(
+            description="Install the IPython kernel spec.")
+        parser.add_argument('--user', action='store_true',
+            help="Install for the current user instead of system-wide")
+        parser.add_argument('--name', type=str, default=KERNEL_NAME,
+            help="Specify a name for the kernelspec."
+            " This is needed to have multiple IPython kernels at the same time.")
+        parser.add_argument('--prefix', type=str,
+            help="Specify an install prefix for the kernelspec."
+            " This is needed to install into a non-default location, such as a conda/virtual-env.")
+        opts = parser.parse_args(self.argv)
+        try:
+            dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix)
+        except OSError as e:
+            if e.errno == errno.EACCES:
+                print(e, file=sys.stderr)
+                if opts.user:
+                    print("Perhaps you want `sudo` or `--user`?", file=sys.stderr)
+                self.exit(1)
+            raise
+        print("Installed kernelspec %s in %s" % (opts.name, dest))
+
 
 if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(
-        description="Install the IPython kernel spec.")
-    parser.add_argument('--user', action='store_true',
-        help="Install for the current user instead of system-wide")
-    parser.add_argument('--name', type=str, default=KERNEL_NAME,
-        help="Specify a name for the kernelspec."
-        " This is needed to have multiple IPython kernels at the same time.")
-    parser.add_argument('--prefix', type=str,
-        help="Specify an install prefix for the kernelspec."
-        " This is needed to install into a non-default location, such as a conda/virtual-env.")
-    opts = parser.parse_args()
-    
-    dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix)
-    print("Installed kernelspec %s in %s" % (opts.name, dest))
+    InstallIPythonKernelSpecApp.launch_instance()

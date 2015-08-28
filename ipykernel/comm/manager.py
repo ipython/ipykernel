@@ -87,7 +87,7 @@ class CommManager(LoggingConfigurable):
         it will log messages if the comm cannot be found.
         """
         if comm_id not in self.comms:
-            self.log.error("No such comm: %s", comm_id)
+            self.log.warn("No such comm: %s", comm_id)
             self.log.debug("Current comms: %s", lazy_keys(self.comms))
             return
         # call, because we store weakrefs

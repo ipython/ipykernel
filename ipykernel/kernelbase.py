@@ -206,19 +206,27 @@ class Kernel(SingletonConfigurable):
         if handler is None:
             self.log.error("UNKNOWN MESSAGE TYPE: %r", msg_type)
         else:
-            # ensure default_int_handler during handler call
-            sig = signal(SIGINT, default_int_handler)
             self.log.debug("%s: %s", msg_type, msg)
+            self.pre_handler_hook()
             try:
                 handler(stream, idents, msg)
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)
             finally:
-                signal(SIGINT, sig)
+                self.post_handler_hook()
 
         sys.stdout.flush()
         sys.stderr.flush()
         self._publish_status(u'idle')
+
+    def pre_handler_hook(self):
+        """Hook to execute before calling message handler"""
+        # ensure default_int_handler during handler call
+        self.saved_sigint_handler = signal(SIGINT, default_int_handler)
+
+    def post_handler_hook(self):
+        """Hook to execute after calling message handler"""
+        signal(SIGINT, self.saved_sigint_handler)
 
     def enter_eventloop(self):
         """enter eventloop"""

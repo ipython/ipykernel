@@ -373,8 +373,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.init_sockets()
         self.init_heartbeat()
         # writing/displaying connection info must be *after* init_sockets/heartbeat
-        self.log_connection_info()
         self.write_connection_file()
+        # Log connection info after writing connection file, so that the connection
+        # file is definitely available at the time someone reads the log.
+        self.log_connection_info()
         self.init_io()
         self.init_signal()
         self.init_kernel()

@@ -12,6 +12,7 @@ except ImportError:
     from Queue import Empty  # Py 2
 
 import nose.tools as nt
+from nose.plugins.skip import SkipTest
 
 from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum,
@@ -163,6 +164,8 @@ class KernelInfoReply(Reference):
         Reference.check(self, d)
         LanguageInfo().check(d['language_info'])
 
+class CommInfoReply(Reference):
+    comms = Dict()
 
 class IsCompleteReply(Reference):
     status = Enum((u'complete', u'incomplete', u'invalid', u'unknown'), default_value=u'complete')
@@ -198,6 +201,7 @@ class DisplayData(MimeBundle):
 class ExecuteResult(MimeBundle):
     execution_count = Integer()
 
+
 class HistoryReply(Reference):
     history = List(List())
 
@@ -208,6 +212,7 @@ references = {
     'status' : Status(),
     'complete_reply' : CompleteReply(),
     'kernel_info_reply': KernelInfoReply(),
+    'comm_info_reply': CommInfoReply(),
     'is_complete_reply': IsCompleteReply(),
     'execute_input' : ExecuteInput(),
     'execute_result' : ExecuteResult(),
@@ -417,6 +422,15 @@ def test_kernel_info_request():
     msg_id = KC.kernel_info()
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     validate_message(reply, 'kernel_info_reply', msg_id)
+
+
+def test_comm_info_request():
+    flush_channels()
+    if not hasattr(KC, 'comm_info'):
+        raise SkipTest()
+    msg_id = KC.comm_info()
+    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    validate_message(reply, 'comm_info_reply', msg_id)
 
 
 def test_single_payload():

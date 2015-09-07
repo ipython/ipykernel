@@ -440,6 +440,7 @@ if buffer is not memoryview:
 
 uncan_map = {
     CannedObject : lambda obj, g: obj.get_object(g),
+    dict : uncan_dict,
 }
 
 # for use in _import_mapping:

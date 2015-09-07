@@ -50,9 +50,18 @@ class InProcessKernelClient(KernelClient):
     #--------------------------------------------------------------------------
     # Channel management methods
     #--------------------------------------------------------------------------
+    
+    def _blocking_class_default(self):
+        from .blocking import BlockingInProcessKernelClient
+        return BlockingInProcessKernelClient
+    
+    def get_connection_info(self):
+        d = super(InProcessKernelClient, self).get_connection_info()
+        d['kernel'] = self.kernel
+        return d
 
     def start_channels(self, *args, **kwargs):
-        super(InProcessKernelClient, self).start_channels(self)
+        super(InProcessKernelClient, self).start_channels()
         self.kernel.frontends.append(self)
 
     @property
@@ -133,6 +142,10 @@ class InProcessKernelClient(KernelClient):
             raise RuntimeError('Cannot send input reply. No kernel exists.')
         self.kernel.raw_input_str = string
 
+    def is_complete(self, code):
+        msg = self.session.msg('is_complete_request', {'code': code})
+        self._dispatch_to_kernel(msg)
+        return msg['header']['msg_id']
 
     def _dispatch_to_kernel(self, msg):
         """ Send a message to the kernel and handle a reply.

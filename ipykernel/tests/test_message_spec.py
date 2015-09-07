@@ -12,6 +12,7 @@ except ImportError:
     from Queue import Empty  # Py 2
 
 import nose.tools as nt
+from nose.plugins.skip import SkipTest
 
 from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum,
@@ -425,7 +426,8 @@ def test_kernel_info_request():
 
 def test_comm_info_request():
     flush_channels()
-
+    if not hasattr(KC, 'comm_info'):
+        raise SkipTest()
     msg_id = KC.comm_info()
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     validate_message(reply, 'comm_info_reply', msg_id)

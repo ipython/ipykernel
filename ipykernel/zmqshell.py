@@ -34,7 +34,6 @@ from IPython.core.magic import magics_class, line_magic, Magics
 from IPython.core import payloadpage
 from IPython.core.usage import default_gui_banner
 from IPython.display import display, Javascript
-from ipykernel.inprocess.socket import SocketABC
 from ipykernel import (
     get_connection_file, get_connection_info, connect_qtconsole
 )
@@ -58,7 +57,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
     """A display publisher that publishes data using a ZeroMQ PUB socket."""
 
     session = Instance(Session, allow_none=True)
-    pub_socket = Instance(SocketABC, allow_none=True)
+    pub_socket = Any(allow_none=True)
     parent_header = Dict({})
     topic = CBytes(b'display_data')
 

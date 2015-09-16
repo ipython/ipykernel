@@ -6,10 +6,9 @@
 import sys
 
 from IPython.core.displayhook import DisplayHook
-from ipykernel.inprocess.socket import SocketABC
 from ipykernel.jsonutil import encode_images
 from ipython_genutils.py3compat import builtin_mod
-from traitlets import Instance, Dict
+from traitlets import Instance, Dict, Any
 from jupyter_client.session import extract_header, Session
 
 class ZMQDisplayHook(object):
@@ -43,7 +42,7 @@ class ZMQShellDisplayHook(DisplayHook):
     topic=None
 
     session = Instance(Session, allow_none=True)
-    pub_socket = Instance(SocketABC, allow_none=True)
+    pub_socket = Any(allow_none=True)
     parent_header = Dict({})
 
     def set_parent(self, parent):

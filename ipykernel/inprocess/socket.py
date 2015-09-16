@@ -1,27 +1,17 @@
 """ Defines a dummy socket implementing (part of) the zmq.Socket interface. """
 
-#-----------------------------------------------------------------------------
-#  Copyright (C) 2012  The IPython Development Team
-#
-#  Distributed under the terms of the BSD License.  The full license is in
-#  the file COPYING, distributed as part of this software.
-#-----------------------------------------------------------------------------
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
 
-#-----------------------------------------------------------------------------
-# Imports
-#-----------------------------------------------------------------------------
-
-# Standard library imports.
 import abc
+import warnings
 try:
     from queue import Queue  # Py 3
 except ImportError:
     from Queue import Queue  # Py 2
 
-# System library imports.
 import zmq
 
-# Local imports.
 from traitlets import HasTraits, Instance, Int
 from ipython_genutils.py3compat import with_metaclass
 
@@ -30,6 +20,7 @@ from ipython_genutils.py3compat import with_metaclass
 #-----------------------------------------------------------------------------
 
 class SocketABC(with_metaclass(abc.ABCMeta, object)):
+    
     @abc.abstractmethod
     def recv_multipart(self, flags=0, copy=True, track=False):
         raise NotImplementedError
@@ -37,8 +28,11 @@ class SocketABC(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def send_multipart(self, msg_parts, flags=0, copy=True, track=False):
         raise NotImplementedError
-
-SocketABC.register(zmq.Socket)
+    
+    @classmethod
+    def register(cls, other_cls):
+        warnings.warn("SocketABC is deprecated.", DeprecationWarning)
+        abc.ABCMeta.register(cls, other_cls)
 
 #-----------------------------------------------------------------------------
 # Dummy socket class

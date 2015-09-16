@@ -5,8 +5,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from traitlets.config import Configurable
-from ipykernel.inprocess.socket import SocketABC
-from traitlets import Instance, Dict, CBytes
+from traitlets import Instance, Dict, CBytes, Any
 from ipykernel.jsonutil import json_clean
 from ipykernel.serialize import serialize_object
 from jupyter_client.session import Session, extract_header
@@ -16,7 +15,7 @@ class ZMQDataPublisher(Configurable):
 
     topic = topic = CBytes(b'datapub')
     session = Instance(Session, allow_none=True)
-    pub_socket = Instance(SocketABC, allow_none=True)
+    pub_socket = Any(allow_none=True)
     parent_header = Dict({})
 
     def set_parent(self, parent):

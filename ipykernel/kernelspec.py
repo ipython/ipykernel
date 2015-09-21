@@ -58,10 +58,11 @@ def get_kernel_dict():
     }
 
 
-def write_kernel_spec(path=None):
+def write_kernel_spec(path=None, overrides=None):
     """Write a kernel spec directory to `path`
     
     If `path` is not specified, a temporary directory is created.
+    If `overrides` is given, the kernelspec JSON is updated before writing.
     
     The path to the kernelspec is always returned.
     """
@@ -71,13 +72,16 @@ def write_kernel_spec(path=None):
     # stage resources
     shutil.copytree(RESOURCES, path)
     # write kernel.json
+    kernel_dict = get_kernel_dict()
+    if overrides:
+        kernel_dict.update(overrides)
     with open(pjoin(path, 'kernel.json'), 'w') as f:
-        json.dump(get_kernel_dict(), f, indent=1)
+        json.dump(kernel_dict, f, indent=1)
     
     return path
 
 
-def install(kernel_spec_manager=None, user=False, kernel_name=None, prefix=None):
+def install(kernel_spec_manager=None, user=False, kernel_name=None, display_name=None, prefix=None):
     """Install the IPython kernelspec for Jupyter
     
     Parameters
@@ -94,6 +98,8 @@ def install(kernel_spec_manager=None, user=False, kernel_name=None, prefix=None)
     prefix: str, optional
         Specify an install prefix for the kernelspec.
         This is needed to install into a non-default location, such as a conda/virtual-env.
+    display_name: str, optional
+        Specify the display name for the kernelspec
     
     Returns
     -------
@@ -104,7 +110,11 @@ def install(kernel_spec_manager=None, user=False, kernel_name=None, prefix=None)
         kernel_spec_manager = KernelSpecManager()
     if kernel_name is None:
         kernel_name = KERNEL_NAME
-    path = write_kernel_spec()
+    if display_name:
+        overrides = dict(display_name=display_name)
+    else:
+        overrides = None
+    path = write_kernel_spec(overrides=overrides)
     dest = kernel_spec_manager.install_kernel_spec(path,
         kernel_name=kernel_name, user=user, prefix=prefix)
     # cleanup afterward
@@ -134,12 +144,17 @@ class InstallIPythonKernelSpecApp(Application):
         parser.add_argument('--name', type=str, default=KERNEL_NAME,
             help="Specify a name for the kernelspec."
             " This is needed to have multiple IPython kernels at the same time.")
+        parser.add_argument('--display-name', type=str,
+            help="Specify the display name for the kernelspec."
+            " This is helpful when you have multiple IPython kernels.")
         parser.add_argument('--prefix', type=str,
             help="Specify an install prefix for the kernelspec."
             " This is needed to install into a non-default location, such as a conda/virtual-env.")
         opts = parser.parse_args(self.argv)
         try:
-            dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix)
+            dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix,
+                dispay_name=opts.display_name,
+            )
         except OSError as e:
             if e.errno == errno.EACCES:
                 print(e, file=sys.stderr)

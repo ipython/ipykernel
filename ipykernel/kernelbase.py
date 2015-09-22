@@ -21,7 +21,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
 from IPython.core.error import StdinNotImplementedError
-from IPython.core import release
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type, string_types
 from ipykernel.jsonutil import json_clean
@@ -31,6 +30,7 @@ from traitlets import (
 
 from jupyter_client.session import Session
 
+from ._version import kernel_protocol_version
 
 class Kernel(SingletonConfigurable):
 
@@ -465,7 +465,7 @@ class Kernel(SingletonConfigurable):
     @property
     def kernel_info(self):
         return {
-            'protocol_version': release.kernel_protocol_version,
+            'protocol_version': kernel_protocol_version,
             'implementation': self.implementation,
             'implementation_version': self.implementation_version,
             'language_info': self.language_info,

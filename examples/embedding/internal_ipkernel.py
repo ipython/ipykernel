@@ -45,7 +45,7 @@ class InternalIPKernel(object):
 
     def new_qt_console(self, evt=None):
         """start a new qtconsole connected to our kernel"""
-        return connect_qtconsole(self.ipkernel.connection_file, profile=self.ipkernel.profile)
+        return connect_qtconsole(self.ipkernel.abs_connection_file, profile=self.ipkernel.profile)
 
     def count(self, evt=None):
         self.namespace['app_counter'] += 1

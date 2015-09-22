@@ -153,7 +153,7 @@ class InstallIPythonKernelSpecApp(Application):
         opts = parser.parse_args(self.argv)
         try:
             dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix,
-                dispay_name=opts.display_name,
+                display_name=opts.display_name,
             )
         except OSError as e:
             if e.errno == errno.EACCES:

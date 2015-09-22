@@ -7,7 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
-
+    
 try:
     from unittest import mock
 except ImportError:
@@ -20,6 +20,7 @@ from ipykernel.kernelspec import (
     get_kernel_dict,
     write_kernel_spec,
     install,
+    InstallIPythonKernelSpecApp,
     KERNEL_NAME,
     RESOURCES,
 )
@@ -73,6 +74,17 @@ def test_write_kernel_spec_path():
     nt.assert_equal(path, path2)
     assert_is_spec(path)
     shutil.rmtree(path)
+
+
+def test_install_kernelspec():
+
+    path = tempfile.mkdtemp()
+    try: 
+        test = InstallIPythonKernelSpecApp.launch_instance(argv=['--prefix', path])
+        assert_is_spec(os.path.join(
+            path, 'share', 'jupyter', 'kernels', KERNEL_NAME))
+    finally:
+        shutil.rmtree(path)
 
 
 def test_install_user():

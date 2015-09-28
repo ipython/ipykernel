@@ -4,6 +4,9 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import warnings
+warnings.warn("ipykernel.pickleutil is deprecated. It has moved to ipyparallel.", DeprecationWarning)
+
 import copy
 import logging
 import sys

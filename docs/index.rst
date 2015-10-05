@@ -1,0 +1,23 @@
+.. _index:
+
+IPython Kernel Docs
+===================
+
+This contains minimal version-sensitive documentation for the IPython kernel package.
+Most IPython kernel documentation is in the `IPython documentation <http://ipython.readthedocs.org/en/latest/>`_.
+
+Contents:
+
+.. toctree::
+    :maxdepth: 2
+
+    changelog.rst
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

@@ -106,6 +106,7 @@ class CommManager(LoggingConfigurable):
                     kernel=self.kernel,
                     iopub_socket=self.iopub_socket,
                     primary=False,
+                    target_name=target_name,
         )
         self.register_comm(comm)
         if f is None:

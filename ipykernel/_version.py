@@ -1,4 +1,4 @@
-version_info = (4, 2, 0, 'dev')
+version_info = (4, 1, 1)
 __version__ = '.'.join(map(str, version_info))
 
 kernel_protocol_version_info = (5, 0)

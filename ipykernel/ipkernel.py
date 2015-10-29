@@ -124,6 +124,31 @@ class IPythonKernel(KernelBase):
         super(IPythonKernel, self).set_parent(ident, parent)
         self.shell.set_parent(parent)
 
+    def init_metadata(self, parent):
+        """Initialize metadata.
+        
+        Run at the beginning of request handlers.
+        """
+        md = super(IPythonKernel, self).init_metadata(parent)
+        # FIXME: remove ipyparallel-specific code
+        md.update({
+            'dependencies_met' : True,
+            'engine' : self.ident,
+        })
+        return md
+    
+    def finish_metadata(self, parent, metadata, reply_content):
+        """Finish populating metadata.
+        
+        Run after completing a request handler.
+        """
+        # FIXME: remove ipyparallel-specific code:
+        metadata['status'] = reply_content['status']
+        if reply_content['status'] == 'error' and reply_content['ename'] == 'UnmetDependency':
+                metadata['dependencies_met'] = False
+
+        return metadata
+
     def _forward_input(self, allow_stdin=False):
         """Forward raw_input and getpass to the current frontend.
 
@@ -198,10 +223,11 @@ class IPythonKernel(KernelBase):
         # runlines.  We'll need to clean up this logic later.
         if shell._reply_content is not None:
             reply_content.update(shell._reply_content)
-            e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='execute')
-            reply_content['engine_info'] = e_info
             # reset after use
             shell._reply_content = None
+            # FIXME: deprecate piece for ipyparallel:
+            e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='execute')
+            reply_content['engine_info'] = e_info
 
         if 'traceback' in reply_content:
             self.log.info("Exception in execute request:\n%s", '\n'.join(reply_content['traceback']))
@@ -328,18 +354,17 @@ class IPythonKernel(KernelBase):
             reply_content = {}
             if shell._reply_content is not None:
                 reply_content.update(shell._reply_content)
-                e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
-                reply_content['engine_info'] = e_info
                 # reset after use
                 shell._reply_content = None
+                
+                # FIXME: deprecate piece for ipyparallel:
+                e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
+                reply_content['engine_info'] = e_info
 
             self.send_response(self.iopub_socket, u'error', reply_content,
                                 ident=self._topic('error'))
             self.log.info("Exception in apply request:\n%s", '\n'.join(reply_content['traceback']))
             result_buf = []
-
-            if reply_content['ename'] == 'UnmetDependency':
-                reply_metadata['dependencies_met'] = False
         else:
             reply_content = {'status' : 'ok'}
 

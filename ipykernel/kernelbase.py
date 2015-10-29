@@ -111,23 +111,26 @@ class Kernel(SingletonConfigurable):
     # Track execution count here. For IPython, we override this to use the
     # execution count we store in the shell.
     execution_count = 0
-
+    
+    msg_types = [
+        'execute_request', 'complete_request',
+        'inspect_request', 'history_request',
+        'comm_info_request', 'kernel_info_request',
+        'connect_request', 'shutdown_request',
+        'is_complete_request',
+        # deprecated:
+        'apply_request',
+    ]
 
     def __init__(self, **kwargs):
         super(Kernel, self).__init__(**kwargs)
 
         # Build dict of handlers for message types
-        msg_types = [ 'execute_request', 'complete_request',
-                      'inspect_request', 'history_request',
-                      'comm_info_request', 'kernel_info_request',
-                      'connect_request', 'shutdown_request',
-                      'apply_request', 'is_complete_request',
-                    ]
         self.shell_handlers = {}
-        for msg_type in msg_types:
+        for msg_type in self.msg_types:
             self.shell_handlers[msg_type] = getattr(self, msg_type)
 
-        control_msg_types = msg_types + [ 'clear_request', 'abort_request' ]
+        control_msg_types = self.msg_types + [ 'clear_request', 'abort_request' ]
         self.control_handlers = {}
         for msg_type in control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
@@ -288,17 +291,6 @@ class Kernel(SingletonConfigurable):
     # Kernel request handlers
     #---------------------------------------------------------------------------
 
-    def _make_metadata(self, other=None):
-        """init metadata dict, for execute/apply_reply"""
-        new_md = {
-            'dependencies_met' : True,
-            'engine' : self.ident,
-            'started': datetime.now(),
-        }
-        if other:
-            new_md.update(other)
-        return new_md
-
     def _publish_execute_input(self, code, parent, execution_count):
         """Publish the code request on the iopub stream."""
 
@@ -340,6 +332,22 @@ class Kernel(SingletonConfigurable):
         """
         return self.session.send(stream, msg_or_type, content, self._parent_header,
                                  ident, buffers, track, header, metadata)
+    
+    def init_metadata(self, parent):
+        """Initialize metadata.
+        
+        Run at the beginning of request handlers.
+        """
+        return {
+            'started': datetime.now(),
+        }
+    
+    def finish_metadata(self, parent, metadata, reply_content):
+        """Finish populating metadata.
+        
+        Run after completing a request handler.
+        """
+        return metadata
 
     def execute_request(self, stream, ident, parent):
         """handle an execute_request"""
@@ -358,7 +366,7 @@ class Kernel(SingletonConfigurable):
 
         stop_on_error = content.get('stop_on_error', True)
 
-        md = self._make_metadata(parent['metadata'])
+        metadata = self.init_metadata(parent)
 
         # Re-broadcast our input for the benefit of listening clients, and
         # start computing output
@@ -380,14 +388,10 @@ class Kernel(SingletonConfigurable):
 
         # Send the reply.
         reply_content = json_clean(reply_content)
-
-        md['status'] = reply_content['status']
-        if reply_content['status'] == 'error' and \
-                        reply_content['ename'] == 'UnmetDependency':
-                md['dependencies_met'] = False
+        metadata = self.finish_metadata(parent, metadata, reply_content)
 
         reply_msg = self.session.send(stream, u'execute_reply',
-                                      reply_content, parent, metadata=md,
+                                      reply_content, parent, metadata=metadata,
                                       ident=ident)
 
         self.log.debug("%s", reply_msg)
@@ -536,6 +540,7 @@ class Kernel(SingletonConfigurable):
     #---------------------------------------------------------------------------
 
     def apply_request(self, stream, ident, parent):
+        self.log.warn("""apply_request is deprecated in kernel_base, moving to ipyparallel.""")
         try:
             content = parent[u'content']
             bufs = parent[u'buffers']
@@ -544,16 +549,15 @@ class Kernel(SingletonConfigurable):
             self.log.error("Got bad msg: %s", parent, exc_info=True)
             return
 
-        md = self._make_metadata(parent['metadata'])
+        md = self.init_metadata(parent)
 
         reply_content, result_buf = self.do_apply(content, bufs, msg_id, md)
-
-        # put 'ok'/'error' status in header, for scheduler introspection:
-        md['status'] = reply_content['status']
-
+        
         # flush i/o
         sys.stdout.flush()
         sys.stderr.flush()
+
+        md = self.finish_metadata(parent, md, reply_content)
 
         self.session.send(stream, u'apply_reply', reply_content,
                     parent=parent, ident=ident,buffers=result_buf, metadata=md)
@@ -601,10 +605,7 @@ class Kernel(SingletonConfigurable):
 
     def _topic(self, topic):
         """prefixed topic for IOPub messages"""
-        if self.int_id >= 0:
-            base = "engine.%i" % self.int_id
-        else:
-            base = "kernel.%s" % self.ident
+        base = "kernel.%s" % self.ident
 
         return py3compat.cast_bytes("%s.%s" % (base, topic))
 

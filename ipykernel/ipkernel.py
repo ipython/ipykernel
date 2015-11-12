@@ -11,7 +11,6 @@ from traitlets import Instance, Type, Any, List
 
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
-from .serialize import serialize_object, unpack_apply_message
 from .zmqshell import ZMQInteractiveShell
 
 
@@ -51,8 +50,6 @@ class IPythonKernel(KernelBase):
         self.shell.displayhook.topic = self._topic('execute_result')
         self.shell.display_pub.session = self.session
         self.shell.display_pub.pub_socket = self.iopub_socket
-        self.shell.data_pub.session = self.session
-        self.shell.data_pub.pub_socket = self.iopub_socket
 
         # TMP - hack while developing
         self.shell._reply_content = None
@@ -315,6 +312,7 @@ class IPythonKernel(KernelBase):
         return r
 
     def do_apply(self, content, bufs, msg_id, reply_metadata):
+        from .serialize import serialize_object, unpack_apply_message
         shell = self.shell
         try:
             working = shell.user_ns

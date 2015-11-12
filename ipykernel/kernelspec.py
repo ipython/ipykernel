@@ -110,6 +110,10 @@ def install(kernel_spec_manager=None, user=False, kernel_name=None, display_name
         kernel_spec_manager = KernelSpecManager()
     if kernel_name is None:
         kernel_name = KERNEL_NAME
+    elif display_name is None:
+        # kernel_name is specified and display_name is not
+        # default display_name to kernel_name
+        display_name = kernel_name
     if display_name:
         overrides = dict(display_name=display_name)
     else:

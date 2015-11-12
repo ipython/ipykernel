@@ -121,6 +121,8 @@ class Kernel(SingletonConfigurable):
         # deprecated:
         'apply_request',
     ]
+    # add deprecated ipyparallel control messages
+    control_msg_types = msg_types + ['clear_request', 'abort_request']
 
     def __init__(self, **kwargs):
         super(Kernel, self).__init__(**kwargs)
@@ -130,9 +132,8 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.msg_types:
             self.shell_handlers[msg_type] = getattr(self, msg_type)
 
-        control_msg_types = self.msg_types + [ 'clear_request', 'abort_request' ]
         self.control_handlers = {}
-        for msg_type in control_msg_types:
+        for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
 
@@ -167,6 +168,25 @@ class Kernel(SingletonConfigurable):
         sys.stderr.flush()
         self._publish_status(u'idle')
 
+    def should_handle(self, stream, msg, idents):
+        """Check whether a shell-channel message should be handled
+        
+        Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
+        """
+        msg_id = msg['header']['msg_id']
+        if msg_id in self.aborted:
+            msg_type = msg['header']['msg_type']
+            # is it safe to assume a msg_id will not be resubmitted?
+            self.aborted.remove(msg_id)
+            reply_type = msg_type.split('_')[0] + '_reply'
+            status = {'status' : 'aborted'}
+            md = {'engine' : self.ident}
+            md.update(status)
+            self.session.send(stream, reply_type, metadata=md,
+                        content=status, parent=msg, ident=idents)
+            return False
+        return True
+
     def dispatch_shell(self, stream, msg):
         """dispatch shell requests"""
         # flush control requests first
@@ -194,15 +214,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug('\n*** MESSAGE TYPE:%s***', msg_type)
         self.log.debug('   Content: %s\n   --->\n   ', msg['content'])
 
-        if msg_id in self.aborted:
-            self.aborted.remove(msg_id)
-            # is it safe to assume a msg_id will not be resubmitted?
-            reply_type = msg_type.split('_')[0] + '_reply'
-            status = {'status' : 'aborted'}
-            md = {'engine' : self.ident}
-            md.update(status)
-            self.session.send(stream, reply_type, metadata=md,
-                        content=status, parent=msg, ident=idents)
+        if not self.should_handle(stream, msg, idents):
             return
 
         handler = self.shell_handlers.get(msg_type, None)
@@ -536,7 +548,7 @@ class Kernel(SingletonConfigurable):
                 }
 
     #---------------------------------------------------------------------------
-    # Engine methods
+    # Engine methods (DEPRECATED)
     #---------------------------------------------------------------------------
 
     def apply_request(self, stream, ident, parent):
@@ -563,16 +575,16 @@ class Kernel(SingletonConfigurable):
                     parent=parent, ident=ident,buffers=result_buf, metadata=md)
 
     def do_apply(self, content, bufs, msg_id, reply_metadata):
-        """Override in subclasses to support the IPython parallel framework.
-        """
+        """DEPRECATED"""
         raise NotImplementedError
 
     #---------------------------------------------------------------------------
-    # Control messages
+    # Control messages (DEPRECATED)
     #---------------------------------------------------------------------------
 
     def abort_request(self, stream, ident, parent):
         """abort a specific msg by id"""
+        self.log.warn("abort_request is deprecated in kernel_base. It os only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
         if isinstance(msg_ids, string_types):
             msg_ids = [msg_ids]
@@ -588,15 +600,13 @@ class Kernel(SingletonConfigurable):
 
     def clear_request(self, stream, idents, parent):
         """Clear our namespace."""
+        self.log.warn("clear_request is deprecated in kernel_base. It os only part of IPython parallel")
         content = self.do_clear()
         self.session.send(stream, 'clear_reply', ident=idents, parent=parent,
                 content = content)
 
     def do_clear(self):
-        """Override in subclasses to clear the namespace
-
-        This is only required for IPython.parallel.
-        """
+        """DEPRECATED"""
         raise NotImplementedError
 
     #---------------------------------------------------------------------------

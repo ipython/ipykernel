@@ -302,12 +302,9 @@ class KernelMagics(Magics):
         """
 
         # %qtconsole should imply bind_kernel for engines:
-        try:
-            from IPython.parallel import bind_kernel
-        except ImportError:
-            # technically possible, because parallel has higher pyzmq min-version
-            pass
-        else:
+        # FIXME: move to ipyparallel Kernel subclass
+        if 'ipyparallel' in sys.modules:
+            from ipyparallel import bind_kernel
             bind_kernel()
 
         try:

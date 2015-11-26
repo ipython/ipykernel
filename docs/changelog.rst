@@ -1,6 +1,14 @@
 Changes in IPython kernel
 =========================
 
+4.2
+---
+
+`4.2 on GitHub <https://github.com/ipython/ipykernel/milestones/4.2>`_
+
+- Support sending a full message in initial opening of comms (metadata, buffers were not previously allowed)
+- When using ``ipython kernel install --name`` to install the IPython kernelspec, default display-name to the same value as ``--name``.
+
 4.1
 ---
 

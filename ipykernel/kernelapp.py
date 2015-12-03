@@ -362,6 +362,15 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                 self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
         # END HARDCODED WIDGETS HACK
 
+    mpl_plots_inline = Bool(True, config=True,
+        help="Make matplotlib send plots to Jupyter frontends by default."
+    )
+
+    def init_mpl_shim(self):
+        if self.mpl_plots_inline:
+            from . import mplshim
+            mplshim.install_import_hook()
+
     @catch_config_error
     def initialize(self, argv=None):
         super(IPKernelApp, self).initialize(argv)
@@ -387,6 +396,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.init_gui_pylab()
             self.init_extensions()
             self.init_code()
+            self.init_mpl_shim()
         # flush stdout/stderr, so that anything written to these streams during
         # initialization do not get associated with the first execution request
         sys.stdout.flush()

@@ -81,7 +81,7 @@ def write_kernel_spec(path=None, overrides=None):
     return path
 
 
-def install(kernel_spec_manager=None, user=False, kernel_name=None, display_name=None, prefix=None):
+def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None, prefix=None):
     """Install the IPython kernelspec for Jupyter
     
     Parameters
@@ -108,9 +108,8 @@ def install(kernel_spec_manager=None, user=False, kernel_name=None, display_name
     """
     if kernel_spec_manager is None:
         kernel_spec_manager = KernelSpecManager()
-    if kernel_name is None:
-        kernel_name = KERNEL_NAME
-    elif display_name is None:
+
+    if (kernel_name != KERNEL_NAME) and (display_name is None):
         # kernel_name is specified and display_name is not
         # default display_name to kernel_name
         display_name = kernel_name

@@ -4,6 +4,16 @@ Changes in IPython kernel
 4.2
 ---
 
+4.2.1
+*****
+
+`4.2.1 on GitHub <https://github.com/ipython/ipykernel/milestones/4.2.1>`__
+
+- Fix default display name back to "Python X" instead of "pythonX"
+
+4.2.0
+*****
+
 `4.2 on GitHub <https://github.com/ipython/ipykernel/milestones/4.2>`_
 
 - Support sending a full message in initial opening of comms (metadata, buffers were not previously allowed)

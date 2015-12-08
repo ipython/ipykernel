@@ -14,6 +14,7 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.zmqshell import ZMQInteractiveShell
 
 from .socket import DummySocket
+from .iostream import OutStream
 
 #-----------------------------------------------------------------------------
 # Main kernel class
@@ -128,12 +129,10 @@ class InProcessKernel(IPythonKernel):
         return InProcessInteractiveShell
 
     def _stdout_default(self):
-        from ipykernel.iostream import OutStream
-        return OutStream(self.session, self.iopub_socket, u'stdout', pipe=False)
+        return OutStream(self.session, self.iopub_socket, u'stdout')
 
     def _stderr_default(self):
-        from ipykernel.iostream import OutStream
-        return OutStream(self.session, self.iopub_socket, u'stderr', pipe=False)
+        return OutStream(self.session, self.iopub_socket, u'stderr')
 
 #-----------------------------------------------------------------------------
 # Interactive shell subclass

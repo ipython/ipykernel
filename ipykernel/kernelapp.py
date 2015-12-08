@@ -33,6 +33,7 @@ from jupyter_client import write_connection_file
 from jupyter_client.connect import ConnectionFileMixin
 
 # local imports
+from .iostream import IOPubThread
 from .heartbeat import Heartbeat
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
@@ -231,11 +232,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
         self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
 
-        self.iopub_socket = context.socket(zmq.PUB)
-        self.iopub_socket.linger = 1000
-        self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
-        self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
-
         self.stdin_socket = context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
@@ -245,6 +241,19 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
         self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
+        
+        self.init_iopub(context)
+
+    def init_iopub(self, context):
+        self.iopub_socket = context.socket(zmq.PUB)
+        self.iopub_socket.linger = 1000
+        self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
+        self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
+        self.iopub_thread = IOPubThread(self.iopub_socket)
+        self.iopub_thread.start()
+        # wrap iopub socket API in background thread
+        self.iopub_socket = self.iopub_thread.background_socket
+        
 
     def init_heartbeat(self):
         """start the heart beating"""
@@ -298,8 +307,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """Redirect input streams and set a display hook."""
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
-            sys.stdout = outstream_factory(self.session, self.iopub_socket, u'stdout')
-            sys.stderr = outstream_factory(self.session, self.iopub_socket, u'stderr')
+            sys.stdout = outstream_factory(self.session, self.iopub_thread, u'stdout')
+            sys.stderr = outstream_factory(self.session, self.iopub_thread, u'stderr')
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             sys.displayhook = displayhook_factory(self.session, self.iopub_socket)

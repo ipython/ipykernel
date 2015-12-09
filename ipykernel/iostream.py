@@ -228,15 +228,26 @@ class OutStream(object):
         return self.pub_thread is None
 
     def _schedule_flush(self):
-        """schedule a flush in the IO thread"""
+        """schedule a flush in the IO thread
+        
+        call this on write, to indicate that flush should be called soon.
+        """
         with self._flush_lock:
-            if self._flush_timeout is None:
-                self._flush_timeout = self._io_loop.add_timeout(
-                    self._io_loop.time() + self.flush_interval,
-                    self._flush)
+            if self._flush_timeout is not None:
+                return
+            # non-None to avoid races while waiting for _schedule
+            self._flush_timeout = 'placeholder'
+        
+        # call_later has to be handed to the io thread with add_callback
+        def _schedule_in_thread():
+            self._flush_timeout = self._io_loop.call_later(self.flush_interval, self._flush)
+        self._io_loop.add_callback(_schedule_in_thread)
 
     def flush(self):
-        """trigger actual zmq send"""
+        """trigger actual zmq send
+        
+        send will happen in the background thread
+        """
         if self.pub_thread.thread.is_alive():
             self._io_loop.add_callback(self._flush)
             # wait for flush to actually get through:
@@ -247,6 +258,11 @@ class OutStream(object):
             self._flush()
     
     def _flush(self):
+        """This is where the actual send happens.
+        
+        _flush should generally be called in the IO thread,
+        unless the thread has been destroyed (e.g. forked subprocess).
+        """
         with self._flush_lock:
             self._flush_timeout = None
             data = self._flush_buffer()

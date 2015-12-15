@@ -36,7 +36,7 @@ def start_new_kernel(**kwargs):
 
     Integrates with our output capturing for tests.
     """
-    stdout = getattr(nose, 'iptest_stdstreams_fileno', open(os.devnull))
+    stdout = getattr(nose, 'iptest_stdstreams_fileno()', open(os.devnull))
     kwargs.update(dict(stdout=stdout, stderr=STDOUT))
     return manager.start_new_kernel(startup_timeout=STARTUP_TIMEOUT, **kwargs)
 

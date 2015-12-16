@@ -7,6 +7,7 @@
 import json
 from base64 import decodestring
 from datetime import datetime
+import numbers
 
 import nose.tools as nt
 
@@ -14,10 +15,16 @@ from .. import jsonutil
 from ..jsonutil import json_clean, encode_images
 from ipython_genutils.py3compat import unicode_to_str, str_to_bytes, iteritems
 
+class MyInt(object):
+    def __int__(self):
+        return 389
+numbers.Integral.register(MyInt)
 
-class Int(int):
-    def __str__(self):
-        return 'Int(%i)' % self
+class MyFloat(object):
+    def __float__(self):
+        return 3.14
+numbers.Real.register(MyFloat)
+
 
 def test():
     # list of input/expected output.  Use None for the expected output if it
@@ -37,8 +44,9 @@ def test():
              # More exotic objects
              ((x for x in range(3)), [0, 1, 2]),
              (iter([1, 2]), [1, 2]),
-             (Int(5), 5),
              (datetime(1991, 7, 3, 12, 00), "1991-07-03T12:00:00.000000"),
+             (MyFloat(), 3.14),
+             (MyInt(), 389)
              ]
     
     for val, jval in pairs:

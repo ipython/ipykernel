@@ -7,6 +7,7 @@ import math
 import re
 import types
 from datetime import datetime
+import numbers
 
 try:
     # base64.encodestring is deprecated in Python 3.x
@@ -122,19 +123,22 @@ def json_clean(obj):
     # containers that we need to convert into lists
     container_to_list = (tuple, set, types.GeneratorType)
 
-    if isinstance(obj, float):
+    # Since bools are a subtype of Integrals, which are a subtype of Reals,
+    # we have to check them in that order.
+
+    if isinstance(obj, bool):
+        return obj
+
+    if isinstance(obj, numbers.Integral):
+        # cast int to int, in case subclasses override __str__ (e.g. boost enum, #4598)
+        return int(obj)
+
+    if isinstance(obj, numbers.Real):
         # cast out-of-range floats to their reprs
         if math.isnan(obj) or math.isinf(obj):
             return repr(obj)
         return float(obj)
     
-    if isinstance(obj, int):
-        # cast int to int, in case subclasses override __str__ (e.g. boost enum, #4598)
-        if isinstance(obj, bool):
-            # bools are ints, but we don't want to cast them to 0,1
-            return obj
-        return int(obj)
-
     if isinstance(obj, atomic_ok):
         return obj
 

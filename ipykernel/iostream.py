@@ -120,6 +120,7 @@ class IOPubThread(object):
     def stop(self):
         """Stop the IOPub thread"""
         self.io_loop.add_callback(self.io_loop.stop)
+        self.thread.join()
     
     def close(self):
         self.socket.close()
@@ -197,6 +198,12 @@ class OutStream(object):
                 DeprecationWarning)
         self.encoding = 'UTF-8'
         self.session = session
+        if not isinstance(pub_thread, IOPubThread):
+            # Backward-compat: given socket, not thread. Wrap in a thread.
+            warnings.warn("OutStream should be created with IOPubThread, not %r" % pub_thread,
+                DeprecationWarning, stacklevel=2)
+            pub_thread = IOPubThread(pub_thread)
+            pub_thread.start()
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b'stream.' + py3compat.cast_bytes(name)

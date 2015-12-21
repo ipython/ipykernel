@@ -156,7 +156,8 @@ class IOPubThread(object):
             tracker = self._pipe_out.send_multipart([self._pipe_uuid] + msg, *args, **kwargs)
             try:
                 tracker.wait(1)
-            except:
+            except Exception as e:
+                print("Failed to send: %s" % e, file=sys.__stderr__)
                 pass
 
 

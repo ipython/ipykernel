@@ -14,7 +14,7 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.zmqshell import ZMQInteractiveShell
 
 from .socket import DummySocket
-from .iostream import OutStream
+from ..iostream import OutStream
 
 #-----------------------------------------------------------------------------
 # Main kernel class

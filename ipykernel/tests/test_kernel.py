@@ -66,10 +66,12 @@ def test_subprocess_print():
         np = 5
         code = '\n'.join([
             "from __future__ import print_function",
+            "import time",
             "import multiprocessing as mp",
             "pool = [mp.Process(target=print, args=('hello', i,)) for i in range(%i)]" % np,
             "for p in pool: p.start()",
-            "for p in pool: p.join()"
+            "for p in pool: p.join()",
+            "time.sleep(0.5),"
         ])
 
         expected = '\n'.join([

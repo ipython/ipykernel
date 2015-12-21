@@ -42,7 +42,7 @@ class IOPubThread(object):
     whose IO is always run in a thread.
     """
 
-    def __init__(self, socket, pipe=True):
+    def __init__(self, socket, pipe=False):
         self.socket = socket
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()

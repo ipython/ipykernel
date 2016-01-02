@@ -4,6 +4,15 @@ Changes in IPython kernel
 4.2
 ---
 
+4.2.2
+*****
+
+`4.2.2 on GitHub <https://github.com/ipython/ipykernel/milestones/4.2.2>`__
+
+- Don't show interactive debugging info when kernel crashes
+- Fix handling of numerical types in json_clean
+- Testing fixes for output capturing
+
 4.2.1
 *****
 

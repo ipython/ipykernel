@@ -9,12 +9,12 @@ import atexit
 import os
 import sys
 import signal
+import traceback
 
 import zmq
 from zmq.eventloop import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from IPython.core.ultratb import FormattedTB
 from IPython.core.application import (
     BaseIPythonApplication, base_flags, base_aliases, catch_config_error
 )
@@ -149,11 +149,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         help="""ONLY USED ON WINDOWS
         Interrupt this process when the parent is signaled.
         """)
-
+    
     def init_crash_handler(self):
-        # Install minimal exception handling
-        sys.excepthook = FormattedTB(mode='Verbose', color_scheme='NoColor',
-                                     ostream=sys.__stdout__)
+        sys.excepthook = self.excepthook
+    
+    def excepthook(self, etype, evalue, tb):
+        # write uncaught traceback to 'real' stderr, not zmq-forwarder
+        traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
 
     def init_poller(self):
         if sys.platform == 'win32':

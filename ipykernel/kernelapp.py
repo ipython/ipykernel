@@ -303,7 +303,32 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             sys.displayhook = displayhook_factory(self.session, self.iopub_socket)
+        
+        self.patch_io()
+    
+    def patch_io(self):
+        """Patch important libraries that can't handle sys.stdout forwarding"""
+        try:
+            import faulthandler
+        except ImportError:
+            pass
+        else:
+            faulthandler_enable = faulthandler.enable
+            faulthandler_register = faulthandler.register
+            # Warning: this is a monkeypatch of `faulthandler.enable`, watch for possible
+            # updates to the upstream API and update accordingly (up-to-date as of Python 3.5):
+            # https://docs.python.org/3/library/faulthandler.html#faulthandler.enable
 
+            # change default file to __stderr__ from forwarded stderr
+            def enable(file=sys.__stderr__, all_threads=True, **kwargs):
+                return faulthandler_enable(file=file, all_threads=all_threads, **kwargs)
+
+            def register(signum, file=sys.__stderr__, all_threads=True, chain=False, **kwargs):
+                return faulthandler_register(signum, file=file, all_threads=all_threads, chain=chain, **kwargs)
+
+            faulthandler.enable = enable
+            faulthandler.register = register
+    
     def init_signal(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 

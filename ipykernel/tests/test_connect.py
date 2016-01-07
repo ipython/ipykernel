@@ -52,10 +52,12 @@ def test_get_connection_info():
         connect.write_connection_file(cf, **sample_info)
         json_info = connect.get_connection_info(cf)
         info = connect.get_connection_info(cf, unpack=True)
-
+    
     nt.assert_equal(type(json_info), type(""))
-    nt.assert_equal(info, sample_info)
+    sub_info = {k:v for k,v in info.items() if k in sample_info}
+    nt.assert_equal(sub_info, sample_info)
 
     info2 = json.loads(json_info)
     info2['key'] = str_to_bytes(info2['key'])
-    nt.assert_equal(info2, sample_info)
+    sub_info2 = {k:v for k,v in info.items() if k in sample_info}
+    nt.assert_equal(sub_info2, sample_info)

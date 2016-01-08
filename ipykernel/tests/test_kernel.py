@@ -189,6 +189,20 @@ def test_save_history():
         nt.assert_in(u'a=1', content)
         nt.assert_in(u'b=u"abcþ"', content)
 
+
+@dec.skip_without('faulthandler')
+def test_smoke_faulthandler():
+    with kernel() as kc:
+        code = u'\n'.join([
+            'import faulthandler, signal',
+            'faulthandler.enable()',
+            'faulthandler.register(signal.SIGTERM)',
+        ])
+        _, reply = execute(code, kc=kc)
+        print(_)
+        nt.assert_equal(reply['status'], 'ok', reply.get('traceback', ''))
+
+
 def test_help_output():
     """ipython kernel --help-all works"""
     tt.help_all_output_test('kernel')

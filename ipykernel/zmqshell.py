@@ -467,14 +467,17 @@ class ZMQInteractiveShell(InteractiveShell):
     def get_parent(self):
         return self.parent_header
 
-    #-------------------------------------------------------------------------
-    # Things related to magics
-    #-------------------------------------------------------------------------
-
     def init_magics(self):
         super(ZMQInteractiveShell, self).init_magics()
         self.register_magics(KernelMagics)
         self.magics_manager.register_alias('ed', 'edit')
+
+    def init_virtualenv(self):
+        # Overridden not to do virtualenv detection, because it's probably
+        # not appropriate in a kernel. To use a kernel in a virtualenv, install
+        # it inside the virtualenv.
+        # http://ipython.readthedocs.org/en/latest/install/kernel_install.html
+        pass
 
 
 InteractiveShellABC.register(ZMQInteractiveShell)

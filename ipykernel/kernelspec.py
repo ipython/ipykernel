@@ -140,7 +140,7 @@ class InstallIPythonKernelSpecApp(Application):
     
     def start(self):
         import argparse
-        parser = argparse.ArgumentParser(
+        parser = argparse.ArgumentParser(prog=self.name,
             description="Install the IPython kernel spec.")
         parser.add_argument('--user', action='store_true',
             help="Install for the current user instead of system-wide")

@@ -50,6 +50,7 @@ class Kernel(SingletonConfigurable):
     shell_streams = List()
     control_stream = Instance(ZMQStream, allow_none=True)
     iopub_socket = Any()
+    iopub_thread = Any()
     stdin_socket = Any()
     log = Instance(logging.Logger, allow_none=True)
 

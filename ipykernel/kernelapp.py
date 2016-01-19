@@ -251,7 +251,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True)
         self.iopub_thread.start()
-        # wrap iopub socket API in background thread
+        # backward-compat: wrap iopub socket API in background thread
         self.iopub_socket = self.iopub_thread.background_socket
         
 
@@ -350,6 +350,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         kernel = kernel_factory(parent=self, session=self.session,
                                 shell_streams=[shell_stream, control_stream],
+                                iopub_thread=self.iopub_thread,
                                 iopub_socket=self.iopub_socket,
                                 stdin_socket=self.stdin_socket,
                                 log=self.log,

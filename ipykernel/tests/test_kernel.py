@@ -19,12 +19,12 @@ from .utils import (new_kernel, kernel, TIMEOUT, assemble_output, execute,
                     flush_channels, wait_for_idle)
 
 
-def _check_mp_mode(kc, expected=False, stream="stdout"):
+def _check_master(kc, expected=True, stream="stdout"):
     execute(kc=kc, code="import sys")
     flush_channels(kc)
-    msg_id, content = execute(kc=kc, code="print (sys.%s._check_mp_mode())" % stream)
+    msg_id, content = execute(kc=kc, code="print (sys.%s._is_master_process())" % stream)
     stdout, stderr = assemble_output(kc.iopub_channel)
-    nt.assert_equal(eval(stdout.strip()), expected)
+    nt.assert_equal(stdout.strip(), repr(expected))
 
 
 # printing tests
@@ -37,7 +37,7 @@ def test_simple_print():
         stdout, stderr = assemble_output(iopub)
         nt.assert_equal(stdout, 'hi\n')
         nt.assert_equal(stderr, '')
-        _check_mp_mode(kc, expected=False)
+        _check_master(kc, expected=True)
 
 
 def test_sys_path():
@@ -61,7 +61,7 @@ def test_subprocess_print():
     with new_kernel() as kc:
         iopub = kc.iopub_channel
 
-        _check_mp_mode(kc, expected=False)
+        _check_master(kc, expected=True)
         flush_channels(kc)
         np = 5
         code = '\n'.join([
@@ -84,8 +84,8 @@ def test_subprocess_print():
         for n in range(np):
             nt.assert_equal(stdout.count(str(n)), 1, stdout)
         nt.assert_equal(stderr, '')
-        _check_mp_mode(kc, expected=False)
-        _check_mp_mode(kc, expected=False, stream="stderr")
+        _check_master(kc, expected=True)
+        _check_master(kc, expected=True, stream="stderr")
 
 
 def test_subprocess_noprint():
@@ -106,8 +106,8 @@ def test_subprocess_noprint():
         nt.assert_equal(stdout, '')
         nt.assert_equal(stderr, '')
 
-        _check_mp_mode(kc, expected=False)
-        _check_mp_mode(kc, expected=False, stream="stderr")
+        _check_master(kc, expected=True)
+        _check_master(kc, expected=True, stream="stderr")
 
 
 @dec.knownfailureif(sys.platform == 'win32', "subprocess prints fail on Windows")
@@ -128,8 +128,8 @@ def test_subprocess_error():
         nt.assert_equal(stdout, '')
         nt.assert_true("ValueError" in stderr, stderr)
 
-        _check_mp_mode(kc, expected=False)
-        _check_mp_mode(kc, expected=False, stream="stderr")
+        _check_master(kc, expected=True)
+        _check_master(kc, expected=True, stream="stderr")
 
 # raw_input tests
 

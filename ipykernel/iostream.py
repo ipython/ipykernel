@@ -112,7 +112,6 @@ class IOPubThread(object):
                 # setup a new out pipe
                 self._setup_pipe_out()
             return CHILD
-
     
     def start(self):
         """Start the IOPub thread"""
@@ -230,13 +229,6 @@ class OutStream(object):
     def _is_master_process(self):
         return os.getpid() == self._master_pid
 
-    def _check_mp_mode(self):
-        """check for forks, and switch to zmq pipeline if necessary"""
-        if self._is_master_process():
-            return MASTER
-        else:
-            return CHILD
-
     def set_parent(self, parent):
         self.parent_header = extract_header(parent)
 
@@ -255,7 +247,9 @@ class OutStream(object):
         with self._flush_lock:
             if self._flush_timeout is not None:
                 return
-            # non-None to avoid races while waiting for _schedule
+            # None indicates there's no flush scheduled.
+            # Use a non-None placeholder to indicate that a flush is scheduled
+            # to avoid races while we wait for _schedule_in_thread below to fire in the io thread.
             self._flush_timeout = 'placeholder'
         
         # add_timeout has to be handed to the io thread with add_callback
@@ -321,7 +315,7 @@ class OutStream(object):
             if not isinstance(string, unicode_type):
                 string = string.decode(self.encoding, 'replace')
 
-            is_child = (self._check_mp_mode() == CHILD)
+            is_child = (not self._is_master_process())
             self._buffer.write(string)
             if is_child:
                 # newlines imply flush in subprocesses

@@ -49,8 +49,9 @@ class Kernel(SingletonConfigurable):
     profile_dir = Instance('IPython.core.profiledir.ProfileDir', allow_none=True)
     shell_streams = List()
     control_stream = Instance(ZMQStream, allow_none=True)
-    iopub_socket = Instance(zmq.Socket, allow_none=True)
-    stdin_socket = Instance(zmq.Socket, allow_none=True)
+    iopub_socket = Any()
+    iopub_thread = Any()
+    stdin_socket = Any()
     log = Instance(logging.Logger, allow_none=True)
 
     # identities:

@@ -14,6 +14,7 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.zmqshell import ZMQInteractiveShell
 
 from .socket import DummySocket
+from ..iostream import OutStream, BackgroundSocket, IOPubThread
 
 #-----------------------------------------------------------------------------
 # Main kernel class
@@ -49,13 +50,23 @@ class InProcessKernel(IPythonKernel):
     shell_class = Type(allow_none=True)
     shell_streams = List()
     control_stream = Any()
-    iopub_socket = Instance(DummySocket, ())
+    _underlying_iopub_socket = Instance(DummySocket, ())
+    iopub_thread = Instance(IOPubThread)
+    def _iopub_thread_default(self):
+        thread = IOPubThread(self._underlying_iopub_socket)
+        thread.start()
+        return thread
+    
+    iopub_socket = Instance(BackgroundSocket)
+    def _iopub_socket_default(self):
+        return self.iopub_thread.background_socket
+    
     stdin_socket = Instance(DummySocket, ())
 
     def __init__(self, **traits):
         super(InProcessKernel, self).__init__(**traits)
 
-        self.iopub_socket.on_trait_change(self._io_dispatch, 'message_sent')
+        self._underlying_iopub_socket.on_trait_change(self._io_dispatch, 'message_sent')
         self.shell.kernel = self
 
     def execute_request(self, stream, ident, parent):
@@ -128,12 +139,10 @@ class InProcessKernel(IPythonKernel):
         return InProcessInteractiveShell
 
     def _stdout_default(self):
-        from ipykernel.iostream import OutStream
-        return OutStream(self.session, self.iopub_socket, u'stdout', pipe=False)
+        return OutStream(self.session, self.iopub_thread, u'stdout')
 
     def _stderr_default(self):
-        from ipykernel.iostream import OutStream
-        return OutStream(self.session, self.iopub_socket, u'stderr', pipe=False)
+        return OutStream(self.session, self.iopub_thread, u'stderr')
 
 #-----------------------------------------------------------------------------
 # Interactive shell subclass

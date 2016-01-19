@@ -162,25 +162,36 @@ class IOPubThread(object):
 
 
 class BackgroundSocket(object):
-    """Wrapper around IOPub thread that provides zmq Socket API"""
+    """Wrapper around IOPub thread that provides zmq send[_multipart]"""
     io_thread = None
     
     def __init__(self, io_thread):
         self.io_thread = io_thread
     
     def __getattr__(self, attr):
-        return getattr(self.io_thread.socket, attr)
+        """Wrap socket attr access for backward-compatibility"""
+        if attr.startswith('__') and attr.endswith('__'):
+            # don't wrap magic methods
+            super(BackgroundSocket, self).__getattr__(attr)
+        if hasattr(self.io_thread.socket, attr):
+            warnings.warn("Accessing zmq Socket attribute %s on BackgroundSocket" % attr,
+                DeprecationWarning, stacklevel=2)
+            return getattr(self.io_thread.socket, attr)
+        super(BackgroundSocket, self).__getattr__(attr)
     
     def __setattr__(self, attr, value):
-        if attr == 'io_thread':
+        if attr == 'io_thread' or (attr.startswith('__' and attr.endswith('__'))):
             super(BackgroundSocket, self).__setattr__(attr, value)
         else:
+            warnings.warn("Setting zmq Socket attribute %s on BackgroundSocket" % attr,
+                DeprecationWarning, stacklevel=2)
             setattr(self.io_thread.socket, attr, value)
     
     def send(self, msg, *args, **kwargs):
         return self.send_multipart([msg], *args, **kwargs)
 
     def send_multipart(self, *args, **kwargs):
+        """Schedule send in IO thread"""
         return self.io_thread.send_multipart(*args, **kwargs)
 
 

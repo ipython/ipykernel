@@ -83,6 +83,7 @@ install_requires = setuptools_args['install_requires'] = [
     'ipython>=4.0.0',
     'traitlets',
     'jupyter_client',
+    'tornado>=4.0',
 ]
 
 extras_require = setuptools_args['extras_require'] = {

@@ -260,9 +260,7 @@ class OutStream(object):
         
         # add_timeout has to be handed to the io thread with add_callback
         def _schedule_in_thread():
-            # FIXME: call_later is a little nicer, if we can require tornado ≥ 4
-            self._flush_timeout = self._io_loop.add_timeout(
-                self._io_loop.time() + self.flush_interval, self._flush)
+            self._flush_timeout = self._io_loop.call_later(self.flush_interval, self._flush)
         self._io_loop.add_callback(_schedule_in_thread)
 
     def flush(self):

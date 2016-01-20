@@ -61,12 +61,12 @@ class InlineBackend(InlineBackendConfig):
         'savefig.dpi': 72,
         # 10pt still needs a little more room on the xlabel:
         'figure.subplot.bottom' : .125
-        }, 
+        },
         help="""Subset of matplotlib rcParams that should be different for the
         inline backend."""
     ).tag(config=True)
 
-    figure_formats = Set({'png'}, 
+    figure_formats = Set({'png'},
                           help="""A set of figure formats to enable: 'png',
                           'retina', 'jpeg', 'svg', 'pdf'.""").tag(config=True)
 
@@ -88,7 +88,7 @@ class InlineBackend(InlineBackendConfig):
         if new:
             self.figure_formats = {new}
 
-    print_figure_kwargs = Dict({'bbox_inches' : 'tight'}, 
+    print_figure_kwargs = Dict({'bbox_inches' : 'tight'},
         help="""Extra kwargs to be passed to fig.canvas.print_figure.
 
         Logical examples include: bbox_inches, quality (for jpeg figures), etc.
@@ -96,7 +96,7 @@ class InlineBackend(InlineBackendConfig):
     ).tag(config=True)
     _print_figure_kwargs_changed = _update_figure_formatters
 
-    close_figures = Bool(True, 
+    close_figures = Bool(True,
         help="""Close all figures at the end of each cell.
 
         When True, ensures that each cell starts with no active figures, but it

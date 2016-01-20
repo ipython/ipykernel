@@ -101,7 +101,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     flags = Dict(kernel_flags)
     classes = [IPythonKernel, ZMQInteractiveShell, ProfileDir, Session]
     # the kernel class, as an importstring
-    kernel_class = Type('ipykernel.ipkernel.IPythonKernel', 
+    kernel_class = Type('ipykernel.ipkernel.IPythonKernel',
                         klass='ipykernel.kernelbase.Kernel',
     help="""The Kernel subclass to be used.
 
@@ -142,11 +142,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         help="The importstring for the DisplayHook factory").tag(config=True)
 
     # polling
-    parent_handle = Integer(int(os.environ.get('JPY_PARENT_PID') or 0), 
+    parent_handle = Integer(int(os.environ.get('JPY_PARENT_PID') or 0),
         help="""kill this process if its parent dies.  On Windows, the argument
         specifies the HANDLE of the parent process, otherwise it is simply boolean.
         """).tag(config=True)
-    interrupt = Integer(int(os.environ.get('JPY_INTERRUPT_EVENT') or 0), 
+    interrupt = Integer(int(os.environ.get('JPY_INTERRUPT_EVENT') or 0),
         help="""ONLY USED ON WINDOWS
         Interrupt this process when the parent is signaled.
         """).tag(config=True)

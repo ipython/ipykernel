@@ -5,6 +5,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from __future__ import print_function
+import atexit
 import os
 import threading
 import sys
@@ -116,9 +117,14 @@ class IOPubThread(object):
     def start(self):
         """Start the IOPub thread"""
         self.thread.start()
+        # make sure we don't prevent process exit
+        # I'm not sure why setting daemon=True above isn't enough, but it doesn't appear to be.
+        atexit.register(self.stop)
     
     def stop(self):
         """Stop the IOPub thread"""
+        if not self.thread.is_alive():
+            return
         self.io_loop.add_callback(self.io_loop.stop)
         self.thread.join()
     

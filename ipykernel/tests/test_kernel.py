@@ -7,6 +7,7 @@
 import io
 import os.path
 import sys
+import time
 
 import nose.tools as nt
 
@@ -242,3 +243,19 @@ def test_complete():
         nt.assert_greater(len(matches), 0)
         for match in matches:
             nt.assert_equal(match[:2], 'a.')
+
+
+def test_shutdown():
+    """Kernel exits after polite shutdown_request"""
+    with new_kernel() as kc:
+        km = kc.parent
+        execute(u'a = 1', kc=kc)
+        wait_for_idle(kc)
+        kc.shutdown()
+        for i in range(100): # 10s timeout
+            if km.is_alive():
+                time.sleep(.1)
+            else:
+                break
+        nt.assert_false(km.is_alive())
+

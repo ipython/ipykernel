@@ -124,10 +124,11 @@ class IPythonKernel(KernelBase):
     def init_metadata(self, parent):
         """Initialize metadata.
         
-        Run at the beginning of request handlers.
+        Run at the beginning of each execution request.
         """
         md = super(IPythonKernel, self).init_metadata(parent)
-        # FIXME: remove ipyparallel-specific code
+        # FIXME: remove deprecated ipyparallel-specific code
+        # This is required for ipyparallel < 5.0
         md.update({
             'dependencies_met' : True,
             'engine' : self.ident,
@@ -137,9 +138,10 @@ class IPythonKernel(KernelBase):
     def finish_metadata(self, parent, metadata, reply_content):
         """Finish populating metadata.
         
-        Run after completing a request handler.
+        Run after completing an execution request.
         """
-        # FIXME: remove ipyparallel-specific code:
+        # FIXME: remove deprecated ipyparallel-specific code
+        # This is required by ipyparallel < 5.0
         metadata['status'] = reply_content['status']
         if reply_content['status'] == 'error' and reply_content['ename'] == 'UnmetDependency':
                 metadata['dependencies_met'] = False

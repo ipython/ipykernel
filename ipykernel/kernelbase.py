@@ -348,7 +348,7 @@ class Kernel(SingletonConfigurable):
     def init_metadata(self, parent):
         """Initialize metadata.
         
-        Run at the beginning of request handlers.
+        Run at the beginning of execution requests.
         """
         return {
             'started': datetime.now(),
@@ -357,7 +357,7 @@ class Kernel(SingletonConfigurable):
     def finish_metadata(self, parent, metadata, reply_content):
         """Finish populating metadata.
         
-        Run after completing a request handler.
+        Run after completing an execution request.
         """
         return metadata
 

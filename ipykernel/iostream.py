@@ -48,7 +48,6 @@ class IOPubThread(object):
         self.socket = socket
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
-        self._pipe_pid = os.getpid()
         self._pipe_flag = pipe
         self.io_loop = IOLoop()
         if pipe:
@@ -94,24 +93,19 @@ class IOPubThread(object):
     def _setup_pipe_out(self):
         # must be new context after fork
         ctx = zmq.Context()
-        self._pipe_pid = os.getpid()
-        self._pipe_out = ctx.socket(zmq.PUSH)
-        self._pipe_out.connect("tcp://127.0.0.1:%i" % self._pipe_port)
+        pipe_out = ctx.socket(zmq.PUSH)
+        pipe_out.linger = 3000 # 3s timeout for pipe_out sends before discarding the message
+        pipe_out.connect("tcp://127.0.0.1:%i" % self._pipe_port)
+        return ctx, pipe_out
 
     def _is_master_process(self):
         return os.getpid() == self._master_pid
-
-    def _have_pipe_out(self):
-        return os.getpid() == self._pipe_pid
 
     def _check_mp_mode(self):
         """check for forks, and switch to zmq pipeline if necessary"""
         if not self._pipe_flag or self._is_master_process():
             return MASTER
         else:
-            if not self._have_pipe_out():
-                # setup a new out pipe
-                self._setup_pipe_out()
             return CHILD
     
     def start(self):
@@ -156,14 +150,12 @@ class IOPubThread(object):
             self.socket.send_multipart(msg, *args, **kwargs)
         else:
             # we are a child, pipe to master
-            kwargs['copy'] = False
-            kwargs['track'] = True
-            tracker = self._pipe_out.send_multipart([self._pipe_uuid] + msg, *args, **kwargs)
-            try:
-                tracker.wait(1)
-            except Exception as e:
-                print("Failed to send: %s" % e, file=sys.__stderr__)
-                pass
+            # new context/socket for every pipe-out
+            # since forks don't teardown politely, use ctx.term to ensure send has completed
+            ctx, pipe_out = self._setup_pipe_out()
+            pipe_out.send_multipart([self._pipe_uuid] + msg, *args, **kwargs)
+            pipe_out.close()
+            ctx.term()
 
 
 class BackgroundSocket(object):

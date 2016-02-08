@@ -112,25 +112,29 @@ class Kernel(SingletonConfigurable):
     # Track execution count here. For IPython, we override this to use the
     # execution count we store in the shell.
     execution_count = 0
-
+    
+    msg_types = [
+        'execute_request', 'complete_request',
+        'inspect_request', 'history_request',
+        'comm_info_request', 'kernel_info_request',
+        'connect_request', 'shutdown_request',
+        'is_complete_request',
+        # deprecated:
+        'apply_request',
+    ]
+    # add deprecated ipyparallel control messages
+    control_msg_types = msg_types + ['clear_request', 'abort_request']
 
     def __init__(self, **kwargs):
         super(Kernel, self).__init__(**kwargs)
 
         # Build dict of handlers for message types
-        msg_types = [ 'execute_request', 'complete_request',
-                      'inspect_request', 'history_request',
-                      'comm_info_request', 'kernel_info_request',
-                      'connect_request', 'shutdown_request',
-                      'apply_request', 'is_complete_request',
-                    ]
         self.shell_handlers = {}
-        for msg_type in msg_types:
+        for msg_type in self.msg_types:
             self.shell_handlers[msg_type] = getattr(self, msg_type)
 
-        control_msg_types = msg_types + [ 'clear_request', 'abort_request' ]
         self.control_handlers = {}
-        for msg_type in control_msg_types:
+        for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
 
@@ -165,6 +169,25 @@ class Kernel(SingletonConfigurable):
         sys.stderr.flush()
         self._publish_status(u'idle')
 
+    def should_handle(self, stream, msg, idents):
+        """Check whether a shell-channel message should be handled
+        
+        Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
+        """
+        msg_id = msg['header']['msg_id']
+        if msg_id in self.aborted:
+            msg_type = msg['header']['msg_type']
+            # is it safe to assume a msg_id will not be resubmitted?
+            self.aborted.remove(msg_id)
+            reply_type = msg_type.split('_')[0] + '_reply'
+            status = {'status' : 'aborted'}
+            md = {'engine' : self.ident}
+            md.update(status)
+            self.session.send(stream, reply_type, metadata=md,
+                        content=status, parent=msg, ident=idents)
+            return False
+        return True
+
     def dispatch_shell(self, stream, msg):
         """dispatch shell requests"""
         # flush control requests first
@@ -192,15 +215,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug('\n*** MESSAGE TYPE:%s***', msg_type)
         self.log.debug('   Content: %s\n   --->\n   ', msg['content'])
 
-        if msg_id in self.aborted:
-            self.aborted.remove(msg_id)
-            # is it safe to assume a msg_id will not be resubmitted?
-            reply_type = msg_type.split('_')[0] + '_reply'
-            status = {'status' : 'aborted'}
-            md = {'engine' : self.ident}
-            md.update(status)
-            self.session.send(stream, reply_type, metadata=md,
-                        content=status, parent=msg, ident=idents)
+        if not self.should_handle(stream, msg, idents):
             return
 
         handler = self.shell_handlers.get(msg_type, None)
@@ -289,17 +304,6 @@ class Kernel(SingletonConfigurable):
     # Kernel request handlers
     #---------------------------------------------------------------------------
 
-    def _make_metadata(self, other=None):
-        """init metadata dict, for execute/apply_reply"""
-        new_md = {
-            'dependencies_met' : True,
-            'engine' : self.ident,
-            'started': datetime.now(),
-        }
-        if other:
-            new_md.update(other)
-        return new_md
-
     def _publish_execute_input(self, code, parent, execution_count):
         """Publish the code request on the iopub stream."""
 
@@ -341,6 +345,22 @@ class Kernel(SingletonConfigurable):
         """
         return self.session.send(stream, msg_or_type, content, self._parent_header,
                                  ident, buffers, track, header, metadata)
+    
+    def init_metadata(self, parent):
+        """Initialize metadata.
+        
+        Run at the beginning of execution requests.
+        """
+        return {
+            'started': datetime.now(),
+        }
+    
+    def finish_metadata(self, parent, metadata, reply_content):
+        """Finish populating metadata.
+        
+        Run after completing an execution request.
+        """
+        return metadata
 
     def execute_request(self, stream, ident, parent):
         """handle an execute_request"""
@@ -359,7 +379,7 @@ class Kernel(SingletonConfigurable):
 
         stop_on_error = content.get('stop_on_error', True)
 
-        md = self._make_metadata(parent['metadata'])
+        metadata = self.init_metadata(parent)
 
         # Re-broadcast our input for the benefit of listening clients, and
         # start computing output
@@ -381,14 +401,10 @@ class Kernel(SingletonConfigurable):
 
         # Send the reply.
         reply_content = json_clean(reply_content)
-
-        md['status'] = reply_content['status']
-        if reply_content['status'] == 'error' and \
-                        reply_content['ename'] == 'UnmetDependency':
-                md['dependencies_met'] = False
+        metadata = self.finish_metadata(parent, metadata, reply_content)
 
         reply_msg = self.session.send(stream, u'execute_reply',
-                                      reply_content, parent, metadata=md,
+                                      reply_content, parent, metadata=metadata,
                                       ident=ident)
 
         self.log.debug("%s", reply_msg)
@@ -533,10 +549,11 @@ class Kernel(SingletonConfigurable):
                 }
 
     #---------------------------------------------------------------------------
-    # Engine methods
+    # Engine methods (DEPRECATED)
     #---------------------------------------------------------------------------
 
     def apply_request(self, stream, ident, parent):
+        self.log.warn("""apply_request is deprecated in kernel_base, moving to ipyparallel.""")
         try:
             content = parent[u'content']
             bufs = parent[u'buffers']
@@ -545,31 +562,30 @@ class Kernel(SingletonConfigurable):
             self.log.error("Got bad msg: %s", parent, exc_info=True)
             return
 
-        md = self._make_metadata(parent['metadata'])
+        md = self.init_metadata(parent)
 
         reply_content, result_buf = self.do_apply(content, bufs, msg_id, md)
-
-        # put 'ok'/'error' status in header, for scheduler introspection:
-        md['status'] = reply_content['status']
-
+        
         # flush i/o
         sys.stdout.flush()
         sys.stderr.flush()
+
+        md = self.finish_metadata(parent, md, reply_content)
 
         self.session.send(stream, u'apply_reply', reply_content,
                     parent=parent, ident=ident,buffers=result_buf, metadata=md)
 
     def do_apply(self, content, bufs, msg_id, reply_metadata):
-        """Override in subclasses to support the IPython parallel framework.
-        """
+        """DEPRECATED"""
         raise NotImplementedError
 
     #---------------------------------------------------------------------------
-    # Control messages
+    # Control messages (DEPRECATED)
     #---------------------------------------------------------------------------
 
     def abort_request(self, stream, ident, parent):
         """abort a specific msg by id"""
+        self.log.warn("abort_request is deprecated in kernel_base. It os only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
         if isinstance(msg_ids, string_types):
             msg_ids = [msg_ids]
@@ -585,15 +601,13 @@ class Kernel(SingletonConfigurable):
 
     def clear_request(self, stream, idents, parent):
         """Clear our namespace."""
+        self.log.warn("clear_request is deprecated in kernel_base. It os only part of IPython parallel")
         content = self.do_clear()
         self.session.send(stream, 'clear_reply', ident=idents, parent=parent,
                 content = content)
 
     def do_clear(self):
-        """Override in subclasses to clear the namespace
-
-        This is only required for IPython.parallel.
-        """
+        """DEPRECATED"""
         raise NotImplementedError
 
     #---------------------------------------------------------------------------
@@ -602,10 +616,7 @@ class Kernel(SingletonConfigurable):
 
     def _topic(self, topic):
         """prefixed topic for IOPub messages"""
-        if self.int_id >= 0:
-            base = "engine.%i" % self.int_id
-        else:
-            base = "kernel.%s" % self.ident
+        base = "kernel.%s" % self.ident
 
         return py3compat.cast_bytes("%s.%s" % (base, topic))
 

@@ -2,6 +2,9 @@ from logging import INFO, DEBUG, WARN, ERROR, FATAL
 
 from zmq.log.handlers import PUBHandler
 
+import warnings
+warnings.warn("ipykernel.log is deprecated. It has moved to ipyparallel.engine.log", DeprecationWarning)
+
 class EnginePUBHandler(PUBHandler):
     """A simple PUBHandler subclass that sets root_topic"""
     engine=None

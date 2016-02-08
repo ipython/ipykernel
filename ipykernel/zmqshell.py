@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import sys
 import time
+import warnings
 
 from zmq.eventloop import ioloop
 
@@ -45,7 +46,6 @@ from ipython_genutils.py3compat import unicode_type
 from traitlets import Instance, Type, Dict, CBool, CBytes, Any
 from IPython.utils.warn import error
 from ipykernel.displayhook import ZMQShellDisplayHook
-from ipykernel.datapub import ZMQDataPublisher
 from jupyter_client.session import extract_header
 from jupyter_client.session import Session
 
@@ -345,7 +345,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
-    data_pub_class = Type(ZMQDataPublisher)
+    data_pub_class = Type('ipykernel.datapub.ZMQDataPublisher')
     kernel = Any()
     parent_header = Any()
 
@@ -398,6 +398,25 @@ class ZMQInteractiveShell(InteractiveShell):
     def init_hooks(self):
         super(ZMQInteractiveShell, self).init_hooks()
         self.set_hook('show_in_pager', page.as_hook(payloadpage.page), 99)
+    
+    def init_data_pub(self):
+        """Delay datapub init until request, for deprecation warnings"""
+        pass
+    
+    @property
+    def data_pub(self):
+        if not hasattr(self, '_data_pub'):
+            warnings.warn("InteractiveShell.data_pub is deprecated outside IPython parallel.", 
+                DeprecationWarning, stacklevel=2)
+            
+            self._data_pub = self.data_pub_class(parent=self)
+            self._data_pub.session = self.display_pub.session
+            self._data_pub.pub_socket = self.display_pub.pub_socket
+        return self._data_pub
+    
+    @data_pub.setter
+    def data_pub(self, pub):
+        self._data_pub = pub
 
     def ask_exit(self):
         """Engage the exit actions."""
@@ -454,7 +473,8 @@ class ZMQInteractiveShell(InteractiveShell):
         self.parent_header = parent
         self.displayhook.set_parent(parent)
         self.display_pub.set_parent(parent)
-        self.data_pub.set_parent(parent)
+        if hasattr(self, '_data_pub'):
+            self.data_pub.set_parent(parent)
         try:
             sys.stdout.set_parent(parent)
         except AttributeError:

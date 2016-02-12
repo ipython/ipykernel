@@ -75,10 +75,6 @@ def test_subprocess_print():
             "time.sleep(0.5),"
         ])
 
-        expected = '\n'.join([
-            "hello %s" % i for i in range(np)
-        ]) + '\n'
-
         msg_id, content = execute(kc=kc, code=code)
         stdout, stderr = assemble_output(iopub)
         nt.assert_equal(stdout.count("hello"), np, stdout)

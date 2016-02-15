@@ -33,7 +33,7 @@ from IPython.core.error import UsageError
 from IPython.core.magics import MacroToEdit, CodeMagics
 from IPython.core.magic import magics_class, line_magic, Magics
 from IPython.core import payloadpage
-from IPython.core.usage import default_gui_banner
+from IPython.core.usage import default_banner
 from IPython.display import display, Javascript
 from ipykernel import (
     get_connection_file, get_connection_info, connect_qtconsole
@@ -350,7 +350,7 @@ class ZMQInteractiveShell(InteractiveShell):
     parent_header = Any()
 
     def _banner1_default(self):
-        return default_gui_banner
+        return default_banner
 
     # Override the traitlet in the parent class, because there's no point using
     # readline for the kernel. Can be removed when the readline code is moved

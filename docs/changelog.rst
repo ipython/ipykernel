@@ -12,6 +12,10 @@ Changes in IPython kernel
 - Publish all IO in a thread, via :class:`IOPubThread`.
   This solves the problem of requiring :meth:`sys.stdout.flush` to be called in the notebook to produce output promptly during long-running cells.
 - Remove refrences to outdated IPython guiref in kernel banner.
+- Deprecate some vestiges of the Big Split:
+  - :func:`ipykernel.find_connection_file` is deprecated. Use :func:`jupyter_client.find_connection_file` instead.
+  - Various pieces of code specific to IPython parallel is deprecated in ipykernel
+    and moved to ipyparallel.
 
 
 4.2

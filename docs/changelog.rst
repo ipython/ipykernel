@@ -14,8 +14,8 @@ Changes in IPython kernel
 - Remove refrences to outdated IPython guiref in kernel banner.
 - Deprecate some vestiges of the Big Split:
   - :func:`ipykernel.find_connection_file` is deprecated. Use :func:`jupyter_client.find_connection_file` instead.
-  - Various pieces of code specific to IPython parallel is deprecated in ipykernel
-    and moved to ipyparallel.
+  - Various pieces of code specific to IPython parallel are deprecated in ipykernel
+  and moved to ipyparallel.
 
 
 4.2

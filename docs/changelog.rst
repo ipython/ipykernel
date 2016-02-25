@@ -1,6 +1,19 @@
 Changes in IPython kernel
 =========================
 
+4.3
+---
+
+4.3.0
+*****
+
+`4.3.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.3>`__
+
+- Publish all IO in a thread, via :class:`IOPubThread`.
+  This solves the problem of requiring :meth:`sys.stdout.flush` to be called in the notebook to produce output promptly during long-running cells.
+- Remove refrences to outdated IPython guiref in kernel banner.
+
+
 4.2
 ---
 

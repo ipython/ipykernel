@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import json
 import sys
 from subprocess import Popen, PIPE
+import warnings
 
 from IPython.core.profiledir import ProfileDir
 from IPython.paths import get_ipython_dir
@@ -37,18 +38,9 @@ def get_connection_file(app=None):
 
 
 def find_connection_file(filename='kernel-*.json', profile=None):
-    """find a connection file, and return its absolute path.
-
-    The current working directory and the profile's security
-    directory will be searched for the file if it is not given by
-    absolute path.
-
-    If profile is unspecified, then the current running application's
-    profile will be used, or 'default', if not run from IPython.
-
-    If the argument does not match an existing file, it will be interpreted as a
-    fileglob, and the matching file in the profile's security dir with
-    the latest access time will be used.
+    """DEPRECATED: find a connection file, and return its absolute path.
+    
+    THIS FUNCION IS DEPRECATED. Use juptyer_client.find_connection_file instead.
 
     Parameters
     ----------
@@ -62,6 +54,10 @@ def find_connection_file(filename='kernel-*.json', profile=None):
     -------
     str : The absolute path of the connection file.
     """
+    
+    import warnings
+    warnings.warn("""ipykernel.find_connection_file is deprecated, use jupyter_client.find_connection_file""",
+        DeprecationWarning, stacklevel=2)
     from IPython.core.application import BaseIPythonApplication as IPApp
     try:
         # quick check for absolute path, before going through logic
@@ -85,6 +81,28 @@ def find_connection_file(filename='kernel-*.json', profile=None):
     return jupyter_client.find_connection_file(filename, path=['.', security_dir])
 
 
+def _find_connection_file(connection_file, profile=None):
+    """Return the absolute path for a connection file
+    
+    - If nothing specified, return current Kernel's connection file
+    - If profile specified, show deprecation warning about finding connection files in profiles
+    - Otherwise, call jupyter_client.find_connection_file
+    """
+    if connection_file is None:
+        # get connection file from current kernel
+        return get_connection_file()
+    else:
+        # connection file specified, allow shortnames:
+        if profile is not None:
+            warnings.warn(
+                "Finding connection file by profile is deprecated.",
+                DeprecationWarning, stacklevel=3,
+            )
+            return find_connection_file(connection_file, profile=profile)
+        else:
+            return jupyter_client.find_connection_file(connection_file)
+
+
 def get_connection_info(connection_file=None, unpack=False, profile=None):
     """Return the connection information for the current Kernel.
 
@@ -100,22 +118,14 @@ def get_connection_info(connection_file=None, unpack=False, profile=None):
     unpack : bool [default: False]
         if True, return the unpacked dict, otherwise just the string contents
         of the file.
-    profile : str [optional]
-        The name of the profile to use when searching for the connection file,
-        if different from the current IPython session or 'default'.
-
+    profile : DEPRECATED
 
     Returns
     -------
     The connection dictionary of the current kernel, as string or dict,
     depending on `unpack`.
     """
-    if connection_file is None:
-        # get connection file from current kernel
-        cf = get_connection_file()
-    else:
-        # connection file specified, allow shortnames:
-        cf = find_connection_file(connection_file, profile=profile)
+    cf = _find_connection_file(connection_file, profile)
 
     with open(cf) as f:
         info = f.read()
@@ -144,10 +154,7 @@ def connect_qtconsole(connection_file=None, argv=None, profile=None):
         IPython Kernel will be used, which is only allowed from inside a kernel.
     argv : list [optional]
         Any extra args to be passed to the console.
-    profile : str [optional]
-        The name of the profile to use when searching for the connection file,
-        if different from the current IPython session or 'default'.
-
+    profile : DEPRECATED
 
     Returns
     -------
@@ -155,11 +162,7 @@ def connect_qtconsole(connection_file=None, argv=None, profile=None):
     """
     argv = [] if argv is None else argv
 
-    if connection_file is None:
-        # get connection file from current kernel
-        cf = get_connection_file()
-    else:
-        cf = find_connection_file(connection_file, profile=profile)
+    cf = _find_connection_file(connection_file, profile)
 
     cmd = ';'.join([
         "from IPython.qt.console import qtconsoleapp",

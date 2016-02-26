@@ -4,6 +4,11 @@ Changes in IPython kernel
 4.3
 ---
 
+4.3.1
+*****
+
+- Fix Windows Python 3.5 incompatibility caused by faulthandler patch in 4.3
+
 4.3.0
 *****
 
@@ -12,6 +17,8 @@ Changes in IPython kernel
 - Publish all IO in a thread, via :class:`IOPubThread`.
   This solves the problem of requiring :meth:`sys.stdout.flush` to be called in the notebook to produce output promptly during long-running cells.
 - Remove refrences to outdated IPython guiref in kernel banner.
+- Patch faulthandler to use ``sys.__stderr__`` instead of forwarded ``sys.stderr``,
+  which has no fileno when forwarded.
 - Deprecate some vestiges of the Big Split:
   - :func:`ipykernel.find_connection_file` is deprecated. Use :func:`jupyter_client.find_connection_file` instead.
   - Various pieces of code specific to IPython parallel are deprecated in ipykernel

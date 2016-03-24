@@ -64,8 +64,9 @@ class ZMQDisplayPublisher(DisplayPublisher):
     parent_header = Dict({})
     topic = CBytes(b'display_data')
 
-    # An attribute in order to ensure the correct output message
-    # is used. See ipykernel Issue #113 for a discussion.
+    # threadlocal:
+    # An attribute used to ensure the correct output message
+    # is processed. See ipykernel Issue #113 for a discussion.
     threadlocal = Any()
 
     def set_parent(self, parent):
@@ -82,8 +83,9 @@ class ZMQDisplayPublisher(DisplayPublisher):
         """ Initialises the threadlocal attribute and
             gives it a 'hooks' attribute.
         """
-        self.threadlocal = local()
-        self.threadlocal.hooks = []
+        loc = local()
+        loc.hooks = []
+        return loc
 
     def publish(self, data, metadata=None, source=None):
         self._flush_streams()

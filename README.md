@@ -12,7 +12,7 @@ After that, all normal `ipython` commands will use this newly-installed version 
 
 ## Running tests
 
-Ensure you have `nosetests` installed
+Ensure you have `nosetests` installed with
 
 ```bash
 pip install nose
@@ -26,7 +26,7 @@ nosetests ipykernel
 
 ## Running tests with coverage
 
-Follow the instructions from `Running tests`, then ensure you have the `coverage` module installed
+Follow the instructions from `Running tests`. Ensure you have the `coverage` module installed with
 
 ```bash
 pip install coverage

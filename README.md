@@ -9,3 +9,31 @@ This package provides the IPython kernel for Jupyter.
 3. `pip install -e .`
 
 After that, all normal `ipython` commands will use this newly-installed version of the kernel.
+
+## Running tests
+
+Ensure you have `nosetests` installed
+
+```bash
+pip install nose
+```
+
+and then from the root directory
+
+```bash
+nosetests ipykernel
+```
+
+## Running tests with coverage
+
+Follow the instructions from `Running tests`, then ensure you have the `coverage` module installed
+
+```bash
+pip install coverage
+```
+
+and then from the root directory
+
+```bash
+nosetests --with-coverage --cover-package ipykernel ipykernel
+```

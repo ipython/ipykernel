@@ -64,10 +64,10 @@ class ZMQDisplayPublisher(DisplayPublisher):
     parent_header = Dict({})
     topic = CBytes(b'display_data')
 
-    # threadlocal:
+    # thread_local:
     # An attribute used to ensure the correct output message
     # is processed. See ipykernel Issue #113 for a discussion.
-    threadlocal = Any()
+    thread_local = Any()
 
     def set_parent(self, parent):
         """Set the parent for outbound messages."""
@@ -78,7 +78,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         sys.stdout.flush()
         sys.stderr.flush()
 
-    @default('threadlocal')
+    @default('thread_local')
     def _threadlocal_default(self):
         """ Initialises the threadlocal attribute and
             gives it a 'hooks' attribute.
@@ -107,8 +107,8 @@ class ZMQDisplayPublisher(DisplayPublisher):
         # Each transform either returns a new
         # message or None. If None is returned,
         # the message has been 'used' and we return.
-        for hook in self.threadlocal.hooks:
-            msg = hook.transform(msg)
+        for hook in self.thread_local.hooks:
+            msg = hook(msg)
             if msg is None:
                 return
 
@@ -125,8 +125,25 @@ class ZMQDisplayPublisher(DisplayPublisher):
         )
 
     def register_hook(self, hook):
-        """ Registers a hook with the thread-local storage """
-        self.threadlocal.hooks.append(hook)
+        """
+        Registers a hook with the thread-local storage.
+
+        Parameters
+        ----------
+        hook : IPython.core.displayhook.DisplayHook
+               An instance of DisplayHook.
+
+        Returns
+        -------
+        None
+
+        The DisplayHook objects must return a message from
+        the __call__ method if they still require the
+        `session.send` method to be called after tranformation.
+        Returning `None` will halt that execution path, and
+        session.send will not be called.
+        """
+        self.thread_local.hooks.append(hook)
 
 
 @magics_class

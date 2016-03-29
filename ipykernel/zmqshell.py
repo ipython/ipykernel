@@ -161,16 +161,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
                found.
         """
 
-        index = -1
-        for idx, hk in enumerate(self.thread_local.hooks):
-            if hook == hk:
-                index = idx
-
-        if index >= 0:
-            self.thread_local.hooks.remove(index)
+        try:
+            self.thread_local.hooks.remove(hook)
             return True
-
-        return False
+        except ValueError:
+            return False
 
 
 @magics_class

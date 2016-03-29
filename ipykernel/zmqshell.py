@@ -66,7 +66,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
     # thread_local:
     # An attribute used to ensure the correct output message
-    # is processed. See ipykernel Issue #113 for a discussion.
+    # is processed. See ipykernel Issue 113 for a discussion.
     thread_local = Any()
 
     def set_parent(self, parent):
@@ -143,7 +143,34 @@ class ZMQDisplayPublisher(DisplayPublisher):
         Returning `None` will halt that execution path, and
         session.send will not be called.
         """
+
         self.thread_local.hooks.append(hook)
+
+    def unregister_hook(self, hook):
+        """
+        Un-registers a hook with the thread-local storage.
+
+        Parameters
+        ----------
+        hook: IPython.code.displayhook.DisplayHook
+              An instance of DisplayHook
+
+        Returns
+        -------
+        bool - `True` if the hook was removed, `False` if it wasn't
+               found.
+        """
+
+        index = -1
+        for idx, hk in enumerate(self.thread_local.hooks):
+            if hook == hk:
+                index = idx
+
+        if index >= 0:
+            self.thread_local.hooks.remove(index)
+            return True
+
+        return False
 
 
 @magics_class

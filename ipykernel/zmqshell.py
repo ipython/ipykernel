@@ -131,12 +131,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
         Parameters
         ----------
-        hook : IPython.core.displayhook.DisplayHook
-               An instance of DisplayHook.
+        hook : Any callable object
 
         Returns
         -------
-        None
+        Either a publishable message, or `None`.
 
         The DisplayHook objects must return a message from
         the __call__ method if they still require the
@@ -152,8 +151,8 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
         Parameters
         ----------
-        hook: IPython.code.displayhook.DisplayHook
-              An instance of DisplayHook
+        hook: Any callable object which has previously been
+              registered as a hook.
 
         Returns
         -------

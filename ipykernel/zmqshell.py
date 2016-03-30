@@ -80,7 +80,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         sys.stderr.flush()
 
     @default('thread_local')
-    def _threadlocal_default(self):
+    def _thread_local_default(self):
         """ Initialises the threadlocal attribute and
             gives it a 'hooks' attribute.
         """
@@ -144,7 +144,6 @@ class ZMQDisplayPublisher(DisplayPublisher):
         Returning `None` will halt that execution path, and
         session.send will not be called.
         """
-
         self.thread_local.hooks.append(hook)
 
     def unregister_hook(self, hook):
@@ -161,7 +160,6 @@ class ZMQDisplayPublisher(DisplayPublisher):
         bool - `True` if the hook was removed, `False` if it wasn't
                found.
         """
-
         try:
             self.thread_local.hooks.remove(hook)
             return True
@@ -259,7 +257,7 @@ class KernelMagics(Magics):
         Note that %edit is also available through the alias %ed.
         """
 
-        opts,args = self.parse_options(parameter_s,'prn:')
+        opts,args = self.parse_options(parameter_s, 'prn:')
 
         try:
             filename, lineno, _ = CodeMagics._find_edit_target(self.shell, args, opts, last_call)

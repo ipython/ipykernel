@@ -13,7 +13,7 @@ from ipykernel.zmqshell import ZMQDisplayPublisher
 from jupyter_client.session import Session
 
 
-class NoReturnDisplayHook:
+class NoReturnDisplayHook(object):
     """
     A dummy DisplayHook which allows us to monitor
     the number of times an object is called, but which

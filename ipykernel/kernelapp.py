@@ -377,8 +377,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             # replace error-sending traceback with stderr
             def print_tb(etype, evalue, stb):
                 print ("GUI event loop or pylab initialization failed",
-                       file=io.stderr)
-                print (shell.InteractiveTB.stb2text(stb), file=io.stderr)
+                       file=sys.stderr)
+                print (shell.InteractiveTB.stb2text(stb), file=sys.stderr)
             shell._showtraceback = print_tb
             InteractiveShellApp.init_gui_pylab(self)
         finally:

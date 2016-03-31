@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """A ZMQ-based subclass of InteractiveShell.
 
 This code is meant to ease the refactoring of the base InteractiveShell into
@@ -20,6 +21,7 @@ import os
 import sys
 import time
 import warnings
+from threading import local
 
 from zmq.eventloop import ioloop
 
@@ -43,7 +45,9 @@ from ipykernel.jsonutil import json_clean, encode_images
 from IPython.utils.process import arg_split
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type
-from traitlets import Instance, Type, Dict, CBool, CBytes, Any
+from traitlets import (
+    Instance, Type, Dict, CBool, CBytes, Any, default
+)
 from IPython.utils.warn import error
 from ipykernel.displayhook import ZMQShellDisplayHook
 from jupyter_client.session import extract_header
@@ -61,6 +65,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
     parent_header = Dict({})
     topic = CBytes(b'display_data')
 
+    # thread_local:
+    # An attribute used to ensure the correct output message
+    # is processed. See ipykernel Issue 113 for a discussion.
+    thread_local = Any()
+
     def set_parent(self, parent):
         """Set the parent for outbound messages."""
         self.parent_header = extract_header(parent)
@@ -70,6 +79,15 @@ class ZMQDisplayPublisher(DisplayPublisher):
         sys.stdout.flush()
         sys.stderr.flush()
 
+    @default('thread_local')
+    def _thread_local_default(self):
+        """ Initialises the threadlocal attribute and
+            gives it a 'hooks' attribute.
+        """
+        loc = local()
+        loc.hooks = []
+        return loc
+
     def publish(self, data, metadata=None, source=None):
         self._flush_streams()
         if metadata is None:
@@ -78,9 +96,25 @@ class ZMQDisplayPublisher(DisplayPublisher):
         content = {}
         content['data'] = encode_images(data)
         content['metadata'] = metadata
+
+        # Use 2-stage process to send a message,
+        # in order to put it through the transform
+        # hooks before potentially sending.
+        msg = self.session.msg(
+            u'display_data', json_clean(content),
+            parent=self.parent_header
+        )
+
+        # Each transform either returns a new
+        # message or None. If None is returned,
+        # the message has been 'used' and we return.
+        for hook in self.thread_local.hooks:
+            msg = hook(msg)
+            if msg is None:
+                return
+
         self.session.send(
-            self.pub_socket, u'display_data', json_clean(content),
-            parent=self.parent_header, ident=self.topic,
+            self.pub_socket, msg, ident=self.topic
         )
 
     def clear_output(self, wait=False):
@@ -90,6 +124,47 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self.pub_socket, u'clear_output', content,
             parent=self.parent_header, ident=self.topic,
         )
+
+    def register_hook(self, hook):
+        """
+        Registers a hook with the thread-local storage.
+
+        Parameters
+        ----------
+        hook : Any callable object
+
+        Returns
+        -------
+        Either a publishable message, or `None`.
+
+        The DisplayHook objects must return a message from
+        the __call__ method if they still require the
+        `session.send` method to be called after tranformation.
+        Returning `None` will halt that execution path, and
+        session.send will not be called.
+        """
+        self.thread_local.hooks.append(hook)
+
+    def unregister_hook(self, hook):
+        """
+        Un-registers a hook with the thread-local storage.
+
+        Parameters
+        ----------
+        hook: Any callable object which has previously been
+              registered as a hook.
+
+        Returns
+        -------
+        bool - `True` if the hook was removed, `False` if it wasn't
+               found.
+        """
+        try:
+            self.thread_local.hooks.remove(hook)
+            return True
+        except ValueError:
+            return False
+
 
 @magics_class
 class KernelMagics(Magics):
@@ -181,7 +256,7 @@ class KernelMagics(Magics):
         Note that %edit is also available through the alias %ed.
         """
 
-        opts,args = self.parse_options(parameter_s,'prn:')
+        opts,args = self.parse_options(parameter_s, 'prn:')
 
         try:
             filename, lineno, _ = CodeMagics._find_edit_target(self.shell, args, opts, last_call)
@@ -398,22 +473,22 @@ class ZMQInteractiveShell(InteractiveShell):
     def init_hooks(self):
         super(ZMQInteractiveShell, self).init_hooks()
         self.set_hook('show_in_pager', page.as_hook(payloadpage.page), 99)
-    
+
     def init_data_pub(self):
         """Delay datapub init until request, for deprecation warnings"""
         pass
-    
+
     @property
     def data_pub(self):
         if not hasattr(self, '_data_pub'):
-            warnings.warn("InteractiveShell.data_pub is deprecated outside IPython parallel.", 
+            warnings.warn("InteractiveShell.data_pub is deprecated outside IPython parallel.",
                 DeprecationWarning, stacklevel=2)
-            
+
             self._data_pub = self.data_pub_class(parent=self)
             self._data_pub.session = self.display_pub.session
             self._data_pub.pub_socket = self.display_pub.pub_socket
         return self._data_pub
-    
+
     @data_pub.setter
     def data_pub(self, pub):
         self._data_pub = pub

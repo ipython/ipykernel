@@ -15,7 +15,7 @@ import nose.tools as nt
 from nose.plugins.skip import SkipTest
 
 from traitlets import (
-    HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum,
+    HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum
 )
 from ipython_genutils.py3compat import string_types, iteritems
 

@@ -8,7 +8,6 @@ from collections import namedtuple
 
 import nose.tools as nt
 
-# from unittest import TestCaes
 from ipykernel.serialize import serialize_object, deserialize_object
 from IPython.testing import decorators as dec
 from ipykernel.pickleutil import CannedArray, CannedClass, interactive
@@ -25,12 +24,6 @@ def roundtrip(obj):
     nt.assert_equals(remainder, [])
     return obj2
 
-class C(object):
-    """dummy class for """
-
-    def __init__(self, **kwargs):
-        for key,value in iteritems(kwargs):
-            setattr(self, key, value)
 
 SHAPES = ((100,), (1024,10), (10,8,6,5), (), (0,))
 DTYPES = ('uint8', 'float64', 'int32', [('g', 'float32')], '|S10')

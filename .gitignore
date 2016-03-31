@@ -1,5 +1,6 @@
 MANIFEST
 build
+cover
 dist
 _build
 docs/man/*.gz

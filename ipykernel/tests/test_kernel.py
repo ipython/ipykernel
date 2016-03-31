@@ -254,4 +254,3 @@ def test_shutdown():
             else:
                 break
         nt.assert_false(km.is_alive())
-

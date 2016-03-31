@@ -11,10 +11,11 @@ from ipython_genutils.py3compat import builtin_mod
 from traitlets import Instance, Dict, Any
 from jupyter_client.session import extract_header, Session
 
+
 class ZMQDisplayHook(object):
     """A simple displayhook that publishes the object's repr over a ZeroMQ
     socket."""
-    topic=b'execute_result'
+    topic = b'execute_result'
 
     def __init__(self, session, pub_socket):
         self.session = session
@@ -28,8 +29,8 @@ class ZMQDisplayHook(object):
         builtin_mod._ = obj
         sys.stdout.flush()
         sys.stderr.flush()
-        msg = self.session.send(self.pub_socket, u'execute_result', {u'data':repr(obj)},
-                               parent=self.parent_header, ident=self.topic)
+        self.session.send(self.pub_socket, u'execute_result', {u'data':repr(obj)},
+                          parent=self.parent_header, ident=self.topic)
 
     def set_parent(self, parent):
         self.parent_header = extract_header(parent)

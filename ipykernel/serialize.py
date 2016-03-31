@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """serialization utilities for apply messages"""
 
 # Copyright (c) IPython Development Team.

@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
 from logging import INFO, DEBUG, WARN, ERROR, FATAL
 
 from zmq.log.handlers import PUBHandler

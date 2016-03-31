@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Replacements for sys.displayhook that publish over ZMQ."""
 
 # Copyright (c) IPython Development Team.

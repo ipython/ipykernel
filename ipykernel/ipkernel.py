@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The IPython kernel implementation"""
 
 # Copyright (c) IPython Development Team.

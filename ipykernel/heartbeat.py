@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The client and server for a basic ping-pong style heartbeat.
 """
 

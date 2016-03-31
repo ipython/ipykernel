@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """test serialization tools"""
 
 # Copyright (c) IPython Development Team.

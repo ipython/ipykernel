@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """A matplotlib backend for publishing figures via display_data"""
 
 # Copyright (c) IPython Development Team.

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Utilities to manipulate JSON objects."""
 
 # Copyright (c) IPython Development Team.

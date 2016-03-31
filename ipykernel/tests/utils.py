@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """utilities for testing IPython kernels"""
 
 # Copyright (c) IPython Development Team.

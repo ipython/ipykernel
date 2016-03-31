@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Connection file-related utilities for the kernel
 """
 

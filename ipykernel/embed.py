@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Simple function for embedding an IPython kernel
 """
 

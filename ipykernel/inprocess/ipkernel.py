@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """An in-process kernel"""
 
 # Copyright (c) IPython Development Team.

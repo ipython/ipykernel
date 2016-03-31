@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The IPython kernel spec for Jupyter"""
 
 # Copyright (c) IPython Development Team.

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ Defines a dummy socket implementing (part of) the zmq.Socket interface. """
 
 # Copyright (c) IPython Development Team.

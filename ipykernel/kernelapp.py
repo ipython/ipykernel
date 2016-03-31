@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """An Application for launching a kernel"""
 
 # Copyright (c) IPython Development Team.

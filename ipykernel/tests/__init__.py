@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -28,7 +30,7 @@ def setup():
     ]
     for p in patchers:
         p.start()
-    
+
     # install IPython in the temp home:
     install(user=True)
 

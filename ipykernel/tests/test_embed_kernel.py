@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """test IPython.embed_kernel()"""
 
 # Copyright (c) IPython Development Team.

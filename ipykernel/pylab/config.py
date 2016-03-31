@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Configurable for configuring the IPython inline backend
 
 This module does not import anything from matplotlib.

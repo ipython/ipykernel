@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Base class for a kernel that talks to frontends over 0MQ."""
 
 # Copyright (c) IPython Development Team.

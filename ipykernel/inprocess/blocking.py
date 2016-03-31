@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """ Implements a fully blocking kernel client.
 
 Useful for test suites and blocking terminal interfaces.

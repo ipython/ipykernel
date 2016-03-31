@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Base class to manage comms"""
 
 # Copyright (c) IPython Development Team.

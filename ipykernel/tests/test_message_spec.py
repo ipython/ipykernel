@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Test suite for our zeromq-based message specification."""
 
 # Copyright (c) IPython Development Team.

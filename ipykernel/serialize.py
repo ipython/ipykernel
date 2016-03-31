@@ -184,6 +184,6 @@ def unpack_apply_message(bufs, g=None, copy=True):
     for key in info['kw_keys']:
         kwarg, kwarg_bufs = deserialize_object(kwarg_bufs, g)
         kwargs[key] = kwarg
-    assert not kwarg_bufs, 'Shouldn\t be any kwarg bufs left over'
+    assert not kwarg_bufs, 'Shouldn\'t be any kwarg bufs left over'
 
     return f,args,kwargs

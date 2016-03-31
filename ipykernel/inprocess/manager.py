@@ -23,7 +23,8 @@ class InProcessKernelManager(KernelManager):
     kernel = Instance('ipykernel.inprocess.ipkernel.InProcessKernel',
                       allow_none=True)
     # the client class for KM.client() shortcut
-    client_class = DottedObjectName('ipykernel.inprocess.BlockingInProcessKernelClient')
+    name = 'ipykernel.inprocess.BlockingInProcessKernelClient'
+    client_class = DottedObjectName(name)
     def _blocking_class_default(self):
         from .blocking import BlockingInProcessKernelClient
         return BlockingInProcessKernelClient
@@ -55,10 +56,10 @@ class InProcessKernelManager(KernelManager):
         self.kernel = None
 
     def interrupt_kernel(self):
-        raise NotImplementedError("Cannot interrupt in-process kernel.")
+        raise NotImplementedError('Cannot interrupt in-process kernel.')
 
     def signal_kernel(self, signum):
-        raise NotImplementedError("Cannot signal in-process kernel.")
+        raise NotImplementedError('Cannot signal in-process kernel.')
 
     def is_alive(self):
         return self.kernel is not None

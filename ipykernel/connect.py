@@ -1,5 +1,6 @@
 """Connection file-related utilities for the kernel
 """
+
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -19,7 +20,6 @@ import jupyter_client
 from jupyter_client import write_connection_file
 
 
-
 def get_connection_file(app=None):
     """Return the path to the connection file of an app
 
@@ -31,7 +31,7 @@ def get_connection_file(app=None):
     if app is None:
         from ipykernel.kernelapp import IPKernelApp
         if not IPKernelApp.initialized():
-            raise RuntimeError("app not specified, and not in a running Kernel")
+            raise RuntimeError('app not specified, and not in a running Kernel')
 
         app = IPKernelApp.instance()
     return filefind(app.connection_file, ['.', app.connection_dir])
@@ -39,7 +39,7 @@ def get_connection_file(app=None):
 
 def find_connection_file(filename='kernel-*.json', profile=None):
     """DEPRECATED: find a connection file, and return its absolute path.
-    
+
     THIS FUNCION IS DEPRECATED. Use juptyer_client.find_connection_file instead.
 
     Parameters
@@ -54,10 +54,13 @@ def find_connection_file(filename='kernel-*.json', profile=None):
     -------
     str : The absolute path of the connection file.
     """
-    
+
     import warnings
-    warnings.warn("""ipykernel.find_connection_file is deprecated, use jupyter_client.find_connection_file""",
-        DeprecationWarning, stacklevel=2)
+    warnings.warn(
+        'ipykernel.find_connection_file is deprecated,'
+        ' use jupyter_client.find_connection_file',
+        DeprecationWarning, stacklevel=2
+    )
     from IPython.core.application import BaseIPythonApplication as IPApp
     try:
         # quick check for absolute path, before going through logic
@@ -72,18 +75,27 @@ def find_connection_file(filename='kernel-*.json', profile=None):
             profile_dir = app.profile_dir
         else:
             # not running in IPython, use default profile
-            profile_dir = ProfileDir.find_profile_dir_by_name(get_ipython_dir(), 'default')
+            profile_dir = ProfileDir.find_profile_dir_by_name(
+                get_ipython_dir(),
+                'default'
+            )
     else:
         # find profiledir by profile name:
-        profile_dir = ProfileDir.find_profile_dir_by_name(get_ipython_dir(), profile)
+        profile_dir = ProfileDir.find_profile_dir_by_name(
+            get_ipython_dir(),
+            profile
+        )
     security_dir = profile_dir.security_dir
-    
-    return jupyter_client.find_connection_file(filename, path=['.', security_dir])
+
+    return jupyter_client.find_connection_file(
+        filename,
+        path=['.', security_dir]
+    )
 
 
 def _find_connection_file(connection_file, profile=None):
     """Return the absolute path for a connection file
-    
+
     - If nothing specified, return current Kernel's connection file
     - If profile specified, show deprecation warning about finding connection files in profiles
     - Otherwise, call jupyter_client.find_connection_file
@@ -95,7 +107,7 @@ def _find_connection_file(connection_file, profile=None):
         # connection file specified, allow shortnames:
         if profile is not None:
             warnings.warn(
-                "Finding connection file by profile is deprecated.",
+                'Finding connection file by profile is deprecated.',
                 DeprecationWarning, stacklevel=3,
             )
             return find_connection_file(connection_file, profile=profile)
@@ -165,8 +177,8 @@ def connect_qtconsole(connection_file=None, argv=None, profile=None):
     cf = _find_connection_file(connection_file, profile)
 
     cmd = ';'.join([
-        "from IPython.qt.console import qtconsoleapp",
-        "qtconsoleapp.main()"
+        'from IPython.qt.console import qtconsoleapp',
+        'qtconsoleapp.main()'
     ])
 
     return Popen([sys.executable, '-c', cmd, '--existing', cf] + argv,

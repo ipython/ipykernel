@@ -48,12 +48,12 @@ def setup_kernel(cmd):
     if kernel.poll() is not None:
         o,e = kernel.communicate()
         e = py3compat.cast_unicode(e)
-        raise IOError("Kernel failed to start:\n%s" % e)
+        raise IOError('Kernel failed to start:\n%s' % e)
 
     if not os.path.exists(connection_file):
         if kernel.poll() is None:
             kernel.terminate()
-        raise IOError("Connection file %r never arrived" % connection_file)
+        raise IOError('Connection file %r never arrived' % connection_file)
 
     client = BlockingKernelClient(connection_file=connection_file)
     client.load_connection_file()
@@ -85,7 +85,7 @@ def test_embed_kernel_basic():
         content = msg['content']
         nt.assert_true(content['found'])
 
-        msg_id = client.execute("c=a*2")
+        msg_id = client.execute('c=a*2')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         nt.assert_equal(content['status'], u'ok')
@@ -158,6 +158,6 @@ def test_embed_kernel_reentrant():
             nt.assert_in(unicode_type(i), text)
 
             # exit from embed_kernel
-            client.execute("get_ipython().exit_now = True")
+            client.execute('get_ipython().exit_now = True')
             msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
             time.sleep(0.2)

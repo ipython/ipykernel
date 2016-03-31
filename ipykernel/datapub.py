@@ -2,7 +2,10 @@
 """
 
 import warnings
-warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub", DeprecationWarning)
+warnings.warn(
+    'ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub',
+    DeprecationWarning
+)
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
@@ -56,7 +59,10 @@ def publish_data(data):
     data : dict
         The data to be published. Think of it as a namespace.
     """
-    warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub", DeprecationWarning)
-    
+    warnings.warn(
+        'ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub',
+        DeprecationWarning
+    )
+
     from ipykernel.zmqshell import ZMQInteractiveShell
     ZMQInteractiveShell.instance().data_pub.publish_data(data)

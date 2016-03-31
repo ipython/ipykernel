@@ -29,8 +29,10 @@ class ZMQDisplayHook(object):
         builtin_mod._ = obj
         sys.stdout.flush()
         sys.stderr.flush()
-        self.session.send(self.pub_socket, u'execute_result', {u'data':repr(obj)},
-                          parent=self.parent_header, ident=self.topic)
+        self.session.send(
+            self.pub_socket, u'execute_result', {u'data':repr(obj)},
+            parent=self.parent_header, ident=self.topic
+        )
 
     def set_parent(self, parent):
         self.parent_header = extract_header(parent)

@@ -20,7 +20,7 @@ from ipython_genutils.py3compat import with_metaclass
 #-----------------------------------------------------------------------------
 
 class SocketABC(with_metaclass(abc.ABCMeta, object)):
-    
+
     @abc.abstractmethod
     def recv_multipart(self, flags=0, copy=True, track=False):
         raise NotImplementedError
@@ -28,10 +28,10 @@ class SocketABC(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def send_multipart(self, msg_parts, flags=0, copy=True, track=False):
         raise NotImplementedError
-    
+
     @classmethod
     def register(cls, other_cls):
-        warnings.warn("SocketABC is deprecated.", DeprecationWarning)
+        warnings.warn('SocketABC is deprecated.', DeprecationWarning)
         abc.ABCMeta.register(cls, other_cls)
 
 #-----------------------------------------------------------------------------

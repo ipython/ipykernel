@@ -34,15 +34,17 @@ class Comm(LoggingConfigurable):
             return self.kernel.session
 
     target_name = Unicode('comm')
-    target_module = Unicode(None, allow_none=True, help="""requirejs module from
-        which to load comm target.""")
+    target_module = Unicode(
+        None, allow_none=True,
+        help='requirejs module from which to load comm target.'
+    )
 
     topic = Bytes()
     def _topic_default(self):
         return ('comm-%s' % self.comm_id).encode('ascii')
 
-    _open_data = Dict(help="data dict, if any, to be included in comm_open")
-    _close_data = Dict(help="data dict, if any, to be included in comm_close")
+    _open_data = Dict(help='data dict, if any, to be included in comm_open')
+    _close_data = Dict(help='data dict, if any, to be included in comm_close')
 
     _msg_callback = Any()
     _close_callback = Any()
@@ -52,7 +54,7 @@ class Comm(LoggingConfigurable):
     def _comm_id_default(self):
         return uuid.uuid4().hex
 
-    primary = Bool(True, help="Am I the primary or secondary Comm?")
+    primary = Bool(True, help='Am I the primary or secondary Comm?)
 
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
         if target_name:
@@ -93,8 +95,8 @@ class Comm(LoggingConfigurable):
             data = self._open_data
         comm_manager = getattr(self.kernel, 'comm_manager', None)
         if comm_manager is None:
-            raise RuntimeError("Comms cannot be opened without a kernel "
-                        "and a comm_manager attached to that kernel.")
+            raise RuntimeError('Comms cannot be opened without a kernel '
+                        'and a comm_manager attached to that kernel.')
 
         comm_manager.register_comm(self)
         try:
@@ -151,13 +153,13 @@ class Comm(LoggingConfigurable):
 
     def handle_close(self, msg):
         """Handle a comm_close message"""
-        self.log.debug("handle_close[%s](%s)", self.comm_id, msg)
+        self.log.debug('handle_close[%s](%s)', self.comm_id, msg)
         if self._close_callback:
             self._close_callback(msg)
 
     def handle_msg(self, msg):
         """Handle a comm_msg message"""
-        self.log.debug("handle_msg[%s](%s)", self.comm_id, msg)
+        self.log.debug('handle_msg[%s](%s)', self.comm_id, msg)
         if self._msg_callback:
             if self.shell:
                 self.shell.events.trigger('pre_execute')

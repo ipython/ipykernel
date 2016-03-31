@@ -50,7 +50,7 @@ def test_sys_path():
             kc=kc, code='import sys; print (repr(sys.path[0]))'
         )
         stdout, stderr = assemble_output(kc.iopub_channel)
-        nt.assert_equal(stdout, '""\n')
+        nt.assert_equal(stdout, "''\n")
 
 def test_sys_path_profile_dir():
     """test that sys.path doesn't get messed up when `--profile-dir` is specified"""
@@ -58,7 +58,7 @@ def test_sys_path_profile_dir():
     with new_kernel(['--profile-dir', locate_profile('default')]) as kc:
         msg_id, content = execute(kc=kc, code='import sys; print (repr(sys.path[0]))')
         stdout, stderr = assemble_output(kc.iopub_channel)
-        nt.assert_equal(stdout, '""\n')
+        nt.assert_equal(stdout, "''\n")
 
 @dec.knownfailureif(sys.platform == 'win32', 'subprocess prints fail on Windows')
 def test_subprocess_print():
@@ -140,7 +140,7 @@ def test_raw_input():
         iopub = kc.iopub_channel
 
         input_f = 'input' if py3compat.PY3 else 'raw_input'
-        theprompt = 'prompt> ''
+        theprompt = 'prompt> '
         code = 'print({input_f}("{theprompt}"))'.format(**locals())
         msg_id = kc.execute(code, allow_stdin=True)
         msg = kc.get_stdin_msg(block=True, timeout=TIMEOUT)

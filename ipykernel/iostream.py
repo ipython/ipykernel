@@ -72,7 +72,7 @@ class IOPubThread(object):
         try:
             self._pipe_port = pipe_in.bind_to_random_port('tcp://127.0.0.1')
         except zmq.ZMQError as e:
-            warn('Couldn't bind IOPub Pipe to 127.0.0.1: %s' % e +
+            warn('Couldn\'t bind IOPub Pipe to 127.0.0.1: %s' % e +
                 '\nsubprocess output will be unavailable.'
             )
             self._pipe_flag = False

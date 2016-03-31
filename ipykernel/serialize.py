@@ -166,7 +166,7 @@ def unpack_apply_message(bufs, g=None, copy=True):
     """unpack f,args,kwargs from buffers packed by pack_apply_message()
     Returns: original f,args,kwargs"""
     bufs = list(bufs) # allow us to pop
-    assert len(bufs) >= 2, 'not enough buffers!''
+    assert len(bufs) >= 2, 'not enough buffers!'
     pf = buffer_to_bytes_py2(bufs.pop(0))
     f = uncan(pickle.loads(pf), g)
     pinfo = buffer_to_bytes_py2(bufs.pop(0))

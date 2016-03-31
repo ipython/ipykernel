@@ -54,7 +54,7 @@ class Comm(LoggingConfigurable):
     def _comm_id_default(self):
         return uuid.uuid4().hex
 
-    primary = Bool(True, help='Am I the primary or secondary Comm?)
+    primary = Bool(True, help='Am I the primary or secondary Comm?')
 
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
         if target_name:

@@ -91,7 +91,7 @@ class IPythonKernel(KernelBase):
             'text': "pandas",
             'url': "http://pandas.pydata.org/pandas-docs/stable/",
         },
-    ])
+    ], config=True)
 
     # Kernel info fields
     implementation = 'ipython'

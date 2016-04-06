@@ -71,3 +71,27 @@ class ZMQShellDisplayHook(DisplayHook):
         if self.msg['content']['data']:
             self.session.send(self.pub_socket, self.msg, ident=self.topic)
         self.msg = None
+
+
+class ZMQMessageHook(object):
+    """
+    A Display Hook for intercepting certain named
+    message types.
+    """
+    def __init__(self, name, callback):
+        """
+        Pass the message type to start intercepting, and
+        a callback which will get passed any item which
+        is hooked.
+        """
+        self._name = name
+        self._callback = callback
+
+    def __call__(self, msg):
+        print('Message Hooked', self._name)
+        if msg['msg_type'] == self._name:
+            print('Message appended to store.')
+            self._callback(msg)
+        else:
+            print('Message ignored')
+            return msg

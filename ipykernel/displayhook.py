@@ -88,10 +88,7 @@ class ZMQMessageHook(object):
         self._callback = callback
 
     def __call__(self, msg):
-        print('Message Hooked', self._name)
         if msg['msg_type'] == self._name:
-            print('Message appended to store.')
             self._callback(msg)
         else:
-            print('Message ignored')
             return msg

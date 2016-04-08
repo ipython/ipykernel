@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """test serialization tools"""
 
 # Copyright (c) IPython Development Team.
@@ -56,9 +57,9 @@ def test_roundtrip_nested():
 
 def test_roundtrip_buffered():
     for obj in [
-        dict(a=b"x"*1025),
-        b"hello"*500,
-        [b"hello"*501, 1,2,3]
+        dict(a=b'x'*1025),
+        b'hello'*500,
+        [b'hello'*501, 1,2,3]
     ]:
         bufs = serialize_object(obj)
         nt.assert_equal(len(bufs), 2)

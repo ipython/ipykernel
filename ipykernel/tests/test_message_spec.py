@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Test suite for our zeromq-based message specification."""
 
 # Copyright (c) IPython Development Team.
@@ -35,7 +36,6 @@ def setup():
 #-----------------------------------------------------------------------------
 
 class Reference(HasTraits):
-
     """
     Base class for message spec specification testing.
 
@@ -43,7 +43,6 @@ class Reference(HasTraits):
     idea is that child classes implement trait attributes for each
     message keys, so that message keys can be tested against these
     traits using :meth:`check` method.
-
     """
 
     def check(self, d):
@@ -68,9 +67,9 @@ class Version(Unicode):
 
     def validate(self, obj, value):
         if self.min and V(value) < V(self.min):
-            raise TraitError("bad version: %s < %s" % (value, self.min))
+            raise TraitError('bad version: %s < %s' % (value, self.min))
         if self.max and (V(value) > V(self.max)):
-            raise TraitError("bad version: %s > %s" % (value, self.max))
+            raise TraitError('bad version: %s > %s' % (value, self.max))
 
 
 class RMessage(Reference):
@@ -140,7 +139,10 @@ class ArgSpec(Reference):
 
 
 class Status(Reference):
-    execution_state = Enum((u'busy', u'idle', u'starting'), default_value=u'busy')
+    execution_state = Enum(
+        (u'busy', u'idle', u'starting'),
+        default_value=u'busy'
+    )
 
 
 class CompleteReply(Reference):
@@ -168,7 +170,10 @@ class CommInfoReply(Reference):
     comms = Dict()
 
 class IsCompleteReply(Reference):
-    status = Enum((u'complete', u'incomplete', u'invalid', u'unknown'), default_value=u'complete')
+    status = Enum(
+        (u'complete', u'incomplete', u'invalid', u'unknown'),
+        default_value=u'complete'
+    )
 
     def check(self, d):
         Reference.check(self, d)
@@ -406,7 +411,7 @@ def test_oinfo_not_found():
 def test_complete():
     flush_channels()
 
-    msg_id, reply = execute(code="alpha = albert = 5")
+    msg_id, reply = execute(code='alpha = albert = 5')
 
     msg_id = KC.complete('al', 2)
     reply = KC.get_shell_msg(timeout=TIMEOUT)
@@ -435,16 +440,16 @@ def test_comm_info_request():
 
 def test_single_payload():
     flush_channels()
-    msg_id, reply = execute(code="for i in range(3):\n"+
-                                 "   x=range?\n")
+    msg_id, reply = execute(code='for i in range(3):\n'+
+                                 '   x=range?\n')
     payload = reply['payload']
-    next_input_pls = [pl for pl in payload if pl["source"] == "set_next_input"]
+    next_input_pls = [pl for pl in payload if pl['source'] == 'set_next_input']
     nt.assert_equal(len(next_input_pls), 1)
 
 def test_is_complete():
     flush_channels()
 
-    msg_id = KC.is_complete("a = 1")
+    msg_id = KC.is_complete('a = 1')
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     validate_message(reply, 'is_complete_reply', msg_id)
 
@@ -454,7 +459,10 @@ def test_history_range():
     msg_id_exec = KC.execute(code='x=1', store_history = True)
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
-    msg_id = KC.history(hist_access_type = 'range', raw = True, output = True, start = 1, stop = 2, session = 0)
+    msg_id = KC.history(
+        hist_access_type = 'range', raw = True, output = True,
+        start = 1, stop = 2, session = 0
+    )
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
@@ -466,7 +474,10 @@ def test_history_tail():
     msg_id_exec = KC.execute(code='x=1', store_history = True)
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
-    msg_id = KC.history(hist_access_type = 'tail', raw = True, output = True, n = 1, session = 0)
+    msg_id = KC.history(
+        hist_access_type = 'tail', raw = True,
+        output = True, n = 1, session = 0
+    )
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
@@ -478,7 +489,10 @@ def test_history_search():
     msg_id_exec = KC.execute(code='x=1', store_history = True)
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
-    msg_id = KC.history(hist_access_type = 'search', raw = True, output = True, n = 1, pattern = '*', session = 0)
+    msg_id = KC.history(
+        hist_access_type = 'search', raw = True,
+        output = True, n = 1, pattern = '*', session = 0
+    )
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
@@ -490,7 +504,7 @@ def test_history_search():
 def test_stream():
     flush_channels()
 
-    msg_id, reply = execute("print('hi')")
+    msg_id, reply = execute('print("hi")')
 
     stdout = KC.iopub_channel.get_msg(timeout=TIMEOUT)
     validate_message(stdout, 'stream', msg_id)
@@ -501,7 +515,7 @@ def test_stream():
 def test_display_data():
     flush_channels()
 
-    msg_id, reply = execute("from IPython.core.display import display; display(1)")
+    msg_id, reply = execute('from IPython.core.display import display; display(1)')
 
     display = KC.iopub_channel.get_msg(timeout=TIMEOUT)
     validate_message(display, 'display_data', parent=msg_id)

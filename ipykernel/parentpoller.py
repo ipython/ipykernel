@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -64,7 +66,7 @@ class ParentPollerWindows(Thread):
         assert(interrupt_handle or parent_handle)
         super(ParentPollerWindows, self).__init__()
         if ctypes is None:
-            raise ImportError("ParentPollerWindows requires ctypes")
+            raise ImportError('ParentPollerWindows requires ctypes')
         self.daemon = True
         self.interrupt_handle = interrupt_handle
         self.parent_handle = parent_handle

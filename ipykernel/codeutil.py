@@ -14,7 +14,10 @@ Reference: A. Tremols, P Cogolo, "Python Cookbook," p 302-305
 # Distributed under the terms of the Modified BSD License.
 
 import warnings
-warnings.warn("ipykernel.codeutil is deprecated. It has moved to ipyparallel.serialize", DeprecationWarning)
+warnings.warn(
+    'ipykernel.codeutil is deprecated. It has moved to ipyparallel.serialize',
+    DeprecationWarning
+)
 
 import sys
 import types

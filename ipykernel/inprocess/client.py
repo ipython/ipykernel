@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """A client for in-process kernels."""
 
 #-----------------------------------------------------------------------------
@@ -50,11 +51,11 @@ class InProcessKernelClient(KernelClient):
     #--------------------------------------------------------------------------
     # Channel management methods
     #--------------------------------------------------------------------------
-    
+
     def _blocking_class_default(self):
         from .blocking import BlockingInProcessKernelClient
         return BlockingInProcessKernelClient
-    
+
     def get_connection_info(self):
         d = super(InProcessKernelClient, self).get_connection_info()
         d['kernel'] = self.kernel

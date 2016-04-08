@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """utilities for testing IPython kernels"""
 
 # Copyright (c) IPython Development Team.
@@ -151,7 +152,7 @@ def assemble_output(iopub):
             elif content['name'] == 'stderr':
                 stderr += content['text']
             else:
-                raise KeyError("bad stream: %r" % content['name'])
+                raise KeyError('bad stream: %r' % content['name'])
         else:
             # other output, ignored
             pass

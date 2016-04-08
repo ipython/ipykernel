@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """An Application for launching a kernel"""
 
 # Copyright (c) IPython Development Team.
@@ -62,14 +63,14 @@ kernel_flags = dict(base_flags)
 kernel_flags.update({
     'no-stdout' : (
             {'IPKernelApp' : {'no_stdout' : True}},
-            "redirect stdout to the null device"),
+            'redirect stdout to the null device'),
     'no-stderr' : (
             {'IPKernelApp' : {'no_stderr' : True}},
-            "redirect stderr to the null device"),
+            'redirect stderr to the null device'),
     'pylab' : (
         {'IPKernelApp' : {'pylab' : 'auto'}},
-        """Pre-load matplotlib and numpy for interactive use with
-        the default matplotlib backend."""),
+        '''Pre-load matplotlib and numpy for interactive use with
+        the default matplotlib backend.'''),
 })
 
 # inherit flags&aliases for any IPython shell apps
@@ -80,7 +81,7 @@ kernel_flags.update(shell_flags)
 kernel_aliases.update(session_aliases)
 kernel_flags.update(session_flags)
 
-_ctrl_c_message = """\
+_ctrl_c_message = '''\
 NOTE: When using the `ipython kernel` entry point, Ctrl-C will not work.
 
 To exit, you will have to explicitly quit this process, by either sending
@@ -88,7 +89,7 @@ To exit, you will have to explicitly quit this process, by either sending
 
 To read more about this, see https://github.com/ipython/ipython/issues/2049
 
-"""
+'''
 
 #-----------------------------------------------------------------------------
 # Application class for starting an IPython Kernel
@@ -103,16 +104,16 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     # the kernel class, as an importstring
     kernel_class = Type('ipykernel.ipkernel.IPythonKernel',
                         klass='ipykernel.kernelbase.Kernel',
-    help="""The Kernel subclass to be used.
+    help='''The Kernel subclass to be used.
 
     This should allow easy re-use of the IPKernelApp entry point
     to configure and launch kernels other than IPython's own.
-    """).tag(config=True)
+    ''').tag(config=True)
     kernel = Any()
     poller = Any() # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
     ports = Dict()
-    
+
     subcommands = {
         'install': (
             'ipykernel.kernelspec.InstallIPythonKernelSpecApp',
@@ -134,26 +135,26 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
 
     # streams, etc.
-    no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
-    no_stderr = Bool(False, help="redirect stderr to the null device").tag(config=True)
+    no_stdout = Bool(False, help='redirect stdout to the null device').tag(config=True)
+    no_stderr = Bool(False, help='redirect stderr to the null device').tag(config=True)
     outstream_class = DottedObjectName('ipykernel.iostream.OutStream',
-        help="The importstring for the OutStream factory").tag(config=True)
+        help='The importstring for the OutStream factory').tag(config=True)
     displayhook_class = DottedObjectName('ipykernel.displayhook.ZMQDisplayHook',
-        help="The importstring for the DisplayHook factory").tag(config=True)
+        help='The importstring for the DisplayHook factory').tag(config=True)
 
     # polling
     parent_handle = Integer(int(os.environ.get('JPY_PARENT_PID') or 0),
-        help="""kill this process if its parent dies.  On Windows, the argument
+        help='''kill this process if its parent dies.  On Windows, the argument
         specifies the HANDLE of the parent process, otherwise it is simply boolean.
-        """).tag(config=True)
+        ''').tag(config=True)
     interrupt = Integer(int(os.environ.get('JPY_INTERRUPT_EVENT') or 0),
-        help="""ONLY USED ON WINDOWS
+        help='''ONLY USED ON WINDOWS
         Interrupt this process when the parent is signaled.
-        """).tag(config=True)
+        ''').tag(config=True)
 
     def init_crash_handler(self):
         sys.excepthook = self.excepthook
-    
+
     def excepthook(self, etype, evalue, tb):
         # write uncaught traceback to 'real' stderr, not zmq-forwarder
         traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
@@ -171,30 +172,30 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             if port <= 0:
                 port = s.bind_to_random_port(iface)
             else:
-                s.bind("tcp://%s:%i" % (self.ip, port))
+                s.bind('tcp://%s:%i' % (self.ip, port))
         elif self.transport == 'ipc':
             if port <= 0:
                 port = 1
-                path = "%s-%i" % (self.ip, port)
+                path = '%s-%i' % (self.ip, port)
                 while os.path.exists(path):
                     port = port + 1
-                    path = "%s-%i" % (self.ip, port)
+                    path = '%s-%i' % (self.ip, port)
             else:
-                path = "%s-%i" % (self.ip, port)
-            s.bind("ipc://%s" % path)
+                path = '%s-%i' % (self.ip, port)
+            s.bind('ipc://%s' % path)
         return port
 
     def write_connection_file(self):
         """write connection info to JSON file"""
         cf = self.abs_connection_file
-        self.log.debug("Writing connection file: %s", cf)
+        self.log.debug('Writing connection file: %s', cf)
         write_connection_file(cf, ip=self.ip, key=self.session.key, transport=self.transport,
         shell_port=self.shell_port, stdin_port=self.stdin_port, hb_port=self.hb_port,
         iopub_port=self.iopub_port, control_port=self.control_port)
 
     def cleanup_connection_file(self):
         cf = self.abs_connection_file
-        self.log.debug("Cleaning up connection file: %s", cf)
+        self.log.debug('Cleaning up connection file: %s', cf)
         try:
             os.remove(cf)
         except (IOError, OSError):
@@ -204,11 +205,17 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     def init_connection_file(self):
         if not self.connection_file:
-            self.connection_file = "kernel-%s.json"%os.getpid()
+            self.connection_file = 'kernel-%s.json'%os.getpid()
         try:
-            self.connection_file = filefind(self.connection_file, ['.', self.connection_dir])
+            self.connection_file = filefind(
+                self.connection_file,
+                ['.', self.connection_dir]
+            )
         except IOError:
-            self.log.debug("Connection file not found: %s", self.connection_file)
+            self.log.debug(
+                'Connection file not found: %s',
+                self.connection_file
+            )
             # This means I own it, and I'll create it in this directory:
             ensure_dir_exists(os.path.dirname(self.abs_connection_file), 0o700)
             # Also, I will clean it up:
@@ -217,12 +224,16 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         try:
             self.load_connection_file()
         except Exception:
-            self.log.error("Failed to load connection file: %r", self.connection_file, exc_info=True)
+            self.log.error(
+                'Failed to load connection file: %r',
+                self.connection_file,
+                exc_info=True
+            )
             self.exit(1)
 
     def init_sockets(self):
         # Create a context, a session, and the kernel sockets.
-        self.log.info("Starting the kernel at pid: %i", os.getpid())
+        self.log.info('Starting the kernel at pid: %i', os.getpid())
         context = zmq.Context.instance()
         # Uncomment this to try closing the context.
         # atexit.register(context.term)
@@ -230,30 +241,30 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
-        self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
+        self.log.debug('shell ROUTER Channel on port: %i' % self.shell_port)
 
         self.stdin_socket = context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
-        self.log.debug("stdin ROUTER Channel on port: %i" % self.stdin_port)
+        self.log.debug('stdin ROUTER Channel on port: %i' % self.stdin_port)
 
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
-        self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
-        
+        self.log.debug('control ROUTER Channel on port: %i' % self.control_port)
+
         self.init_iopub(context)
 
     def init_iopub(self, context):
         self.iopub_socket = context.socket(zmq.PUB)
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
-        self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
+        self.log.debug('iopub PUB Channel on port: %i' % self.iopub_port)
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True)
         self.iopub_thread.start()
         # backward-compat: wrap iopub socket API in background thread
         self.iopub_socket = self.iopub_thread.background_socket
-        
+
 
     def init_heartbeat(self):
         """start the heart beating"""
@@ -262,7 +273,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         hb_ctx = zmq.Context()
         self.heartbeat = Heartbeat(hb_ctx, (self.transport, self.ip, self.hb_port))
         self.hb_port = self.heartbeat.port
-        self.log.debug("Heartbeat REP Channel on port: %i" % self.hb_port)
+        self.log.debug('Heartbeat REP Channel on port: %i' % self.hb_port)
         self.heartbeat.start()
 
     def log_connection_info(self):
@@ -275,8 +286,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         else:
             tail = self.connection_file
         lines = [
-            "To connect another client to this kernel, use:",
-            "    --existing %s" % tail,
+            'To connect another client to this kernel, use:',
+            '    --existing %s' % tail,
         ]
         # log connection info
         # info-level, so often not shown.
@@ -305,16 +316,17 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     def init_io(self):
         """Redirect input streams and set a display hook."""
+        session, iopub = self.session, self.iopub_thread
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
-            sys.stdout = outstream_factory(self.session, self.iopub_thread, u'stdout')
-            sys.stderr = outstream_factory(self.session, self.iopub_thread, u'stderr')
+            sys.stdout = outstream_factory(session, iopub, u'stdout')
+            sys.stderr = outstream_factory(session, iopub, u'stderr')
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
-            sys.displayhook = displayhook_factory(self.session, self.iopub_socket)
-        
+            sys.displayhook = displayhook_factory(session, self.iopub_socket)
+
         self.patch_io()
-    
+
     def patch_io(self):
         """Patch important libraries that can't handle sys.stdout forwarding"""
         try:
@@ -322,22 +334,31 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         except ImportError:
             pass
         else:
-            # Warning: this is a monkeypatch of `faulthandler.enable`, watch for possible
-            # updates to the upstream API and update accordingly (up-to-date as of Python 3.5):
+            # Warning: this is a monkeypatch of `faulthandler.enable`,
+            # watch for possible updates to the upstream API and update
+            # accordingly (up-to-date as of Python 3.5):
             # https://docs.python.org/3/library/faulthandler.html#faulthandler.enable
 
             # change default file to __stderr__ from forwarded stderr
             faulthandler_enable = faulthandler.enable
             def enable(file=sys.__stderr__, all_threads=True, **kwargs):
-                return faulthandler_enable(file=file, all_threads=all_threads, **kwargs)
+                return faulthandler_enable(
+                    file=file,
+                    all_threads=all_threads,
+                    **kwargs
+                )
 
             faulthandler.enable = enable
 
             if hasattr(faulthandler, 'register'):
                 faulthandler_register = faulthandler.register
                 def register(signum, file=sys.__stderr__, all_threads=True, chain=False, **kwargs):
-                    return faulthandler_register(signum, file=file, all_threads=all_threads,
-                                                 chain=chain, **kwargs)
+                    return faulthandler_register(
+                        signum,
+                        file=file,
+                        all_threads=all_threads,
+                        chain=chain, **kwargs
+                    )
                 faulthandler.register = register
 
     def init_signal(self):
@@ -376,7 +397,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         try:
             # replace error-sending traceback with stderr
             def print_tb(etype, evalue, stb):
-                print ("GUI event loop or pylab initialization failed",
+                print ('GUI event loop or pylab initialization failed',
                        file=sys.stderr)
                 print (shell.InteractiveTB.stb2text(stb), file=sys.stderr)
             shell._showtraceback = print_tb
@@ -388,7 +409,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.shell = getattr(self.kernel, 'shell', None)
         if self.shell:
             self.shell.configurables.append(self)
-    
+
     def init_extensions(self):
         super(IPKernelApp, self).init_extensions()
         # BEGIN HARDCODED WIDGETS HACK
@@ -398,7 +419,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             try:
                 extension_man.load_extension('ipywidgets')
             except ImportError as e:
-                self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
+                self.log.debug(
+                'ipywidgets package not installed.'
+                ' Widgets will not be available.'
+            )
         # END HARDCODED WIDGETS HACK
 
     @catch_config_error
@@ -411,10 +435,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.init_poller()
         self.init_sockets()
         self.init_heartbeat()
-        # writing/displaying connection info must be *after* init_sockets/heartbeat
+        # writing/displaying connection info must be
+        # *after* init_sockets/heartbeat
         self.write_connection_file()
-        # Log connection info after writing connection file, so that the connection
-        # file is definitely available at the time someone reads the log.
+        # Log connection info after writing connection file,
+        # so that the connection file is definitely available
+        # at the time someone reads the log.
         self.log_connection_info()
         self.init_io()
         self.init_signal()
@@ -434,7 +460,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def start(self):
         if self.subapp is not None:
             return self.subapp.start()
-        
+
         if self.poller is not None:
             self.poller.start()
         self.kernel.start()

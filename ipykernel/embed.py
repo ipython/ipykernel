@@ -1,5 +1,10 @@
+# -*- coding: utf-8 -*-
 """Simple function for embedding an IPython kernel
 """
+
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------

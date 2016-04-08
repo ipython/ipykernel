@@ -17,7 +17,7 @@ import sys
 
 v = sys.version_info
 if v[:2] < (2,7) or (v[0] >= 3 and v[:2] < (3,3)):
-    error = "ERROR: %s requires Python version 2.7 or 3.3 or above." % name
+    error = 'ERROR: %s requires Python version 2.7 or 3.3 or above.' % name
     print(error, file=sys.stderr)
     sys.exit(1)
 
@@ -56,12 +56,12 @@ setup_args = dict(
     scripts         = glob(pjoin('scripts', '*')),
     packages        = packages,
     package_data    = package_data,
-    description     = "IPython Kernel for Jupyter",
+    description     = 'IPython Kernel for Jupyter',
     author          = 'IPython Development Team',
     author_email    = 'ipython-dev@scipy.org',
     url             = 'http://ipython.org',
     license         = 'BSD',
-    platforms       = "Linux, Mac OS X, Windows",
+    platforms       = 'Linux, Mac OS X, Windows',
     keywords        = ['Interactive', 'Interpreter', 'Shell', 'Web'],
     classifiers     = [
         'Intended Audience :: Developers',

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Base class to manage comms"""
 
 # Copyright (c) IPython Development Team.
@@ -87,8 +88,8 @@ class CommManager(LoggingConfigurable):
         it will log messages if the comm cannot be found.
         """
         if comm_id not in self.comms:
-            self.log.warn("No such comm: %s", comm_id)
-            self.log.debug("Current comms: %s", lazy_keys(self.comms))
+            self.log.warn('No such comm: %s', comm_id)
+            self.log.debug('Current comms: %s', lazy_keys(self.comms))
             return
         # call, because we store weakrefs
         comm = self.comms[comm_id]
@@ -110,20 +111,20 @@ class CommManager(LoggingConfigurable):
         )
         self.register_comm(comm)
         if f is None:
-            self.log.error("No such comm target registered: %s", target_name)
+            self.log.error('No such comm target registered: %s', target_name)
         else:
             try:
                 f(comm, msg)
                 return
             except Exception:
-                self.log.error("Exception opening comm with target: %s", target_name, exc_info=True)
+                self.log.error('Exception opening comm with target: %s', target_name, exc_info=True)
 
         # Failure.
         try:
             comm.close()
         except:
-            self.log.error("""Could not close comm during `comm_open` failure
-                clean-up.  The comm may not have been opened yet.""", exc_info=True)
+            self.log.error('''Could not close comm during `comm_open` failure
+                clean-up.  The comm may not have been opened yet.''', exc_info=True)
 
     def comm_msg(self, stream, ident, msg):
         """Handler for comm_msg messages"""
@@ -136,7 +137,7 @@ class CommManager(LoggingConfigurable):
         try:
             comm.handle_msg(msg)
         except Exception:
-            self.log.error("Exception in comm_msg for %s", comm_id, exc_info=True)
+            self.log.error('Exception in comm_msg for %s', comm_id, exc_info=True)
 
     def comm_close(self, stream, ident, msg):
         """Handler for comm_close messages"""
@@ -145,14 +146,14 @@ class CommManager(LoggingConfigurable):
         comm = self.get_comm(comm_id)
         if comm is None:
             # no such comm
-            self.log.debug("No such comm to close: %s", comm_id)
+            self.log.debug('No such comm to close: %s', comm_id)
             return
         del self.comms[comm_id]
 
         try:
             comm.handle_close(msg)
         except Exception:
-            self.log.error("Exception handling comm_close for %s", comm_id, exc_info=True)
+            self.log.error('Exception handling comm_close for %s', comm_id, exc_info=True)
 
 
 __all__ = ['CommManager']

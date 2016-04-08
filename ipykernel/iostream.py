@@ -37,9 +37,9 @@ CHILD = 1
 
 class IOPubThread(object):
     """An object for sending IOPub messages in a background thread
-    
+
     prevents a blocking main thread
-    
+
     IOPubThread(pub_socket).background_socket is a Socket-API-providing object
     whose IO is always run in a thread.
     """
@@ -70,23 +70,23 @@ class IOPubThread(object):
         pipe_in = ctx.socket(zmq.PULL)
         pipe_in.linger = 0
         try:
-            self._pipe_port = pipe_in.bind_to_random_port("tcp://127.0.0.1")
+            self._pipe_port = pipe_in.bind_to_random_port('tcp://127.0.0.1')
         except zmq.ZMQError as e:
-            warn("Couldn't bind IOPub Pipe to 127.0.0.1: %s" % e +
-                "\nsubprocess output will be unavailable."
+            warn('Couldn\'t bind IOPub Pipe to 127.0.0.1: %s' % e +
+                '\nsubprocess output will be unavailable.'
             )
             self._pipe_flag = False
             pipe_in.close()
             return
         self._pipe_in = ZMQStream(pipe_in, self.io_loop)
         self._pipe_in.on_recv(self._handle_pipe_msg)
-    
+
     def _handle_pipe_msg(self, msg):
         """handle a pipe message from a subprocess"""
         if not self._pipe_flag or not self._is_master_process():
             return
         if msg[0] != self._pipe_uuid:
-            print("Bad pipe message: %s", msg, file=sys.__stderr__)
+            print('Bad pipe message: %s', msg, file=sys.__stderr__)
             return
         self.send_multipart(msg[1:])
 
@@ -95,7 +95,7 @@ class IOPubThread(object):
         ctx = zmq.Context()
         pipe_out = ctx.socket(zmq.PUSH)
         pipe_out.linger = 3000 # 3s timeout for pipe_out sends before discarding the message
-        pipe_out.connect("tcp://127.0.0.1:%i" % self._pipe_port)
+        pipe_out.connect('tcp://127.0.0.1:%i' % self._pipe_port)
         return ctx, pipe_out
 
     def _is_master_process(self):
@@ -107,21 +107,22 @@ class IOPubThread(object):
             return MASTER
         else:
             return CHILD
-    
+
     def start(self):
         """Start the IOPub thread"""
         self.thread.start()
         # make sure we don't prevent process exit
-        # I'm not sure why setting daemon=True above isn't enough, but it doesn't appear to be.
+        # I'm not sure why setting daemon=True above
+        # isn't enough, but it doesn't appear to be.
         atexit.register(self.stop)
-    
+
     def stop(self):
         """Stop the IOPub thread"""
         if not self.thread.is_alive():
             return
         self.io_loop.add_callback(self.io_loop.stop)
         self.thread.join()
-    
+
     def close(self):
         self.socket.close()
         self.socket = None
@@ -129,18 +130,20 @@ class IOPubThread(object):
     @property
     def closed(self):
         return self.socket is None
-    
+
     def send_multipart(self, *args, **kwargs):
         """send_multipart schedules actual zmq send in my thread.
-        
+
         If my thread isn't running (e.g. forked process), send immediately.
         """
 
         if self.thread.is_alive():
-            self.io_loop.add_callback(lambda : self._really_send(*args, **kwargs))
+            self.io_loop.add_callback(
+                lambda : self._really_send(*args, **kwargs)
+            )
         else:
             self._really_send(*args, **kwargs)
-    
+
     def _really_send(self, msg, *args, **kwargs):
         """The callback that actually sends messages"""
         mp_mode = self._check_mp_mode()
@@ -151,7 +154,8 @@ class IOPubThread(object):
         else:
             # we are a child, pipe to master
             # new context/socket for every pipe-out
-            # since forks don't teardown politely, use ctx.term to ensure send has completed
+            # since forks don't teardown politely,
+            # use ctx.term to ensure send has completed
             ctx, pipe_out = self._setup_pipe_out()
             pipe_out.send_multipart([self._pipe_uuid] + msg, *args, **kwargs)
             pipe_out.close()
@@ -161,29 +165,35 @@ class IOPubThread(object):
 class BackgroundSocket(object):
     """Wrapper around IOPub thread that provides zmq send[_multipart]"""
     io_thread = None
-    
+
     def __init__(self, io_thread):
         self.io_thread = io_thread
-    
+
     def __getattr__(self, attr):
         """Wrap socket attr access for backward-compatibility"""
         if attr.startswith('__') and attr.endswith('__'):
             # don't wrap magic methods
             super(BackgroundSocket, self).__getattr__(attr)
         if hasattr(self.io_thread.socket, attr):
-            warnings.warn("Accessing zmq Socket attribute %s on BackgroundSocket" % attr,
-                DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                'Accessing zmq Socket attribute %s on BackgroundSocket' % attr,
+                DeprecationWarning,
+                stacklevel = 2
+            )
             return getattr(self.io_thread.socket, attr)
         super(BackgroundSocket, self).__getattr__(attr)
-    
+
     def __setattr__(self, attr, value):
         if attr == 'io_thread' or (attr.startswith('__' and attr.endswith('__'))):
             super(BackgroundSocket, self).__setattr__(attr, value)
         else:
-            warnings.warn("Setting zmq Socket attribute %s on BackgroundSocket" % attr,
-                DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                'Setting zmq Socket attribute %s on BackgroundSocket' % attr,
+                DeprecationWarning,
+                stacklevel = 2
+            )
             setattr(self.io_thread.socket, attr, value)
-    
+
     def send(self, msg, *args, **kwargs):
         return self.send_multipart([msg], *args, **kwargs)
 
@@ -194,7 +204,7 @@ class BackgroundSocket(object):
 
 class OutStream(object):
     """A file like object that publishes the stream to a 0MQ PUB socket.
-    
+
     Output is handed off to an IO Thread
     """
 
@@ -204,14 +214,16 @@ class OutStream(object):
 
     def __init__(self, session, pub_thread, name, pipe=None):
         if pipe is not None:
-            warnings.warn("pipe argument to OutStream is deprecated and ignored",
-                DeprecationWarning)
+            warnings.warn(
+                'pipe argument to OutStream is deprecated and ignored',
+                DeprecationWarning
+            )
         self.encoding = 'UTF-8'
         self.session = session
         if not isinstance(pub_thread, IOPubThread):
             # Backward-compat: given socket, not thread. Wrap in a thread.
-            warnings.warn("OutStream should be created with IOPubThread, not %r" % pub_thread,
-                DeprecationWarning, stacklevel=2)
+            w = 'OutStream should be created with IOPubThread, not %r'
+            warnings.warn(w % pub_thread, DeprecationWarning, stacklevel = 2)
             pub_thread = IOPubThread(pub_thread)
             pub_thread.start()
         self.pub_thread = pub_thread
@@ -239,7 +251,7 @@ class OutStream(object):
 
     def _schedule_flush(self):
         """schedule a flush in the IO thread
-        
+
         call this on write, to indicate that flush should be called soon.
         """
         with self._flush_lock:
@@ -247,9 +259,10 @@ class OutStream(object):
                 return
             # None indicates there's no flush scheduled.
             # Use a non-None placeholder to indicate that a flush is scheduled
-            # to avoid races while we wait for _schedule_in_thread below to fire in the io thread.
+            # to avoid races while we wait for _schedule_in_thread
+            # below to fire in the io thread.
             self._flush_timeout = 'placeholder'
-        
+
         # add_timeout has to be handed to the io thread with add_callback
         def _schedule_in_thread():
             self._flush_timeout = self._io_loop.call_later(self.flush_interval, self._flush)
@@ -257,7 +270,7 @@ class OutStream(object):
 
     def flush(self):
         """trigger actual zmq send
-        
+
         send will happen in the background thread
         """
         if self.pub_thread.thread.is_alive():
@@ -268,10 +281,10 @@ class OutStream(object):
             evt.wait()
         else:
             self._flush()
-    
+
     def _flush(self):
         """This is where the actual send happens.
-        
+
         _flush should generally be called in the IO thread,
         unless the thread has been destroyed (e.g. forked subprocess).
         """
@@ -283,10 +296,12 @@ class OutStream(object):
             # since pub_thread is itself fork-safe.
             # There should be a better way to do this.
             self.session.pid = os.getpid()
-            content = {u'name':self.name, u'text':data}
-            self.session.send(self.pub_thread, u'stream', content=content,
-                parent=self.parent_header, ident=self.topic)
-    
+            content = {u'name': self.name, u'text': data}
+            self.session.send(
+                self.pub_thread, u'stream', content=content,
+                parent=self.parent_header, ident=self.topic
+            )
+
     def isatty(self):
         return False
 
@@ -303,7 +318,7 @@ class OutStream(object):
         raise IOError('Read not supported on a write only stream.')
 
     def fileno(self):
-        raise UnsupportedOperation("IOStream has no fileno.")
+        raise UnsupportedOperation('IOStream has no fileno.')
 
     def write(self, string):
         if self.pub_thread is None:

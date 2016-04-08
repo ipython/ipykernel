@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """A kernel client for in-process kernels."""
 
 # Copyright (c) IPython Development Team.

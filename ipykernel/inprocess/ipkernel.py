@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """An in-process kernel"""
 
 # Copyright (c) IPython Development Team.
@@ -56,17 +57,20 @@ class InProcessKernel(IPythonKernel):
         thread = IOPubThread(self._underlying_iopub_socket)
         thread.start()
         return thread
-    
+
     iopub_socket = Instance(BackgroundSocket)
     def _iopub_socket_default(self):
         return self.iopub_thread.background_socket
-    
+
     stdin_socket = Instance(DummySocket, ())
 
     def __init__(self, **traits):
         super(InProcessKernel, self).__init__(**traits)
 
-        self._underlying_iopub_socket.on_trait_change(self._io_dispatch, 'message_sent')
+        self._underlying_iopub_socket.on_trait_change(
+            self._io_dispatch,
+            'message_sent'
+        )
         self.shell.kernel = self
 
     def execute_request(self, stream, ident, parent):

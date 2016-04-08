@@ -44,11 +44,11 @@ def test():
              # More exotic objects
              ((x for x in range(3)), [0, 1, 2]),
              (iter([1, 2]), [1, 2]),
-             (datetime(1991, 7, 3, 12, 00), "1991-07-03T12:00:00.000000"),
+             (datetime(1991, 7, 3, 12, 00), '1991-07-03T12:00:00.000000'),
              (MyFloat(), 3.14),
              (MyInt(), 389)
              ]
-    
+
     for val, jval in pairs:
         if jval is None:
             jval = val
@@ -64,7 +64,7 @@ def test_encode_images():
     pngdata = b'\x89PNG\r\n\x1a\nblahblahnotactuallyvalidIEND\xaeB`\x82'
     jpegdata = b'\xff\xd8\xff\xe0\x00\x10JFIFblahblahjpeg(\xa0\x0f\xff\xd9'
     pdfdata = b'%PDF-1.\ntrailer<</Root<</Pages<</Kids[<</MediaBox[0 0 3 3]>>]>>>>>>'
-    
+
     fmt = {
         'image/png'  : pngdata,
         'image/jpeg' : jpegdata,
@@ -77,7 +77,7 @@ def test_encode_images():
         nt.assert_equal(decoded, value)
     encoded2 = encode_images(encoded)
     nt.assert_equal(encoded, encoded2)
-    
+
     b64_str = {}
     for key, encoded in iteritems(encoded):
         b64_str[key] = unicode_to_str(encoded)

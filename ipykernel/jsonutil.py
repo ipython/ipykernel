@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Utilities to manipulate JSON objects."""
 
 # Copyright (c) IPython Development Team.
@@ -26,12 +27,12 @@ next_attr_name = '__next__' if py3compat.PY3 else 'next'
 #-----------------------------------------------------------------------------
 
 # timestamp formats
-ISO8601 = "%Y-%m-%dT%H:%M:%S.%f"
-ISO8601_PAT=re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d{1,6})?Z?([\+\-]\d{2}:?\d{2})?$")
+ISO8601 = '%Y-%m-%dT%H:%M:%S.%f'
+ISO8601_PAT = re.compile(r'^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d{1,6})?Z?([\+\-]\d{2}:?\d{2})?$')
 
 # holy crap, strptime is not threadsafe.
 # Calling it once at import seems to help.
-datetime.strptime("1", "%d")
+datetime.strptime('1', '%d')
 
 #-----------------------------------------------------------------------------
 # Classes and functions
@@ -130,7 +131,8 @@ def json_clean(obj):
         return obj
 
     if isinstance(obj, numbers.Integral):
-        # cast int to int, in case subclasses override __str__ (e.g. boost enum, #4598)
+        # cast int to int, in case subclasses
+        # override __str__ (e.g. boost enum, #4598)
         return int(obj)
 
     if isinstance(obj, numbers.Real):
@@ -138,7 +140,7 @@ def json_clean(obj):
         if math.isnan(obj) or math.isinf(obj):
             return repr(obj)
         return float(obj)
-    
+
     if isinstance(obj, atomic_ok):
         return obj
 
@@ -168,6 +170,6 @@ def json_clean(obj):
         return out
     if isinstance(obj, datetime):
         return obj.strftime(ISO8601)
-    
+
     # we don't understand it, it's probably an unserializable object
-    raise ValueError("Can't clean for JSON: %r" % obj)
+    raise ValueError('Can\'t clean for JSON: %r' % obj)

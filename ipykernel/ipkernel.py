@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
 """The IPython kernel implementation"""
+
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
 
 import getpass
 import sys
@@ -58,38 +62,38 @@ class IPythonKernel(KernelBase):
                                         kernel=self)
 
         self.shell.configurables.append(self.comm_manager)
-        comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
+        comm_msg_types = ['comm_open', 'comm_msg', 'comm_close']
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
 
     help_links = List([
         {
-            'text': "Python",
-            'url': "http://docs.python.org/%i.%i" % sys.version_info[:2],
+            'text': 'Python',
+            'url': 'http://docs.python.org/%i.%i' % sys.version_info[:2],
         },
         {
-            'text': "IPython",
-            'url': "http://ipython.org/documentation.html",
+            'text': 'IPython',
+            'url': 'http://ipython.org/documentation.html',
         },
         {
-            'text': "NumPy",
-            'url': "http://docs.scipy.org/doc/numpy/reference/",
+            'text': 'NumPy',
+            'url': 'http://docs.scipy.org/doc/numpy/reference/',
         },
         {
-            'text': "SciPy",
-            'url': "http://docs.scipy.org/doc/scipy/reference/",
+            'text': 'SciPy',
+            'url': 'http://docs.scipy.org/doc/scipy/reference/',
         },
         {
-            'text': "Matplotlib",
-            'url': "http://matplotlib.org/contents.html",
+            'text': 'Matplotlib',
+            'url': 'http://matplotlib.org/contents.html',
         },
         {
-            'text': "SymPy",
-            'url': "http://docs.sympy.org/latest/index.html",
+            'text': 'SymPy',
+            'url': 'http://docs.sympy.org/latest/index.html',
         },
         {
-            'text': "pandas",
-            'url': "http://pandas.pydata.org/pandas-docs/stable/",
+            'text': 'pandas',
+            'url': 'http://pandas.pydata.org/pandas-docs/stable/',
         },
     ], config=True)
 
@@ -123,7 +127,7 @@ class IPythonKernel(KernelBase):
 
     def init_metadata(self, parent):
         """Initialize metadata.
-        
+
         Run at the beginning of each execution request.
         """
         md = super(IPythonKernel, self).init_metadata(parent)
@@ -134,10 +138,10 @@ class IPythonKernel(KernelBase):
             'engine' : self.ident,
         })
         return md
-    
+
     def finish_metadata(self, parent, metadata, reply_content):
         """Finish populating metadata.
-        
+
         Run after completing an execution request.
         """
         # FIXME: remove deprecated ipyparallel-specific code
@@ -229,8 +233,10 @@ class IPythonKernel(KernelBase):
             reply_content['engine_info'] = e_info
 
         if 'traceback' in reply_content:
-            self.log.info("Exception in execute request:\n%s", '\n'.join(reply_content['traceback']))
-
+            self.log.info(
+                'Exception in execute request:\n%s',
+                '\n'.join(reply_content['traceback'])
+            )
 
         # At this point, we can tell whether the main code execution succeeded
         # or not.  If it did, we proceed to evaluate user_expressions
@@ -286,17 +292,21 @@ class IPythonKernel(KernelBase):
 
     def do_history(self, hist_access_type, output, raw, session=None, start=None,
                    stop=None, n=None, pattern=None, unique=False):
+        hist_man = self.shell.history_manager
         if hist_access_type == 'tail':
-            hist = self.shell.history_manager.get_tail(n, raw=raw, output=output,
-                                                            include_latest=True)
+            hist = hist_man.get_tail(
+                n, raw=raw, output=output, include_latest=True
+            )
 
         elif hist_access_type == 'range':
-            hist = self.shell.history_manager.get_range(session, start, stop,
-                                                        raw=raw, output=output)
+            hist = hist_man.get_range(
+                session, start, stop, raw=raw, output=output
+            )
 
         elif hist_access_type == 'search':
-            hist = self.shell.history_manager.search(
-                pattern, raw=raw, output=output, n=n, unique=unique)
+            hist = hist_man.search(
+                pattern, raw=raw, output=output, n=n, unique=unique
+            )
         else:
             hist = []
 
@@ -319,21 +329,24 @@ class IPythonKernel(KernelBase):
         try:
             working = shell.user_ns
 
-            prefix = "_"+str(msg_id).replace("-","")+"_"
+            prefix = '_' + str(msg_id).replace('-', '') + '_'
 
             f,args,kwargs = unpack_apply_message(bufs, working, copy=False)
 
             fname = getattr(f, '__name__', 'f')
 
-            fname = prefix+"f"
-            argname = prefix+"args"
-            kwargname = prefix+"kwargs"
-            resultname = prefix+"result"
+            fname = prefix + 'f'
+            argname = prefix + 'args'
+            kwargname = prefix + 'kwargs'
+            resultname = prefix + 'result'
 
-            ns = { fname : f, argname : args, kwargname : kwargs , resultname : None }
+            ns = {
+                fname : f, argname : args,
+                kwargname : kwargs, resultname : None
+            }
             # print ns
             working.update(ns)
-            code = "%s = %s(*%s,**%s)" % (resultname, fname, argname, kwargname)
+            code = '%s = %s(*%s,**%s)' % (resultname, fname, argname, kwargname)
             try:
                 exec(code, shell.user_global_ns, shell.user_ns)
                 result = working.get(resultname)
@@ -356,14 +369,21 @@ class IPythonKernel(KernelBase):
                 reply_content.update(shell._reply_content)
                 # reset after use
                 shell._reply_content = None
-                
+
                 # FIXME: deprecate piece for ipyparallel:
-                e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
+                e_info = dict(
+                    engine_uuid=self.ident,
+                    engine_id=self.int_id,
+                    method='apply'
+                )
                 reply_content['engine_info'] = e_info
 
             self.send_response(self.iopub_socket, u'error', reply_content,
                                 ident=self._topic('error'))
-            self.log.info("Exception in apply request:\n%s", '\n'.join(reply_content['traceback']))
+            self.log.info(
+                'Exception in apply request:\n%s',
+                '\n'.join(reply_content['traceback'])
+            )
             result_buf = []
         else:
             reply_content = {'status' : 'ok'}
@@ -380,6 +400,8 @@ class IPythonKernel(KernelBase):
 class Kernel(IPythonKernel):
     def __init__(self, *args, **kwargs):
         import warnings
-        warnings.warn('Kernel is a deprecated alias of ipykernel.ipkernel.IPythonKernel',
-                      DeprecationWarning)
+        warnings.warn(
+            'Kernel is a deprecated alias of ipykernel.ipkernel.IPythonKernel',
+            DeprecationWarning
+        )
         super(Kernel, self).__init__(*args, **kwargs)

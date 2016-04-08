@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """The IPython kernel spec for Jupyter"""
 
 # Copyright (c) IPython Development Team.
@@ -61,15 +62,15 @@ def get_kernel_dict():
 
 def write_kernel_spec(path=None, overrides=None):
     """Write a kernel spec directory to `path`
-    
+
     If `path` is not specified, a temporary directory is created.
     If `overrides` is given, the kernelspec JSON is updated before writing.
-    
+
     The path to the kernelspec is always returned.
     """
     if path is None:
         path = os.path.join(tempfile.mkdtemp(suffix='_kernels'), KERNEL_NAME)
-    
+
     # stage resources
     shutil.copytree(RESOURCES, path)
     # write kernel.json
@@ -78,16 +79,16 @@ def write_kernel_spec(path=None, overrides=None):
         kernel_dict.update(overrides)
     with open(pjoin(path, 'kernel.json'), 'w') as f:
         json.dump(kernel_dict, f, indent=1)
-    
+
     return path
 
 
 def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None, prefix=None):
     """Install the IPython kernelspec for Jupyter
-    
+
     Parameters
     ----------
-    
+
     kernel_spec_manager: KernelSpecManager [optional]
         A KernelSpecManager to use for installation.
         If none provided, a default instance will be created.
@@ -95,16 +96,18 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
         Whether to do a user-only install, or system-wide.
     kernel_name: str, optional
         Specify a name for the kernelspec.
-        This is needed for having multiple IPython kernels for different environments.
+        This is needed for having multiple IPython kernels for
+        different environments.
     prefix: str, optional
         Specify an install prefix for the kernelspec.
-        This is needed to install into a non-default location, such as a conda/virtual-env.
+        This is needed to install into a non-default location,
+        such as a conda/virtual-env.
     display_name: str, optional
         Specify the display name for the kernelspec
-    
+
     Returns
     -------
-    
+
     The path where the kernelspec was installed.
     """
     if kernel_spec_manager is None:
@@ -133,40 +136,46 @@ from traitlets.config import Application
 class InstallIPythonKernelSpecApp(Application):
     """Dummy app wrapping argparse"""
     name = 'ipython-kernel-install'
-    
+
     def initialize(self, argv=None):
         if argv is None:
             argv = sys.argv[1:]
         self.argv = argv
-    
+
     def start(self):
         import argparse
         parser = argparse.ArgumentParser(prog=self.name,
-            description="Install the IPython kernel spec.")
+            description='Install the IPython kernel spec.')
         parser.add_argument('--user', action='store_true',
-            help="Install for the current user instead of system-wide")
+            help='Install for the current user instead of system-wide')
         parser.add_argument('--name', type=str, default=KERNEL_NAME,
-            help="Specify a name for the kernelspec."
-            " This is needed to have multiple IPython kernels at the same time.")
+            help='Specify a name for the kernelspec.'
+            ' This is needed to have multiple IPython kernels'
+            ' at the same time.')
         parser.add_argument('--display-name', type=str,
-            help="Specify the display name for the kernelspec."
-            " This is helpful when you have multiple IPython kernels.")
+            help='Specify the display name for the kernelspec.'
+            ' This is helpful when you have multiple IPython kernels.')
         parser.add_argument('--prefix', type=str,
-            help="Specify an install prefix for the kernelspec."
-            " This is needed to install into a non-default location, such as a conda/virtual-env.")
+            help='Specify an install prefix for the kernelspec.'
+            ' This is needed to install into a non-default location,'
+            ' such as a conda/virtual-env.')
         opts = parser.parse_args(self.argv)
         try:
-            dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix,
-                display_name=opts.display_name,
+            dest = install(
+                user=opts.user,
+                kernel_name=opts.name,
+                prefix=opts.prefix,
+                display_name=opts.display_name
             )
         except OSError as e:
             if e.errno == errno.EACCES:
                 print(e, file=sys.stderr)
                 if opts.user:
-                    print("Perhaps you want `sudo` or `--user`?", file=sys.stderr)
+                    print('Perhaps you want `sudo` or `--user`?',
+                          file=sys.stderr)
                 self.exit(1)
             raise
-        print("Installed kernelspec %s in %s" % (opts.name, dest))
+        print('Installed kernelspec %s in %s' % (opts.name, dest))
 
 
 if __name__ == '__main__':

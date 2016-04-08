@@ -262,7 +262,7 @@ class KernelMagics(Magics):
             filename, lineno, _ = CodeMagics._find_edit_target(self.shell, args, opts, last_call)
         except MacroToEdit as e:
             # TODO: Implement macro editing over 2 processes.
-            print("Macro editing not yet implemented in 2-process model.")
+            print('Macro editing not yet implemented in 2-process model.')
             return
 
         # Make sure we send to the client an absolute path, in case the working
@@ -283,9 +283,9 @@ class KernelMagics(Magics):
     def clear(self, arg_s):
         """Clear the terminal."""
         if os.name == 'posix':
-            self.shell.system("clear")
+            self.shell.system('clear')
         else:
-            self.shell.system("cls")
+            self.shell.system('cls')
 
     if os.name == 'nt':
         # This is the usual name in windows
@@ -345,11 +345,11 @@ class KernelMagics(Magics):
             connection_file = get_connection_file()
             info = get_connection_info(unpack=False)
         except Exception as e:
-            error("Could not get connection info: %r" % e)
+            error('Could not get connection info: %r' % e)
             return
 
         # add profile flag for non-default profile
-        profile_flag = "--profile %s" % profile if profile != 'default' else ""
+        profile_flag = '--profile %s' % profile if profile != 'default' else ''
 
         # if it's in the security dir, truncate to basename
         if security_dir == os.path.dirname(connection_file):
@@ -357,13 +357,13 @@ class KernelMagics(Magics):
 
 
         print (info + '\n')
-        print ("Paste the above JSON into a file, and connect with:\n"
-            "    $> ipython <app> --existing <file>\n"
-            "or, if you are local, you can connect with just:\n"
-            "    $> ipython <app> --existing {0} {1}\n"
-            "or even just:\n"
-            "    $> ipython <app> --existing {1}\n"
-            "if this is the most recent IPython session you have started.".format(
+        print ('Paste the above JSON into a file, and connect with:\n'
+            '    $> ipython <app> --existing <file>\n'
+            'or, if you are local, you can connect with just:\n'
+            '    $> ipython <app> --existing {0} {1}\n'
+            'or even just:\n'
+            '    $> ipython <app> --existing {1}\n'
+            'if this is the most recent IPython session you have started.'.format(
             connection_file, profile_flag
             )
         )
@@ -385,7 +385,7 @@ class KernelMagics(Magics):
         try:
             p = connect_qtconsole(argv=arg_split(arg_s, os.name=='posix'))
         except Exception as e:
-            error("Could not start qtconsole: %r" % e)
+            error('Could not start qtconsole: %r' % e)
             return
 
     @line_magic
@@ -402,17 +402,17 @@ class KernelMagics(Magics):
         try:
             interval = int(arg_s)
         except ValueError:
-            raise UsageError("%%autosave requires an integer, got %r" % arg_s)
+            raise UsageError('%%autosave requires an integer, got %r' % arg_s)
 
         # javascript wants milliseconds
         milliseconds = 1000 * interval
-        display(Javascript("IPython.notebook.set_autosave_interval(%i)" % milliseconds),
+        display(Javascript('IPython.notebook.set_autosave_interval(%i)' % milliseconds),
             include=['application/javascript']
         )
         if interval:
-            print("Autosaving every %i seconds" % interval)
+            print('Autosaving every %i seconds' % interval)
         else:
-            print("Autosave disabled")
+            print('Autosave disabled')
 
 
 class ZMQInteractiveShell(InteractiveShell):
@@ -481,8 +481,8 @@ class ZMQInteractiveShell(InteractiveShell):
     @property
     def data_pub(self):
         if not hasattr(self, '_data_pub'):
-            warnings.warn("InteractiveShell.data_pub is deprecated outside IPython parallel.",
-                DeprecationWarning, stacklevel=2)
+            w = 'InteractiveShell.data_pub is deprecated outside IPython parallel.'
+            warnings.warn(w, DeprecationWarning, stacklevel=2)
 
             self._data_pub = self.data_pub_class(parent=self)
             self._data_pub.session = self.display_pub.session
@@ -520,7 +520,13 @@ class ZMQInteractiveShell(InteractiveShell):
         if dh.topic:
             topic = dh.topic.replace(b'execute_result', b'error')
 
-        exc_msg = dh.session.send(dh.pub_socket, u'error', json_clean(exc_content), dh.parent_header, ident=topic)
+        exc_msg = dh.session.send(
+            dh.pub_socket,
+            u'error',
+            json_clean(exc_content),
+            dh.parent_header,
+            ident=topic
+        )
 
         # FIXME - Hack: store exception info in shell object.  Right now, the
         # caller is reading this info after the fact, we need to fix this logic

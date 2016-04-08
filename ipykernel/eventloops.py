@@ -190,11 +190,11 @@ def loop_cocoa(kernel):
     import matplotlib
     if matplotlib.__version__ < '1.1.0':
         kernel.log.warn(
-        "MacOSX backend in matplotlib %s doesn't have a Timer, "
-        "falling back on Tk for CFRunLoop integration.  Note that "
-        "even this won't work if Tk is linked against X11 instead of "
-        "Cocoa (e.g. EPD).  To use the MacOSX backend in the kernel, "
-        "you must use matplotlib >= 1.1.0, or a native libtk."
+        'MacOSX backend in matplotlib %s doesn\'t have a Timer, '
+        'falling back on Tk for CFRunLoop integration.  Note that '
+        'even this won\'t work if Tk is linked against X11 instead of '
+        'Cocoa (e.g. EPD).  To use the MacOSX backend in the kernel, '
+        'you must use matplotlib >= 1.1.0, or a native libtk.'
         )
         return loop_tk(kernel)
 
@@ -207,7 +207,7 @@ def loop_cocoa(kernel):
     def handle_int(etype, value, tb):
         """don't let KeyboardInterrupts look like crashes"""
         if etype is KeyboardInterrupt:
-            io.raw_print("KeyboardInterrupt caught in CFRunLoop")
+            io.raw_print('KeyboardInterrupt caught in CFRunLoop')
         else:
             real_excepthook(etype, value, tb)
 
@@ -248,26 +248,27 @@ def loop_cocoa(kernel):
                 raise
         except KeyboardInterrupt:
             # Ctrl-C shouldn't crash the kernel
-            io.raw_print("KeyboardInterrupt caught in kernel")
+            io.raw_print('KeyboardInterrupt caught in kernel')
         finally:
             # ensure excepthook is restored
             sys.excepthook = real_excepthook
 
 
-
 def enable_gui(gui, kernel=None):
     """Enable integration with a given GUI"""
     if gui not in loop_map:
-        e = "Invalid GUI request %r, valid ones are:%s" % (gui, loop_map.keys())
+        e = 'Invalid GUI request %r, valid ones are:%s' % (gui, loop_map.keys())
         raise ValueError(e)
     if kernel is None:
         if Application.initialized():
             kernel = getattr(Application.instance(), 'kernel', None)
         if kernel is None:
-            raise RuntimeError("You didn't specify a kernel,"
-                " and no IPython Application with a kernel appears to be running."
+            raise RuntimeError(
+                'You didn\'t specify a kernel,'
+                ' and no IPython Application with a'
+                ' kernel appears to be running.'
             )
     loop = loop_map[gui]
     if loop and kernel.eventloop is not None and kernel.eventloop is not loop:
-        raise RuntimeError("Cannot activate multiple GUI eventloops")
+        raise RuntimeError('Cannot activate multiple GUI eventloops')
     kernel.eventloop = loop

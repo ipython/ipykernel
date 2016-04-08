@@ -1,12 +1,9 @@
+# -*- coding: utf-8 -*-
 """The client and server for a basic ping-pong style heartbeat.
 """
 
-#-----------------------------------------------------------------------------
-#  Copyright (C) 2008-2011  The IPython Development Team
-#
-#  Distributed under the terms of the BSD License.  The full license is in
-#  the file COPYING, distributed as part of this software.
-#-----------------------------------------------------------------------------
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
 
 #-----------------------------------------------------------------------------
 # Imports
@@ -47,7 +44,7 @@ class Heartbeat(Thread):
                 while os.path.exists("%s-%s" % (self.ip, self.port)):
                     self.port = self.port + 1
             else:
-                raise ValueError("Unrecognized zmq transport: %s" % addr[0])
+                raise ValueError('Unrecognized zmq transport: %s' % addr[0])
         self.addr = (self.ip, self.port)
         self.daemon = True
 

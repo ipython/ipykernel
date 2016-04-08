@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 import nose.tools as nt
 
 from .test_embed_kernel import setup_kernel
@@ -18,7 +22,7 @@ def test_ipython_start_kernel_userns():
         nt.assert_in(u'123', text)
 
         # user_module should be an instance of DummyMod
-        msg_id = client.execute("usermod = get_ipython().user_module")
+        msg_id = client.execute('usermod = get_ipython().user_module')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         nt.assert_equal(content['status'], u'ok')
@@ -36,7 +40,7 @@ def test_ipython_start_kernel_no_userns():
 
     with setup_kernel(cmd) as client:
         # user_module should not be an instance of DummyMod
-        msg_id = client.execute("usermod = get_ipython().user_module")
+        msg_id = client.execute('usermod = get_ipython().user_module')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         nt.assert_equal(content['status'], u'ok')

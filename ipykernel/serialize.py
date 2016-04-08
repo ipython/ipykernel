@@ -1,10 +1,14 @@
+# -*- coding: utf-8 -*-
 """serialization utilities for apply messages"""
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
 import warnings
-warnings.warn("ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize", DeprecationWarning)
+warnings.warn(
+    'ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize',
+    DeprecationWarning
+)
 
 try:
     import cPickle
@@ -49,7 +53,7 @@ def _extract_buffers(obj, threshold=MAX_BYTES):
     return buffers
 
 def _restore_buffers(obj, buffers):
-    """restore buffers extracted by """
+    """ restore buffers extracted by """
     if isinstance(obj, CannedObject) and obj.buffers:
         for i,buf in enumerate(obj.buffers):
             if buf is None:
@@ -163,7 +167,7 @@ def unpack_apply_message(bufs, g=None, copy=True):
     """unpack f,args,kwargs from buffers packed by pack_apply_message()
     Returns: original f,args,kwargs"""
     bufs = list(bufs) # allow us to pop
-    assert len(bufs) >= 2, "not enough buffers!"
+    assert len(bufs) >= 2, 'not enough buffers!'
     pf = buffer_to_bytes_py2(bufs.pop(0))
     f = uncan(pickle.loads(pf), g)
     pinfo = buffer_to_bytes_py2(bufs.pop(0))
@@ -175,12 +179,12 @@ def unpack_apply_message(bufs, g=None, copy=True):
         arg, arg_bufs = deserialize_object(arg_bufs, g)
         args.append(arg)
     args = tuple(args)
-    assert not arg_bufs, "Shouldn't be any arg bufs left over"
+    assert not arg_bufs, 'Shouldn\'t be any arg bufs left over'
 
     kwargs = {}
     for key in info['kw_keys']:
         kwarg, kwarg_bufs = deserialize_object(kwarg_bufs, g)
         kwargs[key] = kwarg
-    assert not kwarg_bufs, "Shouldn't be any kwarg bufs left over"
+    assert not kwarg_bufs, 'Shouldn\'t be any kwarg bufs left over'
 
     return f,args,kwargs

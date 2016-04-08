@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
 
 import os
 import pickle
@@ -21,7 +24,7 @@ def test_no_closure():
     def foo():
         a = 5
         return a
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     nt.assert_equal(foo(), bar())
@@ -33,7 +36,7 @@ def test_generator_closure():
         i = 'i'
         r = [ i for j in (1,2) ]
         return r
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     nt.assert_equal(foo(), bar())
@@ -45,7 +48,7 @@ def test_nested_closure():
         def g():
             return i
         return g()
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     nt.assert_equal(foo(), bar())
@@ -55,7 +58,7 @@ def test_closure():
     @interactive
     def foo():
         return i
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     nt.assert_equal(foo(), bar())

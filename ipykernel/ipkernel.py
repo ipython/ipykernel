@@ -243,9 +243,9 @@ class IPythonKernel(KernelBase):
 
         # Payloads should be retrieved regardless of outcome, so we can both
         # recover partial output (that could have been generated early in a
-        # block, before an error) and clear the payload system always.
+        # block, before an error) and always clear the payload system.
         reply_content[u'payload'] = shell.payload_manager.read_payload()
-        # Be agressive about clearing the payload because we don't want
+        # Be aggressive about clearing the payload because we don't want
         # it to sit in memory until the next execute_request comes in.
         shell.payload_manager.clear_payload()
 

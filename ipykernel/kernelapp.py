@@ -25,7 +25,7 @@ from IPython.core.shellapp import (
 from IPython.utils import io
 from ipython_genutils.path import filefind, ensure_dir_exists
 from traitlets import (
-    Any, Instance, Dict, Unicode, Integer, Bool, DottedObjectName, Type,
+    Any, Instance, Dict, Unicode, Integer, Bool, DottedObjectName, Type, default
 )
 from ipython_genutils.importstring import import_item
 from jupyter_core.paths import jupyter_runtime_dir
@@ -112,7 +112,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     poller = Any() # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
     ports = Dict()
-    
+
     subcommands = {
         'install': (
             'ipykernel.kernelspec.InstallIPythonKernelSpecApp',
@@ -122,7 +122,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     # connection info:
     connection_dir = Unicode()
-    def _connection_dir_default(self):
+
+    @default('connection_dir')
+    def _default_connection_dir(self):
         return jupyter_runtime_dir()
 
     @property
@@ -131,7 +133,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             return os.path.join(self.connection_dir, self.connection_file)
         else:
             return self.connection_file
-
 
     # streams, etc.
     no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
@@ -153,7 +154,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     def init_crash_handler(self):
         sys.excepthook = self.excepthook
-    
+
     def excepthook(self, etype, evalue, tb):
         # write uncaught traceback to 'real' stderr, not zmq-forwarder
         traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
@@ -241,7 +242,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
         self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
-        
+
         self.init_iopub(context)
 
     def init_iopub(self, context):
@@ -253,7 +254,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.iopub_thread.start()
         # backward-compat: wrap iopub socket API in background thread
         self.iopub_socket = self.iopub_thread.background_socket
-        
 
     def init_heartbeat(self):
         """start the heart beating"""
@@ -312,9 +312,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             sys.displayhook = displayhook_factory(self.session, self.iopub_socket)
-        
+
         self.patch_io()
-    
+
     def patch_io(self):
         """Patch important libraries that can't handle sys.stdout forwarding"""
         try:
@@ -388,7 +388,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.shell = getattr(self.kernel, 'shell', None)
         if self.shell:
             self.shell.configurables.append(self)
-    
+
     def init_extensions(self):
         super(IPKernelApp, self).init_extensions()
         # BEGIN HARDCODED WIDGETS HACK
@@ -434,7 +434,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def start(self):
         if self.subapp is not None:
             return self.subapp.start()
-        
         if self.poller is not None:
             self.poller.start()
         self.kernel.start()

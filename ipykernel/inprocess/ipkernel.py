@@ -9,7 +9,7 @@ import sys
 
 from IPython.core.interactiveshell import InteractiveShellABC
 from ipykernel.jsonutil import json_clean
-from traitlets import Any, Enum, Instance, List, Type
+from traitlets import Any, Enum, Instance, List, Type, default
 from ipykernel.ipkernel import IPythonKernel
 from ipykernel.zmqshell import ZMQInteractiveShell
 
@@ -52,21 +52,25 @@ class InProcessKernel(IPythonKernel):
     control_stream = Any()
     _underlying_iopub_socket = Instance(DummySocket, ())
     iopub_thread = Instance(IOPubThread)
-    def _iopub_thread_default(self):
+
+    @default('iopub_thread')
+    def _default_iopub_thread(self):
         thread = IOPubThread(self._underlying_iopub_socket)
         thread.start()
         return thread
-    
+
     iopub_socket = Instance(BackgroundSocket)
-    def _iopub_socket_default(self):
+
+    @default('iopub_socket')
+    def _default_iopub_socket(self):
         return self.iopub_thread.background_socket
-    
+
     stdin_socket = Instance(DummySocket, ())
 
     def __init__(self, **traits):
         super(InProcessKernel, self).__init__(**traits)
 
-        self._underlying_iopub_socket.on_trait_change(self._io_dispatch, 'message_sent')
+        self._underlying_iopub_socket.observe(self._io_dispatch, names=['message_sent'])
         self.shell.kernel = self
 
     def execute_request(self, stream, ident, parent):
@@ -119,7 +123,7 @@ class InProcessKernel(IPythonKernel):
 
     #------ Trait change handlers --------------------------------------------
 
-    def _io_dispatch(self):
+    def _io_dispatch(self, change):
         """ Called when a message is sent to the IO socket.
         """
         ident, msg = self.session.recv(self.iopub_socket, copy=False)
@@ -128,20 +132,25 @@ class InProcessKernel(IPythonKernel):
 
     #------ Trait initializers -----------------------------------------------
 
-    def _log_default(self):
+    @default('log')
+    def _default_log(self):
         return logging.getLogger(__name__)
 
-    def _session_default(self):
+    @default('session')
+    def _default_session(self):
         from jupyter_client.session import Session
         return Session(parent=self, key=b'')
 
-    def _shell_class_default(self):
+    @default('shell_class')
+    def _default_shell_class(self):
         return InProcessInteractiveShell
 
-    def _stdout_default(self):
+    @default('stdout')
+    def _default_stdout(self):
         return OutStream(self.session, self.iopub_thread, u'stdout')
 
-    def _stderr_default(self):
+    @default('stderr')
+    def _default_stderr(self):
         return OutStream(self.session, self.iopub_thread, u'stderr')
 
 #-----------------------------------------------------------------------------

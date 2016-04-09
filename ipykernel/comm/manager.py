@@ -11,7 +11,7 @@ from IPython.core.getipython import get_ipython
 
 from ipython_genutils.importstring import import_item
 from ipython_genutils.py3compat import string_types
-from traitlets import Instance, Unicode, Dict, Any
+from traitlets import Instance, Unicode, Dict, Any, default
 
 from .comm import Comm
 
@@ -34,10 +34,15 @@ class CommManager(LoggingConfigurable):
     kernel = Instance('ipykernel.kernelbase.Kernel')
 
     iopub_socket = Any()
-    def _iopub_socket_default(self):
+
+    @default('iopub_socket')
+    def _default_iopub_socket(self):
         return self.kernel.iopub_socket
+
     session = Instance('jupyter_client.session.Session')
-    def _session_default(self):
+
+    @default('session')
+    def _default_session(self):
         return self.kernel.session
 
     comms = Dict()

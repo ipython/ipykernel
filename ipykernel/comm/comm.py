@@ -12,7 +12,7 @@ from traitlets.config import LoggingConfigurable
 from ipykernel.kernelbase import Kernel
 
 from ipykernel.jsonutil import json_clean
-from traitlets import Instance, Unicode, Bytes, Bool, Dict, Any
+from traitlets import Instance, Unicode, Bytes, Bool, Dict, Any, default
 
 
 class Comm(LoggingConfigurable):
@@ -21,15 +21,22 @@ class Comm(LoggingConfigurable):
     shell = Instance('IPython.core.interactiveshell.InteractiveShellABC',
                      allow_none=True)
     kernel = Instance('ipykernel.kernelbase.Kernel')
-    def _kernel_default(self):
+
+    @default('kernel')
+    def _default_kernel(self):
         if Kernel.initialized():
             return Kernel.instance()
 
     iopub_socket = Any()
-    def _iopub_socket_default(self):
+
+    @default('iopub_socket')
+    def _default_iopub_socket(self):
         return self.kernel.iopub_socket
+
     session = Instance('jupyter_client.session.Session')
-    def _session_default(self):
+
+    @default('session')
+    def _default_session(self):
         if self.kernel is not None:
             return self.kernel.session
 
@@ -38,7 +45,9 @@ class Comm(LoggingConfigurable):
         which to load comm target.""")
 
     topic = Bytes()
-    def _topic_default(self):
+
+    @default('topic')
+    def _default_topic(self):
         return ('comm-%s' % self.comm_id).encode('ascii')
 
     _open_data = Dict(help="data dict, if any, to be included in comm_open")
@@ -49,7 +58,9 @@ class Comm(LoggingConfigurable):
 
     _closed = Bool(True)
     comm_id = Unicode()
-    def _comm_id_default(self):
+
+    @default('comm_id')
+    def _default_comm_id(self):
         return uuid.uuid4().hex
 
     primary = Bool(True, help="Am I the primary or secondary Comm?")

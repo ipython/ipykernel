@@ -3,7 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from traitlets import Instance, DottedObjectName
+from traitlets import Instance, DottedObjectName, default
 from jupyter_client.managerabc import KernelManagerABC
 from jupyter_client.manager import KernelManager
 from jupyter_client.session import Session
@@ -24,11 +24,14 @@ class InProcessKernelManager(KernelManager):
                       allow_none=True)
     # the client class for KM.client() shortcut
     client_class = DottedObjectName('ipykernel.inprocess.BlockingInProcessKernelClient')
-    def _blocking_class_default(self):
+
+    @default('blocking_class')
+    def _default_blocking_class(self):
         from .blocking import BlockingInProcessKernelClient
         return BlockingInProcessKernelClient
 
-    def _session_default(self):
+    @default('session')
+    def _default_session(self):
         # don't sign in-process messages
         return Session(key=b'', parent=self)
 

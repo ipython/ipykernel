@@ -13,7 +13,7 @@
 
 # IPython imports
 from ipykernel.inprocess.socket import DummySocket
-from traitlets import Type, Instance
+from traitlets import Type, Instance, default
 from jupyter_client.clientabc import KernelClientABC
 from jupyter_client.client import KernelClient
 
@@ -21,7 +21,6 @@ from jupyter_client.client import KernelClient
 from .channels import (
     InProcessChannel,
     InProcessHBChannel,
-
 )
 
 #-----------------------------------------------------------------------------
@@ -50,11 +49,12 @@ class InProcessKernelClient(KernelClient):
     #--------------------------------------------------------------------------
     # Channel management methods
     #--------------------------------------------------------------------------
-    
-    def _blocking_class_default(self):
+
+    @default('blocking_class')
+    def _default_blocking_class(self):
         from .blocking import BlockingInProcessKernelClient
         return BlockingInProcessKernelClient
-    
+
     def get_connection_info(self):
         d = super(InProcessKernelClient, self).get_connection_info()
         d['kernel'] = self.kernel

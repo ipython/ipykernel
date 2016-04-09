@@ -91,21 +91,24 @@ class IPythonKernel(KernelBase):
             'text': "pandas",
             'url': "http://pandas.pydata.org/pandas-docs/stable/",
         },
-    ], config=True)
+    ]).tag(config=True)
 
     # Kernel info fields
     implementation = 'ipython'
     implementation_version = release.version
     language_info = {
-                     'name': 'python',
-                     'version': sys.version.split()[0],
-                     'mimetype': 'text/x-python',
-                     'codemirror_mode': {'name': 'ipython',
-                                         'version': sys.version_info[0]},
-                     'pygments_lexer': 'ipython%d' % (3 if PY3 else 2),
-                     'nbconvert_exporter': 'python',
-                     'file_extension': '.py'
-                    }
+        'name': 'python',
+        'version': sys.version.split()[0],
+        'mimetype': 'text/x-python',
+        'codemirror_mode': {
+            'name': 'ipython',
+            'version': sys.version_info[0]
+        },
+        'pygments_lexer': 'ipython%d' % (3 if PY3 else 2),
+        'nbconvert_exporter': 'python',
+        'file_extension': '.py'
+    }
+
     @property
     def banner(self):
         return self.shell.banner

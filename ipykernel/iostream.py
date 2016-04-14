@@ -223,7 +223,7 @@ class OutStream(object):
         self._flush_lock = threading.Lock()
         self._flush_timeout = None
         self._io_loop = pub_thread.io_loop
-        self.buffer_lock = threading.Lock()
+        self._buffer_lock = threading.Lock()
         self._new_buffer()
 
     def _is_master_process(self):
@@ -316,9 +316,9 @@ class OutStream(object):
                 string = string.decode(self.encoding, 'replace')
 
             is_child = (not self._is_master_process())
-            self.buffer_lock.acquire(True)
+            self._buffer_lock.acquire(True)
             self._buffer.write(string)
-            self.buffer_lock.release()
+            self._buffer_lock.release()
             if is_child:
                 # newlines imply flush in subprocesses
                 # mp.Pool cannot be trusted to flush promptly (or ever),
@@ -338,14 +338,14 @@ class OutStream(object):
     def _flush_buffer(self):
         """clear the current buffer and return the current buffer data"""
 
-        self.buffer_lock.acquire(True)
+        self._buffer_lock.acquire(True)
         data = u''
         if self._buffer is not None:
             buf = self._buffer
             self._new_buffer()
             data = buf.getvalue()
             buf.close()
-        self.buffer_lock.release()
+        self._buffer_lock.release()
         return data
 
     def _new_buffer(self):

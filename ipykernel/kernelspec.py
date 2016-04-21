@@ -154,6 +154,9 @@ class InstallIPythonKernelSpecApp(Application):
         parser.add_argument('--prefix', type=str,
             help="Specify an install prefix for the kernelspec."
             " This is needed to install into a non-default location, such as a conda/virtual-env.")
+        parser.add_argument('--sys-prefix', action='store_const', const=sys.prefix, dest='prefix',
+            help="Install to Python's sys.prefix."
+            " Shorthand for --prefix='%s'. For use in conda/virtual-envs." % sys.prefix)
         opts = parser.parse_args(self.argv)
         try:
             dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix,

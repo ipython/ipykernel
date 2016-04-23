@@ -49,6 +49,8 @@ class MessageHookFor(object):
 
         self._old_stdout = sys.stdout
         self._old_stderr = sys.stderr
+        sys.stdout = self._std_buffer
+        sys.stderr = self._std_buffer
 
     def __exit__(self, tp, value, tb):
         if tp is not None:

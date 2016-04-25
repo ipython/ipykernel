@@ -54,8 +54,7 @@ class IPythonKernel(KernelBase):
         # TMP - hack while developing
         self.shell._reply_content = None
 
-        self.comm_manager = CommManager(shell=self.shell, parent=self,
-                                        kernel=self)
+        self.comm_manager = CommManager(kernel=self)
 
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
@@ -126,7 +125,7 @@ class IPythonKernel(KernelBase):
 
     def init_metadata(self, parent):
         """Initialize metadata.
-        
+
         Run at the beginning of each execution request.
         """
         md = super(IPythonKernel, self).init_metadata(parent)
@@ -137,10 +136,10 @@ class IPythonKernel(KernelBase):
             'engine' : self.ident,
         })
         return md
-    
+
     def finish_metadata(self, parent, metadata, reply_content):
         """Finish populating metadata.
-        
+
         Run after completing an execution request.
         """
         # FIXME: remove deprecated ipyparallel-specific code
@@ -359,7 +358,7 @@ class IPythonKernel(KernelBase):
                 reply_content.update(shell._reply_content)
                 # reset after use
                 shell._reply_content = None
-                
+
                 # FIXME: deprecate piece for ipyparallel:
                 e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
                 reply_content['engine_info'] = e_info

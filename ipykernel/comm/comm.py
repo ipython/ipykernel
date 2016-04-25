@@ -30,6 +30,8 @@ class Comm(LoggingConfigurable):
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
+    primary = Bool(True, help="Am I the primary or secondary Comm?")
+
     target_name = Unicode('comm')
     target_module = Unicode(None, allow_none=True, help="""requirejs module from
         which to load comm target.""")
@@ -47,8 +49,6 @@ class Comm(LoggingConfigurable):
     _close_callback = Any()
 
     _closed = Bool(True)
-
-    primary = Bool(True, help="Am I the primary or secondary Comm?")
 
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
         if target_name:
@@ -154,8 +154,8 @@ class Comm(LoggingConfigurable):
     def handle_msg(self, msg):
         """Handle a comm_msg message"""
         self.log.debug("handle_msg[%s](%s)", self.comm_id, msg)
-        shell = self.kernel.shell
         if self._msg_callback:
+            shell = self.kernel.shell
             if shell:
                 shell.events.trigger('pre_execute')
             self._msg_callback(msg)

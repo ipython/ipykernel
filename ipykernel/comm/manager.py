@@ -67,7 +67,7 @@ class CommManager(LoggingConfigurable):
         except KeyError:
             self.log.warn("No such comm: %s", comm_id)
             if self.log.isEnabledFor(self.log.DEBUG):
-                self.log.debug("Current comms: %s", self.comms.keys())
+                self.log.debug("Current comms: %s", list(self.comms.keys()))
 
     # Message handlers
     def comm_open(self, stream, ident, msg):
@@ -103,7 +103,7 @@ class CommManager(LoggingConfigurable):
         if self._comm_is_not_valid(comm, comm_id):
             return
 
-        self._safe_handle(msg, comm.handle_msg)
+        self._safe_handle(msg, comm.handle_msg, name='comm_msg')
 
     def comm_close(self, stream, ident, msg):
         """Handler for comm_close messages"""
@@ -112,7 +112,7 @@ class CommManager(LoggingConfigurable):
             return
 
         del self.comms[comm_id]
-        self._safe_handle(msg, comm.handle_close)
+        self._safe_handle(msg, comm.handle_close, name='comm_close')
 
     def _comm_is_not_valid(self, comm, comm_id):
         invalid = comm is None
@@ -125,11 +125,11 @@ class CommManager(LoggingConfigurable):
         comm_id = content['comm_id']
         return (comm_id, self.get_comm(comm_id))
 
-    def _safe_handle(self, msg, callback):
+    def _safe_handle(self, msg, callback, name = ''):
         try:
             callback(msg)
         except Exception:
-            self.log.error('Exception handling ' + callback.__name__ + ' for %s', msg['content']['comm_id'], exc_info=True)
+            self.log.error('Exception handling ' + name + ' for %s', msg['content']['comm_id'], exc_info=True)
 
 
 __all__ = ['CommManager']

@@ -251,7 +251,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
         self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
-        self.init_tornado_logger()
+        self.configure_tornado_logger()
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True)
         self.iopub_thread.start()
         # backward-compat: wrap iopub socket API in background thread
@@ -403,7 +403,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                 self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
         # END HARDCODED WIDGETS HACK
 
-    def init_tornado_logger(self):
+    def configure_tornado_logger(self):
         """ Must set up the tornado logger or else tornado will call
             basicConfig for the root logger which makes the root logger
             go to the real sys.stderr instead of the capture streams.

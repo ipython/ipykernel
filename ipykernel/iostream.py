@@ -12,7 +12,6 @@ import sys
 import threading
 import uuid
 import warnings
-import logging
 from io import StringIO, UnsupportedOperation
 
 import zmq
@@ -51,7 +50,6 @@ class IOPubThread(object):
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
         self._pipe_flag = pipe
-        self._setup_tornado_logger()
         self.io_loop = IOLoop()
         if pipe:
             self._setup_pipe_in()
@@ -159,19 +157,6 @@ class IOPubThread(object):
             pipe_out.send_multipart([self._pipe_uuid] + msg, *args, **kwargs)
             pipe_out.close()
             ctx.term()
-
-    def _setup_tornado_logger(self):
-        """ Must set up the tornado logger or else tornado will call
-            basicConfig for the root logger which makes the root logger
-            go to the real sys.stderr instead of the capture streams.
-            This function mimics the setup of logging.basicConfig.
-        """
-        logger = logging.getLogger('tornado')
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(logging.BASIC_FORMAT)
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
 
 
 class BackgroundSocket(object):

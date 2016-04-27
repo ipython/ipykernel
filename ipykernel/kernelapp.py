@@ -10,6 +10,7 @@ import os
 import sys
 import signal
 import traceback
+import logging
 
 import zmq
 from zmq.eventloop import ioloop
@@ -250,6 +251,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
         self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
+        self.configure_tornado_logger()
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True)
         self.iopub_thread.start()
         # backward-compat: wrap iopub socket API in background thread
@@ -400,6 +402,20 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             except ImportError as e:
                 self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
         # END HARDCODED WIDGETS HACK
+
+    def configure_tornado_logger(self):
+        """ Configure the tornado logging.Logger.
+
+            Must set up the tornado logger or else tornado will call
+            basicConfig for the root logger which makes the root logger
+            go to the real sys.stderr instead of the capture streams.
+            This function mimics the setup of logging.basicConfig.
+        """
+        logger = logging.getLogger('tornado')
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(logging.BASIC_FORMAT)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     @catch_config_error
     def initialize(self, argv=None):

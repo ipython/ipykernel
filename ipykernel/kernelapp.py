@@ -404,7 +404,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         # END HARDCODED WIDGETS HACK
 
     def configure_tornado_logger(self):
-        """ Must set up the tornado logger or else tornado will call
+        """ Configure the tornado logging.Logger.
+
+            Must set up the tornado logger or else tornado will call
             basicConfig for the root logger which makes the root logger
             go to the real sys.stderr instead of the capture streams.
             This function mimics the setup of logging.basicConfig.

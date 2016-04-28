@@ -6,8 +6,6 @@
 import sys
 
 from traitlets.config import LoggingConfigurable
-from IPython.core.prompts import LazyEvaluate
-from IPython.core.getipython import get_ipython
 
 from ipython_genutils.importstring import import_item
 from ipython_genutils.py3compat import string_types
@@ -16,35 +14,10 @@ from traitlets import Instance, Unicode, Dict, Any, default
 from .comm import Comm
 
 
-def lazy_keys(dikt):
-    """Return lazy-evaluated string representation of a dictionary's keys
-
-    Key list is only constructed if it will actually be used.
-    Used for debug-logging.
-    """
-    return LazyEvaluate(lambda d: list(d.keys()))
-
-
 class CommManager(LoggingConfigurable):
     """Manager for Comms in the Kernel"""
 
-    # If this is instantiated by a non-IPython kernel, shell will be None
-    shell = Instance('IPython.core.interactiveshell.InteractiveShellABC',
-                     allow_none=True)
     kernel = Instance('ipykernel.kernelbase.Kernel')
-
-    iopub_socket = Any()
-
-    @default('iopub_socket')
-    def _default_iopub_socket(self):
-        return self.kernel.iopub_socket
-
-    session = Instance('jupyter_client.session.Session')
-
-    @default('session')
-    def _default_session(self):
-        return self.kernel.session
-
     comms = Dict()
     targets = Dict()
 
@@ -67,14 +40,12 @@ class CommManager(LoggingConfigurable):
 
     def unregister_target(self, target_name, f):
         """Unregister a callable registered with register_target"""
-        return self.targets.pop(target_name);
+        return self.targets.pop(target_name)
 
     def register_comm(self, comm):
         """Register a new comm"""
         comm_id = comm.comm_id
-        comm.shell = self.shell
         comm.kernel = self.kernel
-        comm.iopub_socket = self.iopub_socket
         self.comms[comm_id] = comm
         return comm_id
 
@@ -91,13 +62,12 @@ class CommManager(LoggingConfigurable):
         This will not raise an error,
         it will log messages if the comm cannot be found.
         """
-        if comm_id not in self.comms:
+        try:
+            return self.comms[comm_id]
+        except KeyError:
             self.log.warn("No such comm: %s", comm_id)
-            self.log.debug("Current comms: %s", lazy_keys(self.comms))
-            return
-        # call, because we store weakrefs
-        comm = self.comms[comm_id]
-        return comm
+            if self.log.isEnabledFor(self.log.DEBUG):
+                self.log.debug("Current comms: %s", list(self.comms.keys()))
 
     # Message handlers
     def comm_open(self, stream, ident, msg):
@@ -107,9 +77,6 @@ class CommManager(LoggingConfigurable):
         target_name = content['target_name']
         f = self.targets.get(target_name, None)
         comm = Comm(comm_id=comm_id,
-                    shell=self.shell,
-                    kernel=self.kernel,
-                    iopub_socket=self.iopub_socket,
                     primary=False,
                     target_name=target_name,
         )
@@ -132,32 +99,37 @@ class CommManager(LoggingConfigurable):
 
     def comm_msg(self, stream, ident, msg):
         """Handler for comm_msg messages"""
-        content = msg['content']
-        comm_id = content['comm_id']
-        comm = self.get_comm(comm_id)
-        if comm is None:
-            # no such comm
+        comm_id, comm = self._get_id_and_comm(msg)
+        if self._comm_is_not_valid(comm, comm_id):
             return
-        try:
-            comm.handle_msg(msg)
-        except Exception:
-            self.log.error("Exception in comm_msg for %s", comm_id, exc_info=True)
+
+        self._safe_handle(msg, comm.handle_msg, name='comm_msg')
 
     def comm_close(self, stream, ident, msg):
         """Handler for comm_close messages"""
+        comm_id, comm = self._get_id_and_comm(msg)
+        if self._comm_is_not_valid(comm, comm_id):
+            return
+
+        del self.comms[comm_id]
+        self._safe_handle(msg, comm.handle_close, name='comm_close')
+
+    def _comm_is_not_valid(self, comm, comm_id):
+        invalid = comm is None
+        if invalid:
+            self.log.debug('No such comm: ', str(comm_id))
+        return not invalid
+
+    def _get_id_and_comm(self, msg):
         content = msg['content']
         comm_id = content['comm_id']
-        comm = self.get_comm(comm_id)
-        if comm is None:
-            # no such comm
-            self.log.debug("No such comm to close: %s", comm_id)
-            return
-        del self.comms[comm_id]
+        return (comm_id, self.get_comm(comm_id))
 
+    def _safe_handle(self, msg, callback, name = ''):
         try:
-            comm.handle_close(msg)
+            callback(msg)
         except Exception:
-            self.log.error("Exception handling comm_close for %s", comm_id, exc_info=True)
+            self.log.error('Exception handling ' + name + ' for %s', msg['content']['comm_id'], exc_info=True)
 
 
 __all__ = ['CommManager']

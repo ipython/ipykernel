@@ -64,6 +64,7 @@ class MessageHookFor(object):
 
         std = self._std_buffer.getvalue()
         if std:
+            # TODO : update this once rendermime is available here.
             temp = {'content': {'data': {'text/plain': std}}}
             self._callback(temp)
             self._std_buffer.truncate(0)

@@ -54,8 +54,7 @@ class IPythonKernel(KernelBase):
         # TMP - hack while developing
         self.shell._reply_content = None
 
-        self.comm_manager = CommManager(shell=self.shell, parent=self,
-                                        kernel=self)
+        self.comm_manager = CommManager(parent=self, kernel=self)
 
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
@@ -91,21 +90,24 @@ class IPythonKernel(KernelBase):
             'text': "pandas",
             'url': "http://pandas.pydata.org/pandas-docs/stable/",
         },
-    ])
+    ]).tag(config=True)
 
     # Kernel info fields
     implementation = 'ipython'
     implementation_version = release.version
     language_info = {
-                     'name': 'python',
-                     'version': sys.version.split()[0],
-                     'mimetype': 'text/x-python',
-                     'codemirror_mode': {'name': 'ipython',
-                                         'version': sys.version_info[0]},
-                     'pygments_lexer': 'ipython%d' % (3 if PY3 else 2),
-                     'nbconvert_exporter': 'python',
-                     'file_extension': '.py'
-                    }
+        'name': 'python',
+        'version': sys.version.split()[0],
+        'mimetype': 'text/x-python',
+        'codemirror_mode': {
+            'name': 'ipython',
+            'version': sys.version_info[0]
+        },
+        'pygments_lexer': 'ipython%d' % (3 if PY3 else 2),
+        'nbconvert_exporter': 'python',
+        'file_extension': '.py'
+    }
+
     @property
     def banner(self):
         return self.shell.banner
@@ -123,7 +125,7 @@ class IPythonKernel(KernelBase):
 
     def init_metadata(self, parent):
         """Initialize metadata.
-        
+
         Run at the beginning of each execution request.
         """
         md = super(IPythonKernel, self).init_metadata(parent)
@@ -134,10 +136,10 @@ class IPythonKernel(KernelBase):
             'engine' : self.ident,
         })
         return md
-    
+
     def finish_metadata(self, parent, metadata, reply_content):
         """Finish populating metadata.
-        
+
         Run after completing an execution request.
         """
         # FIXME: remove deprecated ipyparallel-specific code
@@ -243,9 +245,9 @@ class IPythonKernel(KernelBase):
 
         # Payloads should be retrieved regardless of outcome, so we can both
         # recover partial output (that could have been generated early in a
-        # block, before an error) and clear the payload system always.
+        # block, before an error) and always clear the payload system.
         reply_content[u'payload'] = shell.payload_manager.read_payload()
-        # Be agressive about clearing the payload because we don't want
+        # Be aggressive about clearing the payload because we don't want
         # it to sit in memory until the next execute_request comes in.
         shell.payload_manager.clear_payload()
 
@@ -356,7 +358,7 @@ class IPythonKernel(KernelBase):
                 reply_content.update(shell._reply_content)
                 # reset after use
                 shell._reply_content = None
-                
+
                 # FIXME: deprecate piece for ipyparallel:
                 e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
                 reply_content['engine_info'] = e_info

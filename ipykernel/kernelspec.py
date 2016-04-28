@@ -22,7 +22,7 @@ KERNEL_NAME = 'python%i' % sys.version_info[0]
 RESOURCES = pjoin(os.path.dirname(__file__), 'resources')
 
 
-def make_ipkernel_cmd(mod='ipykernel', executable=None, extra_arguments=[], **kw):
+def make_ipkernel_cmd(mod='ipykernel', executable=None, extra_arguments=None, **kw):
     """Build Popen command list for launching an IPython kernel.
 
     Parameters
@@ -43,6 +43,7 @@ def make_ipkernel_cmd(mod='ipykernel', executable=None, extra_arguments=[], **kw
     """
     if executable is None:
         executable = sys.executable
+    extra_arguments = extra_arguments or []
     arguments = [ executable, '-m', mod, '-f', '{connection_file}' ]
     arguments.extend(extra_arguments)
 
@@ -153,6 +154,9 @@ class InstallIPythonKernelSpecApp(Application):
         parser.add_argument('--prefix', type=str,
             help="Specify an install prefix for the kernelspec."
             " This is needed to install into a non-default location, such as a conda/virtual-env.")
+        parser.add_argument('--sys-prefix', action='store_const', const=sys.prefix, dest='prefix',
+            help="Install to Python's sys.prefix."
+            " Shorthand for --prefix='%s'. For use in conda/virtual-envs." % sys.prefix)
         opts = parser.parse_args(self.argv)
         try:
             dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix,

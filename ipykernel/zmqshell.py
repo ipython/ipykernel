@@ -46,7 +46,7 @@ from IPython.utils.process import arg_split
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type
 from traitlets import (
-    Instance, Type, Dict, CBool, CBytes, Any, default
+    Instance, Type, Dict, CBool, CBytes, Any, default, observe
 )
 from IPython.utils.warn import error
 from ipykernel.displayhook import ZMQShellDisplayHook
@@ -80,7 +80,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         sys.stderr.flush()
 
     @default('thread_local')
-    def _thread_local_default(self):
+    def _default_thread_local(self):
         """ Initialises the threadlocal attribute and
             gives it a 'hooks' attribute.
         """
@@ -424,7 +424,8 @@ class ZMQInteractiveShell(InteractiveShell):
     kernel = Any()
     parent_header = Any()
 
-    def _banner1_default(self):
+    @default('banner1')
+    def _default_banner1(self):
         return default_banner
 
     # Override the traitlet in the parent class, because there's no point using
@@ -437,14 +438,17 @@ class ZMQInteractiveShell(InteractiveShell):
     autoindent = CBool(False)
 
     exiter = Instance(ZMQExitAutocall)
-    def _exiter_default(self):
+
+    @default('exiter')
+    def _default_exiter(self):
         return ZMQExitAutocall(self)
 
-    def _exit_now_changed(self, name, old, new):
+    @observe('exit_now')
+    def _update_exit_now(self, change):
         """stop eventloop when exit_now fires"""
-        if new:
+        if change['new']:
             loop = ioloop.IOLoop.instance()
-            loop.add_timeout(time.time()+0.1, loop.stop)
+            loop.add_timeout(time.time() + 0.1, loop.stop)
 
     keepkernel_on_exit = None
 

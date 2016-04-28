@@ -11,9 +11,7 @@ import logging
 import uuid
 
 from datetime import datetime
-from signal import (
-        signal, default_int_handler, SIGINT
-)
+from signal import signal, default_int_handler, SIGINT
 
 import zmq
 from zmq.eventloop import ioloop
@@ -25,7 +23,7 @@ from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type, string_types
 from ipykernel.jsonutil import json_clean
 from traitlets import (
-    Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
+    Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool, observe, default
 )
 
 from jupyter_client.session import Session
@@ -40,7 +38,9 @@ class Kernel(SingletonConfigurable):
 
     # attribute to override with a GUI
     eventloop = Any(None)
-    def _eventloop_changed(self, name, old, new):
+
+    @observe('eventloop')
+    def _update_eventloop(self, change):
         """schedule call to eventloop from IOLoop"""
         loop = ioloop.IOLoop.instance()
         loop.add_callback(self.enter_eventloop)
@@ -58,7 +58,8 @@ class Kernel(SingletonConfigurable):
     int_id = Integer(-1)
     ident = Unicode()
 
-    def _ident_default(self):
+    @default('ident')
+    def _default_ident(self):
         return unicode_type(uuid.uuid4())
 
     # This should be overridden by wrapper kernels that implement any real
@@ -112,7 +113,7 @@ class Kernel(SingletonConfigurable):
     # Track execution count here. For IPython, we override this to use the
     # execution count we store in the shell.
     execution_count = 0
-    
+
     msg_types = [
         'execute_request', 'complete_request',
         'inspect_request', 'history_request',
@@ -136,7 +137,6 @@ class Kernel(SingletonConfigurable):
         self.control_handlers = {}
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
-
 
     def dispatch_control(self, msg):
         """dispatch control requests"""
@@ -171,7 +171,7 @@ class Kernel(SingletonConfigurable):
 
     def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
-        
+
         Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
         """
         msg_id = msg['header']['msg_id']
@@ -291,7 +291,6 @@ class Kernel(SingletonConfigurable):
             stream.flush(zmq.POLLIN, 1)
             stream.flush(zmq.POLLOUT)
 
-
     def record_ports(self, ports):
         """Record the ports that this kernel is using.
 
@@ -345,19 +344,19 @@ class Kernel(SingletonConfigurable):
         """
         return self.session.send(stream, msg_or_type, content, self._parent_header,
                                  ident, buffers, track, header, metadata)
-    
+
     def init_metadata(self, parent):
         """Initialize metadata.
-        
+
         Run at the beginning of execution requests.
         """
         return {
             'started': datetime.now(),
         }
-    
+
     def finish_metadata(self, parent, metadata, reply_content):
         """Finish populating metadata.
-        
+
         Run after completing an execution request.
         """
         return metadata
@@ -565,7 +564,7 @@ class Kernel(SingletonConfigurable):
         md = self.init_metadata(parent)
 
         reply_content, result_buf = self.do_apply(content, bufs, msg_id, md)
-        
+
         # flush i/o
         sys.stdout.flush()
         sys.stderr.flush()
@@ -647,7 +646,6 @@ class Kernel(SingletonConfigurable):
             # We need to wait a bit for requests to come in. This can probably
             # be set shorter for true asynchronous clients.
             poller.poll(50)
-
 
     def _no_raw_input(self):
         """Raise StdinNotImplentedError if active frontend doesn't support

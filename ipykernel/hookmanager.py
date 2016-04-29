@@ -34,6 +34,7 @@ class MessageHookFor(object):
         self._std_buffer = StringIO()
 
     def clear_output(self, *args, **kwargs):
+        self._std_buffer.truncate(0)
         self._parent.clear()
 
     def __enter__(self):

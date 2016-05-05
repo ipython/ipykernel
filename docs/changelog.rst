@@ -4,6 +4,12 @@ Changes in IPython kernel
 4.3
 ---
 
+4.3.2
+*****
+
+- Use a nonempty dummy session key for inprocess kernels to avoid security
+  warnings.
+
 4.3.1
 *****
 

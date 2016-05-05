@@ -8,6 +8,8 @@ from jupyter_client.managerabc import KernelManagerABC
 from jupyter_client.manager import KernelManager
 from jupyter_client.session import Session
 
+from .constants import INPROCESS_KEY
+
 
 class InProcessKernelManager(KernelManager):
     """A manager for an in-process kernel.
@@ -33,7 +35,7 @@ class InProcessKernelManager(KernelManager):
     @default('session')
     def _default_session(self):
         # don't sign in-process messages
-        return Session(key=b'', parent=self)
+        return Session(key=INPROCESS_KEY, parent=self)
 
     #--------------------------------------------------------------------------
     # Kernel management methods

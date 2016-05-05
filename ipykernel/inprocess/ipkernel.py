@@ -13,6 +13,7 @@ from traitlets import Any, Enum, Instance, List, Type, default
 from ipykernel.ipkernel import IPythonKernel
 from ipykernel.zmqshell import ZMQInteractiveShell
 
+from .constants import INPROCESS_KEY
 from .socket import DummySocket
 from ..iostream import OutStream, BackgroundSocket, IOPubThread
 
@@ -139,7 +140,7 @@ class InProcessKernel(IPythonKernel):
     @default('session')
     def _default_session(self):
         from jupyter_client.session import Session
-        return Session(parent=self, key=b'')
+        return Session(parent=self, key=INPROCESS_KEY)
 
     @default('shell_class')
     def _default_shell_class(self):

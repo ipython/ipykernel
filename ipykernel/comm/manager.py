@@ -67,6 +67,7 @@ class CommManager(LoggingConfigurable):
         except KeyError:
             self.log.warn("No such comm: %s", comm_id)
             if self.log.isEnabledFor(self.log.DEBUG):
+                # don't create the list of keys if debug messages aren't enabled
                 self.log.debug("Current comms: %s", list(self.comms.keys()))
 
     # Message handlers
@@ -99,37 +100,30 @@ class CommManager(LoggingConfigurable):
 
     def comm_msg(self, stream, ident, msg):
         """Handler for comm_msg messages"""
-        comm_id, comm = self._get_id_and_comm(msg)
-        if self._comm_is_not_valid(comm, comm_id):
+        content = msg['content']
+        comm_id = content['comm_id']
+        comm = self.get_comm(comm_id)
+        if comm is None:
             return
 
-        self._safe_handle(msg, comm.handle_msg, name='comm_msg')
+        try:
+            comm.handle_msg(msg)
+        except Exception:
+            self.log.error('Exception in comm_msg for %s', comm_id, exc_info=True)
 
     def comm_close(self, stream, ident, msg):
         """Handler for comm_close messages"""
-        comm_id, comm = self._get_id_and_comm(msg)
-        if self._comm_is_not_valid(comm, comm_id):
+        content = msg['content']
+        comm_id = content['comm_id']
+        comm = self.get_comm(comm_id)
+        if comm is None:
             return
 
         del self.comms[comm_id]
-        self._safe_handle(msg, comm.handle_close, name='comm_close')
 
-    def _comm_is_not_valid(self, comm, comm_id):
-        invalid = comm is None
-        if invalid:
-            self.log.debug('No such comm: ', str(comm_id))
-        return not invalid
-
-    def _get_id_and_comm(self, msg):
-        content = msg['content']
-        comm_id = content['comm_id']
-        return (comm_id, self.get_comm(comm_id))
-
-    def _safe_handle(self, msg, callback, name = ''):
         try:
-            callback(msg)
+            comm.handle_close(msg)
         except Exception:
-            self.log.error('Exception handling ' + name + ' for %s', msg['content']['comm_id'], exc_info=True)
-
+            self.log.error('Exception in comm_close for %s', comm_id, exc_info=True)
 
 __all__ = ['CommManager']

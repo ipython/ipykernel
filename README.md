@@ -12,10 +12,10 @@ After that, all normal `ipython` commands will use this newly-installed version 
 
 ## Running tests
 
-Ensure you have `nosetests` installed with
+Ensure you have `nosetests` and the `nose-warnings-filters` plugin installed with
 
 ```bash
-pip install nose
+pip install nose nose-warnings-filters
 ```
 
 and then from the root directory

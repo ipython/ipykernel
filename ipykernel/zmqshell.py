@@ -23,7 +23,7 @@ import time
 import warnings
 from threading import local
 
-from zmq.eventloop import ioloop
+from tornado import ioloop
 
 from IPython.core.interactiveshell import (
     InteractiveShell, InteractiveShellABC

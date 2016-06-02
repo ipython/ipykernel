@@ -12,8 +12,9 @@ import signal
 import traceback
 import logging
 
+from tornado import ioloop
 import zmq
-from zmq.eventloop import ioloop
+from zmq.eventloop import ioloop as zmq_ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from IPython.core.application import (
@@ -422,6 +423,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         super(IPKernelApp, self).initialize(argv)
         if self.subapp is not None:
             return
+        # register zmq IOLoop with tornado
+        zmq_ioloop.install()
         self.init_blackhole()
         self.init_connection_file()
         self.init_poller()

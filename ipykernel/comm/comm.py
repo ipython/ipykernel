@@ -6,7 +6,7 @@
 import threading
 import uuid
 
-from zmq.eventloop.ioloop import IOLoop
+from tornado.ioloop import IOLoop
 
 from traitlets.config import LoggingConfigurable
 from ipykernel.kernelbase import Kernel

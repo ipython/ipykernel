@@ -14,7 +14,7 @@ from datetime import datetime
 from signal import signal, default_int_handler, SIGINT
 
 import zmq
-from zmq.eventloop import ioloop
+from tornado import ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable

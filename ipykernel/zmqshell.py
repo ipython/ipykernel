@@ -327,7 +327,7 @@ class KernelMagics(Magics):
         In the simplest case, when called from the most recently launched kernel,
         secondary clients can be connected, simply with:
 
-        $> ipython <app> --existing
+        $> jupyter <app> --existing
 
         """
 
@@ -358,12 +358,12 @@ class KernelMagics(Magics):
 
         print (info + '\n')
         print ("Paste the above JSON into a file, and connect with:\n"
-            "    $> ipython <app> --existing <file>\n"
+            "    $> jupyter <app> --existing <file>\n"
             "or, if you are local, you can connect with just:\n"
-            "    $> ipython <app> --existing {0} {1}\n"
+            "    $> jupyter <app> --existing {0} {1}\n"
             "or even just:\n"
-            "    $> ipython <app> --existing {1}\n"
-            "if this is the most recent IPython session you have started.".format(
+            "    $> jupyter <app> --existing {1}\n"
+            "if this is the most recent Jupyter kernel you have started.".format(
             connection_file, profile_flag
             )
         )

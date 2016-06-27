@@ -50,8 +50,9 @@ from traitlets import (
 )
 from IPython.utils.warn import error
 from ipykernel.displayhook import ZMQShellDisplayHook
-from jupyter_client.session import extract_header
-from jupyter_client.session import Session
+
+from jupyter_core.paths import jupyter_runtime_dir
+from jupyter_client.session import extract_header, Session
 
 #-----------------------------------------------------------------------------
 # Functions and classes
@@ -331,16 +332,6 @@ class KernelMagics(Magics):
 
         """
 
-        from IPython.core.application import BaseIPythonApplication as BaseIPApp
-
-        if BaseIPApp.initialized():
-            app = BaseIPApp.instance()
-            security_dir = app.profile_dir.security_dir
-            profile = app.profile
-        else:
-            profile = 'default'
-            security_dir = ''
-
         try:
             connection_file = get_connection_file()
             info = get_connection_info(unpack=False)
@@ -348,11 +339,8 @@ class KernelMagics(Magics):
             error("Could not get connection info: %r" % e)
             return
 
-        # add profile flag for non-default profile
-        profile_flag = "--profile %s" % profile if profile != 'default' else ""
-
-        # if it's in the security dir, truncate to basename
-        if security_dir == os.path.dirname(connection_file):
+        # if it's in the default dir, truncate to basename
+        if jupyter_runtime_dir() == os.path.dirname(connection_file):
             connection_file = os.path.basename(connection_file)
 
 
@@ -360,11 +348,11 @@ class KernelMagics(Magics):
         print ("Paste the above JSON into a file, and connect with:\n"
             "    $> jupyter <app> --existing <file>\n"
             "or, if you are local, you can connect with just:\n"
-            "    $> jupyter <app> --existing {0} {1}\n"
+            "    $> jupyter <app> --existing {0}\n"
             "or even just:\n"
-            "    $> jupyter <app> --existing {1}\n"
+            "    $> jupyter <app> --existing\n"
             "if this is the most recent Jupyter kernel you have started.".format(
-            connection_file, profile_flag
+            connection_file
             )
         )
 

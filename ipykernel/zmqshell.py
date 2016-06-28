@@ -431,7 +431,6 @@ class ZMQInteractiveShell(InteractiveShell):
     # Override the traitlet in the parent class, because there's no point using
     # readline for the kernel. Can be removed when the readline code is moved
     # to the terminal frontend.
-    colors_force = CBool(True)
     readline_use = CBool(False)
     # autoindent has no meaning in a zmqshell, and attempting to enable it
     # will print a warning in the absence of readline.

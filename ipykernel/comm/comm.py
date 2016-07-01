@@ -3,10 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import threading
 import uuid
-
-from tornado.ioloop import IOLoop
 
 from traitlets.config import LoggingConfigurable
 from ipykernel.kernelbase import Kernel

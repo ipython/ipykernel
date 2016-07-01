@@ -7,7 +7,6 @@
 from __future__ import print_function
 import atexit
 import os
-import threading
 import sys
 import threading
 import uuid
@@ -22,8 +21,6 @@ from jupyter_client.session import extract_header
 
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type
-
-from IPython.utils.warn import warn
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -73,7 +70,7 @@ class IOPubThread(object):
         try:
             self._pipe_port = pipe_in.bind_to_random_port("tcp://127.0.0.1")
         except zmq.ZMQError as e:
-            warn("Couldn't bind IOPub Pipe to 127.0.0.1: %s" % e +
+            warnings.warn("Couldn't bind IOPub Pipe to 127.0.0.1: %s" % e +
                 "\nsubprocess output will be unavailable."
             )
             self._pipe_flag = False

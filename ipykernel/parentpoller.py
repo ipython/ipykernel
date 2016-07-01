@@ -15,8 +15,7 @@ except ImportError:
     from thread import interrupt_main  # Py 2
 from threading import Thread
 
-from IPython.utils.warn import warn
-
+import warnings
 
 class ParentPollerUnix(Thread):
     """ A Unix-specific daemon thread that terminates the program immediately
@@ -107,7 +106,7 @@ class ParentPollerWindows(Thread):
                     os._exit(1)
             elif result < 0:
                 # wait failed, just give up and stop polling.
-                warn("""Parent poll failed.  If the frontend dies,
+                warnings.warn("""Parent poll failed.  If the frontend dies,
                 the kernel may be left running.  Please let us know
                 about your system (bitness, Python, etc.) at
                 ipython-dev@scipy.org""")

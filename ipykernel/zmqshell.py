@@ -48,7 +48,6 @@ from ipython_genutils.py3compat import unicode_type
 from traitlets import (
     Instance, Type, Dict, CBool, CBytes, Any, default, observe
 )
-from IPython.utils.warn import error
 from ipykernel.displayhook import ZMQShellDisplayHook
 
 from jupyter_core.paths import jupyter_runtime_dir
@@ -261,7 +260,7 @@ class KernelMagics(Magics):
 
         try:
             filename, lineno, _ = CodeMagics._find_edit_target(self.shell, args, opts, last_call)
-        except MacroToEdit as e:
+        except MacroToEdit:
             # TODO: Implement macro editing over 2 processes.
             print("Macro editing not yet implemented in 2-process model.")
             return
@@ -336,7 +335,7 @@ class KernelMagics(Magics):
             connection_file = get_connection_file()
             info = get_connection_info(unpack=False)
         except Exception as e:
-            error("Could not get connection info: %r" % e)
+            warnings.warn("Could not get connection info: %r" % e)
             return
 
         # if it's in the default dir, truncate to basename
@@ -371,9 +370,9 @@ class KernelMagics(Magics):
             bind_kernel()
 
         try:
-            p = connect_qtconsole(argv=arg_split(arg_s, os.name=='posix'))
+            connect_qtconsole(argv=arg_split(arg_s, os.name=='posix'))
         except Exception as e:
-            error("Could not start qtconsole: %r" % e)
+            warnings.warn("Could not start qtconsole: %r" % e)
             return
 
     @line_magic
@@ -512,7 +511,7 @@ class ZMQInteractiveShell(InteractiveShell):
         if dh.topic:
             topic = dh.topic.replace(b'execute_result', b'error')
 
-        exc_msg = dh.session.send(dh.pub_socket, u'error', json_clean(exc_content), dh.parent_header, ident=topic)
+        dh.session.send(dh.pub_socket, u'error', json_clean(exc_content), dh.parent_header, ident=topic)
 
         # FIXME - Hack: store exception info in shell object.  Right now, the
         # caller is reading this info after the fact, we need to fix this logic

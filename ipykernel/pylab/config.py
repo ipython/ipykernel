@@ -13,12 +13,10 @@ This module does not import anything from matplotlib.
 # Imports
 #-----------------------------------------------------------------------------
 
-from traitlets.config import Config
 from traitlets.config.configurable import SingletonConfigurable
 from traitlets import (
     Dict, Instance, Set, Bool, TraitError, Unicode
 )
-from IPython.utils.warn import warn
 
 #-----------------------------------------------------------------------------
 # Configurable for inline backend options
@@ -40,12 +38,6 @@ class InlineBackendConfig(SingletonConfigurable):
 
 class InlineBackend(InlineBackendConfig):
     """An object to store configuration of the inline backend."""
-
-    def _config_changed(self, name, old, new):
-        # warn on change of renamed config section
-        if new.InlineBackendConfig != getattr(old, 'InlineBackendConfig', Config()):
-            warn("InlineBackendConfig has been renamed to InlineBackend")
-        super(InlineBackend, self)._config_changed(name, old, new)
 
     # The typical default figure size is too large for inline use,
     # so we shrink the figure size to 6x4, and tweak fonts to

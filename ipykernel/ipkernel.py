@@ -5,7 +5,7 @@ import sys
 import traceback
 
 from IPython.core import release
-from ipython_genutils.py3compat import builtin_mod, PY3
+from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from traitlets import Instance, Type, Any, List
 
@@ -50,9 +50,6 @@ class IPythonKernel(KernelBase):
         self.shell.displayhook.topic = self._topic('execute_result')
         self.shell.display_pub.session = self.session
         self.shell.display_pub.pub_socket = self.iopub_socket
-
-        # TMP - hack while developing
-        self.shell._reply_content = None
 
         self.comm_manager = CommManager(parent=self, kernel=self)
 
@@ -195,40 +192,37 @@ class IPythonKernel(KernelBase):
         self._forward_input(allow_stdin)
 
         reply_content = {}
-        # FIXME: the shell calls the exception handler itself.
-        shell._reply_content = None
         try:
-            shell.run_cell(code, store_history=store_history, silent=silent)
-        except:
-            status = u'error'
-            # FIXME: this code right now isn't being used yet by default,
-            # because the run_cell() call above directly fires off exception
-            # reporting.  This code, therefore, is only active in the scenario
-            # where runlines itself has an unhandled exception.  We need to
-            # uniformize this, for all exception construction to come from a
-            # single location in the codbase.
-            etype, evalue, tb = sys.exc_info()
-            tb_list = traceback.format_exception(etype, evalue, tb)
-            reply_content.update(shell._showtraceback(etype, evalue, tb_list))
-        else:
-            status = u'ok'
+            res = shell.run_cell(code, store_history=store_history, silent=silent)
         finally:
             self._restore_input()
 
-        reply_content[u'status'] = status
+        if res.error_before_exec is not None:
+            err = res.error_before_exec
+        else:
+            err = res.error_in_exec
+
+        if res.success:
+            reply_content[u'status'] = u'ok'
+        elif isinstance(err, KeyboardInterrupt):
+            reply_content[u'status'] = u'abort'
+        else:
+            reply_content[u'status'] = u'error'
+
+            reply_content.update({
+                u'traceback': shell._last_traceback or [],
+                u'ename': unicode_type(type(err).__name__),
+                u'evalue': safe_unicode(err),
+            })
+
+            # FIXME: deprecate piece for ipyparallel:
+            e_info = dict(engine_uuid=self.ident, engine_id=self.int_id,
+                          method='execute')
+            reply_content['engine_info'] = e_info
+
 
         # Return the execution counter so clients can display prompts
         reply_content['execution_count'] = shell.execution_count - 1
-
-        # FIXME - fish exception info out of shell, possibly left there by
-        # runlines.  We'll need to clean up this logic later.
-        if shell._reply_content is not None:
-            reply_content.update(shell._reply_content)
-            # reset after use
-            shell._reply_content = None
-            # FIXME: deprecate piece for ipyparallel:
-            e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='execute')
-            reply_content['engine_info'] = e_info
 
         if 'traceback' in reply_content:
             self.log.info("Exception in execute request:\n%s", '\n'.join(reply_content['traceback']))
@@ -348,25 +342,23 @@ class IPythonKernel(KernelBase):
                 item_threshold=self.session.item_threshold,
             )
 
-        except:
+        except BaseException as e:
             # invoke IPython traceback formatting
             shell.showtraceback()
-            # FIXME - fish exception info out of shell, possibly left there by
-            # run_code.  We'll need to clean up this logic later.
-            reply_content = {}
-            if shell._reply_content is not None:
-                reply_content.update(shell._reply_content)
-                # reset after use
-                shell._reply_content = None
-
-                # FIXME: deprecate piece for ipyparallel:
-                e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
-                reply_content['engine_info'] = e_info
+            reply_content = {
+                u'traceback': shell._last_traceback or [],
+                u'ename': unicode_type(type(e).__name__),
+                u'evalue': safe_unicode(e),
+            }
+            # FIXME: deprecate piece for ipyparallel:
+            e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
+            reply_content['engine_info'] = e_info
 
             self.send_response(self.iopub_socket, u'error', reply_content,
                                 ident=self._topic('error'))
             self.log.info("Exception in apply request:\n%s", '\n'.join(reply_content['traceback']))
             result_buf = []
+            reply_content['status'] = 'error'
         else:
             reply_content = {'status' : 'ok'}
 

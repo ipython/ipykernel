@@ -493,6 +493,10 @@ class ZMQInteractiveShell(InteractiveShell):
             )
         self.payload_manager.write_payload(payload)
 
+    def run_cell(self, *args, **kwargs):
+        self._last_traceback = None
+        return super(ZMQInteractiveShell, self).run_cell(*args, **kwargs)
+
     def _showtraceback(self, etype, evalue, stb):
         # try to preserve ordering of tracebacks and print statements
         sys.stdout.flush()
@@ -511,18 +515,12 @@ class ZMQInteractiveShell(InteractiveShell):
         if dh.topic:
             topic = dh.topic.replace(b'execute_result', b'error')
 
-        dh.session.send(dh.pub_socket, u'error', json_clean(exc_content), dh.parent_header, ident=topic)
+        exc_msg = dh.session.send(dh.pub_socket, u'error', json_clean(exc_content),
+                                  dh.parent_header, ident=topic)
 
-        # FIXME - Hack: store exception info in shell object.  Right now, the
-        # caller is reading this info after the fact, we need to fix this logic
-        # to remove this hack.  Even uglier, we need to store the error status
-        # here, because in the main loop, the logic that sets it is being
-        # skipped because runlines swallows the exceptions.
-        exc_content[u'status'] = u'error'
-        self._reply_content = exc_content
-        # /FIXME
-
-        return exc_content
+        # FIXME - Once we rely on Python 3, the traceback is stored on the
+        # exception object, so we shouldn't need to store it here.
+        self._last_traceback = stb
 
     def set_next_input(self, text, replace=False):
         """Send the specified text to the frontend to be presented at the next

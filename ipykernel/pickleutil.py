@@ -8,7 +8,6 @@ import warnings
 warnings.warn("ipykernel.pickleutil is deprecated. It has moved to ipyparallel.", DeprecationWarning)
 
 import copy
-import logging
 import sys
 from types import FunctionType
 
@@ -21,9 +20,13 @@ from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
 from ipython_genutils.py3compat import string_types, iteritems, buffer_to_bytes, buffer_to_bytes_py2
 
-from . import codeutil  # This registers a hook when it's imported
+# This registers a hook when it's imported
+try:
+    from ipyparallel.serialize import codeutil
+except ImportError:
+    # Deprecated since <value>....
+    from ipykernel import codeutil
 
-from traitlets.config import Application
 from traitlets.log import get_logger
 
 if py3compat.PY3:

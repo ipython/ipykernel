@@ -143,3 +143,14 @@ def flush_figures():
 # figurecanvas. This is set here to a Agg canvas
 # See https://github.com/matplotlib/matplotlib/pull/1125
 FigureCanvas = FigureCanvasAgg
+
+def _enable_matplotlib_integration():
+    """Enable extra IPython matplotlib integration when we are loaded as the matplotlib backend."""
+    from matplotlib import get_backend
+    from IPython.core.pylabtools import configure_inline_support
+    ip = get_ipython()
+    backend = get_backend()
+    if ip and backend == 'module://%s' % __name__:
+        configure_inline_support(ip, backend)
+
+_enable_matplotlib_integration()

@@ -368,6 +368,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def init_gui_pylab(self):
         """Enable GUI event loop integration, taking pylab into account."""
 
+        # Register inline backend as default
+        # this is higher priority than matplotlibrc,
+        # but lower priority than anything else (mpl.use() for instance).
+        # This only affects matplotlib >= 1.5
+        if not os.environ.get('MPLBACKEND'):
+            os.environ['MPLBACKEND'] = 'module://ipykernel.pylab.backend_inline'
+
         # Provide a wrapper for :meth:`InteractiveShellApp.init_gui_pylab`
         # to ensure that any exception is printed straight to stderr.
         # Normally _showtraceback associates the reply with an execution,

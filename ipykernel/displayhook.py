@@ -22,6 +22,10 @@ class ZMQDisplayHook(object):
         self.pub_socket = pub_socket
         self.parent_header = {}
 
+    def get_execution_count(self):
+        """This method is replaced in kernelapp"""
+        return 0
+
     def __call__(self, obj):
         if obj is None:
             return
@@ -29,7 +33,10 @@ class ZMQDisplayHook(object):
         builtin_mod._ = obj
         sys.stdout.flush()
         sys.stderr.flush()
-        self.session.send(self.pub_socket, u'execute_result', {u'data':repr(obj)},
+        contents = {u'execution_count': self.get_execution_count(),
+                    u'data': {'text/plain': repr(obj)},
+                    u'metadata': {}}
+        self.session.send(self.pub_socket, u'execute_result', contents,
                           parent=self.parent_header, ident=self.topic)
 
     def set_parent(self, parent):

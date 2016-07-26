@@ -314,7 +314,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             sys.stderr = outstream_factory(self.session, self.iopub_thread, u'stderr')
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
-            sys.displayhook = displayhook_factory(self.session, self.iopub_socket)
+            self.displayhook = displayhook_factory(self.session, self.iopub_socket)
+            sys.displayhook = self.displayhook
 
         self.patch_io()
 
@@ -364,6 +365,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         )
         kernel.record_ports(self.ports)
         self.kernel = kernel
+
+        # Allow the displayhook to get the execution count
+        self.displayhook.get_execution_count = lambda: kernel.execution_count
 
     def init_gui_pylab(self):
         """Enable GUI event loop integration, taking pylab into account."""

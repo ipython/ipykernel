@@ -46,6 +46,7 @@ class InProcessKernelManager(KernelManager):
         self.kernel = InProcessKernel(parent=self, session=self.session)
 
     def shutdown_kernel(self):
+        self.kernel.iopub_thread.stop()
         self._kill_kernel()
 
     def restart_kernel(self, now=False, **kwds):

@@ -52,6 +52,18 @@ def test_get_kernel_dict():
     assert_kernel_dict(d)
 
 
+def assert_kernel_dict_with_profile(d):
+    nt.assert_equal(d['argv'], make_ipkernel_cmd(
+        extra_arguments=["--profile", "test"]))
+    nt.assert_equal(d['display_name'], 'Python %i' % sys.version_info[0])
+    nt.assert_equal(d['language'], 'python')
+
+
+def test_get_kernel_dict_with_profile():
+    d = get_kernel_dict(["--profile", "test"])
+    assert_kernel_dict_with_profile(d)
+
+
 def assert_is_spec(path):
     for fname in os.listdir(RESOURCES):
         dst = pjoin(path, fname)

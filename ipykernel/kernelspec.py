@@ -50,7 +50,7 @@ def make_ipkernel_cmd(mod='ipykernel', executable=None, extra_arguments=None, **
     return arguments
 
 
-def get_kernel_dict(extra_arguments):
+def get_kernel_dict(extra_arguments=None):
     """Construct dict for kernel.json"""
     return {
         'argv': make_ipkernel_cmd(extra_arguments=extra_arguments),

@@ -44,22 +44,22 @@ def make_ipkernel_cmd(mod='ipykernel', executable=None, extra_arguments=None, **
     if executable is None:
         executable = sys.executable
     extra_arguments = extra_arguments or []
-    arguments = [ executable, '-m', mod, '-f', '{connection_file}' ]
+    arguments = [executable, '-m', mod, '-f', '{connection_file}']
     arguments.extend(extra_arguments)
 
     return arguments
 
 
-def get_kernel_dict():
+def get_kernel_dict(extra_arguments):
     """Construct dict for kernel.json"""
     return {
-        'argv': make_ipkernel_cmd(),
+        'argv': make_ipkernel_cmd(extra_arguments=extra_arguments),
         'display_name': 'Python %i' % sys.version_info[0],
         'language': 'python',
     }
 
 
-def write_kernel_spec(path=None, overrides=None):
+def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
     """Write a kernel spec directory to `path`
     
     If `path` is not specified, a temporary directory is created.
@@ -73,7 +73,8 @@ def write_kernel_spec(path=None, overrides=None):
     # stage resources
     shutil.copytree(RESOURCES, path)
     # write kernel.json
-    kernel_dict = get_kernel_dict()
+    kernel_dict = get_kernel_dict(extra_arguments)
+
     if overrides:
         kernel_dict.update(overrides)
     with open(pjoin(path, 'kernel.json'), 'w') as f:
@@ -82,7 +83,8 @@ def write_kernel_spec(path=None, overrides=None):
     return path
 
 
-def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None, prefix=None):
+def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None,
+            profile=None, prefix=None):
     """Install the IPython kernelspec for Jupyter
     
     Parameters
@@ -96,12 +98,14 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
     kernel_name: str, optional
         Specify a name for the kernelspec.
         This is needed for having multiple IPython kernels for different environments.
+    display_name: str, optional
+        Specify the display name for the kernelspec
+    profile: str, optional
+        Specify a custom profile to be loaded by the kernel.
     prefix: str, optional
         Specify an install prefix for the kernelspec.
         This is needed to install into a non-default location, such as a conda/virtual-env.
-    display_name: str, optional
-        Specify the display name for the kernelspec
-    
+
     Returns
     -------
     
@@ -118,9 +122,13 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
         overrides = dict(display_name=display_name)
     else:
         overrides = None
-    path = write_kernel_spec(overrides=overrides)
-    dest = kernel_spec_manager.install_kernel_spec(path,
-        kernel_name=kernel_name, user=user, prefix=prefix)
+    if profile:
+        extra_arguments = ["--profile", profile]
+    else:
+        extra_arguments = None
+    path = write_kernel_spec(overrides=overrides, extra_arguments=extra_arguments)
+    dest = kernel_spec_manager.install_kernel_spec(
+        path, kernel_name=kernel_name, user=user, prefix=prefix)
     # cleanup afterward
     shutil.rmtree(path)
     return dest
@@ -151,6 +159,9 @@ class InstallIPythonKernelSpecApp(Application):
         parser.add_argument('--display-name', type=str,
             help="Specify the display name for the kernelspec."
             " This is helpful when you have multiple IPython kernels.")
+        parser.add_argument('--profile', type=str,
+            help="Specify an IPython profile to load. "
+            "This can be used to create custom versions of the kernel.")
         parser.add_argument('--prefix', type=str,
             help="Specify an install prefix for the kernelspec."
             " This is needed to install into a non-default location, such as a conda/virtual-env.")
@@ -159,9 +170,8 @@ class InstallIPythonKernelSpecApp(Application):
             " Shorthand for --prefix='%s'. For use in conda/virtual-envs." % sys.prefix)
         opts = parser.parse_args(self.argv)
         try:
-            dest = install(user=opts.user, kernel_name=opts.name, prefix=opts.prefix,
-                display_name=opts.display_name,
-            )
+            dest = install(user=opts.user, kernel_name=opts.name, profile=opts.profile,
+                           prefix=opts.prefix, display_name=opts.display_name)
         except OSError as e:
             if e.errno == errno.EACCES:
                 print(e, file=sys.stderr)

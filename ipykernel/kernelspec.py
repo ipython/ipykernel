@@ -84,7 +84,7 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
 
 
 def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None,
-            profile=None, prefix=None):
+            prefix=None, profile=None):
     """Install the IPython kernelspec for Jupyter
     
     Parameters

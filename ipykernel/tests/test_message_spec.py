@@ -164,6 +164,15 @@ class KernelInfoReply(Reference):
         Reference.check(self, d)
         LanguageInfo().check(d['language_info'])
 
+
+class ConnectReply(Reference):
+    shell_port = Integer()
+    control_port = Integer()
+    stdin_port = Integer()
+    iopub_port = Integer()
+    hb_port = Integer()
+
+
 class CommInfoReply(Reference):
     comms = Dict()
 
@@ -212,6 +221,7 @@ references = {
     'status' : Status(),
     'complete_reply' : CompleteReply(),
     'kernel_info_reply': KernelInfoReply(),
+    'connect_reply': ConnectReply(),
     'comm_info_reply': CommInfoReply(),
     'is_complete_reply': IsCompleteReply(),
     'execute_input' : ExecuteInput(),
@@ -422,6 +432,17 @@ def test_kernel_info_request():
     msg_id = KC.kernel_info()
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     validate_message(reply, 'kernel_info_reply', msg_id)
+
+
+def test_connect_request():
+    flush_channels()
+    msg = KC.session.msg('connect_request')
+    KC.shell_channel.send(msg)
+    return msg['header']['msg_id']
+
+    msg_id = KC.kernel_info()
+    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    validate_message(reply, 'connect_reply', msg_id)
 
 
 def test_comm_info_request():

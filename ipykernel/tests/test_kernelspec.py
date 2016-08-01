@@ -119,3 +119,28 @@ def test_install():
     assert_is_spec(os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME))
 
 
+def test_install_profile():
+    system_jupyter_dir = tempfile.mkdtemp()
+
+    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
+            [system_jupyter_dir]):
+        install(profile="Test")
+
+    spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
+    with open(spec) as f:
+        spec = json.load(f)
+    nt.assert_true(spec["display_name"].endswith(" [profile=Test]"))
+    nt.assert_equal(spec["argv"][-2:], ["--profile", "Test"])
+
+
+def test_install_display_name_overrides_profile():
+    system_jupyter_dir = tempfile.mkdtemp()
+
+    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
+            [system_jupyter_dir]):
+        install(display_name="Display", profile="Test")
+
+    spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
+    with open(spec) as f:
+        spec = json.load(f)
+    nt.assert_equal(spec["display_name"], "Display")

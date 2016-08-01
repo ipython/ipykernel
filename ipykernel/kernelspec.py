@@ -118,12 +118,14 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
         # kernel_name is specified and display_name is not
         # default display_name to kernel_name
         display_name = kernel_name
+    overrides = {}
     if display_name:
-        overrides = dict(display_name=display_name)
-    else:
-        overrides = None
+        overrides["display_name"] = display_name
     if profile:
         extra_arguments = ["--profile", profile]
+        if not display_name:
+            # add the profile to the default display name
+            overrides["display_name"] = 'Python %i [profile=%s]' % (sys.version_info[0], profile)
     else:
         extra_arguments = None
     path = write_kernel_spec(overrides=overrides, extra_arguments=extra_arguments)

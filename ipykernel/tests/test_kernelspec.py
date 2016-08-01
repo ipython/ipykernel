@@ -52,6 +52,18 @@ def test_get_kernel_dict():
     assert_kernel_dict(d)
 
 
+def assert_kernel_dict_with_profile(d):
+    nt.assert_equal(d['argv'], make_ipkernel_cmd(
+        extra_arguments=["--profile", "test"]))
+    nt.assert_equal(d['display_name'], 'Python %i' % sys.version_info[0])
+    nt.assert_equal(d['language'], 'python')
+
+
+def test_get_kernel_dict_with_profile():
+    d = get_kernel_dict(["--profile", "test"])
+    assert_kernel_dict_with_profile(d)
+
+
 def assert_is_spec(path):
     for fname in os.listdir(RESOURCES):
         dst = pjoin(path, fname)
@@ -107,3 +119,28 @@ def test_install():
     assert_is_spec(os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME))
 
 
+def test_install_profile():
+    system_jupyter_dir = tempfile.mkdtemp()
+
+    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
+            [system_jupyter_dir]):
+        install(profile="Test")
+
+    spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
+    with open(spec) as f:
+        spec = json.load(f)
+    nt.assert_true(spec["display_name"].endswith(" [profile=Test]"))
+    nt.assert_equal(spec["argv"][-2:], ["--profile", "Test"])
+
+
+def test_install_display_name_overrides_profile():
+    system_jupyter_dir = tempfile.mkdtemp()
+
+    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
+            [system_jupyter_dir]):
+        install(display_name="Display", profile="Test")
+
+    spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
+    with open(spec) as f:
+        spec = json.load(f)
+    nt.assert_equal(spec["display_name"], "Display")

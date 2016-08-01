@@ -288,7 +288,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         for line in lines:
             self.log.info(line)
         # also raw print to the terminal if no parent_handle (`ipython kernel`)
-        if not self.parent_handle:
+        # unless log-level is CRITICAL (--quiet)
+        if not self.parent_handle and self.log_level < logging.CRITICAL:
             io.rprint(_ctrl_c_message)
             for line in lines:
                 io.rprint(line)

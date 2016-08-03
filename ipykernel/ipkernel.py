@@ -205,7 +205,7 @@ class IPythonKernel(KernelBase):
         if res.success:
             reply_content[u'status'] = u'ok'
         elif isinstance(err, KeyboardInterrupt):
-            reply_content[u'status'] = u'abort'
+            reply_content[u'status'] = u'aborted'
         else:
             reply_content[u'status'] = u'error'
 
@@ -296,7 +296,10 @@ class IPythonKernel(KernelBase):
         else:
             hist = []
 
-        return {'history' : list(hist)}
+        return {
+            'status': 'ok',
+            'history' : list(hist),
+        }
 
     def do_shutdown(self, restart):
         self.shell.exit_now = True

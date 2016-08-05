@@ -22,9 +22,10 @@ from ipython_genutils.py3compat import string_types, iteritems, buffer_to_bytes,
 
 # This registers a hook when it's imported
 try:
+    # available since ipyparallel 5.1.1
     from ipyparallel.serialize import codeutil
 except ImportError:
-    # Deprecated since <value>....
+    # Deprecated since ipykernel 4.3.1
     from ipykernel import codeutil
 
 from traitlets.log import get_logger

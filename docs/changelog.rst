@@ -1,6 +1,21 @@
 Changes in IPython kernel
 =========================
 
+4.4
+---
+
+4.4.0
+*****
+
+`4.4.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.4>`__
+
+- Use `MPLBACKEND`_ environment variable to tell matplotlib >= 1.5 use use the inline backend by default.
+  This is only done if MPLBACKEND is not already set and no backend has been explicitly loaded,
+  so setting ``MPLBACKEND=Qt4Agg`` or calling ``%matplotlib notebook`` or ``matplotlib.use('Agg')``
+  will take precedence.
+
+.. _MPLBACKEND: http://matplotlib.org/devel/coding_guide.html?highlight=mplbackend#developing-a-new-backend
+
 4.3
 ---
 

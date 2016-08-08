@@ -103,11 +103,14 @@ class MimeBundle(Reference):
             assert mime_pat.match(k)
             nt.assert_is_instance(v, string_types)
 
-# shell replies
 
-class ExecuteReply(Reference):
-    execution_count = Integer()
+# shell replies
+class Reply(Reference):
     status = Enum((u'ok', u'error'), default_value=u'ok')
+
+
+class ExecuteReply(Reply):
+    execution_count = Integer()
 
     def check(self, d):
         Reference.check(self, d)
@@ -117,18 +120,18 @@ class ExecuteReply(Reference):
             ExecuteReplyError().check(d)
 
 
-class ExecuteReplyOkay(Reference):
-    payload = List(Dict())
+class ExecuteReplyOkay(Reply):
+    status = Enum(('ok',))
     user_expressions = Dict()
 
 
-class ExecuteReplyError(Reference):
+class ExecuteReplyError(Reply):
     ename = Unicode()
     evalue = Unicode()
     traceback = List(Unicode())
 
 
-class InspectReply(MimeBundle):
+class InspectReply(Reply, MimeBundle):
     found = Bool()
 
 
@@ -143,17 +146,19 @@ class Status(Reference):
     execution_state = Enum((u'busy', u'idle', u'starting'), default_value=u'busy')
 
 
-class CompleteReply(Reference):
+class CompleteReply(Reply):
     matches = List(Unicode())
     cursor_start = Integer()
     cursor_end = Integer()
     status = Unicode()
 
+
 class LanguageInfo(Reference):
     name = Unicode('python')
     version = Unicode(sys.version.split()[0])
 
-class KernelInfoReply(Reference):
+
+class KernelInfoReply(Reply):
     protocol_version = Version(min='5.0')
     implementation = Unicode('ipython')
     implementation_version = Version(min='2.1')
@@ -173,8 +178,9 @@ class ConnectReply(Reference):
     hb_port = Integer()
 
 
-class CommInfoReply(Reference):
+class CommInfoReply(Reply):
     comms = Dict()
+
 
 class IsCompleteReply(Reference):
     status = Enum((u'complete', u'incomplete', u'invalid', u'unknown'), default_value=u'complete')
@@ -183,6 +189,7 @@ class IsCompleteReply(Reference):
         Reference.check(self, d)
         if d['status'] == 'incomplete':
             IsCompleteReplyIncomplete().check(d)
+
 
 class IsCompleteReplyIncomplete(Reference):
     indent = Unicode()
@@ -195,7 +202,9 @@ class ExecuteInput(Reference):
     execution_count = Integer()
 
 
-Error = ExecuteReplyError
+class Error(ExecuteReplyError):
+    """Errors are the same as ExecuteReply, but without status"""
+    status = None # no status field
 
 
 class Stream(Reference):
@@ -211,7 +220,7 @@ class ExecuteResult(MimeBundle):
     execution_count = Integer()
 
 
-class HistoryReply(Reference):
+class HistoryReply(Reply):
     history = List(List())
 
 

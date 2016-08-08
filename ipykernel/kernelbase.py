@@ -467,13 +467,14 @@ class Kernel(SingletonConfigurable):
                    stop=None, n=None, pattern=None, unique=False):
         """Override in subclasses to access history.
         """
-        return {'history': []}
+        return {'status': 'ok', 'history': []}
 
     def connect_request(self, stream, ident, parent):
         if self._recorded_ports is not None:
             content = self._recorded_ports.copy()
         else:
             content = {}
+        content['status'] = 'ok'
         msg = self.session.send(stream, 'connect_reply',
                                 content, parent, ident)
         self.log.debug("%s", msg)
@@ -490,8 +491,10 @@ class Kernel(SingletonConfigurable):
         }
 
     def kernel_info_request(self, stream, ident, parent):
+        content = {'status': 'ok'}
+        content.update(self.kernel_info)
         msg = self.session.send(stream, 'kernel_info_reply',
-                                self.kernel_info, parent, ident)
+                                content, parent, ident)
         self.log.debug("%s", msg)
 
     def comm_info_request(self, stream, ident, parent):
@@ -507,7 +510,7 @@ class Kernel(SingletonConfigurable):
             }
         else:
             comms = {}
-        reply_content = dict(comms=comms)
+        reply_content = dict(comms=comms, status='ok')
         msg = self.session.send(stream, 'comm_info_reply',
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)

@@ -13,8 +13,18 @@ Changes in IPython kernel
   This is only done if MPLBACKEND is not already set and no backend has been explicitly loaded,
   so setting ``MPLBACKEND=Qt4Agg`` or calling ``%matplotlib notebook`` or ``matplotlib.use('Agg')``
   will take precedence.
+- Fixes for logging problems caused by 4.3,
+  where logging could go to the terminal instead of the notebook.
+- Add ``--sys-prefix`` and ``--profile`` arguments to :command:`ipython kernel install`
+- Allow Comm (Widget) messages to be sent from background threads.
+- Select inline matplotlib backend by default if ``%matplotlib`` magic or
+  ``matplotlib.use()`` are not called explicitly (for matplotlib >= 1.5).
+- Fix some longstanding minor deviations from the message protocol
+  (missing status: ok in a few replies, connect_reply format).
+- Remove calls to NoOpContext from IPython, deprecated in 5.0.
 
 .. _MPLBACKEND: http://matplotlib.org/devel/coding_guide.html?highlight=mplbackend#developing-a-new-backend
+
 
 4.3
 ---

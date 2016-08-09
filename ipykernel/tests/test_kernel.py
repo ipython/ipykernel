@@ -6,6 +6,7 @@
 
 import io
 import os.path
+import pprint
 import sys
 import time
 
@@ -26,6 +27,12 @@ def _check_master(kc, expected=True, stream="stdout"):
     msg_id, content = execute(kc=kc, code="print (sys.%s._is_master_process())" % stream)
     stdout, stderr = assemble_output(kc.iopub_channel)
     nt.assert_equal(stdout.strip(), repr(expected))
+
+
+def _check_status(content):
+    """If status=error, show the traceback"""
+    if content['status'] == 'error':
+        nt.assert_true(False, ''.join(['\n'] + content['traceback']))
 
 
 # printing tests
@@ -206,6 +213,7 @@ def test_help_output():
     """ipython kernel --help-all works"""
     tt.help_all_output_test('kernel')
 
+
 def test_is_complete():
     with kernel() as kc:
         # There are more test cases for this in core - here we just check
@@ -224,6 +232,7 @@ def test_is_complete():
         assert reply['content']['status'] == 'incomplete'
         assert reply['content']['indent'] == ''
 
+
 def test_complete():
     with kernel() as kc:
         execute(u'a = 1', kc=kc)
@@ -239,6 +248,22 @@ def test_complete():
         nt.assert_greater(len(matches), 0)
         for match in matches:
             nt.assert_equal(match[:2], 'a.')
+
+
+@dec.skip_without('matplotlib')
+def test_matplotlib_inline_on_import():
+    with kernel() as kc:
+        cell = '\n'.join([
+            'import matplotlib, matplotlib.pyplot as plt',
+            'backend = matplotlib.get_backend()'
+        ])
+        _, reply = execute(cell,
+            user_expressions={'backend': 'backend'},
+            kc=kc)
+        _check_status(reply)
+        backend_bundle = reply['user_expressions']['backend']
+        _check_status(backend_bundle)
+        nt.assert_in('backend_inline', backend_bundle['data']['text/plain'])
 
 
 def test_shutdown():

@@ -4,6 +4,14 @@ Changes in IPython kernel
 4.4
 ---
 
+4.4.1
+*****
+
+`4.4.1 on GitHub <https://github.com/ipython/ipykernel/milestones/4.4.1>`__
+
+- Fix circular import of matplotlib on Python 2 caused by the inline backend changes in 4.4.0.
+
+
 4.4.0
 *****
 

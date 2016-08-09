@@ -147,10 +147,17 @@ FigureCanvas = FigureCanvasAgg
 def _enable_matplotlib_integration():
     """Enable extra IPython matplotlib integration when we are loaded as the matplotlib backend."""
     from matplotlib import get_backend
-    from IPython.core.pylabtools import configure_inline_support
     ip = get_ipython()
     backend = get_backend()
     if ip and backend == 'module://%s' % __name__:
-        configure_inline_support(ip, backend)
+        from IPython.core.pylabtools import configure_inline_support
+        try:
+            configure_inline_support(ip, backend)
+        except ImportError:
+            # bugs may cause a circular import on Python 2
+            def configure_once(*args):
+                configure_inline_support(ip, backend)
+                ip.events.unregister('post_run_cell', configure_once)
+            ip.events.register('post_run_cell', configure_once)
 
 _enable_matplotlib_integration()

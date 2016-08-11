@@ -280,7 +280,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content
 
-    def do_history(self, hist_access_type, output, raw, session=None, start=None,
+    def do_history(self, hist_access_type, output, raw, session=0, start=0,
                    stop=None, n=None, pattern=None, unique=False):
         if hist_access_type == 'tail':
             hist = self.shell.history_manager.get_tail(n, raw=raw, output=output,

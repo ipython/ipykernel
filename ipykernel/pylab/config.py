@@ -50,7 +50,7 @@ class InlineBackend(InlineBackendConfig):
         'font.size': 10,
         # 72 dpi matches SVG/qtconsole
         # this only affects PNG export, as SVG has no dpi setting
-        'savefig.dpi': 72,
+        'figure.dpi': 72,
         # 10pt still needs a little more room on the xlabel:
         'figure.subplot.bottom' : .125
         },

@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import sys
+import logging
 
 from traitlets.config import LoggingConfigurable
 
@@ -66,7 +67,7 @@ class CommManager(LoggingConfigurable):
             return self.comms[comm_id]
         except KeyError:
             self.log.warn("No such comm: %s", comm_id)
-            if self.log.isEnabledFor(self.log.DEBUG):
+            if self.log.isEnabledFor(logging.DEBUG):
                 # don't create the list of keys if debug messages aren't enabled
                 self.log.debug("Current comms: %s", list(self.comms.keys()))
 

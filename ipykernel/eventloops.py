@@ -47,6 +47,7 @@ loop_map = {
     'inline': None,
     'nbagg': None,
     'notebook': None,
+    'ipympl': None,
     None : None,
 }
 

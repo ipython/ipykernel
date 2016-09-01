@@ -5,7 +5,14 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
+try:
+    from queue import Queue
+except ImportError:
+    # py2
+    from Queue import Queue
+from threading import Thread
 import unittest
+
 from traitlets import Int
 import zmq
 
@@ -88,12 +95,24 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         self.assertEqual(self.disp_pub.session, self.session)
         self.assertEqual(self.disp_pub.pub_socket, self.socket)
 
-    def test_thread_local_default(self):
+    def test_thread_local_hooks(self):
         """
         Confirms that the thread_local attribute is correctly
         initialised with an empty list for the display hooks
         """
-        self.assertEqual(self.disp_pub.thread_local.hooks, [])
+        self.assertEqual(self.disp_pub._hooks, [])
+        def hook(msg):
+            return msg
+        self.disp_pub.register_hook(hook)
+        self.assertEqual(self.disp_pub._hooks, [hook])
+
+        q = Queue()
+        def set_thread_hooks():
+            q.put(self.disp_pub._hooks)
+        t = Thread(target=set_thread_hooks)
+        t.start()
+        thread_hooks = q.get(timeout=10)
+        self.assertEqual(thread_hooks, [])
 
     def test_publish(self):
         """

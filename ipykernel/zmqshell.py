@@ -68,7 +68,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
     # thread_local:
     # An attribute used to ensure the correct output message
     # is processed. See ipykernel Issue 113 for a discussion.
-    thread_local = Any()
+    _thread_local = Any()
 
     def set_parent(self, parent):
         """Set the parent for outbound messages."""
@@ -79,14 +79,17 @@ class ZMQDisplayPublisher(DisplayPublisher):
         sys.stdout.flush()
         sys.stderr.flush()
 
-    @default('thread_local')
+    @default('_thread_local')
     def _default_thread_local(self):
-        """ Initialises the threadlocal attribute and
-            gives it a 'hooks' attribute.
-        """
-        loc = local()
-        loc.hooks = []
-        return loc
+        """Initialize our thread local storage"""
+        return local()
+
+    @property
+    def _hooks(self):
+        if not hasattr(self._thread_local, 'hooks'):
+            # create new list for a new thread
+            self._thread_local.hooks = []
+        return self._thread_local.hooks
 
     def publish(self, data, metadata=None, source=None):
         self._flush_streams()
@@ -108,7 +111,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         # Each transform either returns a new
         # message or None. If None is returned,
         # the message has been 'used' and we return.
-        for hook in self.thread_local.hooks:
+        for hook in self._hooks:
             msg = hook(msg)
             if msg is None:
                 return
@@ -143,7 +146,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         Returning `None` will halt that execution path, and
         session.send will not be called.
         """
-        self.thread_local.hooks.append(hook)
+        self._hooks.append(hook)
 
     def unregister_hook(self, hook):
         """
@@ -160,7 +163,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
                found.
         """
         try:
-            self.thread_local.hooks.remove(hook)
+            self._hooks.remove(hook)
             return True
         except ValueError:
             return False

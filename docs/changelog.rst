@@ -1,6 +1,20 @@
 Changes in IPython kernel
 =========================
 
+4.5
+---
+
+4.5.0
+*****
+
+`4.5 on GitHub <https://github.com/ipython/ipykernel/milestones/4.5>`__
+
+- Use figure.dpi instead of savefig.dpi to set DPI for inline figures
+- Support ipympl matplotlib backend (requires IPython update as well to fully work)
+- Various bugfixes, including fixes for output coming from threads,
+  and :func:`input` when called with non-string prompts, which stdlib allows.
+
+
 4.4
 ---
 

@@ -1,5 +1,6 @@
 language: python
 python:
+    - "nightly"
     - 3.5
     - 3.4
     - 3.3
@@ -19,3 +20,6 @@ script:
     - nosetests --with-coverage --with-timer --cover-package  ipykernel ipykernel
 after_success:
     - codecov
+matrix:
+    allow_failures:
+        - python: "nightly"

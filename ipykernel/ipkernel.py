@@ -204,8 +204,6 @@ class IPythonKernel(KernelBase):
 
         if res.success:
             reply_content[u'status'] = u'ok'
-        elif isinstance(err, KeyboardInterrupt):
-            reply_content[u'status'] = u'aborted'
         else:
             reply_content[u'status'] = u'error'
 

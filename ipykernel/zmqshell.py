@@ -563,7 +563,7 @@ class ZMQInteractiveShell(InteractiveShell):
         # Overridden not to do virtualenv detection, because it's probably
         # not appropriate in a kernel. To use a kernel in a virtualenv, install
         # it inside the virtualenv.
-        # http://ipython.readthedocs.org/en/latest/install/kernel_install.html
+        # https://ipython.readthedocs.io/en/latest/install/kernel_install.html
         pass
 
 

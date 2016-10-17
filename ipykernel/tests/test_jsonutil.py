@@ -5,7 +5,13 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
-from base64 import decodestring
+import sys
+
+if sys.version_info < (3,):
+    from base64 import decodestring as decodebytes
+else:
+    from base64 import decodebytes
+
 from datetime import datetime
 import numbers
 
@@ -73,7 +79,7 @@ def test_encode_images():
     encoded = encode_images(fmt)
     for key, value in iteritems(fmt):
         # encoded has unicode, want bytes
-        decoded = decodestring(encoded[key].encode('ascii'))
+        decoded = decodebytes(encoded[key].encode('ascii'))
         nt.assert_equal(decoded, value)
     encoded2 = encode_images(encoded)
     nt.assert_equal(encoded, encoded2)
@@ -85,7 +91,7 @@ def test_encode_images():
     nt.assert_equal(encoded3, b64_str)
     for key, value in iteritems(fmt):
         # encoded3 has str, want bytes
-        decoded = decodestring(str_to_bytes(encoded3[key]))
+        decoded = decodebytes(str_to_bytes(encoded3[key]))
         nt.assert_equal(decoded, value)
 
 def test_lambda():

@@ -32,7 +32,8 @@ class SocketABC(with_metaclass(abc.ABCMeta, object)):
     @classmethod
     def register(cls, other_cls):
         if other_cls is not DummySocket:
-            warnings.warn("SocketABC is deprecated.", DeprecationWarning)
+            warnings.warn("SocketABC is deprecated since ipykernel version 4.5.0.",
+                    DeprecationWarning, stacklevel=2)
         abc.ABCMeta.register(cls, other_cls)
 
 #-----------------------------------------------------------------------------

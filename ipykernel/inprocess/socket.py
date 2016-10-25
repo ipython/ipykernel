@@ -31,7 +31,8 @@ class SocketABC(with_metaclass(abc.ABCMeta, object)):
     
     @classmethod
     def register(cls, other_cls):
-        warnings.warn("SocketABC is deprecated.", DeprecationWarning)
+        if other_cls is not DummySocket:
+            warnings.warn("SocketABC is deprecated.", DeprecationWarning)
         abc.ABCMeta.register(cls, other_cls)
 
 #-----------------------------------------------------------------------------
@@ -43,6 +44,9 @@ class DummySocket(HasTraits):
 
     queue = Instance(Queue, ())
     message_sent = Int(0) # Should be an Event
+    context = Instance(zmq.Context)
+    def _context_default(self):
+        return zmq.Context.instance()
 
     #-------------------------------------------------------------------------
     # Socket interface

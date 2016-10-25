@@ -6,10 +6,10 @@
 
 from __future__ import print_function
 import atexit
+from binascii import b2a_hex
 import os
 import sys
 import threading
-import uuid
 import warnings
 from io import StringIO, UnsupportedOperation
 
@@ -35,14 +35,25 @@ CHILD = 1
 
 class IOPubThread(object):
     """An object for sending IOPub messages in a background thread
-    
-    prevents a blocking main thread
-    
+
+    Prevents a blocking main thread from delaying output from threads.
+
     IOPubThread(pub_socket).background_socket is a Socket-API-providing object
     whose IO is always run in a thread.
     """
 
     def __init__(self, socket, pipe=False):
+        """Create IOPub thread
+
+        Parameters
+        ----------
+
+        socket: zmq.PUB Socket
+            the socket on which messages will be sent.
+        pipe: bool
+            Whether this process should listen for IOPub messages
+            piped from subprocesses.
+        """
         self.socket = socket
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
@@ -50,6 +61,9 @@ class IOPubThread(object):
         self.io_loop = IOLoop()
         if pipe:
             self._setup_pipe_in()
+        self._local = threading.local()
+        self._events = {}
+        self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main)
         self.thread.daemon = True
 
@@ -57,16 +71,51 @@ class IOPubThread(object):
         """The inner loop that's actually run in a thread"""
         self.io_loop.start()
         self.io_loop.close()
+        if hasattr(self._local, 'event_pipe'):
+            self._local.event_pipe.close()
 
+    def _setup_event_pipe(self):
+        """Create the PULL socket listening for events that should fire in this thread."""
+        ctx = self.socket.context
+        pipe_in = ctx.socket(zmq.PULL)
+        pipe_in.linger = 0
+
+        _uuid = b2a_hex(os.urandom(16)).decode('ascii')
+        iface = self._event_interface = 'inproc://%s' % _uuid
+        pipe_in.bind(iface)
+        self._event_puller = ZMQStream(pipe_in, self.io_loop)
+        self._event_puller.on_recv(self._handle_event)
+    
+    @property
+    def _event_pipe(self):
+        """thread-local event pipe for signaling events that should be processed in the thread"""
+        try:
+            event_pipe = self._local.event_pipe
+        except AttributeError:
+            # new thread, new event pipe
+            ctx = self.socket.context
+            event_pipe = ctx.socket(zmq.PUSH)
+            event_pipe.linger = 0
+            event_pipe.connect(self._event_interface)
+            self._local.event_pipe = event_pipe
+        return event_pipe
+
+    def _handle_event(self, msg):
+        """Handle an event on the event pipe"""
+        event_id = msg[0]
+        event_f = self._events.pop(event_id)
+        event_f()
+    
     def _setup_pipe_in(self):
-        """setup listening pipe for subprocesses"""
+        """setup listening pipe for IOPub from forked subprocesses"""
         ctx = self.socket.context
 
         # use UUID to authenticate pipe messages
-        self._pipe_uuid = uuid.uuid4().bytes
+        self._pipe_uuid = os.urandom(16)
 
         pipe_in = ctx.socket(zmq.PULL)
         pipe_in.linger = 0
+
         try:
             self._pipe_port = pipe_in.bind_to_random_port("tcp://127.0.0.1")
         except zmq.ZMQError as e:
@@ -127,17 +176,27 @@ class IOPubThread(object):
     @property
     def closed(self):
         return self.socket is None
-    
+
+    def schedule(self, f):
+        """Schedule a function to be called in our IO thread.
+
+        If the thread is not running, call immediately.
+        """
+        if self.thread.is_alive():
+            event_id = os.urandom(16)
+            while event_id in self._events:
+                event_id = os.urandom(16)
+            self._events[event_id] = f
+            self._event_pipe.send(event_id)
+        else:
+            f()
+
     def send_multipart(self, *args, **kwargs):
         """send_multipart schedules actual zmq send in my thread.
         
         If my thread isn't running (e.g. forked process), send immediately.
         """
-
-        if self.thread.is_alive():
-            self.io_loop.add_callback(lambda : self._really_send(*args, **kwargs))
-        else:
-            self._really_send(*args, **kwargs)
+        self.schedule(lambda : self._really_send(*args, **kwargs))
     
     def _really_send(self, msg, *args, **kwargs):
         """The callback that actually sends messages"""
@@ -219,10 +278,8 @@ class OutStream(object):
         self.topic = b'stream.' + py3compat.cast_bytes(name)
         self.parent_header = {}
         self._master_pid = os.getpid()
-        self._flush_lock = threading.Lock()
-        self._flush_timeout = None
+        self._flush_pending = False
         self._io_loop = pub_thread.io_loop
-        self._buffer_lock = threading.Lock()
         self._new_buffer()
 
     def _is_master_process(self):
@@ -243,18 +300,14 @@ class OutStream(object):
         
         call this on write, to indicate that flush should be called soon.
         """
-        with self._flush_lock:
-            if self._flush_timeout is not None:
-                return
-            # None indicates there's no flush scheduled.
-            # Use a non-None placeholder to indicate that a flush is scheduled
-            # to avoid races while we wait for _schedule_in_thread below to fire in the io thread.
-            self._flush_timeout = 'placeholder'
-        
-        # add_timeout has to be handed to the io thread with add_callback
+        if self._flush_pending:
+            return
+        self._flush_pending = True
+
+        # add_timeout has to be handed to the io thread via event pipe
         def _schedule_in_thread():
-            self._flush_timeout = self._io_loop.call_later(self.flush_interval, self._flush)
-        self._io_loop.add_callback(_schedule_in_thread)
+            self._io_loop.call_later(self.flush_interval, self._flush)
+        self.pub_thread.schedule(_schedule_in_thread)
 
     def flush(self):
         """trigger actual zmq send
@@ -262,10 +315,10 @@ class OutStream(object):
         send will happen in the background thread
         """
         if self.pub_thread.thread.is_alive():
-            self._io_loop.add_callback(self._flush)
             # wait for flush to actually get through:
+            self.pub_thread.schedule(self._flush)
             evt = threading.Event()
-            self._io_loop.add_callback(evt.set)
+            self.pub_thread.schedule(evt.set)
             evt.wait()
         else:
             self._flush()
@@ -276,9 +329,8 @@ class OutStream(object):
         _flush should generally be called in the IO thread,
         unless the thread has been destroyed (e.g. forked subprocess).
         """
-        with self._flush_lock:
-            self._flush_timeout = None
-            data = self._flush_buffer()
+        self._flush_pending = False
+        data = self._flush_buffer()
         if data:
             # FIXME: this disables Session's fork-safe check,
             # since pub_thread is itself fork-safe.
@@ -315,8 +367,8 @@ class OutStream(object):
                 string = string.decode(self.encoding, 'replace')
 
             is_child = (not self._is_master_process())
-            with self._buffer_lock:
-                self._buffer.write(string)
+            # only touch the buffer in the IO thread to avoid races
+            self.pub_thread.schedule(lambda : self._buffer.write(string))
             if is_child:
                 # newlines imply flush in subprocesses
                 # mp.Pool cannot be trusted to flush promptly (or ever),
@@ -334,14 +386,16 @@ class OutStream(object):
                 self.write(string)
 
     def _flush_buffer(self):
-        """clear the current buffer and return the current buffer data"""
-        with self._buffer_lock:
-            data = u''
-            if self._buffer is not None:
-                buf = self._buffer
-                self._new_buffer()
-                data = buf.getvalue()
-                buf.close()
+        """clear the current buffer and return the current buffer data.
+        
+        This should only be called in the IO thread.
+        """
+        data = u''
+        if self._buffer is not None:
+            buf = self._buffer
+            self._new_buffer()
+            data = buf.getvalue()
+            buf.close()
         return data
 
     def _new_buffer(self):

@@ -66,3 +66,11 @@ class InProcessKernelTestCase(unittest.TestCase):
         kc.execute('print("bar")')
         out, err = assemble_output(kc.iopub_channel)
         self.assertEqual(out, 'bar\n')
+
+    def test_getpass_stream(self):
+        "Tests that kernel getpass accept the stream parameter"
+        kernel = InProcessKernel()
+        kernel._allow_stdin = True
+        kernel._input_request = lambda *args, **kwargs : None
+
+        kernel.getpass(stream='non empty')

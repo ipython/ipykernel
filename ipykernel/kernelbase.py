@@ -656,7 +656,7 @@ class Kernel(SingletonConfigurable):
         raise StdinNotImplementedError("raw_input was called, but this "
                                        "frontend does not support stdin.")
 
-    def getpass(self, prompt=''):
+    def getpass(self, prompt='', stream=None):
         """Forward getpass to frontends
 
         Raises
@@ -667,6 +667,10 @@ class Kernel(SingletonConfigurable):
             raise StdinNotImplementedError(
                 "getpass was called, but this frontend does not support input requests."
             )
+        if stream is not None:
+            import warnings
+            warnings.warn("The `stream` parameter of `getpass.getpass` will have no effect when using ipykernel",
+                    UserWarning, stacklevel=2)
         return self._input_request(prompt,
             self._parent_ident,
             self._parent_header,

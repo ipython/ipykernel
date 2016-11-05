@@ -14,7 +14,7 @@ from traitlets import Instance, Unicode, Bytes, Bool, Dict, Any, default
 
 class Comm(LoggingConfigurable):
     """Class for communicating between a Frontend and a Kernel"""
-    kernel = Instance('ipykernel.kernelbase.Kernel')
+    kernel = Instance('ipykernel.kernelbase.Kernel', allow_none=True)
 
     @default('kernel')
     def _default_kernel(self):

@@ -91,20 +91,42 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def publish(self, data, metadata=None, source=None):
+    def publish(self, data, metadata=None, source=None, transient=None,
+        update=False,
+    ):
+        """Publish a display-data message
+
+        Parameters
+        ----------
+        data: dict
+            A mime-bundle dict, keyed by mime-type.
+        metadata: dict, optional
+            Metadata associated with the data.
+        transient: dict, optional, keyword-only
+            Transient data that may only be relevant during a live display,
+            such as display_id.
+            Transient data should not be persisted to documents.
+        update: bool, optional, keyword-only
+            If True, send an update_display_data message instead of display_data.
+        """
         self._flush_streams()
         if metadata is None:
             metadata = {}
+        if transient is None:
+            transient = {}
         self._validate_data(data, metadata)
         content = {}
         content['data'] = encode_images(data)
         content['metadata'] = metadata
+        content['transient'] = transient
+
+        msg_type = 'update_display_data' if update else 'display_data'
 
         # Use 2-stage process to send a message,
         # in order to put it through the transform
         # hooks before potentially sending.
         msg = self.session.msg(
-            u'display_data', json_clean(content),
+            msg_type, json_clean(content),
             parent=self.parent_header
         )
 
@@ -117,10 +139,20 @@ class ZMQDisplayPublisher(DisplayPublisher):
                 return
 
         self.session.send(
-            self.pub_socket, msg, ident=self.topic
+            self.pub_socket, msg, ident=self.topic,
         )
 
     def clear_output(self, wait=False):
+        """Clear output associated with the current execution (cell).
+
+        Parameters
+        ----------
+        wait: bool (default: False)
+            If True, the output will not be cleared immediately,
+            instead waiting for the next display before clearing.
+            This reduces bounce during repeated clear & display loops.
+
+        """
         content = dict(wait=wait)
         self._flush_streams()
         self.session.send(

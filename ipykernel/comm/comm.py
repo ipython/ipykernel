@@ -51,7 +51,7 @@ class Comm(LoggingConfigurable):
         if target_name:
             kwargs['target_name'] = target_name
         super(Comm, self).__init__(**kwargs)
-        if self.primary:
+        if self.kernel is not None and self.primary:
             # I am primary, open my peer.
             self.open(data=data, metadata=metadata, buffers=buffers)
         else:

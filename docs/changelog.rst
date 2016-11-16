@@ -4,6 +4,16 @@ Changes in IPython kernel
 4.5
 ---
 
+4.5.1
+*****
+
+`4.5.1 on GitHub <https://github.com/ipython/ipykernel/milestones/4.5.1>`__
+
+- Add missing ``stream`` parameter to overridden :func:`getpass`
+- Remove locks from iopub thread, which could cause deadlocks during debugging
+- Fix regression where KeyboardInterrupt was treated as an aborted request, rather than an error
+- Allow instantating Comms outside of the IPython kernel
+
 4.5.0
 *****
 

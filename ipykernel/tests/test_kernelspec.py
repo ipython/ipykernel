@@ -35,7 +35,7 @@ def test_make_ipkernel_cmd():
     nt.assert_equal(cmd, [
         sys.executable,
         '-m',
-        'ipykernel',
+        'ipykernel_launcher',
         '-f',
         '{connection_file}'
     ])

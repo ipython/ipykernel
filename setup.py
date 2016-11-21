@@ -55,6 +55,7 @@ setup_args = dict(
     version         = version_ns['__version__'],
     scripts         = glob(pjoin('scripts', '*')),
     packages        = packages,
+    py_modules      = ['ipykernel_launcher'],
     package_data    = package_data,
     description     = "IPython Kernel for Jupyter",
     author          = 'IPython Development Team',

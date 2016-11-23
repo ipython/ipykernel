@@ -104,6 +104,10 @@ class Comm(LoggingConfigurable):
             # only close once
             return
         self._closed = True
+        # nothing to send if we have no kernel
+        # can be None during interpreter cleanup
+        if not self.kernel:
+            return
         if data is None:
             data = self._close_data
         self._publish_msg('comm_close',

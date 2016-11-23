@@ -51,11 +51,12 @@ class Comm(LoggingConfigurable):
         if target_name:
             kwargs['target_name'] = target_name
         super(Comm, self).__init__(**kwargs)
-        if self.kernel is not None and self.primary:
-            # I am primary, open my peer.
-            self.open(data=data, metadata=metadata, buffers=buffers)
-        else:
-            self._closed = False
+        if self.kernel:
+            if self.primary:
+                # I am primary, open my peer.
+                self.open(data=data, metadata=metadata, buffers=buffers)
+            else:
+                self._closed = False
 
     def _publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys):
         """Helper for sending a comm message on IOPub"""

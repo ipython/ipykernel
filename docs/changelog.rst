@@ -4,6 +4,14 @@ Changes in IPython kernel
 4.5
 ---
 
+4.5.2
+*****
+
+`4.5.2 on GitHub <https://github.com/ipython/ipykernel/milestones/4.5.2>`__
+
+- Fix bug when instantating Comms outside of the IPython kernel (introduced in 4.5.1).
+
+
 4.5.1
 *****
 

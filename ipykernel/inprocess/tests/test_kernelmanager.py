@@ -14,10 +14,17 @@ from ipykernel.inprocess.manager import InProcessKernelManager
 
 class InProcessKernelManagerTestCase(unittest.TestCase):
 
+    def setUp(self):
+        self.km = InProcessKernelManager()
+
+    def tearDown(self):
+        if self.km.has_kernel:
+            self.km.shutdown_kernel()
+
     def test_interface(self):
         """ Does the in-process kernel manager implement the basic KM interface?
         """
-        km = InProcessKernelManager()
+        km = self.km
         self.assert_(not km.has_kernel)
 
         km.start_kernel()
@@ -47,7 +54,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
     def test_execute(self):
         """ Does executing code in an in-process kernel work?
         """
-        km = InProcessKernelManager()
+        km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
@@ -58,7 +65,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
     def test_complete(self):
         """ Does requesting completion from an in-process kernel work?
         """
-        km = InProcessKernelManager()
+        km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
@@ -73,7 +80,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
     def test_inspect(self):
         """ Does requesting object information from an in-process kernel work?
         """
-        km = InProcessKernelManager()
+        km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
@@ -90,18 +97,18 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
     def test_history(self):
         """ Does requesting history from an in-process kernel work?
         """
-        km = InProcessKernelManager()
+        km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
         kc.wait_for_ready()
-        kc.execute('%who')
+        kc.execute('1')
         kc.history(hist_access_type='tail', n=1)
         msg = kc.shell_channel.get_msgs()[-1]
         self.assertEquals(msg['header']['msg_type'], 'history_reply')
         history = msg['content']['history']
         self.assertEquals(len(history), 1)
-        self.assertEquals(history[0][2], '%who')
+        self.assertEquals(history[0][2], '1')
 
 
 if __name__ == '__main__':

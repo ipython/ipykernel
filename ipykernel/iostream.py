@@ -70,9 +70,7 @@ class IOPubThread(object):
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""
         self.io_loop.start()
-        self.io_loop.close()
-        if hasattr(self._local, 'event_pipe'):
-            self._local.event_pipe.close()
+        self.io_loop.close(all_fds=True)
 
     def _setup_event_pipe(self):
         """Create the PULL socket listening for events that should fire in this thread."""
@@ -168,6 +166,8 @@ class IOPubThread(object):
             return
         self.io_loop.add_callback(self.io_loop.stop)
         self.thread.join()
+        if hasattr(self._local, 'event_pipe'):
+            self._local.event_pipe.close()
     
     def close(self):
         self.socket.close()

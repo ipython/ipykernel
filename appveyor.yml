@@ -31,4 +31,4 @@ install:
   - ps: pip install nose nose-timer coverage mock nose_warnings_filters
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 test_script:
-  - nosetests --with-coverage --with-time ipykernel
+  - nosetests -v --with-coverage --with-time ipykernel

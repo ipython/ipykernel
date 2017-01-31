@@ -199,11 +199,14 @@ def test_save_history():
 @dec.skip_without('faulthandler')
 def test_smoke_faulthandler():
     with kernel() as kc:
+        # Note: faulthandler.register is not available on windows.
         code = u'\n'.join([
-            'import faulthandler, signal',
+            'import sys',
+            'import faulthandler',
+            'import signal',
             'faulthandler.enable()',
-            'faulthandler.register(signal.SIGTERM)',
-        ])
+            'if not sys.platform.startswith("win32"):',
+            '    faulthandler.register(signal.SIGTERM)'])
         _, reply = execute(code, kc=kc)
         print(_)
         nt.assert_equal(reply['status'], 'ok', reply.get('traceback', ''))

@@ -38,4 +38,4 @@ install:
   - ps: pip freeze
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 test_script:
-  - nosetests -v --with-coverage --with-time ipykernel
+  - ps: nosetests -v --with-coverage --with-time ipykernel

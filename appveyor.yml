@@ -5,6 +5,7 @@ environment:
 
   global:
     distutils_use_sdk: 1
+    NOSE_COVER_PACKAGE: "ipykernel"
 
   matrix:
     - python: "C:/Python27-x64"

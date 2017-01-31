@@ -1,0 +1,8 @@
+nose
+nose-timer
+coverage
+mock
+nose_warnings_filters
+numpy
+matplotlib
+faulthandler ; python_version < "3"

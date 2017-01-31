@@ -20,8 +20,8 @@ environment:
 cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache
 
-matix:
-  fast_finish: True
+matrix:
+  fast_finish: true
 
 init:
   - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:path

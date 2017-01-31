@@ -21,10 +21,14 @@ init:
   - ps: $Env:sdkverpath = "C:/Program Files/Microsoft SDKs/Windows/" + $Env:sdkver + "/Setup/WindowsSdkVer.exe"
   - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:sdkbin + ";" + $Env:path
 install:
+  # prepare pip
   - ps: python -m pip install --upgrade --no-binary wheel pip
   - ps: pip install --upgrade wheel
   - ps: pip --version
+  # install package
   - ps: pip install -e .
+  # install test requirements
+  - ps: pip install nose nose-timer coverage mock
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 test_script:
   - nosetests --with-coverage --with-time --coverage-package ipykernel ipykernel

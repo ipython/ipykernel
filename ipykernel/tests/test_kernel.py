@@ -6,7 +6,6 @@
 
 import io
 import os.path
-import pprint
 import sys
 import time
 
@@ -17,8 +16,9 @@ from ipython_genutils import py3compat
 from IPython.paths import locate_profile
 from ipython_genutils.tempdir import TemporaryDirectory
 
-from .utils import (new_kernel, kernel, TIMEOUT, assemble_output, execute,
-                    flush_channels, wait_for_idle)
+from .utils import (
+    new_kernel, kernel, TIMEOUT, assemble_output, execute,
+    flush_channels, wait_for_idle)
 
 
 def _check_master(kc, expected=True, stream="stdout"):
@@ -63,7 +63,7 @@ def test_sys_path_profile_dir():
         stdout, stderr = assemble_output(kc.iopub_channel)
         nt.assert_equal(stdout, "''\n")
 
-@dec.knownfailureif(sys.platform == 'win32', "subprocess prints fail on Windows")
+@dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
 def test_subprocess_print():
     """printing from forked mp.Process"""
     with new_kernel() as kc:
@@ -114,7 +114,7 @@ def test_subprocess_noprint():
         _check_master(kc, expected=True, stream="stderr")
 
 
-@dec.knownfailureif(sys.platform == 'win32', "subprocess prints fail on Windows")
+@dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
 def test_subprocess_error():
     """error in mp.Process doesn't crash"""
     with new_kernel() as kc:

@@ -9,27 +9,26 @@ environment:
 
   matrix:
     - python: "C:/Python27-x64"
-      sdkver: "v7.0"
-
     - python: "C:/Python27"
-      sdkver: "v7.0"
-
     - python: "C:/Python34-x64"
-      sdkver: "v7.1"
-
     - python: "C:/Python34"
-      sdkver: "v7.1"
+    - python: "C:/Python35-x64"
+    - python: "C:/Python35"
 
 matrix:
   allow_failures:
-  -  sdkver: "v7.0"
+    - python: "C:/Python27-x64"
+    - python: "C:/Python27"
+    - python: "C:/Python34-x64"
+    - python: "C:/Python34"
+    - python: "C:/Python35-x64"
+    - python: "C:/Python35"
 
 cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache
 
 init:
-  - ps: $Env:sdkbin = "C:\Program Files\Microsoft SDKs\Windows\" + $Env:sdkver + "\Bin"
-  - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:sdkbin + ";" + $Env:path
+  - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:path
 install:
   # prepare pip
   - ps: python -m pip install --upgrade --no-binary wheel pip

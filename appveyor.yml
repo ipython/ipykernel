@@ -14,6 +14,10 @@ environment:
     - python: "C:/Python27-x64"
       sdkver: "v7.0"
 
+matrix:
+   allow_failures:
+   - sdkver: "v7.0"
+
 cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache
 

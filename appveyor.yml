@@ -28,7 +28,7 @@ install:
   # install package
   - ps: pip install -e .
   # install test requirements
-  - ps: pip install nose nose-timer coverage mock nose_warnings_filters
+  - ps: pip install nose nose-timer coverage mock nose_warnings_filters numpy matplotlib
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 test_script:
   - nosetests -v --with-coverage --with-time ipykernel

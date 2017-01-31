@@ -208,7 +208,6 @@ def test_smoke_faulthandler():
             'if not sys.platform.startswith("win32"):',
             '    faulthandler.register(signal.SIGTERM)'])
         _, reply = execute(code, kc=kc)
-        print(_)
         nt.assert_equal(reply['status'], 'ok', reply.get('traceback', ''))
 
 

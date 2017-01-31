@@ -11,7 +11,7 @@ environment:
     - python: "C:/Python27-x64"
       sdkver: "v7.0"
 
-    - python: "C:/Python27-x64"
+    - python: "C:/Python27"
       sdkver: "v7.0"
 
 matrix:

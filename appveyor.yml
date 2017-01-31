@@ -1,0 +1,30 @@
+build: false
+shallow_clone: true
+
+environment:
+
+  global:
+    distutils_use_sdk: 1
+
+  matrix:
+    - python: "C:/Python27-x64"
+      sdkver: "v7.0"
+
+    - python: "C:/Python27-x64"
+      sdkver: "v7.0"
+
+cache:
+  - C:\Users\appveyor\AppData\Local\pip\Cache
+
+init:
+  - ps: $Env:sdkbin = "C:\Program Files\Microsoft SDKs\Windows\" + $Env:sdkver + "\Bin"
+  - ps: $Env:sdkverpath = "C:/Program Files/Microsoft SDKs/Windows/" + $Env:sdkver + "/Setup/WindowsSdkVer.exe"
+  - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:sdkbin + ";" + $Env:path
+install:
+  - ps: python -m pip install --upgrade --no-binary wheel pip
+  - ps: pip install --upgrade wheel
+  - ps: pip --version
+  - ps: pip install -e .
+  - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
+test_script:
+  - nosetests --with-coverage --with-time --coverage-package ipykernel ipykernel

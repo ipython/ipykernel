@@ -15,15 +15,6 @@ environment:
     - python: "C:/Python35-x64"
     - python: "C:/Python35"
 
-matrix:
-  allow_failures:
-    - python: "C:/Python27-x64"
-    - python: "C:/Python27"
-    - python: "C:/Python34-x64"
-    - python: "C:/Python34"
-    - python: "C:/Python35-x64"
-    - python: "C:/Python35"
-
 cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache
 

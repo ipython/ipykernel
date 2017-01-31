@@ -14,6 +14,8 @@ environment:
     - python: "C:/Python34"
     - python: "C:/Python35-x64"
     - python: "C:/Python35"
+    - python: "C:/Python36-x64"
+    - python: "C:/Python36"
 
 cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache

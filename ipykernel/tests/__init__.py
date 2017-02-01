@@ -3,6 +3,7 @@
 
 import os
 import shutil
+import sys
 import tempfile
 
 try:
@@ -24,7 +25,11 @@ def setup():
     global tmp
     tmp = tempfile.mkdtemp()
     patchers[:] = [
-        patch.dict(os.environ, {'HOME': tmp}),
+        patch.dict(os.environ, {
+            'HOME': tmp,
+            # Let tests work with --user install when HOME is changed:
+            'PYTHONPATH': os.pathsep.join(sys.path),
+        }),
     ]
     for p in patchers:
         p.start()

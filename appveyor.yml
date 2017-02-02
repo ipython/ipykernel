@@ -26,16 +26,18 @@ matrix:
 init:
   - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:path
 install:
-  # prepare pip
   - ps: python -m pip install --upgrade --no-binary wheel pip
   - ps: pip install --upgrade wheel
   - ps: pip --version
-  # install package
+
   - ps: pip install -e .
-  # install test requirements
+
   - cmd: pip install -r test-requirements.txt
-  # show current setup
   - ps: pip freeze
+
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 test_script:
-  - cmd: nosetests -v --with-coverage --with-time ipykernel
+  - cmd: coverage run -p -m nose.core -v --with-timer --timer-top-n 10 ipykernel
+on_success:
+  - ps: pip install codecov
+  - ps: codecov

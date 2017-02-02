@@ -11,18 +11,8 @@ environment:
   matrix:
     - python: "C:/Python27-x64"
     - python: "C:/Python27"
-    - python: "C:/Python34-x64"
-    - python: "C:/Python34"
-    - python: "C:/Python35-x64"
-    - python: "C:/Python35"
     - python: "C:/Python36-x64"
     - python: "C:/Python36"
-    - python: "C:/Python36-x64"
-      latest: true
-
-matrix:
-  allow_failures:
-  - latest: true
 
 cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache

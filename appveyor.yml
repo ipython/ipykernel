@@ -5,9 +5,6 @@ clone_depth: 1
 
 environment:
 
-  global:
-    NOSE_COVER_PACKAGE: "ipykernel"
-
   matrix:
     - python: "C:/Python27-x64"
     - python: "C:/Python27"

@@ -23,10 +23,9 @@ install:
   - ps: pip install --upgrade pip wheel
   - ps: pip --version
 
-  - ps: if ($Env:latest -eq 'true') {pip install -r requirements-latest.txt}
-  - ps: pip install --pre -e .
-
-  - cmd: pip install -r test-requirements.txt
+  - ps: pip install --pre -e . coverage nose_warnings_filters
+  - ps: pip install ipykernel[test] nose-timer
+  - ps: pip install matplolib numpy
   - ps: pip freeze
 
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'

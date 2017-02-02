@@ -1,0 +1,40 @@
+build: false
+shallow_clone: true
+
+environment:
+
+  global:
+    distutils_use_sdk: 1
+    NOSE_COVER_PACKAGE: "ipykernel"
+
+  matrix:
+    - python: "C:/Python27-x64"
+    - python: "C:/Python27"
+    - python: "C:/Python34-x64"
+    - python: "C:/Python34"
+    - python: "C:/Python35-x64"
+    - python: "C:/Python35"
+    - python: "C:/Python36-x64"
+    - python: "C:/Python36"
+
+cache:
+  - C:\Users\appveyor\AppData\Local\pip\Cache
+
+init:
+  - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:path
+install:
+  - ps: python -m pip install --upgrade --no-binary wheel pip
+  - ps: pip install --upgrade wheel
+  - ps: pip --version
+
+  - ps: pip install -e .
+
+  - cmd: pip install -r test-requirements.txt
+  - ps: pip freeze
+
+  - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
+test_script:
+  - cmd: coverage run -p -m nose.core -v --with-timer --timer-top-n 10 ipykernel
+on_success:
+  - ps: pip install codecov
+  - ps: codecov

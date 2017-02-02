@@ -34,4 +34,4 @@ test_script:
 
 on_success:
   - ps: pip install codecov
-  - cmd: codecov
+  #- cmd: codecov

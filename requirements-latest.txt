@@ -1,0 +1,4 @@
+git+https://github.com/ipython/ipython.git#egg=ipython
+git+https://github.com/ipython/traitlets.git#egg=traitlets
+git+https://github.com/tornadoweb/tornado.git#tornado
+git+https://github.com/jupyter/jupyter_client.git#egg=jupyter_client

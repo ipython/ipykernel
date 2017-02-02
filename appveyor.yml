@@ -1,0 +1,48 @@
+build: false
+shallow_clone: false
+skip_branch_with_pr: true
+clone_depth: 1
+
+environment:
+
+  global:
+    NOSE_COVER_PACKAGE: "ipykernel"
+
+  matrix:
+    - python: "C:/Python27-x64"
+    - python: "C:/Python27"
+    - python: "C:/Python34-x64"
+    - python: "C:/Python34"
+    - python: "C:/Python35-x64"
+    - python: "C:/Python35"
+    - python: "C:/Python36-x64"
+    - python: "C:/Python36"
+    - python: "C:/Python36-x64"
+      latest: true
+
+matrix:
+  allow_failures:
+  - latest: true
+
+cache:
+  - C:\Users\appveyor\AppData\Local\pip\Cache
+
+init:
+  - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:path
+install:
+  - ps: pip install --upgrade pip wheel
+  - ps: pip --version
+
+  - ps: if ($Env:latest -eq 'true') {pip install -r requirements-latest.txt}
+  - ps: pip install --pre -e .
+
+  - cmd: pip install -r test-requirements.txt
+  - ps: pip freeze
+
+  - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
+test_script:
+  - cmd: coverage run -m nose.core -v --with-timer --timer-top-n 10 ipykernel
+
+on_success:
+  - ps: pip install codecov
+  - cmd: codecov

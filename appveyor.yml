@@ -25,7 +25,7 @@ install:
 
   - ps: pip install --pre -e . coverage nose_warnings_filters
   - ps: pip install ipykernel[test] nose-timer
-  - ps: pip install matplolib numpy
+  - ps: pip install matplotlib numpy
   - ps: pip freeze
 
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'

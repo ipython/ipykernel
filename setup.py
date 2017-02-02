@@ -86,8 +86,7 @@ install_requires = setuptools_args['install_requires'] = [
     'jupyter_client',
     'tornado>=4.0',
 ]
-# setup requres same packages
-setuptools_args['setup_requires'] = setuptools_args['install_requires']
+
 if any(a.startswith(('bdist', 'build')) for a in sys.argv):
     from ipykernel.kernelspec import write_kernel_spec, make_ipkernel_cmd, KERNEL_NAME
 

@@ -30,7 +30,7 @@ install:
 
   - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 test_script:
-  - cmd: coverage run -m nose.core -v --with-timer --timer-top-n 10 ipykernel
+  - cmd: nosetests --with-coverage --with-timer --cover-package=ipykernel ipykernel
 
 on_success:
   - ps: pip install codecov

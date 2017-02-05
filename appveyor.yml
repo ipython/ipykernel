@@ -1,0 +1,34 @@
+build: false
+shallow_clone: false
+skip_branch_with_pr: true
+clone_depth: 1
+
+environment:
+
+  matrix:
+    - python: "C:/Python27-x64"
+    - python: "C:/Python27"
+    - python: "C:/Python36-x64"
+    - python: "C:/Python36"
+
+cache:
+  - C:\Users\appveyor\AppData\Local\pip\Cache
+
+init:
+  - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:path
+install:
+  - ps: pip install --upgrade pip wheel
+  - ps: pip --version
+
+  - ps: pip install --pre -e . coverage nose_warnings_filters
+  - ps: pip install ipykernel[test] nose-timer
+  - ps: pip install matplotlib numpy
+  - ps: pip freeze
+
+  - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
+test_script:
+  - cmd: nosetests --with-coverage --with-timer --cover-package=ipykernel ipykernel
+
+on_success:
+  - ps: pip install codecov
+  - cmd: codecov

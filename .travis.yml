@@ -7,13 +7,13 @@ python:
     - 3.3
     - 2.7
 sudo: false
-before_install:
-    - git clone --quiet --depth 1 https://github.com/minrk/travis-wheels travis-wheels
 install:
-    - pip install -f travis-wheels/wheelhouse --pre .
-    - pip install -f travis-wheels/wheelhouse ipykernel[test] nose-timer
     - |
-      if [[ "$TRAVIS_PYTHON_VERSION" != "3.3" ]]; then
+      pip install --upgrade setuptools pip
+      python setup.py bdist_wheel && pip install --pre dist/*.whl
+      pip install ipykernel[test] nose-timer
+    - |
+      if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ||  "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
         pip install matplotlib
       fi
 script:

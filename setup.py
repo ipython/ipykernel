@@ -27,8 +27,9 @@ PY3 = (sys.version_info[0] >= 3)
 # get on with it
 #-----------------------------------------------------------------------------
 
-import os
 from glob import glob
+import os
+import shutil
 
 from distutils.core import setup
 
@@ -86,8 +87,22 @@ install_requires = setuptools_args['install_requires'] = [
     'tornado>=4.0',
 ]
 
+if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
+    from ipykernel.kernelspec import write_kernel_spec, make_ipkernel_cmd, KERNEL_NAME
+
+    argv = make_ipkernel_cmd(executable='python')
+    dest = os.path.join(here, 'data_kernelspec')
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    write_kernel_spec(dest, overrides={'argv': argv})
+
+    setup_args['data_files'] = [
+        (pjoin('share', 'jupyter', 'kernels', KERNEL_NAME), glob(pjoin(dest, '*'))),
+    ]
+
 extras_require = setuptools_args['extras_require'] = {
-    'test:python_version=="2.7"': ['mock', 'nose_warnings_filters'],
+    'test:python_version=="2.7"': ['mock'],
+    'test': ['nose_warnings_filters', 'nose-timer'],
 }
 
 if 'setuptools' in sys.modules:

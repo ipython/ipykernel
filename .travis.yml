@@ -10,7 +10,8 @@ sudo: false
 install:
     - |
       pip install --upgrade setuptools pip
-      pip install --pre . ipykernel[test]
+      pip install --pre .
+      pip install ipykernel[test]
     - |
       if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ||  "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
         pip install matplotlib

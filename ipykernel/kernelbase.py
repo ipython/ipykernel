@@ -643,8 +643,10 @@ class Kernel(SingletonConfigurable):
             status = {'status' : 'aborted'}
             md = {'engine' : self.ident}
             md.update(status)
+            self._publish_status('busy', parent=msg)
             reply_msg = self.session.send(stream, reply_type, metadata=md,
                         content=status, parent=msg, ident=idents)
+            self._publish_status('idle', parent=msg)
             self.log.debug("%s", reply_msg)
             # We need to wait a bit for requests to come in. This can probably
             # be set shorter for true asynchronous clients.

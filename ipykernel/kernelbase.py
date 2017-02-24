@@ -220,7 +220,7 @@ class Kernel(SingletonConfigurable):
 
         handler = self.shell_handlers.get(msg_type, None)
         if handler is None:
-            self.log.error("UNKNOWN MESSAGE TYPE: %r", msg_type)
+            self.log.warn("Unknown message type: %r", msg_type)
         else:
             self.log.debug("%s: %s", msg_type, msg)
             self.pre_handler_hook()

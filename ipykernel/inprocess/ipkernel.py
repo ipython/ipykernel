@@ -172,7 +172,9 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
         from ipykernel.eventloops import enable_gui
         if not gui:
             gui = self.kernel.gui
-        return enable_gui(gui, kernel=self.kernel)
+        enable_gui(gui, kernel=self.kernel)
+        self.active_eventloop = gui
+
 
     def enable_matplotlib(self, gui=None):
         """Enable matplotlib integration for the kernel."""

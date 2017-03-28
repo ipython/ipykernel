@@ -9,6 +9,18 @@ Changes in IPython kernel
 
 `4.6.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.6.0>`__
 
+- Add to API `DisplayPublisher.publish` two new fully backward-compatible
+  keyword-args:
+    - `update: bool`
+    - `transient: dict`
+- Add  a new dict, `transient`, to message spec for `publish`. For a display
+  data message, `transient` contains data that shouldn't be persisted to files
+  or documents. Add a `display_id` to this `transient` dict by
+  `display(obj, display_id=...)`
+- Add `ipykernel_launcher` module which removes the current working directory
+  from `sys.path` before launching the kernel. This helps to reduce the cases
+  where the kernel won't start because there's a `random.py` (or similar)
+  module in the current working directory.
 - Add busy/idle messages on IOPub during processing of every kernel request
 - Add active event loop setting to GUI, which enables the correct response
   to IPython's `is_event_loop_running_xxx`

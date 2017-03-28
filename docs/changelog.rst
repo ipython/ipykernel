@@ -1,6 +1,25 @@
 Changes in IPython kernel
 =========================
 
+4.6
+---
+
+4.6.0
+*****
+
+`4.6.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.6.0>`__
+
+- Add busy/idle messages on IOPub during processing of every kernel request
+- Add active event loop setting to GUI, which enables the correct response
+  to IPython's `is_event_loop_running_xxx`
+- Add Python 3.6 support
+- Modify `OutStream` to inherit from `TextIOBase` instead of object to improve
+  API support and error reporting
+- Fix IPython kernel death messages at start, such as "Kernel Restarting..."
+  and "Kernel appears to have died", when parent-poller handles PID 1
+- Various bugfixes
+
+
 4.5
 ---
 
@@ -9,7 +28,7 @@ Changes in IPython kernel
 
 `4.5.2 on GitHub <https://github.com/ipython/ipykernel/milestones/4.5.2>`__
 
-- Fix bug when instantating Comms outside of the IPython kernel (introduced in 4.5.1).
+- Fix bug when instantiating Comms outside of the IPython kernel (introduced in 4.5.1).
 
 
 4.5.1
@@ -20,7 +39,7 @@ Changes in IPython kernel
 - Add missing ``stream`` parameter to overridden :func:`getpass`
 - Remove locks from iopub thread, which could cause deadlocks during debugging
 - Fix regression where KeyboardInterrupt was treated as an aborted request, rather than an error
-- Allow instantating Comms outside of the IPython kernel
+- Allow instantiating Comms outside of the IPython kernel
 
 4.5.0
 *****

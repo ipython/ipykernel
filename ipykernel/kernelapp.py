@@ -165,7 +165,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if sys.platform == 'win32':
             if self.interrupt or self.parent_handle:
                 self.poller = ParentPollerWindows(self.interrupt, self.parent_handle)
-        elif self.parent_handle:
+        elif self.parent_handle and self.parent_handle != 1:
+            # PID 1 (init) is special and will never go away,
+            # only be reassigned.
+            # Parent polling doesn't work if ppid == 1 to start with.
             self.poller = ParentPollerUnix()
 
     def _bind_socket(self, s, port):

@@ -15,20 +15,21 @@ cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache
 
 init:
-  - ps: $Env:path = $Env:python + ";" + $Env:python + "\scripts;" + $Env:path
+  - cmd: set PATH=%python%;%python%\scripts;%PATH%
 install:
-  - ps: pip install --upgrade pip wheel
-  - ps: pip --version
-
-  - ps: pip install --pre -e . coverage nose_warnings_filters
-  - ps: pip install ipykernel[test] nose-timer
-  - ps: pip install matplotlib numpy
-  - ps: pip freeze
-
-  - ps: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
+  - cmd: |
+        pip install --upgrade pip wheel
+        pip --version
+  - cmd: |
+        pip install --pre -e . coverage nose_warnings_filters
+        pip install ipykernel[test] nose-timer
+  - cmd: |
+        pip install matplotlib numpy
+        pip freeze
+  - cmd: python -c 'import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)'
 test_script:
   - cmd: nosetests --with-coverage --with-timer --cover-package=ipykernel ipykernel
 
 on_success:
-  - ps: pip install codecov
+  - cmd: pip install codecov
   - cmd: codecov

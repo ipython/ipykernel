@@ -11,7 +11,7 @@ import os
 import sys
 import threading
 import warnings
-from io import StringIO, UnsupportedOperation
+from io import StringIO, UnsupportedOperation, TextIOBase
 
 import zmq
 from zmq.eventloop.ioloop import IOLoop
@@ -249,7 +249,7 @@ class BackgroundSocket(object):
         return self.io_thread.send_multipart(*args, **kwargs)
 
 
-class OutStream(object):
+class OutStream(TextIOBase):
     """A file like object that publishes the stream to a 0MQ PUB socket.
     
     Output is handed off to an IO Thread
@@ -257,15 +257,14 @@ class OutStream(object):
 
     # The time interval between automatic flushes, in seconds.
     flush_interval = 0.2
-    topic=None
+    topic = None
+    encoding = 'UTF-8'
 
     def __init__(self, session, pub_thread, name, pipe=None):
         if pipe is not None:
             warnings.warn("pipe argument to OutStream is deprecated and ignored",
                 DeprecationWarning)
-        self.encoding = 'UTF-8'
         # This is necessary for compatibility with Python built-in streams
-        self.errors = None
         self.session = session
         if not isinstance(pub_thread, IOPubThread):
             # Backward-compat: given socket, not thread. Wrap in a thread.
@@ -339,24 +338,6 @@ class OutStream(object):
             content = {u'name':self.name, u'text':data}
             self.session.send(self.pub_thread, u'stream', content=content,
                 parent=self.parent_header, ident=self.topic)
-    
-    def isatty(self):
-        return False
-
-    def __next__(self):
-        raise IOError('Read not supported on a write only stream.')
-
-    if not py3compat.PY3:
-        next = __next__
-
-    def read(self, size=-1):
-        raise IOError('Read not supported on a write only stream.')
-
-    def readline(self, size=-1):
-        raise IOError('Read not supported on a write only stream.')
-
-    def fileno(self):
-        raise UnsupportedOperation("IOStream has no fileno.")
 
     def write(self, string):
         if self.pub_thread is None:

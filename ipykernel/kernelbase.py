@@ -11,6 +11,13 @@ import logging
 import uuid
 
 from datetime import datetime
+try:
+    # jupyter_client >= 5, use tz-aware now
+    from jupyter_client.session import utcnow as now
+except ImportError:
+    # jupyter_client < 5, use local now()
+    now = datetime.now
+
 from signal import signal, default_int_handler, SIGINT
 
 import zmq
@@ -350,8 +357,10 @@ class Kernel(SingletonConfigurable):
 
         Run at the beginning of execution requests.
         """
+        # FIXME: `started` is part of ipyparallel
+        # Remove for ipykernel 5.0
         return {
-            'started': datetime.now(),
+            'started': now(),
         }
 
     def finish_metadata(self, parent, metadata, reply_content):

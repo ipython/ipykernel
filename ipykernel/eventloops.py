@@ -72,11 +72,23 @@ def register_integration(*toolkitnames):
     return decorator
 
 
+def _loop_qt(app):
+    """Inner-loop for running the Qt eventloop
+
+    Pulled from guisupport.start_event_loop in IPython < 5.2,
+    since IPython 5.2 only checks `get_ipython().active_eventloop` is defined,
+    rather than if the eventloop is actually running.
+    """
+    app._in_event_loop = True
+    app.exec_()
+    app._in_event_loop = False
+
+
 @register_integration('qt', 'qt4')
 def loop_qt4(kernel):
     """Start a kernel with PyQt4 event loop integration."""
 
-    from IPython.lib.guisupport import get_app_qt4, start_event_loop_qt4
+    from IPython.lib.guisupport import get_app_qt4
 
     kernel.app = get_app_qt4([" "])
     kernel.app.setQuitOnLastWindowClosed(False)
@@ -84,7 +96,8 @@ def loop_qt4(kernel):
     for s in kernel.shell_streams:
         _notify_stream_qt(kernel, s)
 
-    start_event_loop_qt4(kernel.app)
+    _loop_qt(kernel.app)
+
 
 @register_integration('qt5')
 def loop_qt5(kernel):
@@ -93,12 +106,23 @@ def loop_qt5(kernel):
     return loop_qt4(kernel)
 
 
+def _loop_wx(app):
+    """Inner-loop for running the Wx eventloop
+
+    Pulled from guisupport.start_event_loop in IPython < 5.2,
+    since IPython 5.2 only checks `get_ipython().active_eventloop` is defined,
+    rather than if the eventloop is actually running.
+    """
+    app._in_event_loop = True
+    app.MainLoop()
+    app._in_event_loop = False
+
+
 @register_integration('wx')
 def loop_wx(kernel):
     """Start a kernel with wx event loop support."""
 
     import wx
-    from IPython.lib.guisupport import start_event_loop_wx
 
     if _use_appnope() and kernel._darwin_app_nap:
         # we don't hook up App Nap contexts for Wx,
@@ -143,7 +167,7 @@ def loop_wx(kernel):
     if not callable(signal.getsignal(signal.SIGINT)):
         signal.signal(signal.SIGINT, signal.default_int_handler)
 
-    start_event_loop_wx(kernel.app)
+    _loop_wx(kernel.app)
 
 
 @register_integration('tk')

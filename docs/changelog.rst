@@ -4,6 +4,15 @@ Changes in IPython kernel
 4.6
 ---
 
+4.6.1
+*****
+
+`4.6.1 on GitHub <https://github.com/ipython/ipykernel/milestones/4.6.1>`__
+
+- Fix eventloop-integration bug preventing Qt windows/widgets from displaying with ipykernel 4.6.0 and IPython ≥ 5.2.
+- Avoid deprecation warnings about naive datetimes when working with jupyter_client ≥ 5.0.
+
+
 4.6.0
 *****
 

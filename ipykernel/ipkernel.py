@@ -213,7 +213,7 @@ class IPythonKernel(KernelBase):
                 u'evalue': safe_unicode(err),
             })
 
-            # FIXME: deprecate piece for ipyparallel:
+            # FIXME: deprecated piece for ipyparallel (remove in 5.0):
             e_info = dict(engine_uuid=self.ident, engine_id=self.int_id,
                           method='execute')
             reply_content['engine_info'] = e_info
@@ -351,7 +351,7 @@ class IPythonKernel(KernelBase):
                 u'ename': unicode_type(type(e).__name__),
                 u'evalue': safe_unicode(e),
             }
-            # FIXME: deprecate piece for ipyparallel:
+            # FIXME: deprecated piece for ipyparallel (remove in 5.0):
             e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
             reply_content['engine_info'] = e_info
 

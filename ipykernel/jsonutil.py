@@ -21,6 +21,9 @@ from ipython_genutils.py3compat import unicode_type, iteritems
 from ipython_genutils.encoding import DEFAULT_ENCODING
 next_attr_name = '__next__' if py3compat.PY3 else 'next'
 
+if py3compat.PY3:
+    from collections.abc import MappingView
+
 #-----------------------------------------------------------------------------
 # Globals and constants
 #-----------------------------------------------------------------------------
@@ -123,6 +126,9 @@ def json_clean(obj):
     # containers that we need to convert into lists
     container_to_list = (tuple, set, types.GeneratorType)
 
+    if py3compat.PY3 and isinstance(obj, MappingView):
+        obj = list(obj)
+
     # Since bools are a subtype of Integrals, which are a subtype of Reals,
     # we have to check them in that order.
 
@@ -138,7 +144,7 @@ def json_clean(obj):
         if math.isnan(obj) or math.isinf(obj):
             return repr(obj)
         return float(obj)
-    
+
     if isinstance(obj, atomic_ok):
         return obj
 
@@ -168,6 +174,6 @@ def json_clean(obj):
         return out
     if isinstance(obj, datetime):
         return obj.strftime(ISO8601)
-    
+
     # we don't understand it, it's probably an unserializable object
     raise ValueError("Can't clean for JSON: %r" % obj)

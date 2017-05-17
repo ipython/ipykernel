@@ -290,6 +290,23 @@ def loop_cocoa(kernel):
             sys.excepthook = real_excepthook
 
 
+@register_integration('asyncio')
+def loop_asyncio(kernel):
+    '''Start a kernel with asyncio event loop support.'''
+    import asyncio
+    loop = asyncio.get_event_loop()
+
+    def kernel_handler():
+        loop.call_soon(kernel.do_one_iteration)
+        loop.call_later(kernel._poll_interval, kernel_handler)
+
+    loop.call_soon(kernel_handler)
+    try:
+        if not loop.is_running():
+            loop.run_forever()
+    finally:
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.close()
 
 def enable_gui(gui, kernel=None):
     """Enable integration with a given GUI"""

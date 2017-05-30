@@ -2,7 +2,6 @@
 
 import getpass
 import sys
-import traceback
 
 from IPython.core import release
 from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unicode
@@ -12,6 +11,15 @@ from traitlets import Instance, Type, Any, List
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
+
+
+try:
+    from IPython.core.completer import rectify_completions, provisionalcompleter
+    _use_experimental_60_completion = True
+except ImportError:
+    _use_experimental_60_completion = False
+
+_EXPERIMENTAL_KEY_NAME = '_jupyter_types_experimental'
 
 
 class IPythonKernel(KernelBase):
@@ -246,6 +254,9 @@ class IPythonKernel(KernelBase):
         return reply_content
 
     def do_complete(self, code, cursor_pos):
+        if _use_experimental_60_completion:
+            return self._experimental_do_complete(code, cursor_pos)
+
         # FIXME: IPython completers currently assume single line,
         # but completion messages give multi-line context
         # For now, extract line from cell, based on cursor_pos:
@@ -260,6 +271,42 @@ class IPythonKernel(KernelBase):
                 'cursor_start' : cursor_pos - len(txt),
                 'metadata' : {},
                 'status' : 'ok'}
+
+    def _experimental_do_complete(self, code, cursor_pos):
+        """
+        Experimental completions from IPython, using Jedi. 
+        """
+        if cursor_pos is None:
+            cursor_pos = len(code)
+        with provisionalcompleter():
+            raw_completions = self.shell.Completer.completions(code, cursor_pos)
+            completions = list(rectify_completions(code, raw_completions))
+            
+            comps = []
+            for comp in completions:
+                comps.append(dict(
+                            start=comp.start,
+                            end=comp.end,
+                            text=comp.text,
+                            type=comp.type,
+                ))
+
+        if completions:
+            s = completions[0].start
+            e = completions[0].end
+            matches = [c.text for c in completions]
+        else:
+            s = cursor_pos
+            e = cursor_pos
+            matches = []
+
+        return {'matches': matches,
+                'cursor_end': e,
+                'cursor_start': s,
+                'metadata': {_EXPERIMENTAL_KEY_NAME: comps},
+                'status': 'ok'}
+
+
 
     def do_inspect(self, code, cursor_pos, detail_level=0):
         name = token_at_cursor(code, cursor_pos)

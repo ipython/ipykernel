@@ -46,8 +46,8 @@ JPEG = b'\xff\xd8'
 # front of JPEG base64-encoded
 JPEG64 = b'/9'
 # constants for identifying gif data
-GIF = b'GIF87a'
-GIF89 = b'GIF89a'
+GIF_64 = b'R0lGODdh'
+GIF89_64 = b'R0lGODlh'
 # front of PDF base64-encoded
 PDF64 = b'JVBER'
 
@@ -90,7 +90,7 @@ def encode_images(format_dict):
     gifdata = format_dict.get('image/gif')
     if isinstance(gifdata, bytes):
         # make sure we don't double-encode
-        if not gifdata.startswith(GIF) or not gifdata.startswith(GIF89):
+        if not gifdata.startswith((GIF_64, GIF89_64)):
             gifdata = encodebytes(gifdata)
         encoded['image/gif'] = gifdata.decode('ascii')
 

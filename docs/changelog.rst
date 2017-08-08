@@ -1,6 +1,18 @@
 Changes in IPython kernel
 =========================
 
+4.7
+---
+
+4.7.0
+*****
+
+`4.7.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.7>`__
+
+- Add event loop integration for :mod:`asyncio`.
+- Use the new IPython completer API.
+- Add support for displaying GIF images (mimetype ``image/gif``).
+
 4.6
 ---
 

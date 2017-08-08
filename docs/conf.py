@@ -297,7 +297,7 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'https://docs.python.org/': None,
+    'python': ('https://docs.python.org/3/', None),
     'ipython': ('https://ipython.readthedocs.io/en/latest', None),
     'jupyter': ('https://jupyter.readthedocs.io/en/latest', None),
 }

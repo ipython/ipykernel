@@ -162,11 +162,11 @@ def json_clean(obj):
         else:
             # Python 2 bytestr is ambiguous,
             # needs special handling for possible binary bytestrings.
-            # imperfect workaround: if valid text, assume text.
+            # imperfect workaround: if ascii, assume text.
             # otherwise assume binary, base64-encode (py3 behavior).
             try:
-                return obj.decode(DEFAULT_ENCODING)
-            except ValueError:
+                return obj.decode('ascii')
+            except UnicodeDecodeError:
                 return b2a_base64(obj).decode('ascii')
 
     if isinstance(obj, container_to_list) or (

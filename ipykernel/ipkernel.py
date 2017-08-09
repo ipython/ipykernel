@@ -27,7 +27,9 @@ class IPythonKernel(KernelBase):
                      allow_none=True)
     shell_class = Type(ZMQInteractiveShell)
 
-    use_experimental_completions = Bool(True, help="Deactivate use of experimental IPython completion API").tag(config=True)
+    use_experimental_completions = Bool(True,
+        help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
+    ).tag(config=True)
 
     user_module = Any()
     def _user_module_changed(self, name, old, new):

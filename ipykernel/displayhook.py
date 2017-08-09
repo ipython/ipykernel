@@ -68,7 +68,7 @@ class ZMQShellDisplayHook(DisplayHook):
         self.msg['content']['execution_count'] = self.prompt_count
 
     def write_format_data(self, format_dict, md_dict=None):
-        self.msg['content']['data'] = encode_images(format_dict)
+        self.msg['content']['data'] = json_clean(encode_images(format_dict))
         self.msg['content']['metadata'] = md_dict
 
     def finish_displayhook(self):

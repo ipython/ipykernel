@@ -14,7 +14,7 @@ from .zmqshell import ZMQInteractiveShell
 
 
 try:
-    from IPython.core.completer import rectify_completions, provisionalcompleter
+    from IPython.core.completer import rectify_completions as _rectify_completions, provisionalcompleter as _provisionalcompleter
     _use_experimental_60_completion = True
 except ImportError:
     _use_experimental_60_completion = False
@@ -278,9 +278,9 @@ class IPythonKernel(KernelBase):
         """
         if cursor_pos is None:
             cursor_pos = len(code)
-        with provisionalcompleter():
+        with _provisionalcompleter():
             raw_completions = self.shell.Completer.completions(code, cursor_pos)
-            completions = list(rectify_completions(code, raw_completions))
+            completions = list(_rectify_completions(code, raw_completions))
             
             comps = []
             for comp in completions:

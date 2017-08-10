@@ -3,18 +3,13 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from binascii import b2a_base64
 import math
 import re
 import types
 from datetime import datetime
 import numbers
 
-try:
-    # base64.encodestring is deprecated in Python 3.x
-    from base64 import encodebytes
-except ImportError:
-    # Python 2.x
-    from base64 import encodestring as encodebytes
 
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type, iteritems
@@ -71,20 +66,27 @@ def encode_images(format_dict):
         is base64-encoded.
 
     """
+
+    # no need for handling of ambiguous bytestrings on Python 3,
+    # where bytes objects always represent binary data and thus
+    # base64-encoded.
+    if py3compat.PY3:
+        return format_dict
+
     encoded = format_dict.copy()
 
     pngdata = format_dict.get('image/png')
     if isinstance(pngdata, bytes):
         # make sure we don't double-encode
         if not pngdata.startswith(PNG64):
-            pngdata = encodebytes(pngdata)
+            pngdata = b2a_base64(pngdata)
         encoded['image/png'] = pngdata.decode('ascii')
 
     jpegdata = format_dict.get('image/jpeg')
     if isinstance(jpegdata, bytes):
         # make sure we don't double-encode
         if not jpegdata.startswith(JPEG64):
-            jpegdata = encodebytes(jpegdata)
+            jpegdata = b2a_base64(jpegdata)
         encoded['image/jpeg'] = jpegdata.decode('ascii')
         
     gifdata = format_dict.get('image/gif')
@@ -98,7 +100,7 @@ def encode_images(format_dict):
     if isinstance(pdfdata, bytes):
         # make sure we don't double-encode
         if not pdfdata.startswith(PDF64):
-            pdfdata = encodebytes(pdfdata)
+            pdfdata = b2a_base64(pdfdata)
         encoded['application/pdf'] = pdfdata.decode('ascii')
 
     return encoded
@@ -151,9 +153,21 @@ def json_clean(obj):
     
     if isinstance(obj, atomic_ok):
         return obj
-
+    
     if isinstance(obj, bytes):
-        return obj.decode(DEFAULT_ENCODING, 'replace')
+        if py3compat.PY3:
+            # unanmbiguous binary data is base64-encoded
+            # (this probably should have happened upstream)
+            return b2a_base64(obj).decode('ascii')
+        else:
+            # Python 2 bytestr is ambiguous,
+            # needs special handling for possible binary bytestrings.
+            # imperfect workaround: if ascii, assume text.
+            # otherwise assume binary, base64-encode (py3 behavior).
+            try:
+                return obj.decode('ascii')
+            except UnicodeDecodeError:
+                return b2a_base64(obj).decode('ascii')
 
     if isinstance(obj, container_to_list) or (
         hasattr(obj, '__iter__') and hasattr(obj, next_attr_name)):

@@ -6,7 +6,7 @@ import sys
 from IPython.core import release
 from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
-from traitlets import Instance, Type, Any, List
+from traitlets import Instance, Type, Any, List, Bool
 
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
@@ -26,6 +26,10 @@ class IPythonKernel(KernelBase):
     shell = Instance('IPython.core.interactiveshell.InteractiveShellABC',
                      allow_none=True)
     shell_class = Type(ZMQInteractiveShell)
+
+    use_experimental_completions = Bool(True,
+        help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
+    ).tag(config=True)
 
     user_module = Any()
     def _user_module_changed(self, name, old, new):
@@ -254,7 +258,7 @@ class IPythonKernel(KernelBase):
         return reply_content
 
     def do_complete(self, code, cursor_pos):
-        if _use_experimental_60_completion:
+        if _use_experimental_60_completion and self.use_experimental_completions:
             return self._experimental_do_complete(code, cursor_pos)
 
         # FIXME: IPython completers currently assume single line,

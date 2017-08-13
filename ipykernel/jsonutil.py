@@ -93,7 +93,7 @@ def encode_images(format_dict):
     if isinstance(gifdata, bytes):
         # make sure we don't double-encode
         if not gifdata.startswith((GIF_64, GIF89_64)):
-            gifdata = encodebytes(gifdata)
+            gifdata = b2a_base64(gifdata)
         encoded['image/gif'] = gifdata.decode('ascii')
 
     pdfdata = format_dict.get('application/pdf')

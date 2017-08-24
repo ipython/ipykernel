@@ -152,7 +152,8 @@ class Kernel(SingletonConfigurable):
         'inspect_request', 'history_request',
         'comm_info_request', 'kernel_info_request',
         'connect_request', 'shutdown_request',
-        'is_complete_request',
+        'is_complete_request', 
+        'resource_info_request', #'resource_info_reply', 
         # deprecated:
         'apply_request',
     ]
@@ -527,6 +528,7 @@ class Kernel(SingletonConfigurable):
         if not silent:
             self.execution_count += 1
             self._publish_execute_input(code, parent, self.execution_count)
+        print("doing execute!")
 
         reply_content = yield gen.maybe_future(
             self.do_execute(
@@ -703,6 +705,28 @@ class Kernel(SingletonConfigurable):
         """
         return {'status' : 'unknown',
                 }
+
+
+    def resource_info_request(self, stream, ident, parent):
+        print("sending resource info request")
+        self.session.send(
+            self.iopub_socket, 
+            'resource_info_result',
+            parent= parent or self._parent_header,
+            {"ok": "cool"
+            ,"memory": [32, 264]
+            }
+        )
+
+        self.session.send(self.iopub_socket,
+                          u'resource_info_result',
+                          {u'execution_state': status},
+                          parent=parent or self._parent_header,
+                          ident=self._topic('status'),
+                          )
+
+
+
 
     #---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)

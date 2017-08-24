@@ -72,6 +72,8 @@ class IPythonKernel(KernelBase):
         self.shell.display_pub.session = self.session
         self.shell.display_pub.pub_socket = self.iopub_socket
 
+        print("hi there pi")
+
         self.comm_manager = CommManager(parent=self, kernel=self)
 
         self.shell.configurables.append(self.comm_manager)
@@ -256,6 +258,8 @@ class IPythonKernel(KernelBase):
     @gen.coroutine
     def do_execute(self, code, silent, store_history=True,
                    user_expressions=None, allow_stdin=False):
+
+        print("doing execute")
         shell = self.shell # we'll need this a lot here
 
         self._forward_input(allow_stdin)

@@ -355,7 +355,7 @@ class IPythonKernel(KernelBase):
         return dict(status='ok', restart=restart)
 
     def do_is_complete(self, code):
-        status, indent_spaces = self.shell.input_transformer_manager.check_complete(code)
+        status, indent_spaces = self.shell.input_splitter.check_complete(code)
         r = {'status': status}
         if status == 'incomplete':
             r['indent'] = ' ' * indent_spaces

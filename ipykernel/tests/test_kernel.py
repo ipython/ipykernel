@@ -224,7 +224,7 @@ def test_is_complete():
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
         assert reply['content']['status'] == 'complete'
 
-        # SyntaxError should mean it's complete
+        # SyntaxError
         kc.is_complete('raise = 2')
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
         assert reply['content']['status'] == 'invalid'
@@ -233,6 +233,11 @@ def test_is_complete():
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
         assert reply['content']['status'] == 'incomplete'
         assert reply['content']['indent'] == ''
+
+        # Cell magic ends on two blank lines for console UIs
+        kc.is_complete('%%timeit\na\n\n')
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'complete'
 
 
 def test_complete():

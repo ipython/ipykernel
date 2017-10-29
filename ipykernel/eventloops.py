@@ -48,6 +48,7 @@ loop_map = {
     'nbagg': None,
     'notebook': None,
     'ipympl': None,
+    'widget': None,
     None : None,
 }
 

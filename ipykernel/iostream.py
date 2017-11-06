@@ -7,11 +7,15 @@
 from __future__ import print_function
 import atexit
 from binascii import b2a_hex
+try:
+    from importlib import lock_held as import_lock_held
+except ImportError:
+    from imp import lock_held as import_lock_held
 import os
 import sys
 import threading
 import warnings
-from io import StringIO, UnsupportedOperation, TextIOBase
+from io import StringIO, TextIOBase
 
 import zmq
 from zmq.eventloop.ioloop import IOLoop
@@ -255,6 +259,9 @@ class OutStream(TextIOBase):
     Output is handed off to an IO Thread
     """
 
+    # timeout for flush to avoid infinite hang
+    # in case of misbehavior
+    flush_timeout = 10
     # The time interval between automatic flushes, in seconds.
     flush_interval = 0.2
     topic = None
@@ -296,7 +303,7 @@ class OutStream(TextIOBase):
 
     def _schedule_flush(self):
         """schedule a flush in the IO thread
-        
+
         call this on write, to indicate that flush should be called soon.
         """
         if self._flush_pending:
@@ -310,21 +317,29 @@ class OutStream(TextIOBase):
 
     def flush(self):
         """trigger actual zmq send
-        
+
         send will happen in the background thread
         """
         if self.pub_thread.thread.is_alive():
-            # wait for flush to actually get through:
+            # request flush on the background thread
             self.pub_thread.schedule(self._flush)
-            evt = threading.Event()
-            self.pub_thread.schedule(evt.set)
-            evt.wait()
+            # wait for flush to actually get through, if we can.
+            # waiting across threads during import can cause deadlocks
+            # so only wait if import lock is not held
+            if not import_lock_held():
+                evt = threading.Event()
+                self.pub_thread.schedule(evt.set)
+                # and give a timeout to avoid
+                if not evt.wait(self.flush_timeout):
+                    # write directly to __stderr__ instead of warning because
+                    # if this is happening sys.stderr may be the problem.
+                    print("IOStream.flush timed out", file=sys.__stderr__)
         else:
             self._flush()
-    
+
     def _flush(self):
         """This is where the actual send happens.
-        
+
         _flush should generally be called in the IO thread,
         unless the thread has been destroyed (e.g. forked subprocess).
         """

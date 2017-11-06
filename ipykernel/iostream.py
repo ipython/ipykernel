@@ -46,10 +46,6 @@ class IOPubThread(object):
     whose IO is always run in a thread.
     """
 
-    # timeout for flush to avoid infinite hang
-    # in case of misbehavior
-    FLUSH_TIMEOUT = 10
-
     def __init__(self, socket, pipe=False):
         """Create IOPub thread
 
@@ -263,6 +259,9 @@ class OutStream(TextIOBase):
     Output is handed off to an IO Thread
     """
 
+    # timeout for flush to avoid infinite hang
+    # in case of misbehavior
+    flush_timeout = 10
     # The time interval between automatic flushes, in seconds.
     flush_interval = 0.2
     topic = None
@@ -304,7 +303,7 @@ class OutStream(TextIOBase):
 
     def _schedule_flush(self):
         """schedule a flush in the IO thread
-        
+
         call this on write, to indicate that flush should be called soon.
         """
         if self._flush_pending:
@@ -331,7 +330,7 @@ class OutStream(TextIOBase):
                 evt = threading.Event()
                 self.pub_thread.schedule(evt.set)
                 # and give a timeout to avoid
-                if not evt.wait(self.FLUSH_TIMEOUT):
+                if not evt.wait(self.flush_timeout):
                     # write directly to __stderr__ instead of warning because
                     # if this is happening sys.stderr may be the problem.
                     print("IOStream.flush timed out", file=sys.__stderr__)

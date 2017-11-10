@@ -473,8 +473,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if self.poller is not None:
             self.poller.start()
         self.kernel.start()
+        self.io_loop = ioloop.IOLoop.current()
         try:
-            ioloop.IOLoop.instance().start()
+            self.io_loop.start()
         except KeyboardInterrupt:
             pass
 

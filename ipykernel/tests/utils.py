@@ -3,8 +3,11 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from __future__ import print_function
+
 import atexit
 import os
+import sys
 
 from contextlib import contextmanager
 from subprocess import PIPE, STDOUT
@@ -18,9 +21,6 @@ import nose.tools as nt
 
 from jupyter_client import manager
 
-#-------------------------------------------------------------------------------
-# Globals
-#-------------------------------------------------------------------------------
 
 STARTUP_TIMEOUT = 60
 TIMEOUT = 15
@@ -28,9 +28,7 @@ TIMEOUT = 15
 KM = None
 KC = None
 
-#-------------------------------------------------------------------------------
-# code
-#-------------------------------------------------------------------------------
+
 def start_new_kernel(**kwargs):
     """start a new kernel, and return its Manager and Client
 
@@ -42,6 +40,7 @@ def start_new_kernel(**kwargs):
         stdout = open(os.devnull)
     kwargs.update(dict(stdout=stdout, stderr=STDOUT))
     return manager.start_new_kernel(startup_timeout=STARTUP_TIMEOUT, **kwargs)
+
 
 def flush_channels(kc=None):
     """flush any messages waiting on the queue"""
@@ -75,6 +74,11 @@ def execute(code='', kc=None, **kwargs):
         execute_input = kc.get_iopub_msg(timeout=TIMEOUT)
         validate_message(execute_input, 'execute_input', msg_id)
         nt.assert_equal(execute_input['content']['code'], code)
+
+    # show tracebacks if present for debugging
+    if reply['content'].get('traceback'):
+        print('\n'.join(reply['content']['traceback']), file=sys.stderr)
+
 
     return msg_id, reply['content']
 

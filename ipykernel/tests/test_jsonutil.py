@@ -55,7 +55,7 @@ def test():
             jval = val
         out = json_clean(val)
         # validate our cleanup
-        nt.assert_equal(out, jval)
+        assert out == jval
         # and ensure that what we return, indeed encodes cleanly
         json.loads(json.dumps(out))
 
@@ -77,19 +77,19 @@ def test_encode_images():
     for key, value in fmt.items():
         # encoded has unicode, want bytes
         decoded = a2b_base64(encoded[key])
-        nt.assert_equal(decoded, value)
+        assert decoded == value
     encoded2 = json_clean(encode_images(encoded))
-    nt.assert_equal(encoded, encoded2)
+    assert encoded == encoded2
     
     # test that we don't double-encode base64 str
     b64_str = {}
     for key, encoded in encoded.items():
         b64_str[key] = unicode_to_str(encoded)
     encoded3 = json_clean(encode_images(b64_str))
-    nt.assert_equal(encoded3, b64_str)
+    assert encoded3 == b64_str
     for key, value in fmt.items():
         decoded = a2b_base64(encoded3[key])
-        nt.assert_equal(decoded, value)
+        assert decoded == value
 
 def test_lambda():
     with nt.assert_raises(ValueError):
@@ -107,4 +107,4 @@ def test_exception():
 def test_unicode_dict():
     data = {u'üniço∂e': u'üniço∂e'}
     clean = jsonutil.json_clean(data)
-    nt.assert_equal(data, clean)
+    assert data == clean

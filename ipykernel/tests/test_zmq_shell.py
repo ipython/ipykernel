@@ -92,19 +92,19 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         that keyword args get assigned correctly, and override
         the defaults.
         """
-        self.assertEqual(self.disp_pub.session, self.session)
-        self.assertEqual(self.disp_pub.pub_socket, self.socket)
+        assert self.disp_pub.session == self.session
+        assert self.disp_pub.pub_socket == self.socket
 
     def test_thread_local_hooks(self):
         """
         Confirms that the thread_local attribute is correctly
         initialised with an empty list for the display hooks
         """
-        self.assertEqual(self.disp_pub._hooks, [])
+        assert self.disp_pub._hooks == []
         def hook(msg):
             return msg
         self.disp_pub.register_hook(hook)
-        self.assertEqual(self.disp_pub._hooks, [hook])
+        assert self.disp_pub._hooks == [hook]
 
         q = Queue()
         def set_thread_hooks():
@@ -112,7 +112,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         t = Thread(target=set_thread_hooks)
         t.start()
         thread_hooks = q.get(timeout=10)
-        self.assertEqual(thread_hooks, [])
+        assert thread_hooks == []
 
     def test_publish(self):
         """
@@ -120,10 +120,9 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         `send` by default.
         """
         data = dict(a = 1)
-
-        self.assertEqual(self.session.send_count, 0)
+        assert self.session.send_count == 0
         self.disp_pub.publish(data)
-        self.assertEqual(self.session.send_count, 1)
+        assert self.session.send_count == 1
 
     def test_display_hook_halts_send(self):
         """
@@ -136,13 +135,13 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         hook = NoReturnDisplayHook()
 
         self.disp_pub.register_hook(hook)
-        self.assertEqual(hook.call_count, 0)
-        self.assertEqual(self.session.send_count, 0)
+        assert hook.call_count == 0
+        assert self.session.send_count == 0
 
         self.disp_pub.publish(data)
 
-        self.assertEqual(hook.call_count, 1)
-        self.assertEqual(self.session.send_count, 0)
+        assert hook.call_count == 1
+        assert self.session.send_count == 0
 
     def test_display_hook_return_calls_send(self):
         """
@@ -155,13 +154,13 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         hook = ReturnDisplayHook()
 
         self.disp_pub.register_hook(hook)
-        self.assertEqual(hook.call_count, 0)
-        self.assertEqual(self.session.send_count, 0)
+        assert hook.call_count == 0
+        assert self.session.send_count == 0
 
         self.disp_pub.publish(data)
 
-        self.assertEqual(hook.call_count, 1)
-        self.assertEqual(self.session.send_count, 1)
+        assert hook.call_count == 1
+        assert self.session.send_count == 1
 
     def test_unregister_hook(self):
         """
@@ -172,13 +171,13 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         hook = NoReturnDisplayHook()
 
         self.disp_pub.register_hook(hook)
-        self.assertEqual(hook.call_count, 0)
-        self.assertEqual(self.session.send_count, 0)
+        assert hook.call_count == 0
+        assert self.session.send_count == 0
 
         self.disp_pub.publish(data)
 
-        self.assertEqual(hook.call_count, 1)
-        self.assertEqual(self.session.send_count, 0)
+        assert hook.call_count == 1
+        assert self.session.send_count == 0
 
         #
         # After unregistering the `NoReturn` hook, any calls
@@ -193,8 +192,8 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         self.disp_pub.publish(data)
 
         self.assertTrue(first)
-        self.assertEqual(hook.call_count, 1)
-        self.assertEqual(self.session.send_count, 1)
+        assert hook.call_count == 1
+        assert self.session.send_count == 1
 
         #
         # If a hook is not installed, `unregister_hook`

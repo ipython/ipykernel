@@ -50,7 +50,7 @@ class InProcessKernelTestCase(unittest.TestCase):
                 self.kc.execute('x = raw_input()')
         finally:
             sys.stdin = sys_stdin
-        self.assertEqual(self.km.kernel.shell.user_ns.get('x'), 'foobar')
+        assert self.km.kernel.shell.user_ns.get('x') == 'foobar'
 
     def test_stdout(self):
         """ Does the in-process kernel correctly capture IO?
@@ -59,13 +59,13 @@ class InProcessKernelTestCase(unittest.TestCase):
 
         with capture_output() as io:
             kernel.shell.run_cell('print("foo")')
-        self.assertEqual(io.stdout, 'foo\n')
+        assert io.stdout == 'foo\n'
 
         kc = BlockingInProcessKernelClient(kernel=kernel, session=kernel.session)
         kernel.frontends.append(kc)
         kc.execute('print("bar")')
         out, err = assemble_output(kc.iopub_channel)
-        self.assertEqual(out, 'bar\n')
+        assert out == 'bar\n'
 
     def test_getpass_stream(self):
         "Tests that kernel getpass accept the stream parameter"

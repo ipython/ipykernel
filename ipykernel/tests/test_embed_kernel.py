@@ -4,19 +4,14 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
-import shutil
 import sys
-import tempfile
 import time
 
 from contextlib import contextmanager
 from subprocess import Popen, PIPE
 
-import nose.tools as nt
-
 from jupyter_client import BlockingKernelClient
 from jupyter_core import paths
-from IPython.paths import get_ipython_dir
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type
 
@@ -83,20 +78,20 @@ def test_embed_kernel_basic():
         msg_id = client.inspect('a')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_true(content['found'])
+        assert content['found']
 
         msg_id = client.execute("c=a*2")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_equal(content['status'], u'ok')
+        assert content['status'] == u'ok'
 
         # oinfo c (should be 10)
         msg_id = client.inspect('c')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_true(content['found'])
+        assert content['found']
         text = content['data']['text/plain']
-        nt.assert_in('10', text)
+        assert '10' in text
 
 def test_embed_kernel_namespace():
     """IPython.embed_kernel() inherits calling namespace"""
@@ -115,23 +110,23 @@ def test_embed_kernel_namespace():
         msg_id = client.inspect('a')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_true(content['found'])
+        assert content['found']
         text = content['data']['text/plain']
-        nt.assert_in(u'5', text)
+        assert u'5' in text
 
         # oinfo b (str)
         msg_id = client.inspect('b')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_true(content['found'])
+        assert content['found']
         text = content['data']['text/plain']
-        nt.assert_in(u'hi there', text)
+        assert u'hi there' in text
 
         # oinfo c (undefined)
         msg_id = client.inspect('c')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_false(content['found'])
+        assert not content['found']
 
 def test_embed_kernel_reentrant():
     """IPython.embed_kernel() can be called multiple times"""
@@ -153,9 +148,9 @@ def test_embed_kernel_reentrant():
             msg_id = client.inspect('count')
             msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
             content = msg['content']
-            nt.assert_true(content['found'])
+            assert content['found']
             text = content['data']['text/plain']
-            nt.assert_in(unicode_type(i), text)
+            assert unicode_type(i) in text
 
             # exit from embed_kernel
             client.execute("get_ipython().exit_now = True")

@@ -1,7 +1,7 @@
 language: python
 python:
     - "nightly"
-    - 3.6 
+    - 3.6
     - 3.5
     - 3.4
     - 3.3
@@ -18,7 +18,7 @@ install:
       fi
 script:
     - jupyter kernelspec list
-    - nosetests --with-coverage --with-timer --cover-package ipykernel ipykernel
+    - pytest --cov ipykernel -v ipykernel
 after_success:
     - codecov
 matrix:

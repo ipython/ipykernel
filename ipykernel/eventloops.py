@@ -313,7 +313,8 @@ def loop_asyncio(kernel):
             continue
         except Exception as e:
             error = e
-        loop.run_until_complete(loop.shutdown_asyncgens())
+        if hasattr(loop, 'shutdown_asyncgens'):
+            loop.run_until_complete(loop.shutdown_asyncgens())
         loop.close()
         if error is not None:
             raise error

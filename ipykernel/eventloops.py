@@ -302,12 +302,23 @@ def loop_asyncio(kernel):
         loop.call_later(kernel._poll_interval, kernel_handler)
 
     loop.call_soon(kernel_handler)
-    try:
-        if not loop.is_running():
+    # loop is already running (e.g. tornado 5), nothing left to do
+    if loop.is_running():
+        return
+    while True:
+        error = None
+        try:
             loop.run_forever()
-    finally:
-        loop.run_until_complete(loop.shutdown_asyncgens())
+        except KeyboardInterrupt:
+            continue
+        except Exception as e:
+            error = e
+        if hasattr(loop, 'shutdown_asyncgens'):
+            loop.run_until_complete(loop.shutdown_asyncgens())
         loop.close()
+        if error is not None:
+            raise error
+        break
 
 def enable_gui(gui, kernel=None):
     """Enable integration with a given GUI"""

@@ -7,7 +7,7 @@
 from __future__ import print_function
 import atexit
 from binascii import b2a_hex
-from collections import OrderedDict
+from collections import deque
 try:
     from importlib import lock_held as import_lock_held
 except ImportError:
@@ -67,7 +67,7 @@ class IOPubThread(object):
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
-        self._events = OrderedDict()
+        self._events = deque()
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main)
         self.thread.daemon = True
@@ -106,14 +106,16 @@ class IOPubThread(object):
     def _handle_event(self, msg):
         """Handle an event on the event pipe
 
+        Content of the message is ignored.
+
         Whenever *an* event arrives on the event stream,
         *all* waiting events are processed in order.
         """
-        # freeze event_id list so new writes don't add to it
+        # freeze event count so new writes don't extend the queue
         # while we are processing
-        event_ids = list(self._events)
-        for event_id in event_ids:
-            event_f = self._events.pop(event_id)
+        n_events = len(self._events)
+        for i in range(n_events):
+            event_f = self._events.popleft()
             event_f()
 
     def _setup_pipe_in(self):
@@ -195,11 +197,9 @@ class IOPubThread(object):
         If the thread is not running, call immediately.
         """
         if self.thread.is_alive():
-            event_id = os.urandom(16)
-            while event_id in self._events:
-                event_id = os.urandom(16)
-            self._events[event_id] = f
-            self._event_pipe.send(event_id)
+            self._events.append(f)
+            # wake event thread (message content is ignored)
+            self._event_pipe.send(b'')
         else:
             f()
 

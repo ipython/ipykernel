@@ -7,6 +7,7 @@
 from __future__ import print_function
 import atexit
 from binascii import b2a_hex
+from collections import OrderedDict
 try:
     from importlib import lock_held as import_lock_held
 except ImportError:
@@ -66,7 +67,7 @@ class IOPubThread(object):
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
-        self._events = {}
+        self._events = OrderedDict()
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main)
         self.thread.daemon = True
@@ -87,7 +88,7 @@ class IOPubThread(object):
         pipe_in.bind(iface)
         self._event_puller = ZMQStream(pipe_in, self.io_loop)
         self._event_puller.on_recv(self._handle_event)
-    
+
     @property
     def _event_pipe(self):
         """thread-local event pipe for signaling events that should be processed in the thread"""
@@ -103,11 +104,18 @@ class IOPubThread(object):
         return event_pipe
 
     def _handle_event(self, msg):
-        """Handle an event on the event pipe"""
-        event_id = msg[0]
-        event_f = self._events.pop(event_id)
-        event_f()
-    
+        """Handle an event on the event pipe
+
+        Whenever *an* event arrives on the event stream,
+        *all* waiting events are processed in order.
+        """
+        # freeze event_id list so new writes don't add to it
+        # while we are processing
+        event_ids = list(self._events)
+        for event_id in event_ids:
+            event_f = self._events.pop(event_id)
+            event_f()
+
     def _setup_pipe_in(self):
         """setup listening pipe for IOPub from forked subprocesses"""
         ctx = self.socket.context
@@ -129,7 +137,7 @@ class IOPubThread(object):
             return
         self._pipe_in = ZMQStream(pipe_in, self.io_loop)
         self._pipe_in.on_recv(self._handle_pipe_msg)
-    
+
     def _handle_pipe_msg(self, msg):
         """handle a pipe message from a subprocess"""
         if not self._pipe_flag or not self._is_master_process():

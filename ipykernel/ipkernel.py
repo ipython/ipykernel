@@ -72,32 +72,32 @@ class IPythonKernel(KernelBase):
 
     help_links = List([
         {
-            'text': "Python",
-            'url': "http://docs.python.org/%i.%i" % sys.version_info[:2],
+            'text': "Python Reference",
+            'url': "https://docs.python.org/%i.%i" % sys.version_info[:2],
         },
         {
-            'text': "IPython",
-            'url': "http://ipython.org/documentation.html",
+            'text': "IPython Reference",
+            'url': "https://ipython.org/documentation.html",
         },
         {
-            'text': "NumPy",
-            'url': "http://docs.scipy.org/doc/numpy/reference/",
+            'text': "NumPy Reference",
+            'url': "https://docs.scipy.org/doc/numpy/reference/",
         },
         {
-            'text': "SciPy",
-            'url': "http://docs.scipy.org/doc/scipy/reference/",
+            'text': "SciPy Reference",
+            'url': "https://docs.scipy.org/doc/scipy/reference/",
         },
         {
-            'text': "Matplotlib",
-            'url': "http://matplotlib.org/contents.html",
+            'text': "Matplotlib Reference",
+            'url': "https://matplotlib.org/contents.html",
         },
         {
-            'text': "SymPy",
+            'text': "SymPy Reference",
             'url': "http://docs.sympy.org/latest/index.html",
         },
         {
-            'text': "pandas",
-            'url': "http://pandas.pydata.org/pandas-docs/stable/",
+            'text': "pandas Reference",
+            'url': "https://pandas.pydata.org/pandas-docs/stable/",
         },
     ]).tag(config=True)
 

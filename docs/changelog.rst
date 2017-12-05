@@ -15,6 +15,7 @@ Changes in IPython kernel
 - Allow the kernel to be interrupted without killing the Qt console.
 - Fix ``is_complete`` response with cell magics.
 - Clean up encoding of bytes objects.
+- Clean up help links to use ``https`` and improve display titles.
 
 
 4.6

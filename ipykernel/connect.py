@@ -13,7 +13,7 @@ import warnings
 from IPython.core.profiledir import ProfileDir
 from IPython.paths import get_ipython_dir
 from ipython_genutils.path import filefind
-from ipython_genutils.py3compat import str_to_bytes
+from ipython_genutils.py3compat import str_to_bytes, PY3
 
 import jupyter_client
 from jupyter_client import write_connection_file
@@ -169,8 +169,15 @@ def connect_qtconsole(connection_file=None, argv=None, profile=None):
         "qtconsoleapp.main()"
     ])
 
+    kwargs = {}
+    if PY3:
+        # Launch the Qt console in a separate session & process group, so
+        # interrupting the kernel doesn't kill it. This kwarg is not on Py2.
+        kwargs['start_new_session'] = True
+
     return Popen([sys.executable, '-c', cmd, '--existing', cf] + argv,
         stdout=PIPE, stderr=PIPE, close_fds=(sys.platform != 'win32'),
+        **kwargs
     )
 
 

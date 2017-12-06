@@ -17,7 +17,6 @@ except ImportError:
     from Queue import Empty  # Py 2
 
 import nose
-import nose.tools as nt
 
 from jupyter_client import manager
 
@@ -68,12 +67,12 @@ def execute(code='', kc=None, **kwargs):
     validate_message(reply, 'execute_reply', msg_id)
     busy = kc.get_iopub_msg(timeout=TIMEOUT)
     validate_message(busy, 'status', msg_id)
-    nt.assert_equal(busy['content']['execution_state'], 'busy')
+    assert busy['content']['execution_state'] == 'busy'
 
     if not kwargs.get('silent'):
         execute_input = kc.get_iopub_msg(timeout=TIMEOUT)
         validate_message(execute_input, 'execute_input', msg_id)
-        nt.assert_equal(execute_input['content']['code'], code)
+        assert execute_input['content']['code'] == code
 
     # show tracebacks if present for debugging
     if reply['content'].get('traceback'):

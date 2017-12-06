@@ -6,8 +6,6 @@
 import json
 import os
 
-import nose.tools as nt
-
 from traitlets.config import Config
 from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
 from ipython_genutils.py3compat import str_to_bytes
@@ -36,14 +34,14 @@ def test_get_connection_file():
         app.initialize()
 
         profile_cf = os.path.join(app.connection_dir, cf)
-        nt.assert_equal(profile_cf, app.abs_connection_file)
+        assert profile_cf == app.abs_connection_file
         with open(profile_cf, 'w') as f:
             f.write("{}")
-        nt.assert_true(os.path.exists(profile_cf))
-        nt.assert_equal(connect.get_connection_file(app), profile_cf)
+        assert os.path.exists(profile_cf)
+        assert connect.get_connection_file(app) == profile_cf
 
         app.connection_file = cf
-        nt.assert_equal(connect.get_connection_file(app), profile_cf)
+        assert connect.get_connection_file(app) == profile_cf
 
 
 def test_get_connection_info():
@@ -52,12 +50,12 @@ def test_get_connection_info():
         connect.write_connection_file(cf, **sample_info)
         json_info = connect.get_connection_info(cf)
         info = connect.get_connection_info(cf, unpack=True)
-    
-    nt.assert_equal(type(json_info), type(""))
+    assert isinstance(json_info, str)
+
     sub_info = {k:v for k,v in info.items() if k in sample_info}
-    nt.assert_equal(sub_info, sample_info)
+    assert sub_info == sample_info
 
     info2 = json.loads(json_info)
     info2['key'] = str_to_bytes(info2['key'])
     sub_info2 = {k:v for k,v in info.items() if k in sample_info}
-    nt.assert_equal(sub_info2, sample_info)
+    assert sub_info2 == sample_info

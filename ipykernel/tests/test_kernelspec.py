@@ -7,7 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
-    
+
 try:
     from unittest import mock
 except ImportError:
@@ -42,9 +42,9 @@ def test_make_ipkernel_cmd():
 
 
 def assert_kernel_dict(d):
-    nt.assert_equal(d['argv'], make_ipkernel_cmd())
-    nt.assert_equal(d['display_name'], 'Python %i' % sys.version_info[0])
-    nt.assert_equal(d['language'], 'python')
+    assert d['argv'] == make_ipkernel_cmd()
+    assert d['display_name'] == 'Python %i' % sys.version_info[0]
+    assert d['language'] == 'python'
 
 
 def test_get_kernel_dict():
@@ -55,8 +55,8 @@ def test_get_kernel_dict():
 def assert_kernel_dict_with_profile(d):
     nt.assert_equal(d['argv'], make_ipkernel_cmd(
         extra_arguments=["--profile", "test"]))
-    nt.assert_equal(d['display_name'], 'Python %i' % sys.version_info[0])
-    nt.assert_equal(d['language'], 'python')
+    assert d['display_name'] == 'Python %i' % sys.version_info[0]
+    assert d['language'] == 'python'
 
 
 def test_get_kernel_dict_with_profile():
@@ -83,7 +83,7 @@ def test_write_kernel_spec():
 def test_write_kernel_spec_path():
     path = os.path.join(tempfile.mkdtemp(), KERNEL_NAME)
     path2 = write_kernel_spec(path)
-    nt.assert_equal(path, path2)
+    assert path == path2
     assert_is_spec(path)
     shutil.rmtree(path)
 
@@ -129,7 +129,7 @@ def test_install_profile():
     spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
     with open(spec) as f:
         spec = json.load(f)
-    nt.assert_true(spec["display_name"].endswith(" [profile=Test]"))
+    assert spec["display_name"].endswith(" [profile=Test]")
     nt.assert_equal(spec["argv"][-2:], ["--profile", "Test"])
 
 
@@ -143,4 +143,4 @@ def test_install_display_name_overrides_profile():
     spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
     with open(spec) as f:
         spec = json.load(f)
-    nt.assert_equal(spec["display_name"], "Display")
+    assert spec["display_name"] == "Display"

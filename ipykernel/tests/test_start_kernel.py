@@ -1,5 +1,3 @@
-import nose.tools as nt
-
 from .test_embed_kernel import setup_kernel
 
 TIMEOUT = 15
@@ -15,19 +13,19 @@ def test_ipython_start_kernel_userns():
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        nt.assert_in(u'123', text)
+        assert u'123' in text
 
         # user_module should be an instance of DummyMod
         msg_id = client.execute("usermod = get_ipython().user_module")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_equal(content['status'], u'ok')
+        assert content['status'] == u'ok'
         msg_id = client.inspect('usermod')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        nt.assert_in(u'DummyMod', text)
+        assert u'DummyMod' in text
 
 def test_ipython_start_kernel_no_userns():
     # Issue #4188 - user_ns should be passed to shell as None, not {}
@@ -39,10 +37,10 @@ def test_ipython_start_kernel_no_userns():
         msg_id = client.execute("usermod = get_ipython().user_module")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        nt.assert_equal(content['status'], u'ok')
+        assert content['status'] == u'ok'
         msg_id = client.inspect('usermod')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        nt.assert_not_in(u'DummyMod', text)
+        assert u'DummyMod' not in text

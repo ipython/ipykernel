@@ -1,7 +1,7 @@
 language: python
 python:
     - "nightly"
-    - 3.6 
+    - 3.6
     - 3.5
     - 3.4
     - 3.3
@@ -16,9 +16,10 @@ install:
       if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ||  "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
         pip install matplotlib
       fi
+    - pip freeze
 script:
     - jupyter kernelspec list
-    - nosetests --with-coverage --with-timer --cover-package ipykernel ipykernel
+    - pytest --cov ipykernel --durations 10 -v ipykernel
 after_success:
     - codecov
 matrix:

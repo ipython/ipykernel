@@ -1,8 +1,5 @@
 
-import os
 import pickle
-
-import nose.tools as nt
 
 from ipykernel.pickleutil import can, uncan, codeutil
 
@@ -24,7 +21,7 @@ def test_no_closure():
     
     pfoo = dumps(foo)
     bar = loads(pfoo)
-    nt.assert_equal(foo(), bar())
+    assert foo() == bar()
 
 def test_generator_closure():
     # this only creates a closure on Python 3
@@ -36,7 +33,7 @@ def test_generator_closure():
     
     pfoo = dumps(foo)
     bar = loads(pfoo)
-    nt.assert_equal(foo(), bar())
+    assert foo() == bar()
 
 def test_nested_closure():
     @interactive
@@ -48,7 +45,7 @@ def test_nested_closure():
     
     pfoo = dumps(foo)
     bar = loads(pfoo)
-    nt.assert_equal(foo(), bar())
+    assert foo() == bar()
 
 def test_closure():
     i = 'i'
@@ -58,11 +55,11 @@ def test_closure():
     
     pfoo = dumps(foo)
     bar = loads(pfoo)
-    nt.assert_equal(foo(), bar())
+    assert foo() == bar()
 
 def test_uncan_bytes_buffer():
     data = b'data'
     canned = can(data)
     canned.buffers = [memoryview(buf) for buf in canned.buffers]
     out = uncan(canned)
-    nt.assert_equal(out, data)
+    assert out == data

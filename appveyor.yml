@@ -21,14 +21,14 @@ install:
         pip install --upgrade pip wheel
         pip --version
   - cmd: |
-        pip install --pre -e . coverage nose_warnings_filters
-        pip install ipykernel[test] nose-timer
+        pip install --pre -e .
+        pip install ipykernel[test]
   - cmd: |
         pip install matplotlib numpy
         pip freeze
   - cmd: python -c "import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)"
 test_script:
-  - cmd: nosetests --with-coverage --with-timer --cover-package=ipykernel ipykernel
+  - cmd: pytest -v --cov ipykernel ipykernel
 
 on_success:
   - cmd: pip install codecov

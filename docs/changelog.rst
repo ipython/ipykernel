@@ -12,6 +12,12 @@ Changes in IPython kernel
 - Add event loop integration for :mod:`asyncio`.
 - Use the new IPython completer API.
 - Add support for displaying GIF images (mimetype ``image/gif``).
+- Allow the kernel to be interrupted without killing the Qt console.
+- Fix ``is_complete`` response with cell magics.
+- Clean up encoding of bytes objects.
+- Clean up help links to use ``https`` and improve display titles.
+- Clean up ioloop handling in preparation for tornado 5.
+
 
 4.6
 ---

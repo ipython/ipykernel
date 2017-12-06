@@ -102,8 +102,10 @@ if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
 
 extras_require = setuptools_args['extras_require'] = {
     'test:python_version=="2.7"': ['mock'],
+    # pytest 3.3 doesn't work on Python 3.3
+    'test:python_version=="3.3"': ['pytest==3.2.*'],
+    'test:python_version!="3.3"': ['pytest>=3.2'],
     'test': [
-        'pytest',
         'pytest-cov',
         'nose', # nose because there are still a few nose.tools imports hanging around
     ],

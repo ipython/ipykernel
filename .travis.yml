@@ -18,7 +18,7 @@ install:
       fi
 script:
     - jupyter kernelspec list
-    - pytest --cov ipykernel -v ipykernel
+    - pytest --cov ipykernel --durations 10 -v ipykernel
 after_success:
     - codecov
 matrix:

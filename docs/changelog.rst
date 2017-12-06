@@ -16,6 +16,7 @@ Changes in IPython kernel
 - Fix ``is_complete`` response with cell magics.
 - Clean up encoding of bytes objects.
 - Clean up help links to use ``https`` and improve display titles.
+- Clean up ioloop handling in preparation for tornado 5.
 
 
 4.6

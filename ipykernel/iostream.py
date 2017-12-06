@@ -63,7 +63,7 @@ class IOPubThread(object):
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
         self._pipe_flag = pipe
-        self.io_loop = IOLoop()
+        self.io_loop = IOLoop(make_current=False)
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
@@ -74,6 +74,7 @@ class IOPubThread(object):
 
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""
+        self.io_loop.make_current()
         self.io_loop.start()
         self.io_loop.close(all_fds=True)
 

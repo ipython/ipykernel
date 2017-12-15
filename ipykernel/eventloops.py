@@ -192,6 +192,12 @@ def loop_wx(kernel):
     _loop_wx(kernel.app)
 
 
+@loop_wx.exit
+def loop_wx_exit(kernel):
+    import wx
+    wx.Exit()
+
+
 @register_integration('tk')
 def loop_tk(kernel):
     """Start a kernel with the Tk event loop."""
@@ -222,6 +228,11 @@ def loop_tk(kernel):
     kernel.timer.start()
 
 
+@loop_tk.exit
+def loop_tk_exit(kernel):
+    kernel.timer.app.destroy()
+
+
 @register_integration('gtk')
 def loop_gtk(kernel):
     """Start the kernel, coordinating with the GTK event loop"""
@@ -229,6 +240,12 @@ def loop_gtk(kernel):
 
     gtk_kernel = GTKEmbed(kernel)
     gtk_kernel.start()
+    kernel._gtk = gtk_kernel
+
+
+@loop_gtk.exit
+def loop_gtk_exit(kernel):
+    kernel._gtk.stop()
 
 
 @register_integration('gtk3')
@@ -238,6 +255,12 @@ def loop_gtk3(kernel):
 
     gtk_kernel = GTKEmbed(kernel)
     gtk_kernel.start()
+    kernel._gtk = gtk_kernel
+
+
+@loop_gtk3.exit
+def loop_gtk3_exit(kernel):
+    kernel._gtk.stop()
 
 
 @register_integration('osx')
@@ -314,7 +337,7 @@ def loop_asyncio(kernel):
 
 
 @loop_asyncio.exit
-def exit_asyncio(kernel):
+def loop_asyncio_exit(kernel):
     """Exit hook for asyncio"""
     import asyncio
     loop = asyncio.get_event_loop()

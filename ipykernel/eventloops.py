@@ -49,7 +49,7 @@ loop_map = {
     'notebook': None,
     'ipympl': None,
     'widget': None,
-    None : None,
+    None: None,
 }
 
 def register_integration(*toolkitnames):
@@ -68,6 +68,17 @@ def register_integration(*toolkitnames):
     def decorator(func):
         for name in toolkitnames:
             loop_map[name] = func
+
+        func.exit_hook = lambda kernel: None
+
+        def exit_decorator(exit_func):
+            """@func.exit is now a decorator
+
+            to register a function to be called on exit
+            """
+            func.exit_hook = exit_func
+
+        func.exit = exit_decorator
         return func
 
     return decorator
@@ -100,11 +111,21 @@ def loop_qt4(kernel):
     _loop_qt(kernel.app)
 
 
+@loop_qt4.exit
+def loop_qt4_exit(kernel):
+    kernel.app.exit()
+
+
 @register_integration('qt5')
 def loop_qt5(kernel):
     """Start a kernel with PyQt5 event loop integration."""
     os.environ['QT_API'] = 'pyqt5'
     return loop_qt4(kernel)
+
+
+@loop_qt5.exit
+def loop_qt5_exit(kernel):
+    kernel.app.exit()
 
 
 def _loop_wx(app):
@@ -296,15 +317,15 @@ def loop_asyncio(kernel):
     '''Start a kernel with asyncio event loop support.'''
     import asyncio
     loop = asyncio.get_event_loop()
+    # loop is already running (e.g. tornado 5), nothing left to do
+    if loop.is_running():
+        return
 
     def kernel_handler():
         loop.call_soon(kernel.do_one_iteration)
         loop.call_later(kernel._poll_interval, kernel_handler)
 
     loop.call_soon(kernel_handler)
-    # loop is already running (e.g. tornado 5), nothing left to do
-    if loop.is_running():
-        return
     while True:
         error = None
         try:
@@ -319,6 +340,16 @@ def loop_asyncio(kernel):
         if error is not None:
             raise error
         break
+
+
+@loop_asyncio.exit
+def exit_asyncio(kernel):
+    """Exit hook for asyncio"""
+    import asyncio
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        loop.call_soon(loop.stop)
+
 
 def enable_gui(gui, kernel=None):
     """Enable integration with a given GUI"""

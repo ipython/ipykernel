@@ -471,6 +471,10 @@ class ZMQInteractiveShell(InteractiveShell):
         if change['new']:
             loop = self.kernel.io_loop
             loop.call_later(0.1, loop.stop)
+            if self.kernel.eventloop:
+                exit_hook = getattr(self.kernel.eventloop, 'exit_hook', None)
+                if exit_hook:
+                    exit_hook(self.kernel)
 
     keepkernel_on_exit = None
 

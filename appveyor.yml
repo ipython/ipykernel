@@ -25,6 +25,7 @@ install:
         pip install ipykernel[test]
   - cmd: |
         pip install matplotlib numpy
+        pip install "tornado<5"
         pip freeze
   - cmd: python -c "import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)"
 test_script:

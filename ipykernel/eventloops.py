@@ -96,7 +96,7 @@ def _loop_qt(app):
     app._in_event_loop = False
 
 
-@register_integration('qt', 'qt4')
+@register_integration('qt4')
 def loop_qt4(kernel):
     """Start a kernel with PyQt4 event loop integration."""
 
@@ -116,7 +116,7 @@ def loop_qt4_exit(kernel):
     kernel.app.exit()
 
 
-@register_integration('qt5')
+@register_integration('qt', 'qt5')
 def loop_qt5(kernel):
     """Start a kernel with PyQt5 event loop integration."""
     os.environ['QT_API'] = 'pyqt5'

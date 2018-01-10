@@ -150,14 +150,12 @@ def _enable_matplotlib_integration():
     ip = get_ipython()
     backend = get_backend()
     if ip and backend == 'module://%s' % __name__:
-        from IPython.core.pylabtools import configure_inline_support, activate_matplotlib
+        from IPython.core.pylabtools import configure_inline_support
         try:
-            activate_matplotlib(backend)
             configure_inline_support(ip, backend)
-        except (ImportError, AttributeError):
+        except ImportError:
             # bugs may cause a circular import on Python 2
             def configure_once(*args):
-                activate_matplotlib(backend)
                 configure_inline_support(ip, backend)
                 ip.events.unregister('post_run_cell', configure_once)
             ip.events.register('post_run_cell', configure_once)

@@ -11,8 +11,6 @@ install:
     - |
       pip install --upgrade setuptools pip
       pip install --pre .
-      # temp fix: pin tornado < 5
-      pip install 'tornado<5'
       pip install ipykernel[test] codecov
     - |
       if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ||  "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then

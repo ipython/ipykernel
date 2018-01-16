@@ -50,7 +50,8 @@ class Kernel(SingletonConfigurable):
     def _update_eventloop(self, change):
         """schedule call to eventloop from IOLoop"""
         loop = ioloop.IOLoop.current()
-        loop.add_callback(self.enter_eventloop)
+        if change.new is not None:
+            loop.add_callback(self.enter_eventloop)
 
     session = Instance(Session, allow_none=True)
     profile_dir = Instance('IPython.core.profiledir.ProfileDir', allow_none=True)
@@ -256,7 +257,7 @@ class Kernel(SingletonConfigurable):
             # which may be skipped by entering the eventloop
             stream.flush(zmq.POLLOUT)
         # restore default_int_handler
-        signal(SIGINT, default_int_handler)
+        self.pre_handler_hook()
         while self.eventloop is not None:
             try:
                 self.eventloop(self)
@@ -268,6 +269,7 @@ class Kernel(SingletonConfigurable):
                 # eventloop exited cleanly, this means we should stop (right?)
                 self.eventloop = None
                 break
+        self.post_handler_hook()
         self.log.info("exiting eventloop")
 
     def start(self):

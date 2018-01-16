@@ -257,7 +257,7 @@ class Kernel(SingletonConfigurable):
             # which may be skipped by entering the eventloop
             stream.flush(zmq.POLLOUT)
         # restore default_int_handler
-        signal(SIGINT, default_int_handler)
+        self.pre_handler_hook()
         while self.eventloop is not None:
             try:
                 self.eventloop(self)
@@ -269,6 +269,7 @@ class Kernel(SingletonConfigurable):
                 # eventloop exited cleanly, this means we should stop (right?)
                 self.eventloop = None
                 break
+        self.post_handler_hook()
         self.log.info("exiting eventloop")
 
     def start(self):

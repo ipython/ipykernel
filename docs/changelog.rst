@@ -1,6 +1,21 @@
 Changes in IPython kernel
 =========================
 
+4.8
+---
+
+4.8.0
+*****
+
+`4.8.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.8>`__
+
+- Cleanly shutdown integrated event loops when shutting down the kernel.
+  (:ghpull:`290`)
+- ``%gui qt`` now uses Qt 5 by default rather than Qt 4, following a similar
+  change in terminal IPython. (:ghpull:`293`)
+- Fix event loop integration for :mod:`asyncio` when run with Tornado 5,
+  which uses asyncio where available. (:ghpull:`296`)
+
 4.7
 ---
 
@@ -38,8 +53,10 @@ Changes in IPython kernel
 
 - Add to API `DisplayPublisher.publish` two new fully backward-compatible
   keyword-args:
+
     - `update: bool`
     - `transient: dict`
+
 - Support new `transient` key in `display_data` messages spec for `publish`.
   For a display data message, `transient` contains data that shouldn't be
   persisted to files or documents. Add a `display_id` to this `transient`

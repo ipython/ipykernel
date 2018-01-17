@@ -33,7 +33,10 @@ import shlex
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
+    'sphinxcontrib_github_alt',
 ]
+
+github_project_url = "https://github.com/ipython/ipykernel"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

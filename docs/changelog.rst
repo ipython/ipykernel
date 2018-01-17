@@ -1,6 +1,21 @@
 Changes in IPython kernel
 =========================
 
+4.8
+---
+
+4.8.0
+*****
+
+`4.8.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.8>`__
+
+- Cleanly shutdown integrated event loops when shutting down the kernel.
+  (:ghpull:`290`)
+- ``%gui qt`` now uses Qt 5 by default rather than Qt 4, following a similar
+  change in terminal IPython. (:ghpull:`293`)
+- Fix event loop integration for :mod:`asyncio` when run with Tornado 5,
+  which uses asyncio where available. (:ghpull:`296`)
+
 4.7
 ---
 

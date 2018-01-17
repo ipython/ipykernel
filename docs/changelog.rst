@@ -53,8 +53,10 @@ Changes in IPython kernel
 
 - Add to API `DisplayPublisher.publish` two new fully backward-compatible
   keyword-args:
+
     - `update: bool`
     - `transient: dict`
+
 - Support new `transient` key in `display_data` messages spec for `publish`.
   For a display data message, `transient` contains data that shouldn't be
   persisted to files or documents. Add a `display_id` to this `transient`

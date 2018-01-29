@@ -16,7 +16,7 @@ from jupyter_client.kernelspec import KernelSpecManager
 
 pjoin = os.path.join
 
-KERNEL_NAME = 'python%i' % sys.version_info[0]
+KERNEL_NAME = 'python%i.%i' % (sys.version_info[0], sys.version_info[1])
 
 # path to kernelspec resources
 RESOURCES = pjoin(os.path.dirname(__file__), 'resources')

@@ -8,7 +8,7 @@ from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unic
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from traitlets import Instance, Type, Any, List, Bool
 
-from .comm import CommManager
+from .comm import CommManager, comms
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
 
@@ -69,6 +69,11 @@ class IPythonKernel(KernelBase):
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
+
+        self.comm_manager.register_target(
+            target_name=comms.REGISTER_TARGET_COMM_TARGET_NAME,
+            f=comms.register_target_comm_open
+        )
 
     help_links = List([
         {

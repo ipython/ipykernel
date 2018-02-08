@@ -97,7 +97,8 @@ if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
     write_kernel_spec(dest, overrides={'argv': argv})
 
     setup_args['data_files'] = [
-        (pjoin('share', 'jupyter', 'kernels', KERNEL_NAME), glob(pjoin(dest, '*'))),
+        (pjoin('share', 'jupyter', 'kernels', KERNEL_NAME),
+         glob(pjoin('data_kernelspec', '*'))),
     ]
 
 extras_require = setuptools_args['extras_require'] = {

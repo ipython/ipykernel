@@ -4,6 +4,17 @@ Changes in IPython kernel
 4.8
 ---
 
+4.8.1
+*****
+
+`4.8.1 on GitHub <https://github.com/ipython/ipykernel/milestones/4.8.1>`__
+
+- set zmq.ROUTER_HANDOVER socket option when available
+  to workaround libzmq reconnect bug (:ghpull:`300`).
+- Fix sdists including absolute paths for kernelspec files,
+  which prevented installation from sdist on Windows
+  (:ghpull:`306`).
+
 4.8.0
 *****
 

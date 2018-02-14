@@ -41,12 +41,17 @@ def _notify_stream_qt(kernel, stream):
     fd = stream.getsockopt(zmq.FD)
     notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
     notifier.activated.connect(process_stream_events)
-    process_stream_events()
     # there may already be unprocessed events waiting.
     # these events will not wake zmq's edge-triggered FD
     # since edge-triggered notification only occurs on new i/o activity.
     # process all the waiting events immediately
     # so we start in a clean state ensuring that any new i/o events will notify.
+    # schedule first call on the eventloop as soon as it's running,
+    # so we don't block here processing events
+    timer = QtCore.QTimer(kernel.app)
+    timer.setSingleShot(True)
+    timer.timeout.connect(process_stream_events)
+    timer.start(0)
 
 # mapping of keys to loop functions
 loop_map = {

@@ -4,6 +4,13 @@ Changes in IPython kernel
 4.8
 ---
 
+4.8.2
+*****
+
+`4.8.2 on GitHub <https://github.com/ipython/ipykernel/milestones/4.8.2>`__
+
+- Fix compatibility issue with qt eventloop and pyzmq 17 (:ghpull:`307`).
+
 4.8.1
 *****
 

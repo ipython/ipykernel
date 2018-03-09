@@ -322,7 +322,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """Redirect input streams and set a display hook."""
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
+            sys.stdout.flush()
             sys.stdout = outstream_factory(self.session, self.iopub_thread, u'stdout')
+            sys.stderr.flush()
             sys.stderr = outstream_factory(self.session, self.iopub_thread, u'stderr')
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))

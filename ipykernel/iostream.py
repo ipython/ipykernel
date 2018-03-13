@@ -276,7 +276,7 @@ class OutStream(TextIOBase):
     topic = None
     encoding = 'UTF-8'
 
-    def __init__(self, session, pub_thread, name, pipe=None):
+    def __init__(self, session, pub_thread, name, pipe=None, echo=None):
         if pipe is not None:
             warnings.warn("pipe argument to OutStream is deprecated and ignored",
                 DeprecationWarning)
@@ -296,6 +296,13 @@ class OutStream(TextIOBase):
         self._flush_pending = False
         self._io_loop = pub_thread.io_loop
         self._new_buffer()
+        self.echo = None
+
+        if echo:
+            if hasattr(echo, 'read') and hasattr(echo, 'write'):
+                self.echo = echo
+            else:
+                raise ValueError("echo argument must be a file like object")
 
     def _is_master_process(self):
         return os.getpid() == self._master_pid
@@ -353,6 +360,15 @@ class OutStream(TextIOBase):
         unless the thread has been destroyed (e.g. forked subprocess).
         """
         self._flush_pending = False
+
+        if self.echo is not None:
+            try:
+                self.echo.flush()
+            except OSError as e:
+                if self.echo is not sys.__stderr__:
+                    print("Flush failed: {}".format(e),
+                          file=sys.__stderr__)
+
         data = self._flush_buffer()
         if data:
             # FIXME: this disables Session's fork-safe check,
@@ -364,6 +380,14 @@ class OutStream(TextIOBase):
                 parent=self.parent_header, ident=self.topic)
 
     def write(self, string):
+        if self.echo is not None:
+            try:
+                self.echo.write(string)
+            except OSError as e:
+                if self.echo is not sys.__stderr__:
+                    print("Write failed: {}".format(e),
+                          file=sys.__stderr__)
+
         if self.pub_thread is None:
             raise ValueError('I/O operation on closed file')
         else:

@@ -139,6 +139,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     # streams, etc.
     no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
     no_stderr = Bool(False, help="redirect stderr to the null device").tag(config=True)
+    quiet = Bool(True, help="Only send stdout/stderr to output stream").tag(config=True)
     outstream_class = DottedObjectName('ipykernel.iostream.OutStream',
         help="The importstring for the OutStream factory").tag(config=True)
     displayhook_class = DottedObjectName('ipykernel.displayhook.ZMQDisplayHook',
@@ -323,9 +324,17 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
             sys.stdout.flush()
-            sys.stdout = outstream_factory(self.session, self.iopub_thread, u'stdout')
+
+            e_stdout = None if self.quiet else sys.__stdout__
+            e_stderr = None if self.quiet else sys.__stderr__
+
+            sys.stdout = outstream_factory(self.session, self.iopub_thread,
+                                           u'stdout',
+                                           echo=e_stdout)
             sys.stderr.flush()
-            sys.stderr = outstream_factory(self.session, self.iopub_thread, u'stderr')
+            sys.stderr = outstream_factory(self.session, self.iopub_thread,
+                                           u'stderr',
+                                           echo=e_stderr)
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             self.displayhook = displayhook_factory(self.session, self.iopub_socket)

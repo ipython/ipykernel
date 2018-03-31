@@ -390,6 +390,9 @@ class OutStream(TextIOBase):
             for string in sequence:
                 self.write(string)
 
+    def writable(self):
+        return True
+
     def _flush_buffer(self):
         """clear the current buffer and return the current buffer data.
         

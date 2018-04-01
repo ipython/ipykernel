@@ -18,7 +18,7 @@ init:
   - cmd: set PATH=%python%;%python%\scripts;%PATH%
 install:
   - cmd: |
-        pip install --upgrade pip wheel
+        pip install --upgrade wheel
         pip --version
   - cmd: |
         pip install --pre -e .

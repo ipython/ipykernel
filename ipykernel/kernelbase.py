@@ -225,7 +225,7 @@ class Kernel(SingletonConfigurable):
 
         handler = self.shell_handlers.get(msg_type, None)
         if handler is None:
-            self.log.warn("Unknown message type: %r", msg_type)
+            self.log.warning("Unknown message type: %r", msg_type)
         else:
             self.log.debug("%s: %s", msg_type, msg)
             self.pre_handler_hook()
@@ -563,7 +563,7 @@ class Kernel(SingletonConfigurable):
     #---------------------------------------------------------------------------
 
     def apply_request(self, stream, ident, parent):
-        self.log.warn("""apply_request is deprecated in kernel_base, moving to ipyparallel.""")
+        self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
         try:
             content = parent[u'content']
             bufs = parent[u'buffers']
@@ -595,7 +595,7 @@ class Kernel(SingletonConfigurable):
 
     def abort_request(self, stream, ident, parent):
         """abort a specific msg by id"""
-        self.log.warn("abort_request is deprecated in kernel_base. It os only part of IPython parallel")
+        self.log.warning("abort_request is deprecated in kernel_base. It os only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
         if isinstance(msg_ids, string_types):
             msg_ids = [msg_ids]
@@ -611,7 +611,7 @@ class Kernel(SingletonConfigurable):
 
     def clear_request(self, stream, idents, parent):
         """Clear our namespace."""
-        self.log.warn("clear_request is deprecated in kernel_base. It os only part of IPython parallel")
+        self.log.warning("clear_request is deprecated in kernel_base. It os only part of IPython parallel")
         content = self.do_clear()
         self.session.send(stream, 'clear_reply', ident=idents, parent=parent,
                 content = content)
@@ -728,7 +728,7 @@ class Kernel(SingletonConfigurable):
             try:
                 ident, reply = self.session.recv(self.stdin_socket, 0)
             except Exception:
-                self.log.warn("Invalid Message:", exc_info=True)
+                self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt

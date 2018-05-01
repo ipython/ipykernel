@@ -66,7 +66,7 @@ class CommManager(LoggingConfigurable):
         try:
             return self.comms[comm_id]
         except KeyError:
-            self.log.warn("No such comm: %s", comm_id)
+            self.log.warning("No such comm: %s", comm_id)
             if self.log.isEnabledFor(logging.DEBUG):
                 # don't create the list of keys if debug messages aren't enabled
                 self.log.debug("Current comms: %s", list(self.comms.keys()))

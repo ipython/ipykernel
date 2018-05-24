@@ -22,6 +22,7 @@ from signal import signal, default_int_handler, SIGINT
 
 import zmq
 from tornado import ioloop
+from tornado import gen
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
@@ -145,6 +146,7 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
+    @gen.coroutine
     def dispatch_control(self, msg):
         """dispatch control requests"""
         idents,msg = self.session.feed_identities(msg, copy=False)
@@ -168,7 +170,7 @@ class Kernel(SingletonConfigurable):
             self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
         else:
             try:
-                handler(self.control_stream, idents, msg)
+                yield gen.maybe_future(handler(self.control_stream, idents, msg))
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)
 
@@ -195,6 +197,7 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
+    @gen.coroutine
     def dispatch_shell(self, stream, msg):
         """dispatch shell requests"""
         # flush control requests first
@@ -230,7 +233,7 @@ class Kernel(SingletonConfigurable):
             self.log.debug("%s: %s", msg_type, msg)
             self.pre_handler_hook()
             try:
-                handler(stream, idents, msg)
+                yield gen.maybe_future(handler(stream, idents, msg))
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)
             finally:
@@ -370,6 +373,7 @@ class Kernel(SingletonConfigurable):
         """
         return metadata
 
+    @gen.coroutine
     def execute_request(self, stream, ident, parent):
         """handle an execute_request"""
 
@@ -395,8 +399,12 @@ class Kernel(SingletonConfigurable):
             self.execution_count += 1
             self._publish_execute_input(code, parent, self.execution_count)
 
-        reply_content = self.do_execute(code, silent, store_history,
-                                        user_expressions, allow_stdin)
+        reply_content = yield gen.maybe_future(
+            self.do_execute(
+                code, silent, store_history,
+                user_expressions, allow_stdin,
+            )
+        )
 
         # Flush output before sending the reply.
         sys.stdout.flush()
@@ -426,12 +434,13 @@ class Kernel(SingletonConfigurable):
         """
         raise NotImplementedError
 
+    @gen.coroutine
     def complete_request(self, stream, ident, parent):
         content = parent['content']
         code = content['code']
         cursor_pos = content['cursor_pos']
         
-        matches = self.do_complete(code, cursor_pos)
+        matches = yield gen.maybe_future(self.do_complete(code, cursor_pos))
         matches = json_clean(matches)
         completion_msg = self.session.send(stream, 'complete_reply',
                                            matches, parent, ident)
@@ -445,11 +454,16 @@ class Kernel(SingletonConfigurable):
                 'metadata' : {},
                 'status' : 'ok'}
 
+    @gen.coroutine
     def inspect_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = self.do_inspect(content['code'], content['cursor_pos'],
-                                        content.get('detail_level', 0))
+        reply_content = yield gen.maybe_future(
+            self.do_inspect(
+                content['code'], content['cursor_pos'],
+                content.get('detail_level', 0),
+            )
+        )
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
         msg = self.session.send(stream, 'inspect_reply',
@@ -461,10 +475,11 @@ class Kernel(SingletonConfigurable):
         """
         return {'status': 'ok', 'data': {}, 'metadata': {}, 'found': False}
 
+    @gen.coroutine
     def history_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = self.do_history(**content)
+        reply_content = yield gen.maybe_future(self.do_history(**content))
 
         reply_content = json_clean(reply_content)
         msg = self.session.send(stream, 'history_reply',
@@ -523,8 +538,9 @@ class Kernel(SingletonConfigurable):
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
 
+    @gen.coroutine
     def shutdown_request(self, stream, ident, parent):
-        content = self.do_shutdown(parent['content']['restart'])
+        content = yield gen.maybe_future(self.do_shutdown(parent['content']['restart']))
         self.session.send(stream, u'shutdown_reply', content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg(u'shutdown_reply',
@@ -542,14 +558,15 @@ class Kernel(SingletonConfigurable):
         """
         return {'status': 'ok', 'restart': restart}
 
+    @gen.coroutine
     def is_complete_request(self, stream, ident, parent):
         content = parent['content']
         code = content['code']
 
-        reply_content = self.do_is_complete(code)
+        reply_content = yield gen.maybe_future(self.do_is_complete(code))
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, 'is_complete_reply',
-                                           reply_content, parent, ident)
+                                      reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
     def do_is_complete(self, code):

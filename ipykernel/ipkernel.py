@@ -6,12 +6,12 @@ import sys
 from IPython.core import release
 from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
+from tornado import gen
 from traitlets import Instance, Type, Any, List, Bool
 
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
-
 
 try:
     from IPython.core.completer import rectify_completions as _rectify_completions, provisionalcompleter as _provisionalcompleter
@@ -193,10 +193,11 @@ class IPythonKernel(KernelBase):
 
     @execution_count.setter
     def execution_count(self, value):
-        # Ignore the incrememnting done by KernelBase, in favour of our shell's
+        # Ignore the incrementing done by KernelBase, in favour of our shell's
         # execution counter.
         pass
 
+    @gen.coroutine
     def do_execute(self, code, silent, store_history=True,
                    user_expressions=None, allow_stdin=False):
         shell = self.shell # we'll need this a lot here
@@ -204,8 +205,16 @@ class IPythonKernel(KernelBase):
         self._forward_input(allow_stdin)
 
         reply_content = {}
+        if hasattr(shell, 'run_cell_async'):
+            run_cell = shell.run_cell_async
+        else:
+            # older IPython,
+            # use blocking run_cell and wrap it in coroutine
+            @gen.coroutine
+            def run_cell(*args, **kwargs):
+                return shell.run_cell(*args, **kwargs)
         try:
-            res = shell.run_cell(code, store_history=store_history, silent=silent)
+            res = yield run_cell(code, store_history=store_history, silent=silent)
         finally:
             self._restore_input()
 

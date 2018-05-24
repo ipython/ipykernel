@@ -6,8 +6,6 @@ clone_depth: 1
 environment:
 
   matrix:
-    - python: "C:/Python27-x64"
-    - python: "C:/Python27"
     - python: "C:/Python36-x64"
     - python: "C:/Python36"
 

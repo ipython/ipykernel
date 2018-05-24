@@ -16,12 +16,10 @@ name = 'ipykernel'
 import sys
 
 v = sys.version_info
-if v[:2] < (2,7) or (v[0] >= 3 and v[:2] < (3,4)):
-    error = "ERROR: %s requires Python version 2.7 or 3.4 or above." % name
+if v[:2] < (3, 4):
+    error = "ERROR: %s requires Python version 3.4 or above." % name
     print(error, file=sys.stderr)
     sys.exit(1)
-
-PY3 = (sys.version_info[0] >= 3)
 
 #-----------------------------------------------------------------------------
 # get on with it
@@ -81,12 +79,12 @@ setup_args = dict(
     long_description="The IPython kernel for Jupyter",
     platforms="Linux, Mac OS X, Windows",
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+    python_requires='>=3.4',
     install_requires=[
         'ipython>=4.0.0',
         'traitlets>=4.1.0',
         'jupyter_client',
-        'tornado>=4.0',
+        'tornado>=4.2',
     ],
     extras_require={
         'test:python_version=="2.7"': ['mock'],
@@ -106,6 +104,7 @@ setup_args = dict(
         'Programming Language :: Python :: 3',
     ],
 )
+
 
 if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
     from ipykernel.kernelspec import write_kernel_spec, make_ipkernel_cmd, KERNEL_NAME

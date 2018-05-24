@@ -5,7 +5,6 @@ python:
     - 3.6
     - 3.5
     - 3.4
-    - 2.7
 sudo: false
 install:
     - |
@@ -13,7 +12,7 @@ install:
       pip install --pre .
       pip install ipykernel[test] codecov
     - |
-      if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ||  "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
         pip install matplotlib
       fi
     - pip freeze

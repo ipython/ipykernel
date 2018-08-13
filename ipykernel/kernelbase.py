@@ -764,7 +764,6 @@ class Kernel(SingletonConfigurable):
     def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit.
         """
-        # io.rprint("Kernel at_shutdown") # dbg
         if self._shutdown_message is not None:
             self.session.send(self.iopub_socket, self._shutdown_message, ident=self._topic('shutdown'))
             self.log.debug("%s", self._shutdown_message)

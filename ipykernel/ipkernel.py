@@ -214,7 +214,16 @@ class IPythonKernel(KernelBase):
             def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
         try:
-            res = yield run_cell(code, store_history=store_history, silent=silent)
+            # TODO: here we need to hook into the right event loop to run user
+            # code using trio/curio.
+            from IPython.core.interactiveshell import _asyncio_runner
+            if shell.loop_runner is _asyncio_runner:
+                res = yield run_cell(code, store_history=store_history, silent=silent)
+            else:
+                @gen.coroutine
+                def run_cell(*args, **kwargs):
+                    return shell.run_cell(*args, **kwargs)
+                res = yield run_cell(code, store_history=store_history, silent=silent)
         finally:
             self._restore_input()
 

@@ -23,7 +23,6 @@ from signal import signal, default_int_handler, SIGINT
 import zmq
 from tornado import ioloop
 from tornado import gen
-from tornado.locks import Semaphore
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
@@ -38,13 +37,6 @@ from traitlets import (
 from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
-
-from collections import defaultdict
-
-# shell handlers are now coroutine (for async await code), 
-# so we may not want to consume all the message and block while it yields
-_msg_locks = defaultdict(Semaphore)
-
 
 class Kernel(SingletonConfigurable):
 
@@ -241,9 +233,7 @@ class Kernel(SingletonConfigurable):
             self.log.debug("%s: %s", msg_type, msg)
             self.pre_handler_hook()
             try:
-                lock = _msg_locks[msg_type]
-                with (yield lock.acquire()):
-                    yield gen.maybe_future(handler(stream, idents, msg))
+                yield gen.maybe_future(handler(stream, idents, msg))
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)
             finally:
@@ -386,6 +376,7 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def execute_request(self, stream, ident, parent):
         """handle an execute_request"""
+
         try:
             content = parent[u'content']
             code = py3compat.cast_unicode_py2(content[u'code'])

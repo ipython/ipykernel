@@ -643,7 +643,7 @@ class Kernel(SingletonConfigurable):
                 content = content)
 
     def do_clear(self):
-        """DEPRECATED"""
+        """DEPRECATED since 4.0.3"""
         raise NotImplementedError
 
     #---------------------------------------------------------------------------

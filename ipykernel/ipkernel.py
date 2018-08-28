@@ -216,9 +216,16 @@ class IPythonKernel(KernelBase):
         try:
             # TODO: here we need to hook into the right event loop to run user
             # code using trio/curio.
-            from IPython.core.interactiveshell import _asyncio_runner
+            from IPython.core.interactiveshell import _asyncio_runner, ExecutionResult
             if shell.loop_runner is _asyncio_runner:
-                res = yield run_cell(code, store_history=store_history, silent=silent)
+                coro = run_cell(code, store_history=store_history, silent=silent)
+                try:
+                    interactivity = coro.send(None)
+                except StopIteration as exc:
+                    return exc.value
+                if isinstance(interactivity, ExecutionResult):
+                    return interactivity
+                res = yield coro
             else:
                 @gen.coroutine
                 def run_cell(*args, **kwargs):

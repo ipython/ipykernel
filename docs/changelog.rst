@@ -196,7 +196,7 @@ Changes in IPython kernel
 
 - Publish all IO in a thread, via :class:`IOPubThread`.
   This solves the problem of requiring :meth:`sys.stdout.flush` to be called in the notebook to produce output promptly during long-running cells.
-- Remove refrences to outdated IPython guiref in kernel banner.
+- Remove references to outdated IPython guiref in kernel banner.
 - Patch faulthandler to use ``sys.__stderr__`` instead of forwarded ``sys.stderr``,
   which has no fileno when forwarded.
 - Deprecate some vestiges of the Big Split:

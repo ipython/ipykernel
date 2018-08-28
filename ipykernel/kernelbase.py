@@ -82,7 +82,7 @@ class Kernel(SingletonConfigurable):
     # Private interface
 
     _darwin_app_nap = Bool(True,
-        help="""Whether to use appnope for compatiblity with OS X App Nap.
+        help="""Whether to use appnope for compatibility with OS X App Nap.
 
         Only affects OS X >= 10.9.
         """

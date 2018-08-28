@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import matplotlib
 from matplotlib.backends.backend_agg import new_figure_manager, FigureCanvasAgg # analysis: ignore
+from matplotlib import colors
 from matplotlib._pylab_helpers import Gcf
 
 from IPython.core.getipython import get_ipython
@@ -33,7 +34,10 @@ def show(close=None, block=None):
         close = InlineBackend.instance().close_figures
     try:
         for figure_manager in Gcf.get_all_fig_managers():
-            display(figure_manager.canvas.figure)
+            display(
+                figure_manager.canvas.figure,
+                metadata=_fetch_figure_metadata(figure_manager.canvas.figure)
+            )
     finally:
         show._to_draw = []
         # only call close('all') if any to close
@@ -72,7 +76,7 @@ def draw_if_interactive():
 
     if not hasattr(fig, 'show'):
         # Queue up `fig` for display
-        fig.show = lambda *a: display(fig)
+        fig.show = lambda *a: display(fig, metadata=_fetch_figure_metadata(fig))
 
     # If matplotlib was manually set to non-interactive mode, this function
     # should be a no-op (otherwise we'll generate duplicate plots, since a user
@@ -124,7 +128,7 @@ def flush_figures():
         active = set([fm.canvas.figure for fm in Gcf.get_all_fig_managers()])
         for fig in [ fig for fig in show._to_draw if fig in active ]:
             try:
-                display(fig)
+                display(fig, metadata=_fetch_figure_metadata(fig))
             except Exception as e:
                 # safely show traceback if in IPython, else raise
                 ip = get_ipython()
@@ -163,3 +167,30 @@ def _enable_matplotlib_integration():
             ip.events.register('post_run_cell', configure_once)
 
 _enable_matplotlib_integration()
+
+def _fetch_figure_metadata(fig):
+    """Get some metadata to help with displaying a figure."""
+    # determine if a background is needed for legibility
+    if _is_transparent(fig.get_facecolor()):
+        # the background is transparent
+        ticksLight = _is_light([label.get_color()
+                                for axes in fig.axes
+                                for axis in (axes.xaxis, axes.yaxis)
+                                for label in axis.get_ticklabels()])
+        if ticksLight.size and (ticksLight == ticksLight[0]).all():
+            # there are one or more tick labels, all with the same lightness
+            return {'needs_background': 'dark' if ticksLight[0] else 'light'}
+
+    return None
+
+def _is_light(color):
+    """Determines if a color (or each of a sequence of colors) is light (as
+    opposed to dark). Based on ITU BT.601 luminance formula (see
+    https://stackoverflow.com/a/596241)."""
+    rgbaArr = colors.to_rgba_array(color)
+    return rgbaArr[:,:3].dot((.299, .587, .114)) > .5
+
+def _is_transparent(color):
+    """Determine transparency from alpha."""
+    rgba = colors.to_rgba(color)
+    return rgba[3] < .5

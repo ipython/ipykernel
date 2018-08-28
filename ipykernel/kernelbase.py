@@ -23,6 +23,7 @@ from signal import signal, default_int_handler, SIGINT
 import zmq
 from tornado import ioloop
 from tornado import gen
+from tornado.queues import Queue
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
@@ -281,10 +282,18 @@ class Kernel(SingletonConfigurable):
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
 
+        self.msg_queue = Queue()
+
+        async def process_queue():
+            while True:
+                stream, msg = await self.msg_queue.get()
+                await self.dispatch_shell(stream, msg)
+
         def make_dispatcher(stream):
             def dispatcher(msg):
-                return self.dispatch_shell(stream, msg)
+                self.msg_queue.put((stream, msg))
             return dispatcher
+        self.io_loop.add_callback(process_queue)
 
         for s in self.shell_streams:
             s.on_recv(make_dispatcher(s), copy=False)

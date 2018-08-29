@@ -101,6 +101,9 @@ if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
          glob(pjoin('data_kernelspec', '*'))),
     ]
 
+
+setuptools_args['python_requires'] = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*'
+
 extras_require = setuptools_args['extras_require'] = {
     'test:python_version=="2.7"': ['mock'],
     'test': [

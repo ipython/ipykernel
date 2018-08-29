@@ -1,6 +1,20 @@
 Changes in IPython kernel
 =========================
 
+4.9
+---
+
+4.9.0
+*****
+
+`4.9.0 on GitHub <https://github.com/ipython/ipykernel/milestones/4.9>`__
+
+- Flush stdout/stderr in KernelApp before replacing (:ghpull:`314`)
+- Allow preserving stdout and stderr in KernelApp (:ghpull:`315`)
+- Override writable method on OutStream (:ghpull:`316`)
+- Add metadata to help display matplotlib figures legibly (:ghpull:`336`)
+
+
 4.8
 ---
 

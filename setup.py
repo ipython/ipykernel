@@ -31,7 +31,19 @@ from glob import glob
 import os
 import shutil
 
-from distutils.core import setup
+from setuptools import setup
+from setuptools.command.bdist_egg import bdist_egg
+
+
+class bdist_egg_disabled(bdist_egg):
+    """Disabled version of bdist_egg
+
+    Prevents setup.py install from performing setuptools' default easy_install,
+    which it should never ever do.
+    """
+    def run(self):
+        sys.exit("Aborting implicit building of eggs. Use `pip install .` to install from source.")
+
 
 pjoin = os.path.join
 here = os.path.abspath(os.path.dirname(__file__))
@@ -52,20 +64,39 @@ with open(pjoin(here, name, '_version.py')) as f:
 
 
 setup_args = dict(
-    name            = name,
-    version         = version_ns['__version__'],
-    scripts         = glob(pjoin('scripts', '*')),
-    packages        = packages,
-    py_modules      = ['ipykernel_launcher'],
-    package_data    = package_data,
-    description     = "IPython Kernel for Jupyter",
-    author          = 'IPython Development Team',
-    author_email    = 'ipython-dev@scipy.org',
-    url             = 'http://ipython.org',
-    license         = 'BSD',
-    platforms       = "Linux, Mac OS X, Windows",
-    keywords        = ['Interactive', 'Interpreter', 'Shell', 'Web'],
-    classifiers     = [
+    name=name,
+    version=version_ns['__version__'],
+    cmdclass={
+        'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
+    },
+    scripts=glob(pjoin('scripts', '*')),
+    packages=packages,
+    py_modules=['ipykernel_launcher'],
+    package_data=package_data,
+    description="IPython Kernel for Jupyter",
+    author='IPython Development Team',
+    author_email='ipython-dev@scipy.org',
+    url='https://ipython.org',
+    license='BSD',
+    platforms="Linux, Mac OS X, Windows",
+    keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
+    setup_requires=['ipython', 'jupyter_core>=4.2'],
+    install_requires=[
+        'ipython>=4.0.0',
+        'traitlets>=4.1.0',
+        'jupyter_client',
+        'tornado>=4.0',
+    ],
+    extras_require={
+        'test:python_version=="2.7"': ['mock'],
+        'test': [
+            'pytest',
+            'pytest-cov',
+            'nose',  # nose because there are still a few nose.tools imports hanging around
+        ],
+    },
+    classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Intended Audience :: Science/Research',
@@ -75,17 +106,6 @@ setup_args = dict(
         'Programming Language :: Python :: 3',
     ],
 )
-
-if 'develop' in sys.argv or any(a.startswith('bdist') for a in sys.argv):
-    import setuptools
-
-setuptools_args = {}
-install_requires = setuptools_args['install_requires'] = [
-    'ipython>=4.0.0',
-    'traitlets>=4.1.0',
-    'jupyter_client',
-    'tornado>=4.0',
-]
 
 if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
     from ipykernel.kernelspec import write_kernel_spec, make_ipkernel_cmd, KERNEL_NAME
@@ -97,24 +117,12 @@ if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
     write_kernel_spec(dest, overrides={'argv': argv})
 
     setup_args['data_files'] = [
-        (pjoin('share', 'jupyter', 'kernels', KERNEL_NAME),
-         glob(pjoin('data_kernelspec', '*'))),
+        (
+            pjoin('share', 'jupyter', 'kernels', KERNEL_NAME),
+            glob(pjoin('data_kernelspec', '*')),
+        )
     ]
 
-
-setuptools_args['python_requires'] = '>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*'
-
-extras_require = setuptools_args['extras_require'] = {
-    'test:python_version=="2.7"': ['mock'],
-    'test': [
-        'pytest',
-        'pytest-cov',
-        'nose', # nose because there are still a few nose.tools imports hanging around
-    ],
-}
-
-if 'setuptools' in sys.modules:
-    setup_args.update(setuptools_args)
 
 if __name__ == '__main__':
     setup(**setup_args)

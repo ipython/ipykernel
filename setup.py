@@ -78,6 +78,7 @@ setup_args = dict(
     author_email='ipython-dev@scipy.org',
     url='https://ipython.org',
     license='BSD',
+    long_description="The IPython kernel for Jupyter",
     platforms="Linux, Mac OS X, Windows",
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',

@@ -1,6 +1,7 @@
 include COPYING.md
 include CONTRIBUTING.md
 include README.md
+include pyproject.toml
 
 # Documentation
 graft docs

@@ -82,7 +82,6 @@ setup_args = dict(
     platforms="Linux, Mac OS X, Windows",
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
-    setup_requires=['ipython', 'jupyter_core>=4.2'],
     install_requires=[
         'ipython>=4.0.0',
         'traitlets>=4.1.0',

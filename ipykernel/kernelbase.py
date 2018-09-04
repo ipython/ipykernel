@@ -5,12 +5,14 @@
 
 from __future__ import print_function
 
+from datetime import datetime
+from functools import partial
+import logging
+from signal import signal, default_int_handler, SIGINT
 import sys
 import time
-import logging
 import uuid
 
-from datetime import datetime
 try:
     # jupyter_client >= 5, use tz-aware now
     from jupyter_client.session import utcnow as now
@@ -18,11 +20,11 @@ except ImportError:
     # jupyter_client < 5, use local now()
     now = datetime.now
 
-from signal import signal, default_int_handler, SIGINT
 
 import zmq
 from tornado import ioloop
 from tornado import gen
+from tornado.queues import Queue
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
@@ -31,7 +33,8 @@ from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type, string_types
 from ipykernel.jsonutil import json_clean
 from traitlets import (
-    Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool, observe, default
+    Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
+    observe, default
 )
 
 from jupyter_client.session import Session
@@ -275,19 +278,45 @@ class Kernel(SingletonConfigurable):
         self.post_handler_hook()
         self.log.info("exiting eventloop")
 
+    @gen.coroutine
+    def dispatch_queue(self):
+        """Coroutine to preserve order of message execution
+
+        Ensures that only one message is processing at a time,
+        even when the handler is async
+        """
+
+        while True:
+            # get the next dispatch call
+            dispatch, args = yield self.msg_queue.get()
+            # run it and wait for it to finish
+            yield gen.maybe_future(dispatch(*args))
+
+
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
-        if self.control_stream:
-            self.control_stream.on_recv(self.dispatch_control, copy=False)
+        self.msg_queue = Queue()
+        self.io_loop.add_callback(self.dispatch_queue)
 
-        def make_dispatcher(stream):
-            def dispatcher(msg):
-                return self.dispatch_shell(stream, msg)
-            return dispatcher
+        def schedule_dispatch(dispatch, *args):
+            """schedule a message for dispatch"""
+            # via loop.add_callback to ensure everything gets scheduled
+            self.io_loop.add_callback(
+                lambda: self.msg_queue.put((dispatch, args))
+            )
+
+        if self.control_stream:
+            self.control_stream.on_recv(
+                partial(schedule_dispatch, self.dispatch_control),
+                copy=False,
+            )
 
         for s in self.shell_streams:
-            s.on_recv(make_dispatcher(s), copy=False)
+            s.on_recv(
+                partial(schedule_dispatch, self.dispatch_shell, s),
+                copy=False,
+            )
 
         # publish idle status
         self._publish_status('starting')

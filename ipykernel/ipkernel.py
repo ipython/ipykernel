@@ -1,9 +1,11 @@
 """The IPython kernel implementation"""
 
+import asyncio
 import getpass
 import sys
 
 from IPython.core import release
+from IPython.core.interactiveshell import ExecutionResult
 from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from tornado import gen
@@ -12,6 +14,11 @@ from traitlets import Instance, Type, Any, List, Bool
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
+
+try:
+    from IPython.core.interactiveshell import _asyncio_runner
+except ImportError:
+    _asyncio_runner = None
 
 try:
     from IPython.core.completer import rectify_completions as _rectify_completions, provisionalcompleter as _provisionalcompleter
@@ -214,23 +221,38 @@ class IPythonKernel(KernelBase):
             def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
         try:
-            # TODO: here we need to hook into the right event loop to run user
-            # code using trio/curio.
-            from IPython.core.interactiveshell import _asyncio_runner, ExecutionResult
-            if shell.loop_runner is _asyncio_runner:
+            try:
+                from IPython.core.interactiveshell import _asyncio_runner
+            except ImportError:
+                _asyncio_runner = None
+
+            # default case: runner is asyncio and asyncio is already running
+            # TODO: this should check every case for "are we inside the runner",
+            # not just asyncio
+            if (
+                _asyncio_runner
+                and shell.loop_runner is _asyncio_runner
+                and asyncio.get_event_loop().is_running()
+            ):
                 coro = run_cell(code, store_history=store_history, silent=silent)
+                # check interactivity
                 try:
-                    interactivity = coro.send(None)
+                    res_or_interactivity = coro.send(None)
                 except StopIteration as exc:
-                    return exc.value
-                if isinstance(interactivity, ExecutionResult):
-                    return interactivity
-                res = yield coro
+                    res = exc.value
+                else:
+                    # if code was not async, sending `None` was actually executing the code.
+                    if isinstance(res_or_interactivity, ExecutionResult):
+                        res = res_or_interactivity
+                    else:
+                        # this is where actual async execution happens
+                        res = yield coro
             else:
-                @gen.coroutine
-                def run_cell(*args, **kwargs):
-                    return shell.run_cell(*args, **kwargs)
-                res = yield run_cell(code, store_history=store_history, silent=silent)
+                # runner isn't already running,
+                # make synchronous call,
+                # letting shell dispatch to loop runners
+                res = shell.run_cell(code, store_history=store_history, silent=silent)
+
         finally:
             self._restore_input()
 

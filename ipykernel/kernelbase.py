@@ -42,6 +42,19 @@ from ._version import kernel_protocol_version
 
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
+ABORT_PRIORITY = 20
+
+class _MessageEvent(tuple):
+    """class for priority message events
+
+    ensures that comparison only invokes the priority entry,
+    not comparing the contents of the messages
+    """
+    def __eq__(self, other):
+        return self[:2] == other[:2]
+
+    def __lt__(self, other):
+        return self[:2] < other[:2]
 
 
 class Kernel(SingletonConfigurable):
@@ -155,7 +168,7 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def dispatch_control(self, msg):
         """dispatch control requests"""
-        idents,msg = self.session.feed_identities(msg, copy=False)
+        idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
         except:
@@ -167,6 +180,10 @@ class Kernel(SingletonConfigurable):
         # Set the parent message for side effects.
         self.set_parent(idents, msg)
         self._publish_status(u'busy')
+        if self._aborting:
+            self._send_abort_reply(self.control_stream, msg, idents)
+            self._publish_status(u'idle')
+            return
 
         header = msg['header']
         msg_type = header['msg_type']
@@ -194,12 +211,7 @@ class Kernel(SingletonConfigurable):
             msg_type = msg['header']['msg_type']
             # is it safe to assume a msg_id will not be resubmitted?
             self.aborted.remove(msg_id)
-            reply_type = msg_type.split('_')[0] + '_reply'
-            status = {'status' : 'aborted'}
-            md = {'engine' : self.ident}
-            md.update(status)
-            self.session.send(stream, reply_type, metadata=md,
-                        content=status, parent=msg, ident=idents)
+            self._send_abort_reply(stream, msg, idents)
             return False
         return True
 
@@ -210,7 +222,7 @@ class Kernel(SingletonConfigurable):
         if self.control_stream:
             self.control_stream.flush()
 
-        idents,msg = self.session.feed_identities(msg, copy=False)
+        idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
         except:
@@ -220,6 +232,11 @@ class Kernel(SingletonConfigurable):
         # Set the parent message for side effects.
         self.set_parent(idents, msg)
         self._publish_status(u'busy')
+
+        if self._aborting:
+            self._send_abort_reply(stream, msg, idents)
+            self._publish_status(u'idle')
+            return
 
         msg_type = msg['header']['msg_type']
 
@@ -320,13 +337,12 @@ class Kernel(SingletonConfigurable):
         Returns None if no message was handled.
         """
         if wait:
-            get = self.msg_queue.get
+            priority, t, dispatch, args = yield self.msg_queue.get()
         else:
-            get = self.msg_queue.get_nowait
-        try:
-            priority, dispatch, args = yield get()
-        except QueueEmpty:
-            return
+            try:
+                priority, t, dispatch, args = self.msg_queue.get_nowait()
+            except QueueEmpty:
+                return None
         yield gen.maybe_future(dispatch(*args))
 
     @gen.coroutine
@@ -344,42 +360,32 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.exception("Error in message handler")
 
+    def schedule_dispatch(self, priority, dispatch, *args):
+        """schedule a message for dispatch"""
+        # via loop.add_callback to ensure everything gets scheduled
+        # on the eventloop
+        self.io_loop.add_callback(
+            lambda: self.msg_queue.put(
+                _MessageEvent((
+                    priority,
+                    self.io_loop.time(),
+                    dispatch,
+                    args,
+                    ))
+                )
+        )
+
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
         self.msg_queue = PriorityQueue()
         self.io_loop.add_callback(self.dispatch_queue)
 
-        class MessageEvent(tuple):
-            """class for priority message events
-
-            ensures that comparison only invokes the priority entry,
-            not comparing the contents of the messages
-            """
-            def __eq__(self, other):
-                return self[0] == other[0]
-
-            def __lt__(self, other):
-                return self[0] < other[0]
-
-        def schedule_dispatch(priority, dispatch, *args):
-            """schedule a message for dispatch"""
-            # via loop.add_callback to ensure everything gets scheduled
-            # on the eventloop
-            self.io_loop.add_callback(
-                lambda: self.msg_queue.put(
-                    MessageEvent((
-                        priority,
-                        dispatch,
-                        args,
-                        ))
-                    )
-            )
 
         if self.control_stream:
             self.control_stream.on_recv(
                 partial(
-                    schedule_dispatch,
+                    self.schedule_dispatch,
                     CONTROL_PRIORITY,
                     self.dispatch_control,
                 ),
@@ -391,7 +397,7 @@ class Kernel(SingletonConfigurable):
                 continue
             s.on_recv(
                 partial(
-                    schedule_dispatch,
+                    self.schedule_dispatch,
                     SHELL_PRIORITY,
                     self.dispatch_shell,
                     s,
@@ -528,7 +534,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", reply_msg)
 
         if not silent and reply_msg['content']['status'] == u'error' and stop_on_error:
-            self._abort_queues()
+            yield self._abort_queues()
 
     def do_execute(self, code, silent, store_history=True,
                    user_expressions=None, allow_stdin=False):
@@ -714,7 +720,7 @@ class Kernel(SingletonConfigurable):
 
     def abort_request(self, stream, ident, parent):
         """abort a specific msg by id"""
-        self.log.warning("abort_request is deprecated in kernel_base. It os only part of IPython parallel")
+        self.log.warning("abort_request is deprecated in kernel_base. It is only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
         if isinstance(msg_ids, string_types):
             msg_ids = [msg_ids]
@@ -730,7 +736,7 @@ class Kernel(SingletonConfigurable):
 
     def clear_request(self, stream, idents, parent):
         """Clear our namespace."""
-        self.log.warning("clear_request is deprecated in kernel_base. It os only part of IPython parallel")
+        self.log.warning("clear_request is deprecated in kernel_base. It is only part of IPython parallel")
         content = self.do_clear()
         self.session.send(stream, 'clear_reply', ident=idents, parent=parent,
                 content = content)
@@ -749,35 +755,38 @@ class Kernel(SingletonConfigurable):
 
         return py3compat.cast_bytes("%s.%s" % (base, topic))
 
+    _aborting = Bool(False)
+
+    @gen.coroutine
     def _abort_queues(self):
         for stream in self.shell_streams:
-            if stream:
-                self._abort_queue(stream)
+            stream.flush()
+        self._aborting = True
 
-    def _abort_queue(self, stream):
-        poller = zmq.Poller()
-        poller.register(stream.socket, zmq.POLLIN)
-        while True:
-            idents,msg = self.session.recv(stream, zmq.NOBLOCK, content=True)
-            if msg is None:
-                return
+        self.schedule_dispatch(
+            ABORT_PRIORITY,
+            self._dispatch_abort,
+        )
 
-            self.log.info("Aborting:")
-            self.log.info("%s", msg)
-            msg_type = msg['header']['msg_type']
-            reply_type = msg_type.split('_')[0] + '_reply'
+    @gen.coroutine
+    def _dispatch_abort(self):
+        self.log.info("Finishing abort")
+        yield gen.sleep(0.05)
+        self._aborting = False
 
-            status = {'status' : 'aborted'}
-            md = {'engine' : self.ident}
-            md.update(status)
-            self._publish_status('busy', parent=msg)
-            reply_msg = self.session.send(stream, reply_type, metadata=md,
-                        content=status, parent=msg, ident=idents)
-            self._publish_status('idle', parent=msg)
-            self.log.debug("%s", reply_msg)
-            # We need to wait a bit for requests to come in. This can probably
-            # be set shorter for true asynchronous clients.
-            poller.poll(50)
+    @gen.coroutine
+    def _send_abort_reply(self, stream, msg, idents):
+        """Send a reply to an aborted request"""
+        self.log.info("Aborting:")
+        self.log.info("%s", msg)
+        reply_type = msg['header']['msg_type'].rsplit('_', 1)[0] + '_reply'
+        status = {'status': 'aborted'}
+        md = {'engine': self.ident}
+        md.update(status)
+        self.session.send(
+            stream, reply_type, metadata=md,
+            content=status, parent=msg, ident=idents,
+        )
 
     def _no_raw_input(self):
         """Raise StdinNotImplentedError if active frontend doesn't support

@@ -4,6 +4,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from functools import partial
 import os
 import sys
 import platform
@@ -14,12 +15,14 @@ from distutils.version import LooseVersion as V
 from traitlets.config.application import Application
 from IPython.utils import io
 
+
 def _use_appnope():
     """Should we use appnope for dealing with OS X app nap?
 
     Checks if we are on OS X 10.9 or greater.
     """
     return sys.platform == 'darwin' and V(platform.mac_ver()[0]) >= V('10.9')
+
 
 def _notify_stream_qt(kernel, stream):
 
@@ -34,9 +37,15 @@ def _notify_stream_qt(kernel, stream):
             yield
 
     def process_stream_events():
-        while stream.getsockopt(zmq.EVENTS) & zmq.POLLIN:
-            with context():
-                kernel.do_one_iteration()
+        """fall back to main loop when there's a socket event"""
+        # call flush to ensure that the stream doesn't lose events
+        # due to our consuming of the edge-triggered FD
+        # flush returns the number of events consumed.
+        # if there were any, wake it up
+        if stream.flush(limit=1):
+            kernel.log.info("Socket event!")
+            notifier.setEnabled(False)
+            kernel.app.quit()
 
     fd = stream.getsockopt(zmq.FD)
     notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
@@ -88,6 +97,7 @@ def register_integration(*toolkitnames):
             to register a function to be called on exit
             """
             func.exit_hook = exit_func
+            return exit_func
 
         func.exit = exit_decorator
         return func
@@ -122,11 +132,6 @@ def loop_qt4(kernel):
     _loop_qt(kernel.app)
 
 
-@loop_qt4.exit
-def loop_qt4_exit(kernel):
-    kernel.app.exit()
-
-
 @register_integration('qt', 'qt5')
 def loop_qt5(kernel):
     """Start a kernel with PyQt5 event loop integration."""
@@ -134,8 +139,10 @@ def loop_qt5(kernel):
     return loop_qt4(kernel)
 
 
+# exit and watch are the same for qt 4 and 5
+@loop_qt4.exit
 @loop_qt5.exit
-def loop_qt5_exit(kernel):
+def loop_qt_exit(kernel):
     kernel.app.exit()
 
 

@@ -43,7 +43,6 @@ def _notify_stream_qt(kernel, stream):
         # flush returns the number of events consumed.
         # if there were any, wake it up
         if stream.flush(limit=1):
-            kernel.log.info("Socket event!")
             notifier.setEnabled(False)
             kernel.app.quit()
 
@@ -225,7 +224,6 @@ def loop_tk(kernel):
     def process_stream_events(stream, *a, **kw):
         """fall back to main loop when there's a socket event"""
         if stream.flush(limit=1):
-            kernel.log.info("Socket event!")
             app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
             app.quit()
 
@@ -330,11 +328,24 @@ def loop_asyncio(kernel):
     if loop.is_running():
         return
 
-    def kernel_handler():
-        loop.call_soon(kernel.do_one_iteration)
-        loop.call_later(kernel._poll_interval, kernel_handler)
+    if loop.is_closed():
+        # main loop is closed, create a new one
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    loop._should_close = False
 
-    loop.call_soon(kernel_handler)
+    # pause eventloop when there's an event on a zmq socket
+    def process_stream_events(stream):
+        """fall back to main loop when there's a socket event"""
+        if stream.flush(limit=1):
+            loop.stop()
+
+    for stream in kernel.shell_streams:
+        fd = stream.getsockopt(zmq.FD)
+        notifier = partial(process_stream_events, stream)
+        loop.add_reader(fd, notifier)
+        loop.call_soon(notifier)
+
     while True:
         error = None
         try:
@@ -343,9 +354,8 @@ def loop_asyncio(kernel):
             continue
         except Exception as e:
             error = e
-        if hasattr(loop, 'shutdown_asyncgens'):
-            loop.run_until_complete(loop.shutdown_asyncgens())
-        loop.close()
+        if loop._should_close:
+            loop.close()
         if error is not None:
             raise error
         break
@@ -356,8 +366,20 @@ def loop_asyncio_exit(kernel):
     """Exit hook for asyncio"""
     import asyncio
     loop = asyncio.get_event_loop()
+
+    @asyncio.coroutine
+    def close_loop():
+        if hasattr(loop, 'shutdown_asyncgens'):
+            yield from loop.shutdown_asyncgens()
+        loop._should_close = True
+        loop.stop()
+
     if loop.is_running():
-        loop.call_soon(loop.stop)
+        close_loop()
+
+    elif not loop.is_closed():
+        loop.run_until_complete(close_loop)
+        loop.close()
 
 
 def enable_gui(gui, kernel=None):

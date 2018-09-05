@@ -24,7 +24,7 @@ except ImportError:
 import zmq
 from tornado import ioloop
 from tornado import gen
-from tornado.queues import Queue
+from tornado.queues import PriorityQueue
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
@@ -288,33 +288,54 @@ class Kernel(SingletonConfigurable):
 
         while True:
             # get the next dispatch call
-            dispatch, args = yield self.msg_queue.get()
             # run it and wait for it to finish
-            yield gen.maybe_future(dispatch(*args))
-
+            try:
+                priority, dispatch, args = yield self.msg_queue.get()
+                yield gen.maybe_future(dispatch(*args))
+            except Exception:
+                self.log.exception("Error in message handler")
 
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue = Queue()
+        self.msg_queue = PriorityQueue()
         self.io_loop.add_callback(self.dispatch_queue)
 
-        def schedule_dispatch(dispatch, *args):
+        class MessageEvent(tuple):
+            """class for priority message events
+
+            ensures that comparison only invokes the priority entry,
+            not comparing the contents of the messages
+            """
+            def __eq__(self, other):
+                return self[0] == other[0]
+
+            def __lt__(self, other):
+                return self[0] < other[0]
+
+        def schedule_dispatch(priority, dispatch, *args):
             """schedule a message for dispatch"""
             # via loop.add_callback to ensure everything gets scheduled
+            # on the eventloop
             self.io_loop.add_callback(
-                lambda: self.msg_queue.put((dispatch, args))
+                lambda: self.msg_queue.put(
+                    MessageEvent((
+                        priority,
+                        dispatch,
+                        args,
+                        ))
+                    )
             )
 
         if self.control_stream:
             self.control_stream.on_recv(
-                partial(schedule_dispatch, self.dispatch_control),
+                partial(schedule_dispatch, 1, self.dispatch_control),
                 copy=False,
             )
 
         for s in self.shell_streams:
             s.on_recv(
-                partial(schedule_dispatch, self.dispatch_shell, s),
+                partial(schedule_dispatch, 10, self.dispatch_shell, s),
                 copy=False,
             )
 

@@ -12,7 +12,6 @@ from signal import signal, default_int_handler, SIGINT
 import sys
 import time
 import uuid
-import warnings
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -23,7 +22,7 @@ except ImportError:
 
 from tornado import ioloop
 from tornado import gen
-from tornado.queues import PriorityQueue
+from tornado.queues import PriorityQueue, QueueEmpty
 import zmq
 from zmq.eventloop.zmqstream import ZMQStream
 
@@ -40,6 +39,10 @@ from traitlets import (
 from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
+
+CONTROL_PRIORITY = 1
+SHELL_PRIORITY = 10
+
 
 class Kernel(SingletonConfigurable):
 
@@ -292,19 +295,52 @@ class Kernel(SingletonConfigurable):
         schedule_next()
 
     @gen.coroutine
+    def do_one_iteration(self):
+        """Process a single shell message
+
+        Any pending control messages will be flushed as well
+
+        .. versionchanged:: 5
+            This is now a coroutine
+        """
+        # flush messages off of shell streams into the message queue
+        for stream in self.shell_streams:
+            stream.flush()
+        # process all messages higher priority than shell (control),
+        # and at most one shell message per iteration
+        priority = 0
+        while priority is not None and priority < SHELL_PRIORITY:
+            priority = yield self.process_one(wait=False)
+
+    @gen.coroutine
+    def process_one(self, wait=True):
+        """Process one request
+
+        Returns priority of the message handled.
+        Returns None if no message was handled.
+        """
+        if wait:
+            get = self.msg_queue.get
+        else:
+            get = self.msg_queue.get_nowait
+        try:
+            priority, dispatch, args = yield get()
+        except QueueEmpty:
+            return
+        yield gen.maybe_future(dispatch(*args))
+
+    @gen.coroutine
     def dispatch_queue(self):
-        """Coroutine to preserve order of message execution
+        """Coroutine to preserve order of message handling
 
         Ensures that only one message is processing at a time,
         even when the handler is async
         """
 
         while True:
-            # get the next dispatch call
-            # run it and wait for it to finish
+            # receive the next message and handle it
             try:
-                priority, dispatch, args = yield self.msg_queue.get()
-                yield gen.maybe_future(dispatch(*args))
+                yield self.process_one()
             except Exception:
                 self.log.exception("Error in message handler")
 
@@ -342,27 +378,30 @@ class Kernel(SingletonConfigurable):
 
         if self.control_stream:
             self.control_stream.on_recv(
-                partial(schedule_dispatch, 1, self.dispatch_control),
+                partial(
+                    schedule_dispatch,
+                    CONTROL_PRIORITY,
+                    self.dispatch_control,
+                ),
                 copy=False,
             )
 
         for s in self.shell_streams:
+            if s is self.control_stream:
+                continue
             s.on_recv(
-                partial(schedule_dispatch, 10, self.dispatch_shell, s),
+                partial(
+                    schedule_dispatch,
+                    SHELL_PRIORITY,
+                    self.dispatch_shell,
+                    s,
+                ),
                 copy=False,
             )
 
         # publish idle status
         self._publish_status('starting')
 
-    def do_one_iteration(self):
-        """DEPRECATED in ipykernel 5. Does nothing."""
-        warnings.warn(
-            "Kernel.do_one_iteration is deprecated in ipykernel 5."
-            " Message processing can no longer be done in a blocking manner.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.

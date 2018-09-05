@@ -378,6 +378,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         kernel_factory = self.kernel_class.instance
 
         kernel = kernel_factory(parent=self, session=self.session,
+                                control_stream=control_stream,
                                 shell_streams=[shell_stream, control_stream],
                                 iopub_thread=self.iopub_thread,
                                 iopub_socket=self.iopub_socket,

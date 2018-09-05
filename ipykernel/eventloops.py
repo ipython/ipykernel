@@ -220,35 +220,32 @@ def loop_wx_exit(kernel):
 def loop_tk(kernel):
     """Start a kernel with the Tk event loop."""
 
-    try:
-        from tkinter import Tk  # Py 3
-    except ImportError:
-        from Tkinter import Tk  # Py 2
-    doi = kernel.do_one_iteration
-    # Tk uses milliseconds
-    poll_interval = int(1000*kernel._poll_interval)
+    from tkinter import Tk, READABLE
+
+    def process_stream_events(stream, *a, **kw):
+        """fall back to main loop when there's a socket event"""
+        if stream.flush(limit=1):
+            kernel.log.info("Socket event!")
+            app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
+            app.quit()
+
     # For Tkinter, we create a Tk object and call its withdraw method.
-    class Timer(object):
-        def __init__(self, func):
-            self.app = Tk()
-            self.app.withdraw()
-            self.func = func
+    kernel.app = app = Tk()
+    kernel.app.withdraw()
+    for stream in kernel.shell_streams:
+        notifier = partial(process_stream_events, stream)
+        # seems to be needed for tk
+        notifier.__name__ = 'notifier'
+        app.tk.createfilehandler(stream.getsockopt(zmq.FD), READABLE, notifier)
+        # schedule initial call after start
+        app.after(0, notifier)
 
-        def on_timer(self):
-            self.func()
-            self.app.after(poll_interval, self.on_timer)
-
-        def start(self):
-            self.on_timer()  # Call it once to get things going.
-            self.app.mainloop()
-
-    kernel.timer = Timer(doi)
-    kernel.timer.start()
+    app.mainloop()
 
 
 @loop_tk.exit
 def loop_tk_exit(kernel):
-    kernel.timer.app.destroy()
+    kernel.app.destroy()
 
 
 @register_integration('gtk')

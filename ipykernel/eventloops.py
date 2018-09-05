@@ -169,9 +169,15 @@ def loop_wx(kernel):
         from appnope import nope
         nope()
 
-    doi = kernel.do_one_iteration
      # Wx uses milliseconds
-    poll_interval = int(1000*kernel._poll_interval)
+    poll_interval = int(1000 * kernel._poll_interval)
+
+    def wake():
+        """wake from wx"""
+        for stream in kernel.shell_streams:
+            if stream.flush(limit=1):
+                kernel.app.ExitMainLoop()
+                return
 
     # We have to put the wx.Timer in a wx.Frame for it to fire properly.
     # We make the Frame hidden when we create it in the main app below.
@@ -188,16 +194,20 @@ def loop_wx(kernel):
             self.func()
 
     # We need a custom wx.App to create our Frame subclass that has the
-    # wx.Timer to drive the ZMQ event loop.
+    # wx.Timer to defer back to the tornado event loop.
     class IPWxApp(wx.App):
         def OnInit(self):
-            self.frame = TimerFrame(doi)
+            self.frame = TimerFrame(wake)
             self.frame.Show(False)
             return True
 
     # The redirect=False here makes sure that wx doesn't replace
     # sys.stdout/stderr with its own classes.
-    kernel.app = IPWxApp(redirect=False)
+    if not (
+        getattr(kernel, 'app', None)
+        and isinstance(kernel.app, wx.App)
+    ):
+        kernel.app = IPWxApp(redirect=False)
 
     # The import of wx on Linux sets the handler for signal.SIGINT
     # to 0.  This is a bug in wx or gtk.  We fix by just setting it

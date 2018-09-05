@@ -12,6 +12,7 @@ from signal import signal, default_int_handler, SIGINT
 import sys
 import time
 import uuid
+import warnings
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -20,11 +21,10 @@ except ImportError:
     # jupyter_client < 5, use local now()
     now = datetime.now
 
-
-import zmq
 from tornado import ioloop
 from tornado import gen
 from tornado.queues import PriorityQueue
+import zmq
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
@@ -106,7 +106,7 @@ class Kernel(SingletonConfigurable):
     # Frequency of the kernel's event loop.
     # Units are in seconds, kernel subclasses for GUI toolkits may need to
     # adapt to milliseconds.
-    _poll_interval = Float(0.05).tag(config=True)
+    _poll_interval = Float(0.01).tag(config=True)
 
     # If the shutdown was requested over the network, we leave here the
     # necessary reply message so it can be sent by our registered atexit
@@ -257,26 +257,39 @@ class Kernel(SingletonConfigurable):
 
     def enter_eventloop(self):
         """enter eventloop"""
-        self.log.info("entering eventloop %s", self.eventloop)
-        for stream in self.shell_streams:
-            # flush any pending replies,
-            # which may be skipped by entering the eventloop
-            stream.flush(zmq.POLLOUT)
-        # restore default_int_handler
-        self.pre_handler_hook()
-        while self.eventloop is not None:
+        self.log.info("Entering eventloop %s", self.eventloop)
+        # record handle, so we can check when this changes
+        eventloop = self.eventloop
+        def advance_eventloop():
+            # check if eventloop changed:
+            if self.eventloop is not eventloop:
+                self.log.info("exiting eventloop %s", eventloop)
+                return
+            if self.msg_queue.qsize():
+                self.log.debug("Delaying eventloop due to waiting messages")
+                # still messages to process, make the eventloop wait
+                schedule_next()
+                return
+            self.log.debug("Advancing eventloop %s", eventloop)
             try:
-                self.eventloop(self)
+                eventloop(self)
             except KeyboardInterrupt:
                 # Ctrl-C shouldn't crash the kernel
                 self.log.error("KeyboardInterrupt caught in kernel")
-                continue
-            else:
-                # eventloop exited cleanly, this means we should stop (right?)
-                self.eventloop = None
-                break
-        self.post_handler_hook()
-        self.log.info("exiting eventloop")
+                pass
+            if self.eventloop is eventloop:
+                # schedule advance again
+                schedule_next()
+
+        def schedule_next():
+            """Schedule the next advance of the eventloop"""
+            # flush the eventloop every so often,
+            # giving us a chance to handle messages in the meantime
+            self.log.debug("Scheduling eventloop advance")
+            self.io_loop.call_later(1, advance_eventloop)
+
+        # begin polling the eventloop
+        schedule_next()
 
     @gen.coroutine
     def dispatch_queue(self):
@@ -343,13 +356,13 @@ class Kernel(SingletonConfigurable):
         self._publish_status('starting')
 
     def do_one_iteration(self):
-        """step eventloop just once"""
-        if self.control_stream:
-            self.control_stream.flush()
-        for stream in self.shell_streams:
-            # handle at most one request per iteration
-            stream.flush(zmq.POLLIN, 1)
-            stream.flush(zmq.POLLOUT)
+        """DEPRECATED in ipykernel 5. Does nothing."""
+        warnings.warn(
+            "Kernel.do_one_iteration is deprecated in ipykernel 5."
+            " Message processing can no longer be done in a blocking manner.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.

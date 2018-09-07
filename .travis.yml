@@ -30,7 +30,7 @@ install:
       else
         SPEC="ipython==$IPYTHON"
       fi
-      pip install --pre "$SPEC"
+      pip install --upgrade --pre "$SPEC"
     fi
   - pip freeze
 script:

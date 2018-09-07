@@ -1,26 +1,28 @@
 language: python
 python:
-    - "nightly"
-    - "3.7-dev"
-    - 3.6
-    - 3.5
-    - 3.4
+  - "nightly"
+  - "3.7-dev"
+  - 3.6
+  - 3.5
+  - 3.4
 sudo: false
 install:
-    - |
-      pip install --upgrade setuptools pip
-      pip install --pre .
-      pip install ipykernel[test] codecov
-    - |
-      if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
-        pip install matplotlib
-      fi
-    - pip freeze
+  - |
+    # pip install
+    pip install --upgrade setuptools pip
+    pip install --pre .
+    pip install ipykernel[test] codecov
+  - |
+    # install matplotlib
+    if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then
+      pip install matplotlib
+    fi
+  - pip freeze
 script:
-    - jupyter kernelspec list
-    - pytest --cov ipykernel --durations 10 -v ipykernel
+  - jupyter kernelspec list
+  - pytest --cov ipykernel --durations 10 -v ipykernel
 after_success:
-    - codecov
+  - codecov
 matrix:
-    allow_failures:
-        - python: "nightly"
+  allow_failures:
+    - python: "nightly"

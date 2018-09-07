@@ -1,11 +1,13 @@
 """The IPython kernel implementation"""
 
 import asyncio
+from contextlib import contextmanager
+from functools import partial
 import getpass
+import signal
 import sys
 
 from IPython.core import release
-from IPython.core.interactiveshell import ExecutionResult
 from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from tornado import gen
@@ -204,6 +206,53 @@ class IPythonKernel(KernelBase):
         # execution counter.
         pass
 
+    @contextmanager
+    def _cancel_on_sigint(self, future):
+        """ContextManager for capturing SIGINT and cancelling a future
+
+        SIGINT raises in the event loop when running async code,
+        but we want it to halt a coroutine.
+
+        Ideally, it would raise KeyboardInterrupt,
+        but this turns it into a CancelledError.
+        At least it gets a decent traceback to the user.
+        """
+        sigint_future = asyncio.Future()
+
+        # whichever future finishes first,
+        # cancel the other one
+        def cancel_unless_done(f, _ignored):
+            if f.cancelled() or f.done():
+                return
+            f.cancel()
+
+        # when sigint finishes,
+        # abort the coroutine with CancelledError
+        sigint_future.add_done_callback(
+            partial(cancel_unless_done, future)
+        )
+        # when the main future finishes,
+        # stop watching for SIGINT events
+        future.add_done_callback(
+            partial(cancel_unless_done, sigint_future)
+        )
+
+        def handle_sigint(*args):
+            def set_sigint_result():
+                if sigint_future.cancelled() or sigint_future.done():
+                    return
+                sigint_future.set_result(1)
+            # use add_callback for thread safety
+            self.io_loop.add_callback(set_sigint_result)
+
+        # set the custom sigint hander during this context
+        save_sigint = signal.signal(signal.SIGINT, handle_sigint)
+        try:
+            yield
+        finally:
+            # restore the previous sigint handler
+            signal.signal(signal.SIGINT, save_sigint)
+
     @gen.coroutine
     def do_execute(self, code, silent, store_history=True,
                    user_expressions=None, allow_stdin=False):
@@ -223,10 +272,6 @@ class IPythonKernel(KernelBase):
             def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
         try:
-            try:
-                from IPython.core.interactiveshell import _asyncio_runner
-            except ImportError:
-                _asyncio_runner = None
 
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
@@ -237,13 +282,16 @@ class IPythonKernel(KernelBase):
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
             ):
-                res = yield run_cell(code, store_history=store_history, silent=silent)
+                coro = run_cell(code, store_history=store_history, silent=silent)
+                coro_future = asyncio.ensure_future(coro)
+
+                with self._cancel_on_sigint(coro_future):
+                    res = yield coro_future
             else:
                 # runner isn't already running,
                 # make synchronous call,
                 # letting shell dispatch to loop runners
                 res = shell.run_cell(code, store_history=store_history, silent=silent)
-
         finally:
             self._restore_input()
 

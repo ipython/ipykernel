@@ -1,9 +1,10 @@
 """Test eventloop integration"""
 
 import sys
-import time
 
-import IPython.testing.decorators as dec
+import pytest
+import tornado
+
 from .utils import flush_channels, start_new_kernel, execute
 
 KC = KM = None
@@ -27,7 +28,8 @@ async_func()
 """
 
 
-@dec.skipif(sys.version_info < (3, 5), "async/await syntax required")
+@pytest.mark.skipif(sys.version_info < (3, 5), reason="async/await syntax required")
+@pytest.mark.skipif(tornado.version_info < (5,), reason="only relevant on tornado 5")
 def test_asyncio_interrupt():
     flush_channels(KC)
     msg_id, content = execute('%gui asyncio', KC)

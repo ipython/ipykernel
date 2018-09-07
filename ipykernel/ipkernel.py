@@ -212,9 +212,11 @@ class IPythonKernel(KernelBase):
         self._forward_input(allow_stdin)
 
         reply_content = {}
-        if hasattr(shell, 'run_cell_async'):
+        if hasattr(shell, 'run_cell_async') and hasattr(shell, 'should_run_async'):
             run_cell = shell.run_cell_async
+            should_run_async = shell.should_run_async
         else:
+            should_run_async = lambda cell: False
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
             @gen.coroutine
@@ -231,22 +233,11 @@ class IPythonKernel(KernelBase):
             # not just asyncio
             if (
                 _asyncio_runner
+                and should_run_async(code)
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
             ):
-                coro = run_cell(code, store_history=store_history, silent=silent)
-                # check interactivity
-                try:
-                    res_or_interactivity = coro.send(None)
-                except StopIteration as exc:
-                    res = exc.value
-                else:
-                    # if code was not async, sending `None` was actually executing the code.
-                    if isinstance(res_or_interactivity, ExecutionResult):
-                        res = res_or_interactivity
-                    else:
-                        # this is where actual async execution happens
-                        res = yield coro
+                res = yield run_cell(code, store_history=store_history, silent=silent)
             else:
                 # runner isn't already running,
                 # make synchronous call,

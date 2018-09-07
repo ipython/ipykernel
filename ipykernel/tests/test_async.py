@@ -70,6 +70,6 @@ def test_async_interrupt(asynclib, request):
     KM.interrupt_kernel()
     reply = KC.get_shell_msg()["content"]
     assert reply["status"] == "error", reply
-    assert reply["ename"] == "CancelledError"
+    assert reply["ename"] in {"CancelledError", "KeyboardInterrupt"}
 
     flush_channels(KC)

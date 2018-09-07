@@ -22,6 +22,16 @@ install:
     if [[ ! -z "$TORNADO" ]]; then
       pip install tornado=="$TORNADO"
     fi
+  - |
+    # pin IPython
+    if [[ ! -z "$IPYTHON" ]]; then
+      if [[ "$IPYTHON" == "master" ]]; then
+        SPEC=git+https://github.com/ipython/ipython#egg=ipython
+      else
+        SPEC="ipython==$IPYTHON"
+      fi
+      pip install --pre "$SPEC"
+    fi
   - pip freeze
 script:
   - jupyter kernelspec list
@@ -33,5 +43,9 @@ matrix:
     - python: 3.5
       env:
         - TORNADO="4.5.*"
+        - IPYTHON=master
+    - python: 3.6
+      env:
+        - IPYTHON=master
   allow_failures:
     - python: "nightly"

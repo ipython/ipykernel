@@ -465,8 +465,9 @@ def test_comm_info_request():
 
 def test_single_payload():
     flush_channels()
-    msg_id, reply = execute(code="for i in range(3):\n"+
-                                 "   x=range?\n")
+    msg_id, reply = execute(code="ip = get_ipython()\n"
+                                 "for i in range(3):\n"
+                                 "   ip.set_next_input('Hello There')\n")
     payload = reply['payload']
     next_input_pls = [pl for pl in payload if pl["source"] == "set_next_input"]
     assert len(next_input_pls) == 1

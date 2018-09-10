@@ -42,7 +42,6 @@ def test_async_await():
 @pytest.mark.parametrize("asynclib", ["asyncio", "trio", "curio"])
 @skip_without_async
 def test_async_interrupt(asynclib, request):
-    asynclib = "asyncio"
     try:
         __import__(asynclib)
     except ImportError:

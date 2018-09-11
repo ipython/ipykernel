@@ -174,7 +174,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
         The DisplayHook objects must return a message from
         the __call__ method if they still require the
-        `session.send` method to be called after tranformation.
+        `session.send` method to be called after transformation.
         Returning `None` will halt that execution path, and
         session.send will not be called.
         """
@@ -253,7 +253,7 @@ class KernelMagics(Magics):
 
         Arguments:
 
-        If arguments are given, the following possibilites exist:
+        If arguments are given, the following possibilities exist:
 
         - The arguments are numbers or pairs of colon-separated numbers (like
           1 4:8 9). These are interpreted as lines of previous input to be

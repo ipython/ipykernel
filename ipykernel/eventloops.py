@@ -4,6 +4,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from functools import partial
 import os
 import sys
 import platform
@@ -14,12 +15,14 @@ from distutils.version import LooseVersion as V
 from traitlets.config.application import Application
 from IPython.utils import io
 
+
 def _use_appnope():
     """Should we use appnope for dealing with OS X app nap?
 
     Checks if we are on OS X 10.9 or greater.
     """
     return sys.platform == 'darwin' and V(platform.mac_ver()[0]) >= V('10.9')
+
 
 def _notify_stream_qt(kernel, stream):
 
@@ -34,9 +37,14 @@ def _notify_stream_qt(kernel, stream):
             yield
 
     def process_stream_events():
-        while stream.getsockopt(zmq.EVENTS) & zmq.POLLIN:
-            with context():
-                kernel.do_one_iteration()
+        """fall back to main loop when there's a socket event"""
+        # call flush to ensure that the stream doesn't lose events
+        # due to our consuming of the edge-triggered FD
+        # flush returns the number of events consumed.
+        # if there were any, wake it up
+        if stream.flush(limit=1):
+            notifier.setEnabled(False)
+            kernel.app.quit()
 
     fd = stream.getsockopt(zmq.FD)
     notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
@@ -88,6 +96,7 @@ def register_integration(*toolkitnames):
             to register a function to be called on exit
             """
             func.exit_hook = exit_func
+            return exit_func
 
         func.exit = exit_decorator
         return func
@@ -122,11 +131,6 @@ def loop_qt4(kernel):
     _loop_qt(kernel.app)
 
 
-@loop_qt4.exit
-def loop_qt4_exit(kernel):
-    kernel.app.exit()
-
-
 @register_integration('qt', 'qt5')
 def loop_qt5(kernel):
     """Start a kernel with PyQt5 event loop integration."""
@@ -134,8 +138,10 @@ def loop_qt5(kernel):
     return loop_qt4(kernel)
 
 
+# exit and watch are the same for qt 4 and 5
+@loop_qt4.exit
 @loop_qt5.exit
-def loop_qt5_exit(kernel):
+def loop_qt_exit(kernel):
     kernel.app.exit()
 
 
@@ -163,9 +169,15 @@ def loop_wx(kernel):
         from appnope import nope
         nope()
 
-    doi = kernel.do_one_iteration
      # Wx uses milliseconds
-    poll_interval = int(1000*kernel._poll_interval)
+    poll_interval = int(1000 * kernel._poll_interval)
+
+    def wake():
+        """wake from wx"""
+        for stream in kernel.shell_streams:
+            if stream.flush(limit=1):
+                kernel.app.ExitMainLoop()
+                return
 
     # We have to put the wx.Timer in a wx.Frame for it to fire properly.
     # We make the Frame hidden when we create it in the main app below.
@@ -182,16 +194,20 @@ def loop_wx(kernel):
             self.func()
 
     # We need a custom wx.App to create our Frame subclass that has the
-    # wx.Timer to drive the ZMQ event loop.
+    # wx.Timer to defer back to the tornado event loop.
     class IPWxApp(wx.App):
         def OnInit(self):
-            self.frame = TimerFrame(doi)
+            self.frame = TimerFrame(wake)
             self.frame.Show(False)
             return True
 
     # The redirect=False here makes sure that wx doesn't replace
     # sys.stdout/stderr with its own classes.
-    kernel.app = IPWxApp(redirect=False)
+    if not (
+        getattr(kernel, 'app', None)
+        and isinstance(kernel.app, wx.App)
+    ):
+        kernel.app = IPWxApp(redirect=False)
 
     # The import of wx on Linux sets the handler for signal.SIGINT
     # to 0.  This is a bug in wx or gtk.  We fix by just setting it
@@ -213,35 +229,31 @@ def loop_wx_exit(kernel):
 def loop_tk(kernel):
     """Start a kernel with the Tk event loop."""
 
-    try:
-        from tkinter import Tk  # Py 3
-    except ImportError:
-        from Tkinter import Tk  # Py 2
-    doi = kernel.do_one_iteration
-    # Tk uses milliseconds
-    poll_interval = int(1000*kernel._poll_interval)
+    from tkinter import Tk, READABLE
+
+    def process_stream_events(stream, *a, **kw):
+        """fall back to main loop when there's a socket event"""
+        if stream.flush(limit=1):
+            app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
+            app.quit()
+
     # For Tkinter, we create a Tk object and call its withdraw method.
-    class Timer(object):
-        def __init__(self, func):
-            self.app = Tk()
-            self.app.withdraw()
-            self.func = func
+    kernel.app = app = Tk()
+    kernel.app.withdraw()
+    for stream in kernel.shell_streams:
+        notifier = partial(process_stream_events, stream)
+        # seems to be needed for tk
+        notifier.__name__ = 'notifier'
+        app.tk.createfilehandler(stream.getsockopt(zmq.FD), READABLE, notifier)
+        # schedule initial call after start
+        app.after(0, notifier)
 
-        def on_timer(self):
-            self.func()
-            self.app.after(poll_interval, self.on_timer)
-
-        def start(self):
-            self.on_timer()  # Call it once to get things going.
-            self.app.mainloop()
-
-    kernel.timer = Timer(doi)
-    kernel.timer.start()
+    app.mainloop()
 
 
 @loop_tk.exit
 def loop_tk_exit(kernel):
-    kernel.timer.app.destroy()
+    kernel.app.destroy()
 
 
 @register_integration('gtk')
@@ -299,8 +311,10 @@ def loop_cocoa(kernel):
                 # don't let interrupts during mainloop invoke crash_handler:
                 sys.excepthook = handle_int
                 mainloop(kernel._poll_interval)
-                sys.excepthook = real_excepthook
-                kernel.do_one_iteration()
+                for stream in kernel.shell_streams:
+                    if stream.flush(limit=1):
+                        # events to process, return control to kernel
+                        return
             except:
                 raise
         except KeyboardInterrupt:
@@ -326,11 +340,24 @@ def loop_asyncio(kernel):
     if loop.is_running():
         return
 
-    def kernel_handler():
-        loop.call_soon(kernel.do_one_iteration)
-        loop.call_later(kernel._poll_interval, kernel_handler)
+    if loop.is_closed():
+        # main loop is closed, create a new one
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    loop._should_close = False
 
-    loop.call_soon(kernel_handler)
+    # pause eventloop when there's an event on a zmq socket
+    def process_stream_events(stream):
+        """fall back to main loop when there's a socket event"""
+        if stream.flush(limit=1):
+            loop.stop()
+
+    for stream in kernel.shell_streams:
+        fd = stream.getsockopt(zmq.FD)
+        notifier = partial(process_stream_events, stream)
+        loop.add_reader(fd, notifier)
+        loop.call_soon(notifier)
+
     while True:
         error = None
         try:
@@ -339,9 +366,8 @@ def loop_asyncio(kernel):
             continue
         except Exception as e:
             error = e
-        if hasattr(loop, 'shutdown_asyncgens'):
-            loop.run_until_complete(loop.shutdown_asyncgens())
-        loop.close()
+        if loop._should_close:
+            loop.close()
         if error is not None:
             raise error
         break
@@ -352,8 +378,20 @@ def loop_asyncio_exit(kernel):
     """Exit hook for asyncio"""
     import asyncio
     loop = asyncio.get_event_loop()
+
+    @asyncio.coroutine
+    def close_loop():
+        if hasattr(loop, 'shutdown_asyncgens'):
+            yield from loop.shutdown_asyncgens()
+        loop._should_close = True
+        loop.stop()
+
     if loop.is_running():
-        loop.call_soon(loop.stop)
+        close_loop()
+
+    elif not loop.is_closed():
+        loop.run_until_complete(close_loop)
+        loop.close()
 
 
 def enable_gui(gui, kernel=None):

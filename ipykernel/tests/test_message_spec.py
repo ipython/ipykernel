@@ -464,9 +464,19 @@ def test_comm_info_request():
 
 
 def test_single_payload():
+    """
+    We want to test the set_next_input is not triggered several time per cell.
+    This is (was ?) mostly due to the fact that `?` in a loop would trigger
+    several set_next_input.
+
+    I'm tempted to thing that we actually want to _allow_ multiple
+    set_next_input (that's users' choice). But that `?` itself (and ?'s
+    transform) should avoid setting multiple set_next_input).
+    """
     flush_channels()
-    msg_id, reply = execute(code="for i in range(3):\n"+
-                                 "   x=range?\n")
+    msg_id, reply = execute(code="ip = get_ipython()\n"
+                                 "for i in range(3):\n"
+                                 "   ip.set_next_input('Hello There')\n")
     payload = reply['payload']
     next_input_pls = [pl for pl in payload if pl["source"] == "set_next_input"]
     assert len(next_input_pls) == 1

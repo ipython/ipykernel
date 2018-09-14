@@ -7,10 +7,10 @@ Changes in IPython kernel
 5.0.0
 *****
 
-`4.9.0 on GitHub <https://github.com/ipython/ipykernel/milestones/5.0>`__
+`5.0.0 on GitHub <https://github.com/ipython/ipykernel/milestones/5.0>`__
 
-- Add Support for IPython's Asynchronous code execution (:ghpull:`323`)
-- Update release Process in ``Contributing.md`` (:ghpull:`339`)
+- Add support for IPython's asynchronous code execution (:ghpull:`323`)
+- Update release process in ``CONTRIBUTING.md`` (:ghpull:`339`)
 
 4.9
 ---

@@ -1,6 +1,19 @@
 Changes in IPython kernel
 =========================
 
+5.0
+---
+
+5.0.0
+*****
+
+`5.0.0 on GitHub <https://github.com/ipython/ipykernel/milestones/5.0>`__
+
+- Drop support for Python 2. ``ipykernel`` 5.0 requires Python >= 3.4
+- Add support for IPython's asynchronous code execution (:ghpull:`323`)
+- Update release process in ``CONTRIBUTING.md`` (:ghpull:`339`)
+
+
 4.9
 ---
 

@@ -302,9 +302,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         # also raw print to the terminal if no parent_handle (`ipython kernel`)
         # unless log-level is CRITICAL (--quiet)
         if not self.parent_handle and self.log_level < logging.CRITICAL:
-            io.rprint(_ctrl_c_message)
+            io.raw_print(_ctrl_c_message)
             for line in lines:
-                io.rprint(line)
+                io.raw_print(line)
 
         self.ports = dict(shell=self.shell_port, iopub=self.iopub_port,
                                 stdin=self.stdin_port, hb=self.hb_port,

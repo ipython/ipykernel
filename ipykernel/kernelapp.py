@@ -323,7 +323,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """Redirect input streams and set a display hook."""
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
-            sys.stdout.flush()
+            if sys.stdout is not None:
+                sys.stdout.flush()
 
             e_stdout = None if self.quiet else sys.__stdout__
             e_stderr = None if self.quiet else sys.__stderr__
@@ -331,7 +332,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             sys.stdout = outstream_factory(self.session, self.iopub_thread,
                                            u'stdout',
                                            echo=e_stdout)
-            sys.stderr.flush()
+            if sys.stderr is not None:
+                sys.stderr.flush()
             sys.stderr = outstream_factory(self.session, self.iopub_thread,
                                            u'stderr',
                                            echo=e_stderr)

@@ -88,7 +88,7 @@ setup_args = dict(
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
     python_requires='>=3.4',
     install_requires=[
-        'ipython>=4.0.0',
+        'ipython>=5.0.0',
         'traitlets>=4.1.0',
         'jupyter_client',
         'tornado>=4.2',

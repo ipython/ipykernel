@@ -13,7 +13,6 @@ import zmq
 
 from distutils.version import LooseVersion as V
 from traitlets.config.application import Application
-from IPython.utils import io
 
 
 def _use_appnope():
@@ -299,7 +298,7 @@ def loop_cocoa(kernel):
         # wake the eventloop when we get a signal
         stop()
         if etype is KeyboardInterrupt:
-            io.raw_print("KeyboardInterrupt caught in CFRunLoop")
+            print("KeyboardInterrupt caught in CFRunLoop", file=sys.__stdout__)
         else:
             real_excepthook(etype, value, tb)
 
@@ -319,7 +318,7 @@ def loop_cocoa(kernel):
                 raise
         except KeyboardInterrupt:
             # Ctrl-C shouldn't crash the kernel
-            io.raw_print("KeyboardInterrupt caught in kernel")
+            print("KeyboardInterrupt caught in kernel", file=sys.__stdout__)
         finally:
             # ensure excepthook is restored
             sys.excepthook = real_excepthook

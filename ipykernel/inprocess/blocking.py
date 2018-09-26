@@ -8,14 +8,13 @@ Useful for test suites and blocking terminal interfaces.
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING.txt, distributed as part of this software.
 #-----------------------------------------------------------------------------
-
+import sys
 try:
     from queue import Queue, Empty  # Py 3
 except ImportError:
     from Queue import Queue, Empty  # Py 2
 
 # IPython imports
-from IPython.utils.io import raw_print
 from traitlets import Type
 
 # Local imports
@@ -66,7 +65,8 @@ class BlockingInProcessStdInChannel(BlockingInProcessChannel):
         if msg_type == 'input_request':
             _raw_input = self.client.kernel._sys_raw_input
             prompt = msg['content']['prompt']
-            raw_print(prompt, end='')
+            print(prompt, end='', file=sys.__stdout__)
+            sys.__stdout__.flush()
             self.client.input(_raw_input())
 
 class BlockingInProcessKernelClient(InProcessKernelClient):

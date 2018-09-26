@@ -24,7 +24,6 @@ from IPython.core.profiledir import ProfileDir
 from IPython.core.shellapp import (
     InteractiveShellApp, shell_flags, shell_aliases
 )
-from IPython.utils import io
 from ipython_genutils.path import filefind, ensure_dir_exists
 from traitlets import (
     Any, Instance, Dict, Unicode, Integer, Bool, DottedObjectName, Type, default
@@ -302,9 +301,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         # also raw print to the terminal if no parent_handle (`ipython kernel`)
         # unless log-level is CRITICAL (--quiet)
         if not self.parent_handle and self.log_level < logging.CRITICAL:
-            io.raw_print(_ctrl_c_message)
+            print(_ctrl_c_message, file=sys.__stdout__)
             for line in lines:
-                io.raw_print(line)
+                print(line, file=sys.__stdout__)
 
         self.ports = dict(shell=self.shell_port, iopub=self.iopub_port,
                                 stdin=self.stdin_port, hb=self.hb_port,

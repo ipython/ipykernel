@@ -94,7 +94,6 @@ setup_args = dict(
         'tornado>=4.2',
     ],
     extras_require={
-        'test:python_version=="2.7"': ['mock'],
         'test': [
             'pytest',
             'pytest-cov',
@@ -107,7 +106,6 @@ setup_args = dict(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
     ],
 )

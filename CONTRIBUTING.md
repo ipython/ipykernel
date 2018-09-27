@@ -27,7 +27,9 @@ Releasing ipykernel is *almost* standard for a Python package:
 - set version back to development
 
 The one extra step for ipykernel is that we need to make separate wheels for Python 2 and 3
-because the bundled kernelspec has different contents for Python 2 and 3.
+because the bundled kernelspec has different contents for Python 2 and 3. This
+affects only the 4.x branch of ipykernel as the 5+ version is only compatible
+Python 3.
 
 The full release process is available below:
 
@@ -49,7 +51,7 @@ git push --tags
 pip install --upgrade twine
 git clean -xfd
 python3 setup.py sdist bdist_wheel
-python2 setup.py bdist_wheel  # the extra step!
+python2 setup.py bdist_wheel  # the extra step for the 4.x branch.
 twine upload dist/*
 
 # set the version back to '.dev' in ipykernel/_version.py

@@ -27,14 +27,6 @@ def _notify_stream_qt(kernel, stream):
 
     from IPython.external.qt_for_kernel import QtCore
 
-    if _use_appnope() and kernel._darwin_app_nap:
-        from appnope import nope_scope as context
-    else:
-        from contextlib import contextmanager
-        @contextmanager
-        def context():
-            yield
-
     def process_stream_events():
         """fall back to main loop when there's a socket event"""
         # call flush to ensure that the stream doesn't lose events

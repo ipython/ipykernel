@@ -400,18 +400,22 @@ class IPythonKernel(KernelBase):
 
     def do_inspect(self, code, cursor_pos, detail_level=0):
         name = token_at_cursor(code, cursor_pos)
-        info = self.shell.object_inspect(name)
 
         reply_content = {'status' : 'ok'}
-        reply_content['data'] = data = {}
+        reply_content['data'] = {}
         reply_content['metadata'] = {}
-        reply_content['found'] = info['found']
-        if info['found']:
-            info_text = self.shell.object_inspect_text(
-                name,
-                detail_level=detail_level,
+        try:
+            reply_content['data'].update(
+                self.shell.object_inspect_mime(
+                    name,
+                    detail_level=detail_level
+                )
             )
-            data['text/plain'] = info_text
+            if not self.shell.enable_html_pager:
+                reply_content['data'].pop('text/html')
+            reply_content['found'] = True
+        except KeyError:
+            reply_content['found'] = False
 
         return reply_content
 

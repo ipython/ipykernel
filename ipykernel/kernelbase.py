@@ -254,13 +254,19 @@ class Kernel(SingletonConfigurable):
             self.log.warning("Unknown message type: %r", msg_type)
         else:
             self.log.debug("%s: %s", msg_type, msg)
-            self.pre_handler_hook()
+            try:
+                self.pre_handler_hook()
+            except Exception:
+                self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
                 yield gen.maybe_future(handler(stream, idents, msg))
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)
             finally:
-                self.post_handler_hook()
+                try:
+                    self.post_handler_hook()
+                except Exception:
+                    self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
 
         sys.stdout.flush()
         sys.stderr.flush()

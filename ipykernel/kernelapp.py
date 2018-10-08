@@ -474,7 +474,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         # file is definitely available at the time someone reads the log.
         self.log_connection_info()
         self.init_io()
-        self.init_signal()
+        try:
+            self.init_signal()
+        except:
+            # Catch exception when initializing signal fails, eg when running the 
+            # kernel on a separate thread 
+            if self.log_level < logging.CRITICAL:
+                self.log.error("Unable to initialize signal:", exc_info=True)
         self.init_kernel()
         # shell init steps
         self.init_path()

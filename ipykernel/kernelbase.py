@@ -7,6 +7,7 @@ from __future__ import print_function
 
 from datetime import datetime
 from functools import partial
+import itertools
 import logging
 from signal import signal, default_int_handler, SIGINT
 import sys
@@ -43,18 +44,6 @@ from ._version import kernel_protocol_version
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
 ABORT_PRIORITY = 20
-
-class _MessageEvent(tuple):
-    """class for priority message events
-
-    ensures that comparison only invokes the priority entry,
-    not comparing the contents of the messages
-    """
-    def __eq__(self, other):
-        return self[:2] == other[:2]
-
-    def __lt__(self, other):
-        return self[:2] < other[:2]
 
 
 class Kernel(SingletonConfigurable):
@@ -360,20 +349,30 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.exception("Error in message handler")
 
+    _message_counter = Any(
+        help="""Monotonic counter of messages
+
+        Ensures messages of the same priority are handled in arrival order.
+        """,
+    )
+    @default('_message_counter')
+    def _message_counter_default(self):
+        return itertools.count()
+
     def schedule_dispatch(self, priority, dispatch, *args):
         """schedule a message for dispatch"""
-        # via loop.add_callback to ensure everything gets scheduled
-        # on the eventloop
-        self.io_loop.add_callback(
-            lambda: self.msg_queue.put(
-                _MessageEvent((
-                    priority,
-                    self.io_loop.time(),
-                    dispatch,
-                    args,
-                    ))
-                )
+        idx = next(self._message_counter)
+
+        self.msg_queue.put_nowait(
+            (
+                priority,
+                idx,
+                dispatch,
+                args,
+            )
         )
+        # ensure the eventloop wakes up
+        self.io_loop.add_callback(lambda: None)
 
     def start(self):
         """register dispatchers for streams"""

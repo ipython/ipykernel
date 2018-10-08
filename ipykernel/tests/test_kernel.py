@@ -18,7 +18,8 @@ from ipython_genutils.tempdir import TemporaryDirectory
 
 from .utils import (
     new_kernel, kernel, TIMEOUT, assemble_output, execute,
-    flush_channels, wait_for_idle)
+    flush_channels, wait_for_idle,
+)
 
 
 def _check_master(kc, expected=True, stream="stdout"):
@@ -271,6 +272,25 @@ def test_matplotlib_inline_on_import():
         backend_bundle = reply['user_expressions']['backend']
         _check_status(backend_bundle)
         assert 'backend_inline' in backend_bundle['data']['text/plain']
+
+
+def test_message_order():
+    N = 100  # number of messages to test
+    with kernel() as kc:
+        _, reply = execute("a = 1", kc=kc)
+        _check_status(reply)
+        offset = reply['execution_count'] + 1
+        cell = "a += 1\na"
+        msg_ids = []
+        # submit N executions as fast as we can
+        for i in range(N):
+            msg_ids.append(kc.execute(cell))
+        # check message-handling order
+        for i, msg_id in enumerate(msg_ids, offset):
+            reply = kc.get_shell_msg(timeout=TIMEOUT)
+            _check_status(reply['content'])
+            assert reply['content']['execution_count'] == i
+            assert reply['parent_header']['msg_id'] == msg_id
 
 
 def test_shutdown():

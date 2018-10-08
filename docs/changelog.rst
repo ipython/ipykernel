@@ -1,6 +1,23 @@
 Changes in IPython kernel
 =========================
 
+5.1
+---
+
+5.1.0
+*****
+
+5.1.0 fixes some important regressions in 5.0, especially on Windows.
+
+`5.1.0 on GitHub <https://github.com/ipython/ipykernel/milestones/5.1>`__
+
+- Fix message-ordering bug that could result in out-of-order executions,
+  especially on Windows (:ghpull:`356`)
+- Fix classifiers to indicate dropped Python 2 support (:ghpull:`354`)
+- Remove some dead code (:ghpull:`355`)
+- Support rich-media responses in ``inspect_requests`` (tooltips) (:ghpull:`361`)
+
+
 5.0
 ---
 
@@ -13,6 +30,14 @@ Changes in IPython kernel
 - Add support for IPython's asynchronous code execution (:ghpull:`323`)
 - Update release process in ``CONTRIBUTING.md`` (:ghpull:`339`)
 
+
+4.10
+----
+
+`4.10 on GitHub <https://github.com/ipython/ipykernel/milestones/4.10>`__
+
+- Fix compatibility with IPython 7.0 (:ghpull:`348`)
+- Fix compatibility in cases where sys.stdout can be None (:ghpull:`344`)
 
 4.9
 ---

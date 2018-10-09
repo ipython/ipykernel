@@ -113,6 +113,22 @@ class Kernel(SingletonConfigurable):
     # adapt to milliseconds.
     _poll_interval = Float(0.01).tag(config=True)
 
+    stop_on_error_timeout = Float(
+        0.1,
+        config=True,
+        help="""time (in seconds) to wait for messages to arrive
+        when aborting queued requests after an error.
+
+        Requests that arrive within this window after an error
+        will be cancelled.
+
+        Increase in the event of unusually slow network
+        causing significant delays,
+        which can manifest as e.g. "Run all" in a notebook
+        aborting some, but not all, messages after an error.
+        """
+    )
+
     # If the shutdown was requested over the network, we leave here the
     # necessary reply message so it can be sent by our registered atexit
     # handler.  This ensures that the reply is only sent to clients truly at
@@ -770,7 +786,7 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def _dispatch_abort(self):
         self.log.info("Finishing abort")
-        yield gen.sleep(0.05)
+        yield gen.sleep(self.stop_on_error_timeout)
         self._aborting = False
 
     @gen.coroutine

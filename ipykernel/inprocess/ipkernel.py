@@ -83,7 +83,7 @@ class InProcessKernel(IPythonKernel):
         """ Override registration of dispatchers for streams. """
         self.shell.exit_now = False
 
-    def _abort_queue(self, stream):
+    def _abort_queues(self):
         """ The in-process kernel doesn't abort requests. """
         pass
 

@@ -10,6 +10,7 @@ import json
 import os
 import shutil
 import sys
+import stat
 import tempfile
 
 from jupyter_client.kernelspec import KernelSpecManager
@@ -72,6 +73,8 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
     
     # stage resources
     shutil.copytree(RESOURCES, path)
+    perms = stat.S_IMODE(os.lstat(path).st_mode)
+    os.chmod(path, perms | stat.S_IWRITE)
     # write kernel.json
     kernel_dict = get_kernel_dict(extra_arguments)
 

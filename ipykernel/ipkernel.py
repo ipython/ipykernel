@@ -321,7 +321,7 @@ class IPythonKernel(KernelBase):
         reply_content['execution_count'] = shell.execution_count - 1
 
         if 'traceback' in reply_content:
-            self.log.info("Exception in execute request:\n%s", '\n'.join(reply_content['traceback']))
+            self.log.warn("Exception in execute request:\n%s", '\n'.join(reply_content['traceback']))
 
 
         # At this point, we can tell whether the main code execution succeeded

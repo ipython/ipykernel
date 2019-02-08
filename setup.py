@@ -114,7 +114,12 @@ setup_args = dict(
 if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
     from ipykernel.kernelspec import write_kernel_spec, make_ipkernel_cmd, KERNEL_NAME
 
-    argv = make_ipkernel_cmd(executable='python')
+    # When building a wheel, the executable specified in the kernelspec is simply 'python'.
+    # When installing from source, the full `sys.executable` can be used.
+    if any(a.startswith('bdist') for a in sys.argv):
+        argv = make_ipkernel_cmd(executable='python')
+    else:
+        argv = make_ipkernel_cmd()
     dest = os.path.join(here, 'data_kernelspec')
     if os.path.exists(dest):
         shutil.rmtree(dest)

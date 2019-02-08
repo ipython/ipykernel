@@ -152,8 +152,8 @@ class Kernel(SingletonConfigurable):
         'inspect_request', 'history_request',
         'comm_info_request', 'kernel_info_request',
         'connect_request', 'shutdown_request',
-        'is_complete_request', 
-        'resource_info_request', #'resource_info_reply', 
+        'is_complete_request',
+        'resource_info_request', #'resource_info_reply',
         # deprecated:
         'apply_request',
     ]
@@ -708,21 +708,23 @@ class Kernel(SingletonConfigurable):
 
 
     def resource_info_request(self, stream, ident, parent):
-        print("sending resource info request")
+        #print("aaaa sending resource info request")
         self.session.send(
-            self.iopub_socket, 
+            self.iopub_socket,
             'resource_info_result',
             parent= parent or self._parent_header,
-            {"ok": "cool"
-            ,"memory": [32, 264]
-            }
+            content = {
+                "ok": "cool",
+                "memory": [32, 264]
+                }
         )
 
+        # content = dict(status='ok')
         self.session.send(self.iopub_socket,
                           u'resource_info_result',
-                          {u'execution_state': status},
+                          #{u'execution_state': status},
                           parent=parent or self._parent_header,
-                          ident=self._topic('status'),
+                          #ident=self._topic('status'),
                           )
 
 

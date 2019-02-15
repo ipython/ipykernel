@@ -4,6 +4,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import ast
 import io
 import os.path
 import sys
@@ -52,17 +53,27 @@ def test_simple_print():
 def test_sys_path():
     """test that sys.path doesn't get messed up by default"""
     with kernel() as kc:
-        msg_id, content = execute(kc=kc, code="import sys; print (repr(sys.path[0]))")
+        msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
         stdout, stderr = assemble_output(kc.iopub_channel)
-        assert stdout == "''\n"
+    # for error-output on failure
+    sys.stderr.write(stderr)
+
+    sys_path = ast.literal_eval(stdout.strip())
+    assert '' in sys_path
+
 
 def test_sys_path_profile_dir():
     """test that sys.path doesn't get messed up when `--profile-dir` is specified"""
 
     with new_kernel(['--profile-dir', locate_profile('default')]) as kc:
-        msg_id, content = execute(kc=kc, code="import sys; print (repr(sys.path[0]))")
+        msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
         stdout, stderr = assemble_output(kc.iopub_channel)
-        assert stdout == "''\n"
+    # for error-output on failure
+    sys.stderr.write(stderr)
+
+    sys_path = ast.literal_eval(stdout.strip())
+    assert '' in sys_path
+
 
 @dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
 def test_subprocess_print():
@@ -248,14 +259,23 @@ def test_complete():
         cell = 'import IPython\nb = a.'
         kc.complete(cell)
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
-        c = reply['content']
-        assert c['status'] == 'ok'
-        assert c['cursor_start'] == cell.find('a.')
-        assert c['cursor_end'] == cell.find('a.') + 2
-        matches = c['matches']
-        nt.assert_greater(len(matches), 0)
-        for match in matches:
-            assert match[:2] == 'a.'
+
+    c = reply['content']
+    assert c['status'] == 'ok'
+    start = cell.find('a.')
+    end = start + 2
+    assert c['cursor_end'] == cell.find('a.') + 2
+    assert c['cursor_start'] <= end
+
+    # there are many right answers for cursor_start,
+    # so verify application of the completion
+    # rather than the value of cursor_start
+
+    matches = c['matches']
+    assert matches
+    for m in matches:
+        completed = cell[:c['cursor_start']] + m
+        assert completed.startswith(cell)
 
 
 @dec.skip_without('matplotlib')

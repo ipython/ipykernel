@@ -795,7 +795,6 @@ class Kernel(SingletonConfigurable):
         yield gen.sleep(self.stop_on_error_timeout)
         self._aborting = False
 
-    @gen.coroutine
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""
         self.log.info("Aborting:")

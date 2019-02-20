@@ -205,6 +205,8 @@ class Kernel(SingletonConfigurable):
         sys.stdout.flush()
         sys.stderr.flush()
         self._publish_status(u'idle')
+        # flush to ensure reply is sent
+        self.control_stream.flush(zmq.POLLOUT)
 
     def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
@@ -241,6 +243,9 @@ class Kernel(SingletonConfigurable):
         if self._aborting:
             self._send_abort_reply(stream, msg, idents)
             self._publish_status(u'idle')
+            # flush to ensure reply is sent before
+            # handling the next request
+            stream.flush(zmq.POLLOUT)
             return
 
         msg_type = msg['header']['msg_type']
@@ -276,6 +281,9 @@ class Kernel(SingletonConfigurable):
         sys.stdout.flush()
         sys.stderr.flush()
         self._publish_status(u'idle')
+        # flush to ensure reply is sent before
+        # handling the next request
+        stream.flush(zmq.POLLOUT)
 
     def pre_handler_hook(self):
         """Hook to execute before calling message handler"""

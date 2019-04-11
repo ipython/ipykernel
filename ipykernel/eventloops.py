@@ -125,7 +125,8 @@ def loop_qt4(kernel):
 @register_integration('qt', 'qt5')
 def loop_qt5(kernel):
     """Start a kernel with PyQt5 event loop integration."""
-    os.environ['QT_API'] = 'pyqt5'
+    if os.environ['QT_API'] not in ['pyqt5', 'pyside2']:
+        os.environ['QT_API'] = 'pyqt5'
     return loop_qt4(kernel)
 
 

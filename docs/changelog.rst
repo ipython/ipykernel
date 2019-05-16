@@ -4,6 +4,13 @@ Changes in IPython kernel
 5.1
 ---
 
+5.1.1
+*****
+5.1.1 fixes a bug that caused cells to get stuck in a busy state.
+
+- Flush after sending replies (:ghpull:`390`)
+
+
 5.1.0
 *****
 

@@ -245,7 +245,10 @@ class Kernel(SingletonConfigurable):
             self._publish_status(u'idle')
             # flush to ensure reply is sent before
             # handling the next request
-            stream.flush(zmq.POLLOUT)
+            try:
+                stream.flush(zmq.POLLOUT)
+            except AttributeError:
+                pass
             return
 
         msg_type = msg['header']['msg_type']
@@ -283,7 +286,10 @@ class Kernel(SingletonConfigurable):
         self._publish_status(u'idle')
         # flush to ensure reply is sent before
         # handling the next request
-        stream.flush(zmq.POLLOUT)
+        try:
+            stream.flush(zmq.POLLOUT)
+        except AttributeError:
+            pass
 
     def pre_handler_hook(self):
         """Hook to execute before calling message handler"""

@@ -154,10 +154,29 @@ class Kernel(SingletonConfigurable):
         'connect_request', 'shutdown_request',
         'is_complete_request',
         # deprecated:
-        'apply_request',
+        'apply_request', 'fork'
     ]
     # add deprecated ipyparallel control messages
     control_msg_types = msg_types + ['clear_request', 'abort_request']
+
+    def fork(self, stream, ident, parent):
+        # Forking in the (async)io loop is not supported.
+        # instead, we stop it, and use the io loop to pass
+        # information up the callstack
+        loop = ioloop.IOLoop.current()
+        loop._fork_requested = True
+
+        def post_fork_callback(pid, conn):
+            reply_content = json_clean({'status': 'ok', 'pid': pid, 'conn': conn})
+            metadata = {}
+            metadata = self.finish_metadata(parent, metadata, reply_content)
+
+            self.session.send(stream, u'execute_reply',
+                                        reply_content, parent, metadata=metadata,
+                                        ident=ident)
+
+        loop._post_fork_callback = post_fork_callback
+        loop.stop()
 
     def __init__(self, **kwargs):
         super(Kernel, self).__init__(**kwargs)
@@ -513,6 +532,7 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def execute_request(self, stream, ident, parent):
         """handle an execute_request"""
+
 
         try:
             content = parent[u'content']

@@ -32,7 +32,7 @@ from traitlets import (
 from ipython_genutils.importstring import import_item
 from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_client import write_connection_file
-from jupyter_client.connect import ConnectionFileMixin
+from jupyter_client.connect import ConnectionFileMixin, port_names
 
 # local imports
 from .iostream import IOPubThread
@@ -436,16 +436,22 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         kernel_factory = self.kernel_class.instance
 
-        kernel = kernel_factory(parent=self, session=self.session,
-                                control_stream=control_stream,
-                                shell_streams=[shell_stream, control_stream],
-                                iopub_thread=self.iopub_thread,
-                                iopub_socket=self.iopub_socket,
-                                stdin_socket=self.stdin_socket,
-                                log=self.log,
-                                profile_dir=self.profile_dir,
-                                user_ns=self.user_ns,
+        params = dict(
+            parent=self,
+            session=self.session,
+            control_stream=control_stream,
+            shell_streams=[shell_stream, control_stream],
+            iopub_thread=self.iopub_thread,
+            iopub_socket=self.iopub_socket,
+            stdin_socket=self.stdin_socket,
+            log=self.log,
+            profile_dir=self.profile_dir,
+            user_ns=self.user_ns,
         )
+        kernel = kernel_factory(**params)
+        for k, v in params.items():
+            setattr(kernel, k, v)
+
         kernel.record_ports({
             name + '_port': port for name, port in self.ports.items()
         })
@@ -559,10 +565,64 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.poller.start()
         self.kernel.start()
         self.io_loop = ioloop.IOLoop.current()
-        try:
-            self.io_loop.start()
-        except KeyboardInterrupt:
-            pass
+        keep_running = True
+        while keep_running:
+            try:
+                self.io_loop.start()
+            except KeyboardInterrupt:
+                pass
+            if not getattr(self.io_loop, '_fork_requested', False):
+                keep_running = False
+            else:
+                self.fork()
+
+    def fork(self):
+        # Create a temporary connection file that will be inherited by the child process.
+        connection_file, conn = write_connection_file()
+
+        parent_pid = os.getpid()
+        pid = os.fork()
+        self.io_loop._fork_requested = False  # reset for parent AND child
+        if pid == 0:
+            import asyncio
+            self.log.debug('Child kernel with pid ', os.getpid())
+
+            # close all sockets and ioloops
+            self.close()
+
+            self.io_loop.close(all_fds=True)
+            self.io_loop.clear_current()
+            ioloop.IOLoop.clear_current()
+            asyncio.new_event_loop()
+
+            import tornado.platform.asyncio as tasio
+            # explicitly create a new io loop that will also be the current
+            self.io_loop = tasio.AsyncIOMainLoop(make_current=True)
+            assert self.io_loop == ioloop.IOLoop.current()
+
+            # Reset all ports so they will be reinitialized with the ports from the connection file
+            for name in port_names:
+                setattr(self, name, 0)
+            self.connection_file = connection_file
+
+            # Reset the ZMQ context for it to be recreated in initialize()
+            self.context = None
+
+            # Make ParentPoller work correctly (the new process is a child of the previous kernel)
+            self.parent_handle = parent_pid
+
+            # Session have a protection to send messages from forked processes through the `check_pid` flag.
+            self.session.pid = os.getpid()
+            self.session.key = conn['key'].encode()
+
+            self.initialize(argv=['-f', self.abs_connection_file, '--debug'])
+            self.start()
+        else:
+            self.log.debug('Parent kernel will resume')
+            # keep a reference, since the will set this to None
+            post_fork_callback = self.io_loop._post_fork_callback
+            self.io_loop.add_callback(lambda: post_fork_callback(pid, conn))
+            self.io_loop._post_fork_callback = None
 
 
 launch_new_instance = IPKernelApp.launch_instance
@@ -577,3 +637,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

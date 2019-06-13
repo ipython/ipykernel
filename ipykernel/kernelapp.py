@@ -8,6 +8,7 @@ from __future__ import print_function
 import atexit
 import os
 import sys
+import errno
 import signal
 import traceback
 import logging
@@ -171,7 +172,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             # Parent polling doesn't work if ppid == 1 to start with.
             self.poller = ParentPollerUnix()
 
-    def _bind_socket(self, s, port):
+    def _try_bind_socket(self, s, port):
         iface = '%s://%s' % (self.transport, self.ip)
         if self.transport == 'tcp':
             if port <= 0:
@@ -189,6 +190,25 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                 path = "%s-%i" % (self.ip, port)
             s.bind("ipc://%s" % path)
         return port
+
+    def _bind_socket(self, s, port):
+        try:
+            win_in_use = errno.WSAEADDRINUSE
+        except AttributeError:
+            win_in_use = None
+
+        # Try up to 100 times to bind a port when in conflict to avoid
+        # infinite attempts in bad setups
+        max_attempts = 100
+        for attempt in range(max_attempts):
+            try:
+                return self._try_bind_socket(s, port)
+            except zmq.ZMQError as ze:
+                # Raise if we have any error not related to socket binding
+                if ze.errno != errno.EADDRINUSE and ze.errno != win_in_use:
+                    raise
+                if attempt == max_attempts - 1:
+                    raise
 
     def write_connection_file(self):
         """write connection info to JSON file"""
@@ -229,7 +249,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def init_sockets(self):
         # Create a context, a session, and the kernel sockets.
         self.log.info("Starting the kernel at pid: %i", os.getpid())
-        context = zmq.Context.instance()
+        context = zmq.Context()
         # Uncomment this to try closing the context.
         # atexit.register(context.term)
 
@@ -477,8 +497,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         try:
             self.init_signal()
         except:
-            # Catch exception when initializing signal fails, eg when running the 
-            # kernel on a separate thread 
+            # Catch exception when initializing signal fails, eg when running the
+            # kernel on a separate thread
             if self.log_level < logging.CRITICAL:
                 self.log.error("Unable to initialize signal:", exc_info=True)
         self.init_kernel()

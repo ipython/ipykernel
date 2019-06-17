@@ -172,6 +172,9 @@ class InProcessKernelClient(KernelClient):
         idents, reply_msg = self.session.recv(stream, copy=False)
         self.shell_channel.call_handlers_later(reply_msg)
 
+    def flush(self):
+        """no-op to comply with stream API"""
+
 
 #-----------------------------------------------------------------------------
 # ABC Registration

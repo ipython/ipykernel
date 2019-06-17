@@ -173,7 +173,7 @@ class InProcessKernelClient(KernelClient):
         self.shell_channel.call_handlers_later(reply_msg)
 
     def flush(self):
-        # dummy method (see https://github.com/ipython/ipykernel/pull/405)
+        """no-op to comply with stream API"""
 
 
 #-----------------------------------------------------------------------------

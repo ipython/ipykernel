@@ -698,7 +698,7 @@ class Kernel(SingletonConfigurable):
             raise StdinNotImplementedError(
                 "raw_input was called, but this frontend does not support input requests."
             )
-        return self._input_request(str(prompt),
+        return self._input_request(prompt.decode('utf-8'),
             self._parent_ident,
             self._parent_header,
             password=False,

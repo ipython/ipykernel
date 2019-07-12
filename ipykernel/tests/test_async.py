@@ -14,14 +14,14 @@ from .test_message_spec import validate_message
 KC = KM = None
 
 
-def setup():
+def setup_function():
     """start the global kernel (if it isn't running) and return its client"""
     global KM, KC
     KM, KC = start_new_kernel()
     flush_channels(KC)
 
 
-def teardown():
+def teardown_function():
     KC.stop_channels()
     KM.shutdown_kernel(now=True)
 

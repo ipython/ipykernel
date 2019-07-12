@@ -199,7 +199,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         # Try up to 100 times to bind a port when in conflict to avoid
         # infinite attempts in bad setups
-        max_attempts = 1 if port else 1
+        max_attempts = 1 if port else 100
         for attempt in range(max_attempts):
             try:
                 return self._try_bind_socket(s, port)

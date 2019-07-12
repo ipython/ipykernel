@@ -199,7 +199,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         # Try up to 100 times to bind a port when in conflict to avoid
         # infinite attempts in bad setups
-        max_attempts = 100
+        max_attempts = 1 if port else 1
         for attempt in range(max_attempts):
             try:
                 return self._try_bind_socket(s, port)
@@ -251,7 +251,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.log.info("Starting the kernel at pid: %i", os.getpid())
         context = zmq.Context()
         # Uncomment this to try closing the context.
-        # atexit.register(context.term)
+        atexit.register(context.term)
 
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000

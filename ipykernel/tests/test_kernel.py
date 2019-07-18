@@ -320,7 +320,7 @@ def test_shutdown():
         execute(u'a = 1', kc=kc)
         wait_for_idle(kc)
         kc.shutdown()
-        for i in range(100): # 10s timeout
+        for i in range(300): # 30s timeout
             if km.is_alive():
                 time.sleep(.1)
             else:

@@ -3,13 +3,11 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import json
-import os
-import pytest
 import errno
-import zmq
+from unittest.mock import patch
 
-from mock import patch
+import pytest
+import zmq
 
 from ipykernel.heartbeat import Heartbeat
 

@@ -3,13 +3,14 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import errno
 import json
 import os
+from unittest.mock import patch
+
 import pytest
-import errno
 import zmq
 
-from mock import patch
 from traitlets.config import Config
 from ipython_genutils.tempdir import TemporaryDirectory, TemporaryWorkingDirectory
 from ipython_genutils.py3compat import str_to_bytes
@@ -68,12 +69,13 @@ def test_get_connection_info():
     assert sub_info2 == sample_info
 
 
-def test_port_bind_failure_raises():
+def test_port_bind_failure_raises(request):
     cfg = Config()
     with TemporaryWorkingDirectory() as d:
         cfg.ProfileDir.location = d
         cf = 'kernel.json'
         app = DummyKernelApp(config=cfg, connection_file=cf)
+        request.addfinalizer(app.close)
         app.initialize()
         with patch.object(app, '_try_bind_socket') as mock_try_bind:
             mock_try_bind.side_effect = zmq.ZMQError(-100, "fails for unknown error types")
@@ -82,39 +84,37 @@ def test_port_bind_failure_raises():
             assert mock_try_bind.call_count == 1
 
 
-def test_port_bind_failure_recovery():
+def test_port_bind_failure_recovery(request):
     try:
         errno.WSAEADDRINUSE
     except AttributeError:
         # Fake windows address in-use code
-        errno.WSAEADDRINUSE = 12345
+        p = patch.object(errno, 'WSAEADDRINUSE', 12345, create=True)
+        p.start()
+        request.addfinalizer(p.stop)
 
-    try:
-        cfg = Config()
-        with TemporaryWorkingDirectory() as d:
-            cfg.ProfileDir.location = d
-            cf = 'kernel.json'
-            app = DummyKernelApp(config=cfg, connection_file=cf)
-            app.initialize()
-            with patch.object(app, '_try_bind_socket') as mock_try_bind:
-                mock_try_bind.side_effect = [
-                    zmq.ZMQError(errno.EADDRINUSE, "fails for non-bind unix"),
-                    zmq.ZMQError(errno.WSAEADDRINUSE, "fails for non-bind windows")
-                ] + [0] * 100
-                # Shouldn't raise anything as retries will kick in
-                app.init_sockets()
-    finally:
-        # Cleanup fake assignment
-        if errno.WSAEADDRINUSE == 12345:
-            del errno.WSAEADDRINUSE
-
-
-def test_port_bind_failure_gives_up_retries():
     cfg = Config()
     with TemporaryWorkingDirectory() as d:
         cfg.ProfileDir.location = d
         cf = 'kernel.json'
         app = DummyKernelApp(config=cfg, connection_file=cf)
+        request.addfinalizer(app.close)
+        app.initialize()
+        with patch.object(app, '_try_bind_socket') as mock_try_bind:
+            mock_try_bind.side_effect = [
+                zmq.ZMQError(errno.EADDRINUSE, "fails for non-bind unix"),
+                zmq.ZMQError(errno.WSAEADDRINUSE, "fails for non-bind windows")
+            ] + [0] * 100
+            # Shouldn't raise anything as retries will kick in
+            app.init_sockets()
+
+def test_port_bind_failure_gives_up_retries(request):
+    cfg = Config()
+    with TemporaryWorkingDirectory() as d:
+        cfg.ProfileDir.location = d
+        cf = 'kernel.json'
+        app = DummyKernelApp(config=cfg, connection_file=cf)
+        request.addfinalizer(app.close)
         app.initialize()
         with patch.object(app, '_try_bind_socket') as mock_try_bind:
             mock_try_bind.side_effect = zmq.ZMQError(errno.EADDRINUSE, "fails for non-bind")

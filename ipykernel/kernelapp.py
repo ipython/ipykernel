@@ -113,6 +113,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     kernel = Any()
     poller = Any() # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
+
+    context = Any()
+    shell_socket = Any()
+    control_socket = Any()
+    stdin_socket = Any()
+    iopub_socket = Any()
+    iopub_thread = Any()
+
     ports = Dict()
 
     subcommands = {
@@ -249,9 +257,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def init_sockets(self):
         # Create a context, a session, and the kernel sockets.
         self.log.info("Starting the kernel at pid: %i", os.getpid())
-        context = zmq.Context()
-        # Uncomment this to try closing the context.
-        atexit.register(context.term)
+        assert self.context is None, "init_sockets cannot be called twice!"
+        self.context = context = zmq.Context()
 
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
@@ -298,6 +305,20 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.hb_port = self.heartbeat.port
         self.log.debug("Heartbeat REP Channel on port: %i" % self.hb_port)
         self.heartbeat.start()
+
+    def close(self):
+        """Close zmq sockets in an orderly fashion"""
+        if self.heartbeat:
+            self.heartbeat.socket.close()
+            self.heartbeat.context.term()
+        if self.iopub_thread:
+            self.iopub_thread.stop()
+            self.iopub_thread.close()
+        for channel in ('shell', 'control', 'stdin'):
+            socket = getattr(self, channel + "_socket", None)
+            if socket and not socket.closed:
+                socket.close()
+        self.context.term()
 
     def log_connection_info(self):
         """display connection info, and store ports"""

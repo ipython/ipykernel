@@ -185,6 +185,8 @@ class IOPubThread(object):
             self._local.event_pipe.close()
 
     def close(self):
+        if self.closed:
+            return
         self.socket.close()
         self.socket = None
 

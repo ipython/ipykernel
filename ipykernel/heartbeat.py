@@ -87,7 +87,11 @@ class Heartbeat(Thread):
     def run(self):
         self.socket = self.context.socket(zmq.ROUTER)
         self.socket.linger = 1000
-        self._bind_socket()
+        try:
+            self._bind_socket()
+        except Exception:
+            self.socket.close()
+            raise
 
         while True:
             try:

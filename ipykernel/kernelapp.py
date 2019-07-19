@@ -259,6 +259,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.log.info("Starting the kernel at pid: %i", os.getpid())
         assert self.context is None, "init_sockets cannot be called twice!"
         self.context = context = zmq.Context()
+        atexit.register(self.close)
 
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
@@ -308,17 +309,23 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     def close(self):
         """Close zmq sockets in an orderly fashion"""
+        self.log.info("Cleaning up sockets")
         if self.heartbeat:
+            self.log.debug("Closing heartbeat channel")
             self.heartbeat.socket.close()
             self.heartbeat.context.term()
         if self.iopub_thread:
+            self.log.debug("Closing iopub channel")
             self.iopub_thread.stop()
             self.iopub_thread.close()
         for channel in ('shell', 'control', 'stdin'):
+            self.log.debug("Closing %s channel", channel)
             socket = getattr(self, channel + "_socket", None)
             if socket and not socket.closed:
                 socket.close()
+        self.log.debug("Terminating zmq context")
         self.context.term()
+        self.log.debug("Terminated zmq context")
 
     def log_connection_info(self):
         """display connection info, and store ports"""
@@ -547,7 +554,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         except KeyboardInterrupt:
             pass
 
+
 launch_new_instance = IPKernelApp.launch_instance
+
 
 def main():
     """Run an IPKernel as an application"""

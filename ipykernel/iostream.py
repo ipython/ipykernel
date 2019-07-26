@@ -167,14 +167,14 @@ class IOPubThread(object):
             return MASTER
         else:
             return CHILD
-    
+
     def start(self):
         """Start the IOPub thread"""
         self.thread.start()
         # make sure we don't prevent process exit
         # I'm not sure why setting daemon=True above isn't enough, but it doesn't appear to be.
         atexit.register(self.stop)
-    
+
     def stop(self):
         """Stop the IOPub thread"""
         if not self.thread.is_alive():
@@ -183,8 +183,10 @@ class IOPubThread(object):
         self.thread.join()
         if hasattr(self._local, 'event_pipe'):
             self._local.event_pipe.close()
-    
+
     def close(self):
+        if self.closed:
+            return
         self.socket.close()
         self.socket = None
 
@@ -206,11 +208,11 @@ class IOPubThread(object):
 
     def send_multipart(self, *args, **kwargs):
         """send_multipart schedules actual zmq send in my thread.
-        
+
         If my thread isn't running (e.g. forked process), send immediately.
         """
         self.schedule(lambda : self._really_send(*args, **kwargs))
-    
+
     def _really_send(self, msg, *args, **kwargs):
         """The callback that actually sends messages"""
         mp_mode = self._check_mp_mode()
@@ -231,10 +233,10 @@ class IOPubThread(object):
 class BackgroundSocket(object):
     """Wrapper around IOPub thread that provides zmq send[_multipart]"""
     io_thread = None
-    
+
     def __init__(self, io_thread):
         self.io_thread = io_thread
-    
+
     def __getattr__(self, attr):
         """Wrap socket attr access for backward-compatibility"""
         if attr.startswith('__') and attr.endswith('__'):
@@ -245,7 +247,7 @@ class BackgroundSocket(object):
                 DeprecationWarning, stacklevel=2)
             return getattr(self.io_thread.socket, attr)
         super(BackgroundSocket, self).__getattr__(attr)
-    
+
     def __setattr__(self, attr, value):
         if attr == 'io_thread' or (attr.startswith('__' and attr.endswith('__'))):
             super(BackgroundSocket, self).__setattr__(attr, value)
@@ -253,7 +255,7 @@ class BackgroundSocket(object):
             warnings.warn("Setting zmq Socket attribute %s on BackgroundSocket" % attr,
                 DeprecationWarning, stacklevel=2)
             setattr(self.io_thread.socket, attr, value)
-    
+
     def send(self, msg, *args, **kwargs):
         return self.send_multipart([msg], *args, **kwargs)
 
@@ -264,7 +266,7 @@ class BackgroundSocket(object):
 
 class OutStream(TextIOBase):
     """A file like object that publishes the stream to a 0MQ PUB socket.
-    
+
     Output is handed off to an IO Thread
     """
 
@@ -419,7 +421,7 @@ class OutStream(TextIOBase):
 
     def _flush_buffer(self):
         """clear the current buffer and return the current buffer data.
-        
+
         This should only be called in the IO thread.
         """
         data = u''

@@ -8,6 +8,7 @@ from __future__ import print_function
 import atexit
 import os
 import sys
+import errno
 import signal
 import traceback
 import logging
@@ -112,6 +113,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     kernel = Any()
     poller = Any() # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
+
+    context = Any()
+    shell_socket = Any()
+    control_socket = Any()
+    stdin_socket = Any()
+    iopub_socket = Any()
+    iopub_thread = Any()
+
     ports = Dict()
 
     subcommands = {
@@ -171,7 +180,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             # Parent polling doesn't work if ppid == 1 to start with.
             self.poller = ParentPollerUnix()
 
-    def _bind_socket(self, s, port):
+    def _try_bind_socket(self, s, port):
         iface = '%s://%s' % (self.transport, self.ip)
         if self.transport == 'tcp':
             if port <= 0:
@@ -189,6 +198,25 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                 path = "%s-%i" % (self.ip, port)
             s.bind("ipc://%s" % path)
         return port
+
+    def _bind_socket(self, s, port):
+        try:
+            win_in_use = errno.WSAEADDRINUSE
+        except AttributeError:
+            win_in_use = None
+
+        # Try up to 100 times to bind a port when in conflict to avoid
+        # infinite attempts in bad setups
+        max_attempts = 1 if port else 100
+        for attempt in range(max_attempts):
+            try:
+                return self._try_bind_socket(s, port)
+            except zmq.ZMQError as ze:
+                # Raise if we have any error not related to socket binding
+                if ze.errno != errno.EADDRINUSE and ze.errno != win_in_use:
+                    raise
+                if attempt == max_attempts - 1:
+                    raise
 
     def write_connection_file(self):
         """write connection info to JSON file"""
@@ -229,9 +257,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def init_sockets(self):
         # Create a context, a session, and the kernel sockets.
         self.log.info("Starting the kernel at pid: %i", os.getpid())
-        context = zmq.Context.instance()
-        # Uncomment this to try closing the context.
-        # atexit.register(context.term)
+        assert self.context is None, "init_sockets cannot be called twice!"
+        self.context = context = zmq.Context()
+        atexit.register(self.close)
 
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
@@ -278,6 +306,26 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.hb_port = self.heartbeat.port
         self.log.debug("Heartbeat REP Channel on port: %i" % self.hb_port)
         self.heartbeat.start()
+
+    def close(self):
+        """Close zmq sockets in an orderly fashion"""
+        self.log.info("Cleaning up sockets")
+        if self.heartbeat:
+            self.log.debug("Closing heartbeat channel")
+            self.heartbeat.socket.close()
+            self.heartbeat.context.term()
+        if self.iopub_thread:
+            self.log.debug("Closing iopub channel")
+            self.iopub_thread.stop()
+            self.iopub_thread.close()
+        for channel in ('shell', 'control', 'stdin'):
+            self.log.debug("Closing %s channel", channel)
+            socket = getattr(self, channel + "_socket", None)
+            if socket and not socket.closed:
+                socket.close()
+        self.log.debug("Terminating zmq context")
+        self.context.term()
+        self.log.debug("Terminated zmq context")
 
     def log_connection_info(self):
         """display connection info, and store ports"""
@@ -477,8 +525,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         try:
             self.init_signal()
         except:
-            # Catch exception when initializing signal fails, eg when running the 
-            # kernel on a separate thread 
+            # Catch exception when initializing signal fails, eg when running the
+            # kernel on a separate thread
             if self.log_level < logging.CRITICAL:
                 self.log.error("Unable to initialize signal:", exc_info=True)
         self.init_kernel()
@@ -506,7 +554,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         except KeyboardInterrupt:
             pass
 
+
 launch_new_instance = IPKernelApp.launch_instance
+
 
 def main():
     """Run an IPKernel as an application"""

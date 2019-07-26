@@ -39,4 +39,3 @@ def test_io_api():
     with nt.assert_raises(io.UnsupportedOperation):
         stream.tell()
 
-    

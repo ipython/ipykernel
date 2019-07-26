@@ -20,7 +20,7 @@ from ipython_genutils.py3compat import with_metaclass
 #-----------------------------------------------------------------------------
 
 class SocketABC(with_metaclass(abc.ABCMeta, object)):
-    
+
     @abc.abstractmethod
     def recv_multipart(self, flags=0, copy=True, track=False):
         raise NotImplementedError
@@ -28,7 +28,7 @@ class SocketABC(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def send_multipart(self, msg_parts, flags=0, copy=True, track=False):
         raise NotImplementedError
-    
+
     @classmethod
     def register(cls, other_cls):
         if other_cls is not DummySocket:
@@ -47,7 +47,7 @@ class DummySocket(HasTraits):
     message_sent = Int(0) # Should be an Event
     context = Instance(zmq.Context)
     def _context_default(self):
-        return zmq.Context.instance()
+        return zmq.Context()
 
     #-------------------------------------------------------------------------
     # Socket interface

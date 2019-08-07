@@ -98,7 +98,20 @@ class Heartbeat(Thread):
                 zmq.device(zmq.QUEUE, self.socket, self.socket)
             except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
+                    # signal interrupt, resume heartbeat
                     continue
+                elif e.errno == zmq.ETERM:
+                    # context terminated, close socket and exit
+                    try:
+                        self.socket.close()
+                    except zmq.ZMQError:
+                        # suppress further errors during cleanup
+                        # this shouldn't happen, though
+                        pass
+                    break
+                elif e.errno == zmq.ENOTSOCK:
+                    # socket closed elsewhere, exit
+                    break
                 else:
                     raise
             else:

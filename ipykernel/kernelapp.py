@@ -314,7 +314,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.log.info("Cleaning up sockets")
         if self.heartbeat:
             self.log.debug("Closing heartbeat channel")
-            self.heartbeat.socket.close()
             self.heartbeat.context.term()
         if self.iopub_thread:
             self.log.debug("Closing iopub channel")

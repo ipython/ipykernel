@@ -309,10 +309,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     def close(self):
         """Close zmq sockets in an orderly fashion"""
+        # un-capture IO before we start closing channels
+        self.reset_io()
         self.log.info("Cleaning up sockets")
         if self.heartbeat:
             self.log.debug("Closing heartbeat channel")
-            self.heartbeat.socket.close()
             self.heartbeat.context.term()
         if self.iopub_thread:
             self.log.debug("Closing iopub channel")
@@ -390,6 +391,15 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             sys.displayhook = self.displayhook
 
         self.patch_io()
+
+    def reset_io(self):
+        """restore original io
+
+        restores state after init_io
+        """
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        sys.displayhook = sys.__displayhook__
 
     def patch_io(self):
         """Patch important libraries that can't handle sys.stdout forwarding"""

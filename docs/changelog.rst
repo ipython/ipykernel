@@ -4,6 +4,20 @@ Changes in IPython kernel
 5.1
 ---
 
+5.1.2
+*****
+
+5.1.2 fixes some socket-binding race conditions that caused testing failures in
+nbconvert.
+
+- Fix socket-binding race conditions (:ghpull: `412`, :ghpull: `419`)
+- Add a no-op ``flush`` method to ``DummySocket`` and comply with stream API
+  (:ghpull: `405`)
+- Update kernel version to indicate kernel v5.3 support (:ghpull: `394`)
+- Add testing for upcoming Python 3.8 and PEP 570 positional parameters
+ (:ghpull: `396`, :ghpull: `408`)
+
+
 5.1.1
 *****
 5.1.1 fixes a bug that caused cells to get stuck in a busy state.

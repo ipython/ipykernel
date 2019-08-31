@@ -33,11 +33,11 @@ def start_new_kernel(**kwargs):
 
     Integrates with our output capturing for tests.
     """
+    kwargs['stderr'] = STDOUT
     try:
-        stdout = nose.iptest_stdstreams_fileno()
+        kwargs['stdout'] = nose.iptest_stdstreams_fileno()
     except AttributeError:
-        stdout = open(os.devnull)
-    kwargs.update(dict(stdout=stdout, stderr=STDOUT))
+        pass
     return manager.start_new_kernel(startup_timeout=STARTUP_TIMEOUT, **kwargs)
 
 
@@ -131,8 +131,11 @@ def new_kernel(argv=None):
     -------
     kernel_client: connected KernelClient instance
     """
-    stdout = getattr(nose, 'iptest_stdstreams_fileno', open(os.devnull))
-    kwargs = dict(stdout=stdout, stderr=STDOUT)
+    kwargs = {'stderr': STDOUT}
+    try:
+        kwargs['stdout'] = nose.iptest_stdstreams_fileno()
+    except AttributeError:
+        pass
     if argv is not None:
         kwargs['extra_arguments'] = argv
     return manager.run_kernel(**kwargs)

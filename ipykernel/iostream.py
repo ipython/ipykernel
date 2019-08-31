@@ -69,7 +69,7 @@ class IOPubThread(object):
         self._local = threading.local()
         self._events = deque()
         self._setup_event_pipe()
-        self.thread = threading.Thread(target=self._thread_main)
+        self.thread = threading.Thread(target=self._thread_main, name="IOPub")
         self.thread.daemon = True
 
     def _thread_main(self):

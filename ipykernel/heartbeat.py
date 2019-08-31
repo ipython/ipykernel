@@ -32,7 +32,7 @@ class Heartbeat(Thread):
     def __init__(self, context, addr=None):
         if addr is None:
             addr = ('tcp', localhost(), 0)
-        Thread.__init__(self)
+        Thread.__init__(self, name="Heartbeat")
         self.context = context
         self.transport, self.ip, self.port = addr
         self.original_port = self.port

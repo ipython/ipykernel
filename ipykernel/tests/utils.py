@@ -170,3 +170,14 @@ def wait_for_idle(kc):
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':
             break
+
+@contextmanager
+def connect_to_kernel(connection_info, timeout):
+    from jupyter_client import BlockingKernelClient
+    kc = BlockingKernelClient()
+    kc.log.setLevel('DEBUG')
+    kc.load_connection_info(connection_info)
+    kc.start_channels()
+    kc.wait_for_ready(timeout)
+    yield kc
+    kc.stop_channels()

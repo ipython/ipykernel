@@ -171,7 +171,7 @@ class Kernel(SingletonConfigurable):
             metadata = {}
             metadata = self.finish_metadata(parent, metadata, reply_content)
 
-            self.session.send(stream, u'execute_reply',
+            self.session.send(stream, u'fork_reply',
                                         reply_content, parent, metadata=metadata,
                                         ident=ident)
 

@@ -333,7 +333,7 @@ def test_fork_metadata():
         km = kc.parent
         fork_msg_id = kc.fork()
         fork_reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
-        # validate_message(fork_reply, "execute_reply", fork_msg_id)  # TODO: Make it work (need the `fork_reply`)
+        validate_message(fork_reply, "fork_reply", fork_msg_id)
         assert fork_msg_id == fork_reply['parent_header']['msg_id'] == fork_msg_id
         assert fork_reply['content']['conn']['key'] != kc.session.key.decode()
         fork_pid = fork_reply['content']['pid']

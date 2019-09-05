@@ -164,7 +164,7 @@ class IPythonKernel(KernelBase):
         # This is required by ipyparallel < 5.0
         metadata['status'] = reply_content['status']
         if reply_content['status'] == 'error' and reply_content['ename'] == 'UnmetDependency':
-                metadata['dependencies_met'] = False
+            metadata['dependencies_met'] = False
 
         return metadata
 

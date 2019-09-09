@@ -72,6 +72,7 @@ class Heartbeat(Thread):
         for attempt in range(max_attempts):
             try:
                 self._try_bind_socket()
+                break
             except zmq.ZMQError as ze:
                 if attempt == max_attempts - 1:
                     raise

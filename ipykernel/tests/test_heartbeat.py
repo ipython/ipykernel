@@ -21,6 +21,14 @@ def test_port_bind_failure_raises():
         assert mock_try_bind.call_count == 1
 
 
+def test_port_bind_failure_succeeds():
+    heart = Heartbeat(None)
+    with patch.object(heart, '_try_bind_socket') as mock_try_bind:
+        mock_try_bind.side_effect = lambda: None
+        heart._bind_socket()
+        assert mock_try_bind.call_count == 1
+
+
 def test_port_bind_failure_recovery():
     try:
         errno.WSAEADDRINUSE

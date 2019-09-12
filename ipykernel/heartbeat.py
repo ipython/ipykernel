@@ -83,6 +83,8 @@ class Heartbeat(Thread):
                     self.pick_port()
                 else:
                     raise
+            else:
+                return
 
     def run(self):
         self.socket = self.context.socket(zmq.ROUTER)

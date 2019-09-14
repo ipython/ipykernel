@@ -4,6 +4,18 @@ Changes in IPython kernel
 5.1
 ---
 
+5.1.3
+*****
+
+5.1.3 Includes several bugfixes and internal logic improvements.
+
+- Skip unregisterying comm with destructor (:ghpull: `433`)
+- Fix ``Heartbeat._bind_socket`` to return on the first bind (:ghpull: `431`)
+- Don't redirect stdout if nose machinery is not present (:ghpull: `427`)
+- Rename `_asyncio.py` to `_asyncio_utils.py` to avoid name conflicts on Python 3.6+  (:ghpull: `426`)
+- Only generate kernelspec when installing or building wheel (:ghpull: `425`)
+
+
 5.1.2
 *****
 

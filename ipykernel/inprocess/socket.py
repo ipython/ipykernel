@@ -61,4 +61,7 @@ class DummySocket(HasTraits):
         self.queue.put_nowait(msg_parts)
         self.message_sent += 1
 
+    def flush(self):
+        """no-op to comply with stream API"""
+
 SocketABC.register(DummySocket)

@@ -9,7 +9,7 @@ Changes in IPython kernel
 
 5.1.3 Includes several bugfixes and internal logic improvements.
 
-- Fix comm shutdown behavior (:ghpull: `433`, :ghpull: `435`)
+- Fix comm shutdown behavior by adding a ``deleting`` option to ``close`` which can be set to prevent registering new comm channels during shutdown (:ghpull: `433`, :ghpull: `435`)
 - Fix ``Heartbeat._bind_socket`` to return on the first bind (:ghpull: `431`)
 - Don't redirect stdout if nose machinery is not present (:ghpull: `427`)
 - Rename `_asyncio.py` to `_asyncio_utils.py` to avoid name conflicts on Python 3.6+  (:ghpull: `426`)

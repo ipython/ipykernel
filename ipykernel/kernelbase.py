@@ -41,10 +41,6 @@ from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
 
-try:
-    from matplotlib._pylab_helpers import Gcf
-except ImportError:
-    Gcf = None
 
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
@@ -866,6 +862,13 @@ class Kernel(SingletonConfigurable):
         )
 
     def _input_request(self, prompt, ident, parent, password=False):
+        """Send an input request to the frontend and wait for the reply."""
+        # matplotlib needs to be imported after app.launch_new_instance()
+        try:
+            from matplotlib._pylab_helpers import Gcf
+        except ImportError:
+            Gcf = None
+
         # Flush output before making the request.
         sys.stderr.flush()
         sys.stdout.flush()

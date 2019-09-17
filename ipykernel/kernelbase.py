@@ -41,7 +41,10 @@ from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
 
-from matplotlib._pylab_helpers import Gcf
+try:
+    from matplotlib._pylab_helpers import Gcf
+except ImportError:
+    Gcf = None
 
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
@@ -892,9 +895,8 @@ class Kernel(SingletonConfigurable):
                     # Allow comms and other messages to be processed
                     self.do_one_iteration()
                     # Allow matplotlib figures with e.g. qt5 to update
-                    manager = Gcf.get_active()
-                    if manager is not None:
-                        manager.canvas.flush_events()
+                    if Gcf and Gcf.get_active():
+                        Gcf.get_active().canvas.flush_events()
 
             except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)

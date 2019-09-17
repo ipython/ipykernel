@@ -41,6 +41,8 @@ from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
 
+from matplotlib import _pylab_helpers
+
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
 ABORT_PRIORITY = 20
@@ -880,16 +882,25 @@ class Kernel(SingletonConfigurable):
                           ident=ident)
 
         # Await a response.
-        while True:
+        reply = None
+        while reply is None:
             try:
-                ident, reply = self.session.recv(self.stdin_socket, 0)
+                ident, reply = self.session.recv(
+                    self.stdin_socket, zmq.NOBLOCK)
+                if not reply:
+                    time.sleep(0.01)
+                    # Allow comms and other messages to be processed
+                    self.do_one_iteration()
+                    # Allow matplotlib figures with e.g. qt5 to update
+                    manager = _pylab_helpers.Gcf.get_active()
+                    if manager is not None:
+                        manager.canvas.flush_events()
+
             except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt
-            else:
-                break
         try:
             value = py3compat.unicode_to_str(reply['content']['value'])
         except:

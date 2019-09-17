@@ -41,7 +41,7 @@ from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
 
-from matplotlib import _pylab_helpers
+from matplotlib._pylab_helpers import Gcf
 
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
@@ -892,7 +892,7 @@ class Kernel(SingletonConfigurable):
                     # Allow comms and other messages to be processed
                     self.do_one_iteration()
                     # Allow matplotlib figures with e.g. qt5 to update
-                    manager = _pylab_helpers.Gcf.get_active()
+                    manager = Gcf.get_active()
                     if manager is not None:
                         manager.canvas.flush_events()
 

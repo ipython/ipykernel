@@ -878,8 +878,26 @@ class Kernel(SingletonConfigurable):
         content = json_clean(dict(prompt=prompt, password=password))
         self.session.send(self.stdin_socket, u'input_request', content, parent,
                           ident=ident)
-
         # Await a response.
+        reply = self._wait_input_request_reply()
+
+        try:
+            value = py3compat.unicode_to_str(reply['content']['value'])
+        except:
+            self.log.error("Bad input_reply: %s", parent)
+            value = ''
+        if value == '\x04':
+            # EOF
+            raise EOFError
+        return value
+
+    def _wait_input_request_reply(self):
+        """Wait for an input request reply.
+
+        Raises
+        ------
+        KeyboardInterrupt if a keyboard interrupt is recieved.
+        """
         while True:
             try:
                 ident, reply = self.session.recv(self.stdin_socket, 0)
@@ -890,15 +908,7 @@ class Kernel(SingletonConfigurable):
                 raise KeyboardInterrupt
             else:
                 break
-        try:
-            value = py3compat.unicode_to_str(reply['content']['value'])
-        except:
-            self.log.error("Bad input_reply: %s", parent)
-            value = ''
-        if value == '\x04':
-            # EOF
-            raise EOFError
-        return value
+        return reply
 
     def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit.

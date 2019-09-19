@@ -863,12 +863,6 @@ class Kernel(SingletonConfigurable):
 
     def _input_request(self, prompt, ident, parent, password=False):
         """Send an input request to the frontend and wait for the reply."""
-        # matplotlib needs to be imported after app.launch_new_instance()
-        try:
-            from matplotlib._pylab_helpers import Gcf
-        except ImportError:
-            Gcf = None
-
         # Flush output before making the request.
         sys.stderr.flush()
         sys.stdout.flush()
@@ -906,6 +900,12 @@ class Kernel(SingletonConfigurable):
         ------
         KeyboardInterrupt if a keyboard interrupt is recieved.
         """
+        # matplotlib needs to be imported after app.launch_new_instance()
+        try:
+            from matplotlib._pylab_helpers import Gcf
+        except ImportError:
+            Gcf = None
+
         # Await a response.
         reply = None
         while reply is None:

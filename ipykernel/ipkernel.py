@@ -17,6 +17,9 @@ from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
 
+if sys.platform == 'darwin':
+    import appnope
+
 try:
     from IPython.core.interactiveshell import _asyncio_runner
 except ImportError:
@@ -78,6 +81,10 @@ class IPythonKernel(KernelBase):
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
+
+        if sys.platform == 'darwin':
+            # Disable app-nap as the kernel is not a gui but can have guis
+            appnope.nope()
 
     help_links = List([
         {

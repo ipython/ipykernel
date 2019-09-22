@@ -16,9 +16,7 @@ from traitlets import Instance, Type, Any, List, Bool
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
-
-if sys.platform == 'darwin':
-    import appnope
+from .eventloops import _use_appnope
 
 try:
     from IPython.core.interactiveshell import _asyncio_runner
@@ -82,8 +80,9 @@ class IPythonKernel(KernelBase):
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
 
-        if sys.platform == 'darwin':
+        if _use_appnope() and self._darwin_app_nap:
             # Disable app-nap as the kernel is not a gui but can have guis
+            import appnope
             appnope.nope()
 
     help_links = List([

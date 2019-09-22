@@ -900,15 +900,6 @@ class Kernel(SingletonConfigurable):
         ------
         KeyboardInterrupt if a keyboard interrupt is recieved.
         """
-        # matplotlib needs to be imported after app.launch_new_instance()
-        if 'matplotlib.pyplot' in sys.modules:
-            def flush_matplotlib():
-                import matplotlib.pyplot as plt
-                if plt.get_fignums():
-                    plt.gcf().canvas.flush_events()
-        else:
-            flush_matplotlib = None
-
         # Await a response.
         reply = None
         while reply is None:
@@ -917,19 +908,22 @@ class Kernel(SingletonConfigurable):
                     self.stdin_socket, zmq.NOBLOCK)
                 if not reply:
                     time.sleep(0.01)
-                    # Allow comms and other messages to be processed
-                    self.do_one_iteration()
-                    # Allow matplotlib figures with e.g. qt5 to update
-                    if flush_matplotlib:
-                        flush_matplotlib()
-
+                    self._input_request_loop_step()
             except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt
-
         return reply
+
+    def _input_request_loop_step(self):
+        """Do one step of the input request loop."""
+        # Allow matplotlib figures with e.g. qt5 to update
+        if 'matplotlib.pyplot' in sys.modules:
+            # matplotlib needs to be imported after app.launch_new_instance()
+            import matplotlib.pyplot as plt
+            if plt.get_fignums():
+                plt.gcf().canvas.flush_events()
 
     def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit.

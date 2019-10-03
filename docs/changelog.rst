@@ -15,6 +15,7 @@ Changes in IPython kernel
 - Don't redirect stdout if nose machinery is not present (:ghpull: `427`)
 - Rename `_asyncio.py` to `_asyncio_utils.py` to avoid name conflicts on Python 3.6+  (:ghpull: `426`)
 - Only generate kernelspec when installing or building wheel (:ghpull: `425`)
+- Fix priority ordering of control-channel messages in some cases (:ghpull:`443`)
 
 
 5.1.2

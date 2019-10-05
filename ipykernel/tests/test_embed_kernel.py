@@ -54,6 +54,9 @@ def setup_kernel(cmd):
             and time.time() < tic + SETUP_TIMEOUT:
             time.sleep(0.1)
 
+        # Wait 100ms for the writing to finish
+        time.sleep(0.1)
+
         if kernel.poll() is not None:
             o,e = kernel.communicate()
             e = py3compat.cast_unicode(e)

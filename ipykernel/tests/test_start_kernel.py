@@ -1,7 +1,10 @@
 from .test_embed_kernel import setup_kernel
+from flaky import flaky
 
 TIMEOUT = 15
 
+
+@flaky(max_runs=3)
 def test_ipython_start_kernel_userns():
     cmd = ('from IPython import start_kernel\n'
            'ns = {"tre": 123}\n'
@@ -27,6 +30,8 @@ def test_ipython_start_kernel_userns():
         text = content['data']['text/plain']
         assert u'DummyMod' in text
 
+
+@flaky(max_runs=3)
 def test_ipython_start_kernel_no_userns():
     # Issue #4188 - user_ns should be passed to shell as None, not {}
     cmd = ('from IPython import start_kernel\n'

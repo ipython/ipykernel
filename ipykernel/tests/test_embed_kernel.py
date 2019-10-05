@@ -56,13 +56,11 @@ def setup_kernel(cmd):
         client.load_connection_file()
         client.start_channels()
         client.wait_for_ready()
-    except:
-        kernel.terminate()
-
-    try:
-        yield client
+        try:
+            yield client
+        finally:
+            client.stop_channels()
     finally:
-        client.stop_channels()
         kernel.terminate()
 
 

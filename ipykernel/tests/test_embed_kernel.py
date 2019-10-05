@@ -52,9 +52,12 @@ def setup_kernel(cmd):
         raise IOError("Connection file %r never arrived" % connection_file)
 
     client = BlockingKernelClient(connection_file=connection_file)
-    client.load_connection_file()
-    client.start_channels()
-    client.wait_for_ready()
+    try:
+        client.load_connection_file()
+        client.start_channels()
+        client.wait_for_ready()
+    except:
+        kernel.terminate()
 
     try:
         yield client

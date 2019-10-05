@@ -225,10 +225,6 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def dispatch_shell(self, stream, msg):
         """dispatch shell requests"""
-        # flush control requests first
-        if self.control_stream:
-            self.control_stream.flush()
-
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
@@ -373,6 +369,9 @@ class Kernel(SingletonConfigurable):
         """
 
         while True:
+            # ensure control stream is flushed before processing shell messages
+            if self.control_stream:
+                self.control_stream.flush()
             # receive the next message and handle it
             try:
                 yield self.process_one()

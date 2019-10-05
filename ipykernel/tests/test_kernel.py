@@ -11,6 +11,7 @@ import sys
 import time
 
 import nose.tools as nt
+from flaky import flaky
 
 from IPython.testing import decorators as dec, tools as tt
 from ipython_genutils import py3compat
@@ -75,6 +76,7 @@ def test_sys_path_profile_dir():
     assert '' in sys_path
 
 
+@flaky(max_runs=3)
 @dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
 def test_subprocess_print():
     """printing from forked mp.Process"""
@@ -104,6 +106,7 @@ def test_subprocess_print():
         _check_master(kc, expected=True, stream="stderr")
 
 
+@flaky(max_runs=3)
 def test_subprocess_noprint():
     """mp.Process without print doesn't trigger iostream mp_mode"""
     with kernel() as kc:
@@ -126,6 +129,7 @@ def test_subprocess_noprint():
         _check_master(kc, expected=True, stream="stderr")
 
 
+@flaky(max_runs=3)
 @dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
 def test_subprocess_error():
     """error in mp.Process doesn't crash"""

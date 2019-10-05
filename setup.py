@@ -98,6 +98,7 @@ setup_args = dict(
         'test': [
             'pytest',
             'pytest-cov',
+            'flaky',
             'nose',  # nose because there are still a few nose.tools imports hanging around
         ],
     },

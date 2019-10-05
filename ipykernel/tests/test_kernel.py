@@ -11,7 +11,7 @@ import sys
 import time
 
 import nose.tools as nt
-import flaky as flaky
+from flaky import flaky
 
 from IPython.testing import decorators as dec, tools as tt
 from ipython_genutils import py3compat

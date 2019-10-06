@@ -917,7 +917,7 @@ class Kernel(SingletonConfigurable):
 
     def _input_request_loop_step(self):
         """Do one step of the input request loop."""
-        # Allow matplotlib figures with e.g. qt5 to update
+        # Allow matplotlib figures using GUI frameworks (e.g. qt, wx, gtk, tk) to update
         if 'matplotlib.pyplot' in sys.modules:
             # matplotlib needs to be imported after app.launch_new_instance()
             import matplotlib.pyplot as plt

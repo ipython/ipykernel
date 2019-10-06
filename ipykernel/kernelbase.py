@@ -13,6 +13,7 @@ from signal import signal, default_int_handler, SIGINT
 import sys
 import time
 import uuid
+import threading
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -917,8 +918,15 @@ class Kernel(SingletonConfigurable):
 
     def _input_request_loop_step(self):
         """Do one step of the input request loop."""
-        # Allow matplotlib figures using GUI frameworks (e.g. qt, wx, gtk, tk) to update
-        if 'matplotlib.pyplot' in sys.modules:
+        # Allow matplotlib figures using GUI frameworks (e.g. qt, wx, gtk, tk)
+        # to update
+        if sys.version_info >= (3, 4):
+            is_main_thread = (threading.current_thread() is
+                              threading.main_thread())
+        else:
+            is_main_thread = isinstance(threading.current_thread(),
+                                        threading._MainThread)
+        if is_main_thread and 'matplotlib.pyplot' in sys.modules:
             # matplotlib needs to be imported after app.launch_new_instance()
             import matplotlib.pyplot as plt
             if plt.get_fignums():

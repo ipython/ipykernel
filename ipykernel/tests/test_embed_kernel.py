@@ -6,6 +6,7 @@
 import os
 import sys
 import time
+import json
 
 from contextlib import contextmanager
 from subprocess import Popen, PIPE
@@ -29,6 +30,18 @@ def setup_kernel(cmd):
     -------
     kernel_manager: connected KernelManager instance
     """
+
+    def connection_file_ready(connection_file):
+        """Check if connection_file is a readable json file."""
+        if not os.path.exists(connection_file):
+            return False
+        try:
+            with open(connection_file) as f:
+                json.load(f)
+            return True
+        except ValueError:
+            return False
+
     kernel = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE)
     try:
         connection_file = os.path.join(
@@ -37,10 +50,13 @@ def setup_kernel(cmd):
         )
         # wait for connection file to exist, timeout after 5s
         tic = time.time()
-        while not os.path.exists(connection_file) \
+        while not connection_file_ready(connection_file) \
             and kernel.poll() is None \
             and time.time() < tic + SETUP_TIMEOUT:
             time.sleep(0.1)
+
+        # Wait 100ms for the writing to finish
+        time.sleep(0.1)
 
         if kernel.poll() is not None:
             o,e = kernel.communicate()

@@ -154,12 +154,6 @@ def loop_wx(kernel):
 
     import wx
 
-    if _use_appnope() and kernel._darwin_app_nap:
-        # we don't hook up App Nap contexts for Wx,
-        # just disable it outright.
-        from appnope import nope
-        nope()
-
      # Wx uses milliseconds
     poll_interval = int(1000 * kernel._poll_interval)
 

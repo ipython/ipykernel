@@ -16,6 +16,7 @@ from traitlets import Instance, Type, Any, List, Bool
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
+from .eventloops import _use_appnope
 
 try:
     from IPython.core.interactiveshell import _asyncio_runner
@@ -78,6 +79,11 @@ class IPythonKernel(KernelBase):
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
+
+        if _use_appnope() and self._darwin_app_nap:
+            # Disable app-nap as the kernel is not a gui but can have guis
+            import appnope
+            appnope.nope()
 
     help_links = List([
         {

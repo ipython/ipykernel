@@ -876,6 +876,7 @@ class Kernel(SingletonConfigurable):
                 else:
                     raise
 
+        self._stdin_msg = None
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))
         self.session.send(self.stdin_socket, u'input_request', content, parent,
@@ -904,11 +905,7 @@ class Kernel(SingletonConfigurable):
         reply = None
         while reply is None:
             try:
-                ident, reply = self.session.recv(
-                    self.stdin_socket, zmq.NOBLOCK)
-                if not reply:
-                    time.sleep(0.01)
-                    self._input_request_loop_step()
+                reply = self._input_request_loop_step()
             except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
@@ -918,19 +915,19 @@ class Kernel(SingletonConfigurable):
 
     def _input_request_loop_step(self):
         """Do one step of the input request loop."""
-        # Allow matplotlib figures using GUI frameworks (e.g. qt, wx, gtk, tk)
-        # to update
+        # Allow GUI event loop to update
         if sys.version_info >= (3, 4):
             is_main_thread = (threading.current_thread() is
                               threading.main_thread())
         else:
             is_main_thread = isinstance(threading.current_thread(),
                                         threading._MainThread)
-        if is_main_thread and 'matplotlib.pyplot' in sys.modules:
-            # matplotlib needs to be imported after app.launch_new_instance()
-            import matplotlib.pyplot as plt
-            if plt.get_fignums():
-                plt.gcf().canvas.flush_events()
+        if is_main_thread and self.eventloop:
+            self.eventloop(self)
+            return self._stdin_msg
+        else:
+            ident, reply = self.session.recv(self.stdin_socket)
+            return reply
 
     def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit.

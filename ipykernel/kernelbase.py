@@ -926,7 +926,7 @@ class Kernel(SingletonConfigurable):
             self.eventloop(self)
             return self._stdin_msg
         else:
-            ident, reply = self.session.recv(self.stdin_socket)
+            ident, reply = self.session.recv(self.stdin_socket, 0)
             return reply
 
     def _at_shutdown(self):

@@ -448,7 +448,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                                 user_ns=self.user_ns,
         )
         kernel.stdin_stream = stdin_stream
-        kernel._stdin_msg = None
 
         def handle_msg(msg):
             idents, msg = self.session.feed_identities(msg, copy=False)

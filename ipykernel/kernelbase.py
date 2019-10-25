@@ -42,7 +42,6 @@ from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
 
-
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
 ABORT_PRIORITY = 20
@@ -174,6 +173,18 @@ class Kernel(SingletonConfigurable):
 
         self._stdin_msg = None
         self._stdin_lock = threading.Lock()
+        self.stdin_stream = ZMQStream(self.stdin_socket)
+
+        def handle_msg(msg):
+            idents, msg = self.session.feed_identities(msg, copy=False)
+            try:
+                msg = self.session.deserialize(msg, content=True, copy=False)
+            except Exception:
+                self.log.error("Invalid Message", exc_info=True)
+                return
+            self._stdin_msg = msg
+
+        self.stdin_stream.on_recv(handle_msg, copy=False)
 
     @gen.coroutine
     def dispatch_control(self, msg):

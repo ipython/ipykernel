@@ -433,7 +433,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """Create the Kernel object itself"""
         shell_stream = ZMQStream(self.shell_socket)
         control_stream = ZMQStream(self.control_socket)
-        stdin_stream = ZMQStream(self.stdin_socket)
 
         kernel_factory = self.kernel_class.instance
 
@@ -447,18 +446,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                                 profile_dir=self.profile_dir,
                                 user_ns=self.user_ns,
         )
-        kernel.stdin_stream = stdin_stream
 
-        def handle_msg(msg):
-            idents, msg = self.session.feed_identities(msg, copy=False)
-            try:
-                msg = self.session.deserialize(msg, content=True, copy=False)
-            except:
-                self.log.error("Invalid Message", exc_info=True)
-                return
-            kernel._stdin_msg = msg
-
-        kernel.stdin_stream.on_recv(handle_msg, copy=False)
         kernel.record_ports({
             name + '_port': port for name, port in self.ports.items()
         })

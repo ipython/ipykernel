@@ -446,7 +446,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                                 profile_dir=self.profile_dir,
                                 user_ns=self.user_ns,
         )
-
         kernel.record_ports({
             name + '_port': port for name, port in self.ports.items()
         })

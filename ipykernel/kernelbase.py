@@ -41,6 +41,7 @@ from traitlets import (
 from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
+from .inprocess.socket import DummySocket
 
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
@@ -173,6 +174,11 @@ class Kernel(SingletonConfigurable):
 
         self._stdin_msg = None
         self._stdin_lock = threading.Lock()
+
+        if isinstance(self.stdin_socket, DummySocket):
+            # This is a test
+            self.stdin_stream = None
+            return
         self.stdin_stream = ZMQStream(self.stdin_socket)
 
         def handle_msg(msg):

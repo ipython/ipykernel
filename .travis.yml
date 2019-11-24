@@ -41,10 +41,6 @@ after_success:
   - codecov
 matrix:
   include:
-    - python: 3.5
-      env:
-        - TORNADO="4.5.*"
-        - IPYTHON=master
     - python: 3.6
       env:
         - IPYTHON=master

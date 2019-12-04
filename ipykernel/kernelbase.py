@@ -295,6 +295,9 @@ class Kernel(SingletonConfigurable):
         self.log.info("Entering eventloop %s", self.eventloop)
         # record handle, so we can check when this changes
         eventloop = self.eventloop
+        if eventloop is None:
+            self.log.info("Exiting as there is no eventloop")
+            return
         def advance_eventloop():
             # check if eventloop changed:
             if self.eventloop is not eventloop:

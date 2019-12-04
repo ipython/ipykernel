@@ -85,6 +85,8 @@ class IPythonKernel(KernelBase):
             import appnope
             appnope.nope()
 
+        self.shell.magics_manager.register_function(self.input_eventloop)
+
     help_links = List([
         {
             'text': "Python Reference",

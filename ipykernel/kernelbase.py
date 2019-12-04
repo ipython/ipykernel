@@ -29,7 +29,7 @@ import zmq
 from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
-from IPython.core.error import StdinNotImplementedError
+from IPython.core.error import StdinNotImplementedError, UsageError
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type, string_types
 from ipykernel.jsonutil import json_clean
@@ -191,6 +191,26 @@ class Kernel(SingletonConfigurable):
             self._stdin_msg = msg
 
         self.stdin_stream.on_recv(handle_msg, copy=False)
+        # Should the eventloop be run while waiting for input
+        self._input_eventloop = False
+
+    def input_eventloop(self, active):
+        """
+        Activates and desactivates the eventloop while waiting for input.
+
+        active is "True" or "False" (Strings as it is used as a magic)
+
+        This allows eg. matplotlib plots to be used while debugging.
+
+        This should not be active while debugging a gui application that
+        uses the same eventloop as the events will be processed.
+        """
+        if active == "True":
+            self._input_eventloop = True
+        elif active == "False":
+            self._input_eventloop = False
+        else:
+            raise UsageError('Please use "True" or "False"')
 
     @gen.coroutine
     def dispatch_control(self, msg):
@@ -943,7 +963,7 @@ class Kernel(SingletonConfigurable):
         else:
             is_main_thread = isinstance(threading.current_thread(),
                                         threading._MainThread)
-        if is_main_thread and self.eventloop:
+        if is_main_thread and self.eventloop and self._input_eventloop:
             self.eventloop(self)
             return self._stdin_msg
         else:

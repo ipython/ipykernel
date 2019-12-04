@@ -298,6 +298,7 @@ class Kernel(SingletonConfigurable):
         if eventloop is None:
             self.log.info("Exiting as there is no eventloop")
             return
+
         def advance_eventloop():
             # check if eventloop changed:
             if self.eventloop is not eventloop:

@@ -4,6 +4,20 @@ Changes in IPython kernel
 5.1
 ---
 
+5.1.3
+*****
+
+5.1.3 Includes several bugfixes and internal logic improvements.
+
+- Fix comm shutdown behavior by adding a ``deleting`` option to ``close`` which can be set to prevent registering new comm channels during shutdown (:ghpull: `433`, :ghpull: `435`)
+- Fix ``Heartbeat._bind_socket`` to return on the first bind (:ghpull: `431`)
+- Moved ``InProcessKernelClient.flush`` to ``DummySocket`` (:gphull: `437`)
+- Don't redirect stdout if nose machinery is not present (:ghpull: `427`)
+- Rename `_asyncio.py` to `_asyncio_utils.py` to avoid name conflicts on Python 3.6+  (:ghpull: `426`)
+- Only generate kernelspec when installing or building wheel (:ghpull: `425`)
+- Fix priority ordering of control-channel messages in some cases (:ghpull:`443`)
+
+
 5.1.2
 *****
 

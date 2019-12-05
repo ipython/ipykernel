@@ -172,6 +172,7 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
+        self._stdin_lock = threading.Lock()
     @gen.coroutine
     def dispatch_control(self, msg):
         """dispatch control requests"""
@@ -876,12 +877,13 @@ class Kernel(SingletonConfigurable):
                 else:
                     raise
 
-        # Send the input request.
-        content = json_clean(dict(prompt=prompt, password=password))
-        self.session.send(self.stdin_socket, u'input_request', content, parent,
-                          ident=ident)
-        # Await a response.
-        reply = self._wait_input_request_reply()
+        with self._stdin_lock:
+            # Send the input request.
+            content = json_clean(dict(prompt=prompt, password=password))
+            self.session.send(self.stdin_socket, u'input_request', content, parent,
+                              ident=ident)
+            # Await a response.
+            reply = self._wait_input_request_reply()
 
         try:
             value = py3compat.unicode_to_str(reply['content']['value'])

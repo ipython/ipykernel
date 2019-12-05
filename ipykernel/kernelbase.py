@@ -882,8 +882,8 @@ class Kernel(SingletonConfigurable):
         with self._stdin_lock:
             # Send the input request.
             content = json_clean(dict(prompt=prompt, password=password))
-            self.session.send(self.stdin_socket, u'input_request', content, parent,
-                              ident=ident)
+            self.session.send(self.stdin_socket, u'input_request',
+                              content, parent, ident=ident)
             # Await a response.
             reply = self._wait_input_request_reply()
 
@@ -905,45 +905,50 @@ class Kernel(SingletonConfigurable):
         KeyboardInterrupt if a keyboard interrupt is recieved.
         """
         # Await a response.
-        reply = None
-        while reply is None:
+        while True:
             try:
-                reply = self._input_request_loop_step()
+                # Try a non blocking recv
+                ident, reply = self.session.recv(
+                    self.stdin_socket, zmq.NOBLOCK)
+                if reply:
+                    return reply
+                if not self._input_request_loop_step():
+                    # Wait until a reply is recieved
+                    ident, reply = self.session.recv(self.stdin_socket, 0)
+                    return reply
             except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt
-        return reply
 
     def _input_request_loop_step(self):
-        """Do one step of the input request loop."""
+        """
+        Do one step of the input request loop.
+
+        Returns False if no additional steps are needed, otherwise True.
+        """
         # Allow matplotlib figures using GUI frameworks (e.g. qt, wx, gtk, tk)
         # to update
         if PY3:
-            is_main_thread = (threading.current_thread() is
-                              threading.main_thread())
+            is_main_thread = (
+                threading.current_thread() is threading.main_thread())
         else:
             # Python 2
-            is_main_thread = isinstance(threading.current_thread(),
-                                        threading._MainThread)
+            is_main_thread = isinstance(
+                threading.current_thread(), threading._MainThread)
+
         if (is_main_thread and 'matplotlib.pyplot' in sys.modules and
                 self._enable_input_matplotlib_processing):
-            ident, reply = self.session.recv(self.stdin_socket, zmq.NOBLOCK)
-            if reply:
-                return reply
-
             # matplotlib needs to be imported after app.launch_new_instance()
             import matplotlib.pyplot as plt
             if plt.get_fignums():
                 # If there is a figure, update it, wait, and run the next step.
                 plt.gcf().canvas.flush_events()
                 time.sleep(0.01)
-                return None
-
-        # Wait until a reply is recieved
-        ident, reply = self.session.recv(self.stdin_socket, 0)
-        return reply
+                return True
+        # No more steps are needed
+        return False
 
     def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit.

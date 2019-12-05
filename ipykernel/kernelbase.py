@@ -173,6 +173,8 @@ class Kernel(SingletonConfigurable):
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
         self._stdin_lock = threading.Lock()
+        self._enable_input_matplotlib_processing = True
+
     @gen.coroutine
     def dispatch_control(self, msg):
         """dispatch control requests"""
@@ -924,7 +926,8 @@ class Kernel(SingletonConfigurable):
         else:
             is_main_thread = isinstance(threading.current_thread(),
                                         threading._MainThread)
-        if is_main_thread and 'matplotlib.pyplot' in sys.modules:
+        if (is_main_thread and 'matplotlib.pyplot' in sys.modules and
+                self._enable_input_matplotlib_processing):
             ident, reply = self.session.recv(self.stdin_socket, zmq.NOBLOCK)
             if reply:
                 return reply

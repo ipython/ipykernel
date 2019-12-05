@@ -906,11 +906,7 @@ class Kernel(SingletonConfigurable):
         reply = None
         while reply is None:
             try:
-                ident, reply = self.session.recv(
-                    self.stdin_socket, zmq.NOBLOCK)
-                if not reply:
-                    time.sleep(0.01)
-                    self._input_request_loop_step()
+                reply = self._input_request_loop_step()
             except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
@@ -929,10 +925,21 @@ class Kernel(SingletonConfigurable):
             is_main_thread = isinstance(threading.current_thread(),
                                         threading._MainThread)
         if is_main_thread and 'matplotlib.pyplot' in sys.modules:
+            ident, reply = self.session.recv(self.stdin_socket, zmq.NOBLOCK)
+            if reply:
+                return reply
+
             # matplotlib needs to be imported after app.launch_new_instance()
             import matplotlib.pyplot as plt
             if plt.get_fignums():
+                # If there is a figure, update it, wait, and run the next step.
                 plt.gcf().canvas.flush_events()
+                time.sleep(0.01)
+                return None
+
+        # Wait until a reply is recieved
+        ident, reply = self.session.recv(self.stdin_socket, 0)
+        return reply
 
     def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit.

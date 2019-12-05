@@ -338,7 +338,7 @@ class OutStream(TextIOBase):
 
         send will happen in the background thread
         """
-        if self.pub_thread.thread.is_alive():
+        if self.pub_thread and self.pub_thread.thread is not None and self.pub_thread.thread.is_alive():
             # request flush on the background thread
             self.pub_thread.schedule(self._flush)
             # wait for flush to actually get through, if we can.

@@ -1,10 +1,27 @@
 language: python
-python:
-  - "nightly"
-  - 3.8
-  - 3.7
-  - 3.6
-  - 3.5
+matrix:
+  include:
+    - arch: arm64
+      python: "nightly"
+      dist: bionic
+    - arch: amd64
+      python: "nightly"
+    - arch: arm64
+      python: 3.5
+    - arch: amd64
+      python: 3.5
+    - arch: arm64
+      python: 3.6
+    - arch: amd64
+      python: 3.6
+    - arch: arm64
+      python: 3.7
+    - arch: amd64
+      python: 3.7
+    - arch: arm64
+      python: 3.8
+    - arch: amd64
+      python: 3.8
 sudo: false
 dist: xenial
 install:

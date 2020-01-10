@@ -488,18 +488,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if self.shell:
             self.shell.configurables.append(self)
 
-    def init_extensions(self):
-        super(IPKernelApp, self).init_extensions()
-        # BEGIN HARDCODED WIDGETS HACK
-        # Ensure ipywidgets extension is loaded if available
-        extension_man = self.shell.extension_manager
-        if 'ipywidgets' not in extension_man.loaded:
-            try:
-                extension_man.load_extension('ipywidgets')
-            except ImportError as e:
-                self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
-        # END HARDCODED WIDGETS HACK
-
     def configure_tornado_logger(self):
         """ Configure the tornado logging.Logger.
 

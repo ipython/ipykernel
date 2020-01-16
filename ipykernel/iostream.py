@@ -406,6 +406,8 @@ class OutStream(TextIOBase):
                 # and this helps.
                 if '\n' in string:
                     self.flush()
+                else:
+                    self.pub_thread.schedule(self._flush)
             else:
                 self._schedule_flush()
 

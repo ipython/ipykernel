@@ -1,6 +1,8 @@
 import builtins
 import logging
+import threading
 import traceback
+import warnings
 
 import trio
 
@@ -8,6 +10,16 @@ import trio
 class TrioRunner:
     def __init__(self):
         self._trio_token = None
+
+    def initialize(self, kernel, io_loop):
+        kernel.shell.set_trio_runner(self)
+        kernel.shell.run_line_magic('autoawait', 'trio')
+        kernel.shell.magics_manager.magics['line']['autoawait'] = \
+            lambda _: warnings.warn("Autoawait isn't allowed in Trio "
+                "background loop mode.")
+        bg_thread = threading.Thread(target=io_loop.start, daemon=True,
+            name='TornadoBackground')
+        bg_thread.start()
 
     def run(self):
         def log_nursery_exc(exc):

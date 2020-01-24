@@ -12,7 +12,6 @@ import errno
 import signal
 import traceback
 import logging
-import threading
 
 from tornado import ioloop
 import zmq
@@ -587,16 +586,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.io_loop = ioloop.IOLoop.current()
         if self.trio_loop:
             from ipykernel.trio_runner import TrioRunner
-            import warnings
             tr = TrioRunner()
-            self.kernel.shell.set_trio_runner(tr)
-            self.kernel.shell.run_line_magic('autoawait', 'trio')
-            self.kernel.shell.magics_manager.magics['line']['autoawait'] = \
-                lambda _: warnings.warn("Autoawait isn't allowed in Trio "
-                    "background loop mode.")
-            bg_thread = threading.Thread(target=self.io_loop.start, daemon=True,
-                name='TornadoBackground')
-            bg_thread.start()
+            tr.initialize(self.kernel, self.io_loop)
             try:
                 tr.run()
             except KeyboardInterrupt:

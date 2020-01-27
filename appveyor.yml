@@ -15,6 +15,7 @@ cache:
 
 init:
   - cmd: set PATH=%python%;%python%\scripts;%PATH%
+
 install:
   - cmd: |
         python -m pip install --upgrade setuptools pip wheel
@@ -26,8 +27,9 @@ install:
         pip install matplotlib numpy
         pip freeze
   - cmd: python -c "import ipykernel.kernelspec; ipykernel.kernelspec.install(user=True)"
+
 test_script:
-  - cmd: pytest -v --cov ipykernel ipykernel
+  - cmd: pytest -v -x --cov ipykernel ipykernel
 
 on_success:
   - cmd: pip install codecov

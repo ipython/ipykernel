@@ -6,8 +6,9 @@ clone_depth: 1
 environment:
 
   matrix:
+    - python: "C:/Python38-x64"
     - python: "C:/Python36-x64"
-    - python: "C:/Python36"
+    - python: "C:/Python35"
 
 cache:
   - C:\Users\appveyor\AppData\Local\pip\Cache

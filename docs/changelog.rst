@@ -4,6 +4,17 @@ Changes in IPython kernel
 5.1
 ---
 
+5.1.4
+*****
+
+5.1.4 Includes a few bugfixes,
+especially for compatibility with Python 3.8 on Windows.
+
+- Fix pickle issues when using inline matplotlib backend (:ghpull:`476`)
+- Fix an error during kernel shutdown (:ghpull:`463`)
+- Fix compatibility issues with Python 3.8 (:ghpull:`456`, :ghpull:`461`)
+- Remove some dead code (:ghpull:`474`, :ghpull:`467`)
+
 5.1.3
 *****
 

@@ -2,8 +2,8 @@ from __future__ import print_function
 import os
 import sys
 
-from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
-from IPython.qt.inprocess import QtInProcessKernelManager
+from qtconsole.rich_ipython_widget import RichIPythonWidget
+from qtconsole.inprocess import QtInProcessKernelManager
 from IPython.lib import guisupport
 
 

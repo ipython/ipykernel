@@ -2,8 +2,8 @@ from __future__ import print_function
 import os
 import sys
 
-from IPython.kernel.inprocess import InProcessKernelManager
-from IPython.terminal.console.interactiveshell import ZMQTerminalInteractiveShell
+from ipykernel.inprocess import InProcessKernelManager
+from jupyter_console.ptshell import ZMQTerminalInteractiveShell
 
 
 def print_process_id():

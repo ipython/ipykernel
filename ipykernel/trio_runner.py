@@ -1,5 +1,6 @@
 import builtins
 import logging
+import signal
 import threading
 import traceback
 import warnings
@@ -9,6 +10,7 @@ import trio
 
 class TrioRunner:
     def __init__(self):
+        self._cell_cancel_scope = None
         self._trio_token = None
 
     def initialize(self, kernel, io_loop):
@@ -21,7 +23,15 @@ class TrioRunner:
             name='TornadoBackground')
         bg_thread.start()
 
+    def interrupt(self, signum, frame):
+        if self._cell_cancel_scope:
+            self._cell_cancel_scope.cancel()
+        else:
+            raise Exception('Kernel interrupted but no cell is running')
+
     def run(self):
+        old_sig = signal.signal(signal.SIGINT, self.interrupt)
+
         def log_nursery_exc(exc):
             exc = '\n'.join(traceback.format_exception(type(exc), exc,
                 exc.__traceback__))
@@ -38,13 +48,13 @@ class TrioRunner:
                 await trio.sleep_forever()
 
         trio.run(trio_main)
+        signal.signal(signal.SIGINT, old_sig)
 
     def __call__(self, async_fn):
         async def loc(coro):
-            """
-            We need the dummy no-op async def to protect from
-            trio's internal. See https://github.com/python-trio/trio/issues/89
-            """
-            return await coro
+            self._cell_cancel_scope = trio.CancelScope()
+            with self._cell_cancel_scope:
+                return await coro
+            self._cell_cancel_scope = None
 
         return trio.from_thread.run(loc, async_fn, trio_token=self._trio_token)

@@ -96,7 +96,7 @@ setup_args = dict(
     ],
     extras_require={
         'test': [
-            'pytest',
+            'pytest !=5.3.4',
             'pytest-cov',
             'flaky',
             'nose',  # nose because there are still a few nose.tools imports hanging around

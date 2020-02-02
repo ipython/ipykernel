@@ -17,8 +17,8 @@ import sys
 import re
 
 v = sys.version_info
-if v[:2] < (3, 4):
-    error = "ERROR: %s requires Python version 3.4 or above." % name
+if v[:2] < (3, 5):
+    error = "ERROR: %s requires Python version 3.5 or above." % name
     print(error, file=sys.stderr)
     sys.exit(1)
 
@@ -86,7 +86,7 @@ setup_args = dict(
     long_description="The IPython kernel for Jupyter",
     platforms="Linux, Mac OS X, Windows",
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     install_requires=[
         'ipython>=5.0.0',
         'traitlets>=4.1.0',

@@ -534,6 +534,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                     # fallback to the pre-3.8 default of Selector
                     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
+    def init_pdb(self):
+        """Replace pdb with IPython's version that is e.g. interruptible."""
+        import pdb
+        from IPython.core import debugger
+        pdb.Pdb = debugger.Pdb
+        pdb.set_trace = debugger.set_trace
+
     @catch_config_error
     def initialize(self, argv=None):
         self._init_asyncio_patch()
@@ -541,6 +548,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if self.subapp is not None:
             return
 
+        self.init_pdb()
         self.init_blackhole()
         self.init_connection_file()
         self.init_poller()

@@ -575,7 +575,7 @@ class Kernel(SingletonConfigurable):
         content = parent['content']
         code = content['code']
         cursor_pos = content['cursor_pos']
-        
+
         matches = yield gen.maybe_future(self.do_complete(code, cursor_pos))
         matches = json_clean(matches)
         completion_msg = self.session.send(stream, 'complete_reply',
@@ -886,7 +886,7 @@ class Kernel(SingletonConfigurable):
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
-                raise KeyboardInterrupt
+                raise KeyboardInterrupt("Interrupted by user") from None
             else:
                 break
         try:

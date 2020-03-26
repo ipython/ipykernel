@@ -35,7 +35,6 @@ def test_io_api():
     with nt.assert_raises(io.UnsupportedOperation):
         stream.readline()
     with nt.assert_raises(io.UnsupportedOperation):
-        stream.seek()
+        stream.seek(0)
     with nt.assert_raises(io.UnsupportedOperation):
         stream.tell()
-

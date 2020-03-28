@@ -194,6 +194,11 @@ class Kernel(SingletonConfigurable):
         # Should the eventloop be run while waiting for input
         self._input_eventloop = False
 
+    @property
+    def io_streams(self):
+        """Return all I/O streams."""
+        return self.shell_streams + [self.stdin_stream]
+
     def input_eventloop(self, active):
         """
         Activates and desactivates the eventloop while waiting for input.

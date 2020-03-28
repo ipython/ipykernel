@@ -116,7 +116,7 @@ def loop_qt4(kernel):
     kernel.app = get_app_qt4([" "])
     kernel.app.setQuitOnLastWindowClosed(False)
 
-    for s in kernel.shell_streams + [kernel.stdin_stream]:
+    for s in kernel.io_streams:
         _notify_stream_qt(kernel, s)
 
     _loop_qt(kernel.app)
@@ -159,7 +159,7 @@ def loop_wx(kernel):
 
     def wake():
         """wake from wx"""
-        for stream in kernel.shell_streams + [kernel.stdin_stream]:
+        for stream in kernel.io_streams:
             if stream.flush(limit=1):
                 kernel.app.ExitMainLoop()
                 return
@@ -225,7 +225,7 @@ def loop_tk(kernel):
     # For Tkinter, we create a Tk object and call its withdraw method.
     kernel.app = app = Tk()
     kernel.app.withdraw()
-    for stream in kernel.shell_streams + [kernel.stdin_stream]:
+    for stream in kernel.io_streams:
         notifier = partial(process_stream_events, stream)
         # seems to be needed for tk
         notifier.__name__ = 'notifier'
@@ -296,7 +296,7 @@ def loop_cocoa(kernel):
                 # don't let interrupts during mainloop invoke crash_handler:
                 sys.excepthook = handle_int
                 mainloop(kernel._poll_interval)
-                for stream in kernel.shell_streams + [kernel.stdin_stream]:
+                for stream in kernel.io_streams:
                     if stream.flush(limit=1):
                         # events to process, return control to kernel
                         return
@@ -337,7 +337,7 @@ def loop_asyncio(kernel):
         if stream.flush(limit=1):
             loop.stop()
 
-    for stream in kernel.shell_streams + [kernel.stdin_stream]:
+    for stream in kernel.io_streams:
         fd = stream.getsockopt(zmq.FD)
         notifier = partial(process_stream_events, stream)
         loop.add_reader(fd, notifier)

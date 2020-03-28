@@ -1,8 +1,34 @@
 Changes in IPython kernel
 =========================
 
+5.2
+---
+
+5.2.0
+*****
+
+5.2.0 Includes several bugfixes and internal logic improvements.
+
+- Produce better traceback when kernel is interrupted (:ghpull:`491`)
+- Add ``InProcessKernelClient.control_channel`` for compatibility with jupyter-client v6.0.0 (:ghpull:`489`)
+- Drop support for Python 3.4 (:ghpull:`483`)
+- Work around issue related to Tornado with python3.8 on Windows (:ghpull:`480`, :ghpull:`481`)
+- Prevent entering event loop if it is None (:ghpull:`464`)
+- Use ``shell.input_transformer_manager`` when available (:ghpull:`411`)
+
 5.1
 ---
+
+5.1.4
+*****
+
+5.1.4 Includes a few bugfixes,
+especially for compatibility with Python 3.8 on Windows.
+
+- Fix pickle issues when using inline matplotlib backend (:ghpull:`476`)
+- Fix an error during kernel shutdown (:ghpull:`463`)
+- Fix compatibility issues with Python 3.8 (:ghpull:`456`, :ghpull:`461`)
+- Remove some dead code (:ghpull:`474`, :ghpull:`467`)
 
 5.1.3
 *****

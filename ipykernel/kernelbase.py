@@ -337,6 +337,10 @@ class Kernel(SingletonConfigurable):
         self.log.info("Entering eventloop %s", self.eventloop)
         # record handle, so we can check when this changes
         eventloop = self.eventloop
+        if eventloop is None:
+            self.log.info("Exiting as there is no eventloop")
+            return
+
         def advance_eventloop():
             # check if eventloop changed:
             if self.eventloop is not eventloop:
@@ -617,7 +621,7 @@ class Kernel(SingletonConfigurable):
         content = parent['content']
         code = content['code']
         cursor_pos = content['cursor_pos']
-        
+
         matches = yield gen.maybe_future(self.do_complete(code, cursor_pos))
         matches = json_clean(matches)
         completion_msg = self.session.send(stream, 'complete_reply',
@@ -951,7 +955,7 @@ class Kernel(SingletonConfigurable):
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
-                raise KeyboardInterrupt
+                raise KeyboardInterrupt("Interrupted by user") from None
         return reply
 
     def _input_request_loop_step(self):

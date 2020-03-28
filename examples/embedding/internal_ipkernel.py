@@ -5,7 +5,7 @@
 import sys
 
 from IPython.lib.kernel import connect_qtconsole
-from IPython.kernel.zmq.kernelapp import IPKernelApp
+from ipykernel.kernelapp import IPKernelApp
 
 #-----------------------------------------------------------------------------
 # Functions and classes

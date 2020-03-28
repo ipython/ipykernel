@@ -6,7 +6,11 @@
 from __future__ import print_function
 
 import matplotlib
-from matplotlib.backends.backend_agg import new_figure_manager, FigureCanvasAgg # analysis: ignore
+from matplotlib.backends.backend_agg import (
+    new_figure_manager,
+    FigureCanvasAgg,
+    new_figure_manager_given_figure,
+) # analysis: ignore
 from matplotlib import colors
 from matplotlib._pylab_helpers import Gcf
 

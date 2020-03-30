@@ -330,3 +330,17 @@ def test_shutdown():
             else:
                 break
         assert not km.is_alive()
+
+
+def test_interrupt_during_input():
+    """Kernel exits after being interrupted, while waiting in input()."""
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id = kc.execute("input()")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        from .test_message_spec import validate_message
+        validate_message(reply, 'execute_reply', msg_id)

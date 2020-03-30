@@ -14,6 +14,16 @@ try:
 except ImportError:
     from thread import interrupt_main  # Py 2
 from threading import Thread
+if hasattr(signal, "raise_signal"):
+    # Python 3.8 and later:
+    raise_signal = signal.raise_signal
+elif ctypes:
+    # Emulate raise_signal using ctypes:
+    raise_signal = getattr(ctypes.PyDLL(None), "raise")
+else:
+    # Give up:
+    def raise_signal(sig):
+        warnings.warn("Process interruption won't work, upgrade to Python 3.8")
 
 from traitlets.log import get_logger
 
@@ -103,7 +113,9 @@ class ParentPollerWindows(Thread):
                     # check if signal handler is callable
                     # to avoid 'int not callable' error (Python issue #23395)
                     if callable(signal.getsignal(signal.SIGINT)):
-                        interrupt_main()
+                        # interrupt_main() doesn't seem to interrupt input(),
+                        # so use a different mechanism:
+                        raise_signal(signal.SIGINT)
 
                 elif handle == self.parent_handle:
                     get_logger().warning("Parent appears to have exited, shutting down.")

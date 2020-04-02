@@ -863,6 +863,7 @@ class Kernel(SingletonConfigurable):
         # Flush output before making the request.
         sys.stderr.flush()
         sys.stdout.flush()
+
         # flush the stdin socket, to purge stale replies
         while True:
             try:
@@ -881,14 +882,18 @@ class Kernel(SingletonConfigurable):
         # Await a response.
         while True:
             try:
-                ident, reply = self.session.recv(self.stdin_socket, 0)
-            except Exception:
+                ident, reply = self.session.recv(self.stdin_socket)
+            except Exception as e:
                 self.log.warning("Invalid Message:", exc_info=True)
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt
             else:
-                break
+                # Use polling with sleep so KeyboardInterrupts can get through:
+                if (ident, reply) == (None, None):
+                    time.sleep(0.001)
+                else:
+                    break
         try:
             value = py3compat.unicode_to_str(reply['content']['value'])
         except:

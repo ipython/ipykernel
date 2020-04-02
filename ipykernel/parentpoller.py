@@ -113,8 +113,6 @@ class ParentPollerWindows(Thread):
                     # check if signal handler is callable
                     # to avoid 'int not callable' error (Python issue #23395)
                     if callable(signal.getsignal(signal.SIGINT)):
-                        # interrupt_main() doesn't seem to interrupt input(),
-                        # so use a different mechanism:
                         raise_signal(signal.SIGINT)
 
                 elif handle == self.parent_handle:

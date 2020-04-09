@@ -42,7 +42,7 @@ from ipykernel import (
 )
 from IPython.utils import openpy
 from ipykernel.jsonutil import json_clean, encode_images
-from IPython.utils.process import arg_split
+from IPython.utils.process import arg_split, system
 from ipython_genutils import py3compat
 from ipython_genutils.py3compat import unicode_type
 from traitlets import (
@@ -600,6 +600,42 @@ class ZMQInteractiveShell(InteractiveShell):
         # it inside the virtualenv.
         # https://ipython.readthedocs.io/en/latest/install/kernel_install.html
         pass
+
+    def system_piped(self, cmd):
+        """Call the given cmd in a subprocess, piping stdout/err
+
+        Parameters
+        ----------
+        cmd : str
+          Command to execute (can not end in '&', as background processes are
+          not supported.  Should not be a command that expects input
+          other than simple text.
+        """
+        if cmd.rstrip().endswith('&'):
+            # this is *far* from a rigorous test
+            # We do not support backgrounding processes because we either use
+            # pexpect or pipes to read from.  Users can always just call
+            # os.system() or use ip.system=ip.system_raw
+            # if they really want a background process.
+            raise OSError("Background processes not supported.")
+
+        # we explicitly do NOT return the subprocess status code, because
+        # a non-None value would trigger :func:`sys.displayhook` calls.
+        # Instead, we store the exit_code in user_ns.
+        # Also, protect system call from UNC paths on Windows here too
+        # as is done in InteractiveShell.system_raw
+        if sys.platform == 'win32':
+            cmd = self.var_expand(cmd, depth=1)
+            from IPython.utils._process_win32 import AvoidUNCPath
+            with AvoidUNCPath() as path:
+                if path is not None:
+                    cmd = 'pushd %s &&%s' % (path, cmd)
+                self.user_ns['_exit_code'] = system(cmd)
+        else:
+            self.user_ns['_exit_code'] = system(self.var_expand(cmd, depth=1))
+
+    # Ensure new system_piped implementation is used
+    system = system_piped
 
 
 InteractiveShellABC.register(ZMQInteractiveShell)

@@ -7,6 +7,7 @@
 import ast
 import io
 import os.path
+import platform
 import sys
 import time
 
@@ -315,6 +316,26 @@ def test_message_order():
             _check_status(reply['content'])
             assert reply['content']['execution_count'] == i
             assert reply['parent_header']['msg_id'] == msg_id
+
+@dec.skipif(
+    sys.platform.startswith('linux'), "Test UNC paths handling on Windows")
+def test_unc_paths():
+    with kernel() as kc, TemporaryDirectory() as td:
+        iopub = kc.iopub_channel
+        drive_file_path = os.path.join(td, 'unc.txt')
+        with open(drive_file_path, 'w+') as f:
+            f.write('# UNC test')
+
+        unc_root = '\\\\{0:s}'.format(platform.node())
+        file_path = os.path.splitdrive(os.path.dirname(drive_file_path))[1]
+        unc_file_path = os.path.join(unc_root, file_path[1:])
+
+        _, reply = execute("ls {0:s}".format(unc_file_path), kc=kc)
+        _check_status(reply)
+
+        stdout, stderr = assemble_output(iopub)
+        assert '10 unc.txt' in stdout, stdout
+        assert stderr == '', stderr
 
 
 def test_shutdown():

@@ -7,7 +7,6 @@
 import ast
 import io
 import os.path
-import platform
 import sys
 import time
 
@@ -324,7 +323,7 @@ def test_unc_paths():
         drive_file_path = os.path.join(td, 'unc.txt')
         with open(drive_file_path, 'w+') as f:
             f.write('# UNC test')
-        unc_root = '\\\\{0:s}'.format(platform.node())
+        unc_root = '\\\\localhost\\C$'
         file_path = os.path.splitdrive(os.path.dirname(drive_file_path))[1]
         unc_file_path = os.path.join(unc_root, file_path[1:])
 

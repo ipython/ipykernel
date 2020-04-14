@@ -256,6 +256,7 @@ def test_is_complete():
         assert reply['content']['status'] == 'complete'
 
 
+@dec.skipif(sys.platform.startswith('linux'))
 def test_complete():
     with kernel() as kc:
         execute(u'a = 1', kc=kc)
@@ -315,6 +316,36 @@ def test_message_order():
             _check_status(reply['content'])
             assert reply['content']['execution_count'] == i
             assert reply['parent_header']['msg_id'] == msg_id
+
+
+@dec.skipif(sys.platform.startswith('linux'))
+def test_unc_paths():
+    with kernel() as kc, TemporaryDirectory() as td:
+        drive_file_path = os.path.join(td, 'unc.txt')
+        with open(drive_file_path, 'w+') as f:
+            f.write('# UNC test')
+        unc_root = '\\\\localhost\\C$'
+        file_path = os.path.splitdrive(os.path.dirname(drive_file_path))[1]
+        unc_file_path = os.path.join(unc_root, file_path[1:])
+
+        iopub = kc.iopub_channel
+
+        kc.execute("cd {0:s}".format(unc_file_path))
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+        out, err = assemble_output(iopub)
+        assert unc_file_path in out
+
+        flush_channels(kc)
+        kc.execute(code="ls")
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+        out, err = assemble_output(iopub)
+        assert 'unc.txt' in out
+
+        kc.execute(code="cd")
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
 
 
 def test_shutdown():

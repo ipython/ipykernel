@@ -4,6 +4,12 @@ Changes in IPython kernel
 5.2
 ---
 
+5.2.1
+*****
+
+- Handle system commands that use UNC paths on Windows (:ghpull:`500`)
+- Add offset argument to seek in io test (:ghpull:`496`)
+
 5.2.0
 *****
 

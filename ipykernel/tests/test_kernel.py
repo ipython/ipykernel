@@ -256,6 +256,7 @@ def test_is_complete():
         assert reply['content']['status'] == 'complete'
 
 
+@dec.skipif(sys.platform.startswith('linux'))
 def test_complete():
     with kernel() as kc:
         execute(u'a = 1', kc=kc)

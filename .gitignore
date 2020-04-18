@@ -24,3 +24,4 @@ __pycache__
 
 data_kernelspec
 .pytest_cache
+.idea

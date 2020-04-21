@@ -538,6 +538,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """Replace pdb with IPython's version that is e.g. interruptible."""
         import pdb
         from IPython.core import debugger
+        debugger.Pdb = debugger.InterruptiblePdb
         pdb.Pdb = debugger.Pdb
         pdb.set_trace = debugger.set_trace
 

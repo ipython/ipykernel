@@ -893,7 +893,9 @@ class Kernel(SingletonConfigurable):
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt("Interrupted by user") from None
             else:
-                # Use polling with sleep so KeyboardInterrupts can get through:
+                # Use polling with sleep so KeyboardInterrupts can get through;
+                # doing a blocking recv() means stdin reads are uninterruptible
+                # on Windows:
                 if (ident, reply) == (None, None):
                     time.sleep(0.001)
                 else:

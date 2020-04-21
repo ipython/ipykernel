@@ -333,10 +333,10 @@ def test_shutdown():
 
 
 def test_interrupt_during_input():
-    """Kernel exits after being interrupted, while waiting in input().
+    """The kernel exits after being interrupted, while waiting in input().
     
     input() appears to have issues other functions don't, and it needs to be
-    interruptible for pdb to be interruptible.
+    interruptible in order for pdb to be interruptible.
     """
     with new_kernel() as kc:
         km = kc.parent

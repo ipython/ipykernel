@@ -886,20 +886,25 @@ class Kernel(SingletonConfigurable):
         # Await a response.
         while True:
             try:
-                ident, reply = self.session.recv(self.stdin_socket)
-            except Exception as e:
-                self.log.warning("Invalid Message:", exc_info=True)
+                # Use polling with select() so KeyboardInterrupts can get
+                # through; doing a blocking recv() means stdin reads are
+                # uninterruptible on Windows. We need a timeout because
+                # zmq.select() is also uninterruptible, but at least this
+                # way reads get noticed immediately and KeyboardInterrupts
+                # get noticed fairly quickly by human response time standards.
+                rlist, _, xlist = zmq.select(
+                    [self.stdin_socket], [], [self.stdin_socket], 0.01
+                )
+                if rlist or xlist:
+                    ident, reply = self.session.recv(self.stdin_socket)
+                    if (ident, reply) != (None, None):
+                        break
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt("Interrupted by user") from None
-            else:
-                # Use polling with sleep so KeyboardInterrupts can get through;
-                # doing a blocking recv() means stdin reads are uninterruptible
-                # on Windows:
-                if (ident, reply) == (None, None):
-                    time.sleep(0.001)
-                else:
-                    break
+            except Exception as e:
+                self.log.warning("Invalid Message:", exc_info=True)
+        
         try:
             value = py3compat.unicode_to_str(reply['content']['value'])
         except:

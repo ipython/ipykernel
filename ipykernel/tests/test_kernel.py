@@ -256,7 +256,7 @@ def test_is_complete():
         assert reply['content']['status'] == 'complete'
 
 
-@dec.skipif(sys.platform.startswith('linux'))
+@dec.skipif(sys.platform != 'win32', "only run on Windows")
 def test_complete():
     with kernel() as kc:
         execute(u'a = 1', kc=kc)

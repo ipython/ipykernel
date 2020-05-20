@@ -72,6 +72,10 @@ kernel_flags.update({
         {'IPKernelApp' : {'pylab' : 'auto'}},
         """Pre-load matplotlib and numpy for interactive use with
         the default matplotlib backend."""),
+    'trio-loop' : (
+        {'InteractiveShell' : {'trio_loop' : False}},
+        'Enable Trio as main event loop.'
+    ),
 })
 
 # inherit flags&aliases for any IPython shell apps
@@ -147,6 +151,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     # streams, etc.
     no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
     no_stderr = Bool(False, help="redirect stderr to the null device").tag(config=True)
+    trio_loop = Bool(False, help="Set main event loop.").tag(config=True)
     quiet = Bool(True, help="Only send stdout/stderr to output stream").tag(config=True)
     outstream_class = DottedObjectName('ipykernel.iostream.OutStream',
         help="The importstring for the OutStream factory").tag(config=True)
@@ -579,10 +584,19 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.poller.start()
         self.kernel.start()
         self.io_loop = ioloop.IOLoop.current()
-        try:
-            self.io_loop.start()
-        except KeyboardInterrupt:
-            pass
+        if self.trio_loop:
+            from ipykernel.trio_runner import TrioRunner
+            tr = TrioRunner()
+            tr.initialize(self.kernel, self.io_loop)
+            try:
+                tr.run()
+            except KeyboardInterrupt:
+                pass
+        else:
+            try:
+                self.io_loop.start()
+            except KeyboardInterrupt:
+                pass
 
 
 launch_new_instance = IPKernelApp.launch_instance

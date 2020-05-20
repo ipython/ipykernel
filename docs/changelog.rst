@@ -1,6 +1,21 @@
 Changes in IPython kernel
 =========================
 
+5.3
+---
+
+5.3.0
+*****
+
+5.3.0 Adds support for Trio event loops and has some bug fixes.
+
+- Fix ipython display imports (:ghpull:`509`)
+- Skip test_unc_paths if OS is not Windows (:ghpull:`507`)
+- Allow interrupting input() on Windows, as part of effort to make pdb interruptible (:ghpull:`498`)
+- Add Trio Loop (:ghpull:`479`)
+- Flush from process even without newline (:ghpull:`478`)
+
+
 5.2
 ---
 

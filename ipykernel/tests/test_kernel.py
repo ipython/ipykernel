@@ -361,3 +361,21 @@ def test_shutdown():
             else:
                 break
         assert not km.is_alive()
+
+
+def test_interrupt_during_input():
+    """
+    The kernel exits after being interrupted while waiting in input().
+    
+    input() appears to have issues other functions don't, and it needs to be
+    interruptible in order for pdb to be interruptible.
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id = kc.execute("input()")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        from .test_message_spec import validate_message
+        validate_message(reply, 'execute_reply', msg_id)

@@ -535,7 +535,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                     asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
     def init_pdb(self):
-        """Replace pdb with IPython's version that is e.g. interruptible."""
+        """Replace pdb with IPython's version that is interruptible.
+        
+        With the non-interruptible version, stopping pdb() locks up the kernel in a
+        non-recoverable state.
+        """
         import pdb
         from IPython.core import debugger
         debugger.Pdb = debugger.InterruptiblePdb

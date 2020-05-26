@@ -387,6 +387,8 @@ def test_interrupt_during_pdb_set_trace():
 
     Merely testing input() isn't enough, pdb has its own issues that need
     to be handled in addition.
+
+    This test will fail with versions of IPython < 7.14.0.
     """
     with new_kernel() as kc:
         km = kc.parent

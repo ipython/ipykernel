@@ -547,9 +547,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """
         import pdb
         from IPython.core import debugger
-        debugger.Pdb = debugger.InterruptiblePdb
-        pdb.Pdb = debugger.Pdb
-        pdb.set_trace = debugger.set_trace
+        if hasattr(debugger, "InterruptiblePdb"):
+            # Only available in newer IPython releases:
+            debugger.Pdb = debugger.InterruptiblePdb
+            pdb.Pdb = debugger.Pdb
+            pdb.set_trace = debugger.set_trace
 
     @catch_config_error
     def initialize(self, argv=None):

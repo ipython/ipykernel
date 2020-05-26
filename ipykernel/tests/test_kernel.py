@@ -379,3 +379,24 @@ def test_interrupt_during_input():
         reply = kc.get_shell_msg(timeout=TIMEOUT)
         from .test_message_spec import validate_message
         validate_message(reply, 'execute_reply', msg_id)
+
+
+def test_interrupt_during_pdb_set_trace():
+    """
+    The kernel exits after being interrupted while waiting in pdb.set_trace().
+
+    Merely testing input() isn't enough, pdb has its own issues that need
+    to be handled in addition.
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id = kc.execute("import pdb; pdb.set_trace()")
+        msg_id2 = kc.execute("3 + 4")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+        # If we failed to interrupt interrupt, this will timeout:
+        from .test_message_spec import validate_message
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id2)

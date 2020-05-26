@@ -12,8 +12,10 @@ import time
 
 import nose.tools as nt
 from flaky import flaky
+import pytest
 
 from IPython.testing import decorators as dec, tools as tt
+import IPython
 from ipython_genutils import py3compat
 from IPython.paths import locate_profile
 from ipython_genutils.tempdir import TemporaryDirectory
@@ -381,6 +383,10 @@ def test_interrupt_during_input():
         validate_message(reply, 'execute_reply', msg_id)
 
 
+@pytest.mark.skipif(
+    tuple(map(int, IPython.__version__.split("."))) < (7, 14, 0),
+    reason="Need new IPython"
+)
 def test_interrupt_during_pdb_set_trace():
     """
     The kernel exits after being interrupted while waiting in pdb.set_trace().

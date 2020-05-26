@@ -13,6 +13,7 @@ import time
 import nose.tools as nt
 from flaky import flaky
 import pytest
+from packaging import version
 
 from IPython.testing import decorators as dec, tools as tt
 import IPython
@@ -384,7 +385,7 @@ def test_interrupt_during_input():
 
 
 @pytest.mark.skipif(
-    tuple(map(int, IPython.__version__.split("."))) < (7, 14, 0),
+    version.parse(IPython.__version__) < version.parse("7.14.0"),
     reason="Need new IPython"
 )
 def test_interrupt_during_pdb_set_trace():

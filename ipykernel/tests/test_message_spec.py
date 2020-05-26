@@ -541,7 +541,7 @@ def test_stream():
 def test_display_data():
     flush_channels()
 
-    msg_id, reply = execute("from IPython.core.display import display; display(1)")
+    msg_id, reply = execute("from IPython.display import display; display(1)")
 
     display = KC.iopub_channel.get_msg(timeout=TIMEOUT)
     validate_message(display, 'display_data', parent=msg_id)

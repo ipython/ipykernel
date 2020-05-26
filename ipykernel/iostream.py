@@ -296,6 +296,7 @@ class OutStream(TextIOBase):
         self.parent_header = {}
         self._master_pid = os.getpid()
         self._flush_pending = False
+        self._subprocess_flush_pending = False
         self._io_loop = pub_thread.io_loop
         self._new_buffer()
         self.echo = None
@@ -362,6 +363,7 @@ class OutStream(TextIOBase):
         unless the thread has been destroyed (e.g. forked subprocess).
         """
         self._flush_pending = False
+        self._subprocess_flush_pending = False
 
         if self.echo is not None:
             try:
@@ -401,11 +403,13 @@ class OutStream(TextIOBase):
             # only touch the buffer in the IO thread to avoid races
             self.pub_thread.schedule(lambda : self._buffer.write(string))
             if is_child:
-                # newlines imply flush in subprocesses
                 # mp.Pool cannot be trusted to flush promptly (or ever),
                 # and this helps.
-                if '\n' in string:
-                    self.flush()
+                if self._subprocess_flush_pending:
+                    return
+                self._subprocess_flush_pending = True
+                # We can not rely on self._io_loop.call_later from a subprocess
+                self.pub_thread.schedule(self._flush)
             else:
                 self._schedule_flush()
 

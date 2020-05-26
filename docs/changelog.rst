@@ -1,6 +1,42 @@
 Changes in IPython kernel
 =========================
 
+5.3
+---
+
+5.3.0
+*****
+
+5.3.0 Adds support for Trio event loops and has some bug fixes.
+
+- Fix ipython display imports (:ghpull:`509`)
+- Skip test_unc_paths if OS is not Windows (:ghpull:`507`)
+- Allow interrupting input() on Windows, as part of effort to make pdb interruptible (:ghpull:`498`)
+- Add Trio Loop (:ghpull:`479`)
+- Flush from process even without newline (:ghpull:`478`)
+
+
+5.2
+---
+
+5.2.1
+*****
+
+- Handle system commands that use UNC paths on Windows (:ghpull:`500`)
+- Add offset argument to seek in io test (:ghpull:`496`)
+
+5.2.0
+*****
+
+5.2.0 Includes several bugfixes and internal logic improvements.
+
+- Produce better traceback when kernel is interrupted (:ghpull:`491`)
+- Add ``InProcessKernelClient.control_channel`` for compatibility with jupyter-client v6.0.0 (:ghpull:`489`)
+- Drop support for Python 3.4 (:ghpull:`483`)
+- Work around issue related to Tornado with python3.8 on Windows (:ghpull:`480`, :ghpull:`481`)
+- Prevent entering event loop if it is None (:ghpull:`464`)
+- Use ``shell.input_transformer_manager`` when available (:ghpull:`411`)
+
 5.1
 ---
 

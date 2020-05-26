@@ -15,7 +15,7 @@ from matplotlib import colors
 from matplotlib._pylab_helpers import Gcf
 
 from IPython.core.getipython import get_ipython
-from IPython.core.display import display
+from IPython.display import display
 
 from .config import InlineBackend
 

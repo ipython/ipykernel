@@ -256,6 +256,7 @@ def test_is_complete():
         assert reply['content']['status'] == 'complete'
 
 
+@dec.skipif(sys.platform != 'win32', "only run on Windows")
 def test_complete():
     with kernel() as kc:
         execute(u'a = 1', kc=kc)
@@ -317,6 +318,36 @@ def test_message_order():
             assert reply['parent_header']['msg_id'] == msg_id
 
 
+@dec.skipif(sys.platform.startswith('linux'))
+def test_unc_paths():
+    with kernel() as kc, TemporaryDirectory() as td:
+        drive_file_path = os.path.join(td, 'unc.txt')
+        with open(drive_file_path, 'w+') as f:
+            f.write('# UNC test')
+        unc_root = '\\\\localhost\\C$'
+        file_path = os.path.splitdrive(os.path.dirname(drive_file_path))[1]
+        unc_file_path = os.path.join(unc_root, file_path[1:])
+
+        iopub = kc.iopub_channel
+
+        kc.execute("cd {0:s}".format(unc_file_path))
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+        out, err = assemble_output(iopub)
+        assert unc_file_path in out
+
+        flush_channels(kc)
+        kc.execute(code="ls")
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+        out, err = assemble_output(iopub)
+        assert 'unc.txt' in out
+
+        kc.execute(code="cd")
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+
+
 def test_shutdown():
     """Kernel exits after polite shutdown_request"""
     with new_kernel() as kc:
@@ -330,3 +361,21 @@ def test_shutdown():
             else:
                 break
         assert not km.is_alive()
+
+
+def test_interrupt_during_input():
+    """
+    The kernel exits after being interrupted while waiting in input().
+    
+    input() appears to have issues other functions don't, and it needs to be
+    interruptible in order for pdb to be interruptible.
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id = kc.execute("input()")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        from .test_message_spec import validate_message
+        validate_message(reply, 'execute_reply', msg_id)

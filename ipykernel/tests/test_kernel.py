@@ -12,8 +12,11 @@ import time
 
 import nose.tools as nt
 from flaky import flaky
+import pytest
+from packaging import version
 
 from IPython.testing import decorators as dec, tools as tt
+import IPython
 from ipython_genutils import py3compat
 from IPython.paths import locate_profile
 from ipython_genutils.tempdir import TemporaryDirectory
@@ -379,3 +382,30 @@ def test_interrupt_during_input():
         reply = kc.get_shell_msg(timeout=TIMEOUT)
         from .test_message_spec import validate_message
         validate_message(reply, 'execute_reply', msg_id)
+
+
+@pytest.mark.skipif(
+    version.parse(IPython.__version__) < version.parse("7.14.0"),
+    reason="Need new IPython"
+)
+def test_interrupt_during_pdb_set_trace():
+    """
+    The kernel exits after being interrupted while waiting in pdb.set_trace().
+
+    Merely testing input() isn't enough, pdb has its own issues that need
+    to be handled in addition.
+
+    This test will fail with versions of IPython < 7.14.0.
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id = kc.execute("import pdb; pdb.set_trace()")
+        msg_id2 = kc.execute("3 + 4")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+        # If we failed to interrupt interrupt, this will timeout:
+        from .test_message_spec import validate_message
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id2)

@@ -61,12 +61,38 @@ class IPythonKernel(KernelBase):
         super(IPythonKernel, self).__init__(**kwargs)
 
         # Initialize the InteractiveShell subclass
-        self.shell = self.shell_class.instance(parent=self,
-            profile_dir = self.profile_dir,
-            user_module = self.user_module,
-            user_ns     = self.user_ns,
-            kernel      = self,
-        )
+        self._existing_shell = False
+        if kwargs.get('shell'):
+            self.shell = kwargs['shell']
+            self._existing_shell = True
+        else:
+            self.shell = self.shell_class.instance(parent=self,
+                profile_dir = self.profile_dir,
+                user_module = self.user_module,
+                user_ns     = self.user_ns,
+                kernel      = self,
+            )
+        if self._existing_shell:
+            # we need to replace the displayhook
+            from ipykernel.displayhook import ZMQShellDisplayHook
+            self.shell.displayhook = ZMQShellDisplayHook(
+                parent=self.shell,
+                shell=self.shell,
+                cache_size=self.shell.cache_size,
+            )
+            self.shell.configurables.append(self.shell.displayhook)
+            # This is a context manager that installs/revmoes the displayhook at
+            # the appropriate time.
+            from IPython.core.display_trap import DisplayTrap
+            self.shell.display_trap = DisplayTrap(hook=self.shell.displayhook)
+            self.shell._last_traceback = None
+
+            # displaypub:
+            from .zmqshell import ZMQDisplayPublisher
+            self.shell.display_pub = ZMQDisplayPublisher(parent=self.shell, shell=self.shell)
+            self.shell.configurables.append(self.shell.display_pub)
+
+
         self.shell.displayhook.session = self.session
         self.shell.displayhook.pub_socket = self.iopub_socket
         self.shell.displayhook.topic = self._topic('execute_result')

@@ -434,7 +434,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def init_signal(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    def init_kernel(self):
+    def init_kernel(self, shell=None):
         """Create the Kernel object itself"""
         shell_stream = ZMQStream(self.shell_socket)
         control_stream = ZMQStream(self.control_socket)
@@ -449,7 +449,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                                 stdin_socket=self.stdin_socket,
                                 log=self.log,
                                 profile_dir=self.profile_dir,
-                                user_ns=self.user_ns,
+                                #user_ns=self.user_ns,
+                                shell=shell
         )
         kernel.record_ports({
             name + '_port': port for name, port in self.ports.items()
@@ -554,7 +555,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             pdb.set_trace = debugger.set_trace
 
     @catch_config_error
-    def initialize(self, argv=None):
+    def initialize(self, argv=None, shell=None):
         self._init_asyncio_patch()
         super(IPKernelApp, self).initialize(argv)
         if self.subapp is not None:

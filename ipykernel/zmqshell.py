@@ -423,8 +423,8 @@ class KernelMagics(Magics):
 
         try:
             interval = int(arg_s)
-        except ValueError:
-            raise UsageError("%%autosave requires an integer, got %r" % arg_s)
+        except ValueError as e:
+            raise UsageError("%%autosave requires an integer, got %r" % arg_s) from e
 
         # javascript wants milliseconds
         milliseconds = 1000 * interval
@@ -485,7 +485,7 @@ class ZMQInteractiveShell(InteractiveShell):
             real_enable_gui(gui)
             self.active_eventloop = gui
         except ValueError as e:
-            raise UsageError("%s" % e)
+            raise UsageError("%s" % e) from e
 
     def init_environment(self):
         """Configure the user's environment."""

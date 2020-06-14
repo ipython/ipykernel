@@ -580,14 +580,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             # kernel on a separate thread
             if self.log_level < logging.CRITICAL:
                 self.log.error("Unable to initialize signal:", exc_info=True)
-        self.init_kernel()
+        self.init_kernel(shell=shell)
         # shell init steps
         self.init_path()
         self.init_shell()
-        if self.shell:
-            self.init_gui_pylab()
-            self.init_extensions()
-            self.init_code()
+        #if self.shell:
+        #    self.init_gui_pylab()
+        #    self.init_extensions()
+        #    self.init_code()
         # flush stdout/stderr, so that anything written to these streams during
         # initialization do not get associated with the first execution request
         sys.stdout.flush()

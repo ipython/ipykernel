@@ -395,6 +395,7 @@ class Kernel(SingletonConfigurable):
     def schedule_dispatch(self, priority, dispatch, *args):
         """schedule a message for dispatch"""
         idx = next(self._message_counter)
+        print('ho got message scheduled', now(), dispatch)
 
         self.msg_queue.put_nowait(
             (
@@ -423,7 +424,7 @@ class Kernel(SingletonConfigurable):
                 ),
                 copy=False,
             )
-
+        print('will register dispathc shell')
         for s in self.shell_streams:
             if s is self.control_stream:
                 continue

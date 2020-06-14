@@ -92,6 +92,12 @@ class IPythonKernel(KernelBase):
             self.shell.display_pub = ZMQDisplayPublisher(parent=self.shell, shell=self.shell)
             self.shell.configurables.append(self.shell.display_pub)
 
+            from ipykernel.datapub import ZMQDataPublisher
+            self.shell.data_pub = ZMQDataPublisher(parent=self.shell)
+            import types
+            meth = types.MethodType(ZMQInteractiveShell.system_piped, self.shell)
+            self.shell.system = meth
+
 
         self.shell.displayhook.session = self.session
         self.shell.displayhook.pub_socket = self.iopub_socket

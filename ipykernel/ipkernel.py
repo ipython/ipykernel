@@ -292,7 +292,13 @@ class IPythonKernel(KernelBase):
                 coro_future = asyncio.ensure_future(coro)
 
                 with self._cancel_on_sigint(coro_future):
-                    res = yield coro_future
+                    res = None
+                    try:
+                        res = yield coro_future
+                    finally:
+                        shell.events.trigger('post_execute')
+                        if not silent:
+                            shell.events.trigger('post_run_cell', res)
             else:
                 # runner isn't already running,
                 # make synchronous call,

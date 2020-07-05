@@ -4,6 +4,13 @@ Changes in IPython kernel
 5.3
 ---
 
+5.3.1
+*****
+
+- Fix #520: run post_execute and post_run_cell on async cells (:ghpull:`521`)
+- Fix exception causes in zmqshell.py (:ghpull:`516`)
+- Make pdb on Windows interruptible (:ghpull:`490`)
+
 5.3.0
 *****
 

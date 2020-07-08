@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.3
 ---
 
+5.3.2
+*****
+- Restore timer based event loop as a Windows-compatible fallback. (:ghpull:`523`)
+
 5.3.1
 *****
 

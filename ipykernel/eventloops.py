@@ -216,29 +216,62 @@ def loop_tk(kernel):
 
     from tkinter import Tk, READABLE
 
-    def process_stream_events(stream, *a, **kw):
-        """fall back to main loop when there's a socket event"""
-        if stream.flush(limit=1):
-            app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
-            app.quit()
+    app = Tk()
+    # Capability detection:
+    # per https://docs.python.org/3/library/tkinter.html#file-handlers
+    # file handlers are not available on Windows
+    if hasattr(app, 'createfilehandler'):
+        # A basic wrapper for structural similarity with the Windows version
+        class BasicAppWrapper(object):
+            def __init__(self, app):
+                self.app = app
+                self.app.withdraw()
 
-    # For Tkinter, we create a Tk object and call its withdraw method.
-    kernel.app = app = Tk()
-    kernel.app.withdraw()
-    for stream in kernel.shell_streams:
-        notifier = partial(process_stream_events, stream)
-        # seems to be needed for tk
-        notifier.__name__ = 'notifier'
-        app.tk.createfilehandler(stream.getsockopt(zmq.FD), READABLE, notifier)
-        # schedule initial call after start
-        app.after(0, notifier)
+        def process_stream_events(stream, *a, **kw):
+            """fall back to main loop when there's a socket event"""
+            if stream.flush(limit=1):
+                app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
+                app.quit()
 
-    app.mainloop()
+        # For Tkinter, we create a Tk object and call its withdraw method.
+        kernel.app_wrapper = BasicAppWrapper(app)
+
+        for stream in kernel.shell_streams:
+            notifier = partial(process_stream_events, stream)
+            # seems to be needed for tk
+            notifier.__name__ = "notifier"
+            app.tk.createfilehandler(stream.getsockopt(zmq.FD), READABLE, notifier)
+            # schedule initial call after start
+            app.after(0, notifier)
+
+        app.mainloop()
+
+    else:
+        doi = kernel.do_one_iteration
+        # Tk uses milliseconds
+        poll_interval = int(1000 * kernel._poll_interval)
+
+        class TimedAppWrapper(object):
+            def __init__(self, app, func):
+                self.app = app
+                self.app.withdraw()
+                self.func = func
+
+            def on_timer(self):
+                self.func()
+                self.app.after(poll_interval, self.on_timer)
+
+            def start(self):
+                self.on_timer()  # Call it once to get things going.
+                self.app.mainloop()
+
+        kernel.app_wrapper = TimedAppWrapper(app, doi)
+        kernel.app_wrapper.start()
 
 
 @loop_tk.exit
 def loop_tk_exit(kernel):
-    kernel.app.destroy()
+    kernel.app_wrapper.app.destroy()
 
 
 @register_integration('gtk')

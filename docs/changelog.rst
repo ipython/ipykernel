@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.3
 ---
 
+5.3.3
+*****
+- Fix QSocketNotifier in the Qt event loop not being disabled for the control channel. (:ghpull:`525`)
+
 5.3.2
 *****
 - Restore timer based event loop as a Windows-compatible fallback. (:ghpull:`523`)

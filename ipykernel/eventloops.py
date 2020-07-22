@@ -36,12 +36,6 @@ def _notify_stream_qt(kernel, stream):
         if stream.flush(limit=1):
             notifier.setEnabled(False)
             kernel.app.quit()
-        else:
-            # Even if there's nothing to flush, we need to disable the
-            # notifier in order to connect a new one in the next
-            # execution. This applies to the control channel.
-            notifier.setEnabled(False)
-            kernel.app.quit()
 
     fd = stream.getsockopt(zmq.FD)
     notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
@@ -122,8 +116,10 @@ def loop_qt4(kernel):
     kernel.app = get_app_qt4([" "])
     kernel.app.setQuitOnLastWindowClosed(False)
 
-    for s in kernel.shell_streams:
-        _notify_stream_qt(kernel, s)
+    # Only register the eventloop for the shell stream because doing
+    # it for the control stream is generating a bunch of unnecessary
+    # warnings on Windows.
+    _notify_stream_qt(kernel, kernel.shell_streams[0])
 
     _loop_qt(kernel.app)
 

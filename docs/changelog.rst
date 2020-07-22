@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.3
 ---
 
+5.3.4
+*****
+- Only run Qt eventloop in the shell stream. (:ghpull:`531`)
+
 5.3.3
 *****
 - Fix QSocketNotifier in the Qt event loop not being disabled for the control channel. (:ghpull:`525`)

@@ -96,7 +96,6 @@ def test_write_kernel_spec_permissions():
     os.chmod(read_only_resources, 0o500)
     for f in os.listdir(read_only_resources):
         os.chmod(os.path.join(read_only_resources, f), 0o400)
-        print(os.path.join(read_only_resources, f), oct(os.stat(os.path.join(read_only_resources, f)).st_mode))
 
     path = write_kernel_spec(resources=read_only_resources)
     assert_is_spec(path)

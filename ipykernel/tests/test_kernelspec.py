@@ -88,6 +88,26 @@ def test_write_kernel_spec_path():
     shutil.rmtree(path)
 
 
+def test_write_kernel_spec_permissions():
+    read_only_resources = tempfile.mkdtemp()
+    shutil.copytree(RESOURCES, read_only_resources, dirs_exist_ok=True)
+
+    # create copy of `RESOURCES` with no write permissions
+    os.chmod(read_only_resources, 0o500)
+    for f in os.listdir(read_only_resources):
+        os.chmod(os.path.join(read_only_resources, f), 0o400)
+        print(os.path.join(read_only_resources, f), oct(os.stat(os.path.join(read_only_resources, f)).st_mode))
+
+    path = write_kernel_spec(resources=read_only_resources)
+    assert_is_spec(path)
+
+    # ensure permissions are not loosened too much, original permission was
+    # 0o500, so the 'fixed' one should be 0o700, still no rw for group/other
+    assert os.stat(path).st_mode & 0o77 == 0o00
+
+    shutil.rmtree(path)
+
+
 def test_install_kernelspec():
 
     path = tempfile.mkdtemp()

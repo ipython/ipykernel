@@ -59,19 +59,29 @@ def get_kernel_dict(extra_arguments=None):
     }
 
 
-def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
+def write_kernel_spec(path=None, overrides=None, extra_arguments=None, resources=RESOURCES):
     """Write a kernel spec directory to `path`
-    
+
     If `path` is not specified, a temporary directory is created.
     If `overrides` is given, the kernelspec JSON is updated before writing.
-    
+    if 'resources' is given, copies resources from non-standard location.
+
     The path to the kernelspec is always returned.
     """
     if path is None:
         path = os.path.join(tempfile.mkdtemp(suffix='_kernels'), KERNEL_NAME)
-    
+
     # stage resources
-    shutil.copytree(RESOURCES, path)
+    shutil.copytree(resources, path)
+
+    # change permission if resources directory is not read-write able
+    if not os.access(path, os.W_OK | os.R_OK):
+        # changes permissions only for owner, do not touch group/other
+        os.chmod(path, os.stat(path).st_mode | 0o700)
+        for f in os.listdir(path):
+            file_path = os.path.join(path, f)
+            os.chmod(file_path, os.stat(file_path).st_mode | 0o600)
+
     # write kernel.json
     kernel_dict = get_kernel_dict(extra_arguments)
 
@@ -79,7 +89,7 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
         kernel_dict.update(overrides)
     with open(pjoin(path, 'kernel.json'), 'w') as f:
         json.dump(kernel_dict, f, indent=1)
-    
+
     return path
 
 

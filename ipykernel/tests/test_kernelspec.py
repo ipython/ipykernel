@@ -13,6 +13,8 @@ try:
 except ImportError:
     import mock # py2
 
+import pytest
+
 from jupyter_core.paths import jupyter_data_dir
 
 from ipykernel.kernelspec import (
@@ -97,14 +99,23 @@ def test_write_kernel_spec_permissions():
     for f in os.listdir(read_only_resources):
         os.chmod(os.path.join(read_only_resources, f), 0o400)
 
-    path = write_kernel_spec(resources=read_only_resources)
-    assert_is_spec(path)
+    with mock.patch('ipykernel.kernelspec.RESOURCES', read_only_resources):
+        with pytest.warns(UserWarning):
+            path = write_kernel_spec()
 
-    # ensure permissions are not loosened too much, original permission was
-    # 0o500, so the 'fixed' one should be 0o700, still no rw for group/other
-    assert os.stat(path).st_mode & 0o77 == 0o00
+        assert_is_spec(path)
 
-    shutil.rmtree(path)
+        # ensure permissions actually restricted
+        # not sure how to run these as `RESOURCES` is directly imported from
+        # `ipykernel.kernelspec` so it can't be mocked
+        # print(RESOURCES, oct(os.stat(RESOURCES).st_mode & 0o777))
+        # assert os.stat(RESOURCES).st_mode & 0o777 == 0o500
+
+        # ensure permissions are not loosened too much, original permission was
+        # 0o500, so the 'fixed' one should be 0o700, still no rw for group/other
+        assert os.stat(path).st_mode & 0o77 == 0o00
+
+        shutil.rmtree(path)
 
 
 def test_install_kernelspec():

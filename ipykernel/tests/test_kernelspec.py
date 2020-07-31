@@ -91,8 +91,8 @@ def test_write_kernel_spec_path():
 
 
 def test_write_kernel_spec_permissions():
-    read_only_resources = tempfile.mkdtemp()
-    shutil.copytree(RESOURCES, read_only_resources, dirs_exist_ok=True)
+    read_only_resources = os.path.join(tempfile.mkdtemp(), "_RESOURCES")
+    shutil.copytree(RESOURCES, read_only_resources)
 
     # create copy of `RESOURCES` with no write permissions
     os.chmod(read_only_resources, 0o500)

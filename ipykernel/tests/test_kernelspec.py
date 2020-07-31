@@ -89,7 +89,8 @@ def test_write_kernel_spec_path():
     assert_is_spec(path)
     shutil.rmtree(path)
 
-
+@pytest.mark.skipif(sys.platform == 'win32',
+                    reason="does not run on windows")
 def test_write_kernel_spec_permissions():
     read_only_resources = os.path.join(tempfile.mkdtemp(), "_RESOURCES")
     shutil.copytree(RESOURCES, read_only_resources)

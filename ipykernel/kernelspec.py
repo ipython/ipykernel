@@ -11,6 +11,7 @@ import os
 import shutil
 import sys
 import tempfile
+import warnings
 
 from jupyter_client.kernelspec import KernelSpecManager
 
@@ -76,6 +77,9 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
 
     # change permission if resources directory is not read-write able
     if not os.access(path, os.W_OK | os.R_OK):
+        warnings.warn(
+            UserWarning("resources is not writable, adjusting permissions before creating kernel")
+        )
         # changes permissions only for owner, do not touch group/other
         os.chmod(path, os.stat(path).st_mode | 0o700)
         for f in os.listdir(path):

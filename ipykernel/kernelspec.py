@@ -59,7 +59,7 @@ def get_kernel_dict(extra_arguments=None):
     }
 
 
-def write_kernel_spec(path=None, overrides=None, extra_arguments=None, resources=RESOURCES):
+def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
     """Write a kernel spec directory to `path`
 
     If `path` is not specified, a temporary directory is created.
@@ -72,7 +72,7 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None, resources
         path = os.path.join(tempfile.mkdtemp(suffix='_kernels'), KERNEL_NAME)
 
     # stage resources
-    shutil.copytree(resources, path)
+    shutil.copytree(RESOURCES, path)
 
     # change permission if resources directory is not read-write able
     if not os.access(path, os.W_OK | os.R_OK):
@@ -96,10 +96,10 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None, resources
 def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None,
             prefix=None, profile=None):
     """Install the IPython kernelspec for Jupyter
-    
+
     Parameters
     ----------
-    
+
     kernel_spec_manager: KernelSpecManager [optional]
         A KernelSpecManager to use for installation.
         If none provided, a default instance will be created.
@@ -118,7 +118,7 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
 
     Returns
     -------
-    
+
     The path where the kernelspec was installed.
     """
     if kernel_spec_manager is None:
@@ -153,12 +153,12 @@ from traitlets.config import Application
 class InstallIPythonKernelSpecApp(Application):
     """Dummy app wrapping argparse"""
     name = 'ipython-kernel-install'
-    
+
     def initialize(self, argv=None):
         if argv is None:
             argv = sys.argv[1:]
         self.argv = argv
-    
+
     def start(self):
         import argparse
         parser = argparse.ArgumentParser(prog=self.name,

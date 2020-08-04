@@ -11,7 +11,6 @@ import os
 import shutil
 import sys
 import tempfile
-import warnings
 
 from jupyter_client.kernelspec import KernelSpecManager
 

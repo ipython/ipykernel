@@ -92,8 +92,8 @@ def test_write_kernel_spec_path():
 
 @pytest.mark.skipif(sys.platform == 'win32',
                     reason="does not run on windows")
-def test_write_kernel_spec_permissions():
-    read_only_resources = os.path.join(tempfile.mkdtemp(), "_RESOURCES")
+def test_write_kernel_spec_permissions(tmp_path):
+    read_only_resources = os.path.join(tmp_path, "_RESOURCES")
     shutil.copytree(RESOURCES, read_only_resources)
 
     # file used to check that the correct (mocked) resource directory was used

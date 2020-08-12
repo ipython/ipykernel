@@ -43,7 +43,6 @@ from ._version import kernel_protocol_version
 
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
-ABORT_PRIORITY = 20
 
 
 class Kernel(SingletonConfigurable):

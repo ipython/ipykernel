@@ -795,16 +795,10 @@ class Kernel(SingletonConfigurable):
             stream.flush()
         self._aborting = True
 
-        self.schedule_dispatch(
-            ABORT_PRIORITY,
-            self._dispatch_abort,
-        )
+        def stop_aborting(f):
+            self._aborting = False
 
-    @gen.coroutine
-    def _dispatch_abort(self):
-        self.log.info("Finishing abort")
-        yield gen.sleep(self.stop_on_error_timeout)
-        self._aborting = False
+        self.io_loop.add_future(gen.sleep(self.stop_on_error_timeout), stop_aborting)
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""

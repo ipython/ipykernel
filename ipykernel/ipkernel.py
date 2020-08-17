@@ -1,6 +1,7 @@
 """The IPython kernel implementation"""
 
 import asyncio
+import builtins
 from contextlib import contextmanager
 from functools import partial
 import getpass

@@ -10,13 +10,12 @@ import warnings
 import zmq
 
 from traitlets import HasTraits, Instance, Int
-from ipython_genutils.py3compat import with_metaclass
 
 #-----------------------------------------------------------------------------
 # Generic socket interface
 #-----------------------------------------------------------------------------
 
-class SocketABC(with_metaclass(abc.ABCMeta, object)):
+class SocketABC(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def recv_multipart(self, flags=0, copy=True, track=False):

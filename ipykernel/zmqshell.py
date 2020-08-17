@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A ZMQ-based subclass of InteractiveShell.
 
 This code is meant to ease the refactoring of the base InteractiveShell into

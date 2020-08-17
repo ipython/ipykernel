@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ Tests for zmq shell / display publisher. """
 
 # Copyright (c) IPython Development Team.

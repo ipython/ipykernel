@@ -1,4 +1,3 @@
-# coding: utf-8
 """Wrappers for forwarding stdout/stderr over zmq"""
 
 # Copyright (c) IPython Development Team.

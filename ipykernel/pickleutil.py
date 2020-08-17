@@ -1,4 +1,3 @@
-# encoding: utf-8
 """Pickle related utilities. Perhaps this should be called 'can'."""
 
 # Copyright (c) IPython Development Team.

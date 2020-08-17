@@ -1,4 +1,3 @@
-# coding: utf-8
 """test the IPython Kernel"""
 
 # Copyright (c) IPython Development Team.

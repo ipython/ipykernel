@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # IPython Kernel documentation build configuration file, created by
 # sphinx-quickstart on Mon Oct  5 11:32:44 2015.

@@ -14,7 +14,7 @@ from nose.plugins.skip import SkipTest
 from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum
 )
-from ipython_genutils.py3compat import string_types, iteritems
+from ipython_genutils.py3compat import iteritems
 
 from .utils import TIMEOUT, start_global_kernel, flush_channels, execute
 
@@ -98,7 +98,7 @@ class MimeBundle(Reference):
     def _data_changed(self, name, old, new):
         for k,v in iteritems(new):
             assert mime_pat.match(k)
-            assert isinstance(v, string_types)
+            assert isinstance(v, str)
 
 
 # shell replies

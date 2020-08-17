@@ -13,7 +13,7 @@ from types import FunctionType
 
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
-from ipython_genutils.py3compat import string_types, iteritems, buffer_to_bytes, buffer_to_bytes_py2
+from ipython_genutils.py3compat import iteritems, buffer_to_bytes, buffer_to_bytes_py2
 
 # This registers a hook when it's imported
 try:
@@ -159,7 +159,7 @@ class CannedObject(object):
 class Reference(CannedObject):
     """object for wrapping a remote reference by name."""
     def __init__(self, name):
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError("illegal name: %r"%name)
         self.name = name
         self.buffers = []
@@ -315,7 +315,7 @@ def _import_mapping(mapping, original=None):
     log = get_logger()
     log.debug("Importing canning map")
     for key,value in list(mapping.items()):
-        if isinstance(key, string_types):
+        if isinstance(key, str):
             try:
                 cls = import_item(key)
             except Exception:
@@ -345,7 +345,7 @@ def can(obj):
     import_needed = False
     
     for cls,canner in iteritems(can_map):
-        if isinstance(cls, string_types):
+        if isinstance(cls, str):
             import_needed = True
             break
         elif istype(obj, cls):
@@ -390,7 +390,7 @@ def uncan(obj, g=None):
     
     import_needed = False
     for cls,uncanner in iteritems(uncan_map):
-        if isinstance(cls, string_types):
+        if isinstance(cls, str):
             import_needed = True
             break
         elif isinstance(obj, cls):

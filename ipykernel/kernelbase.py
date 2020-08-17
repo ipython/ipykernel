@@ -28,7 +28,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from traitlets.config.configurable import SingletonConfigurable
 from IPython.core.error import StdinNotImplementedError
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import string_types
 from ipykernel.jsonutil import json_clean
 from traitlets import (
     Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
@@ -752,7 +751,7 @@ class Kernel(SingletonConfigurable):
         """abort a specific msg by id"""
         self.log.warning("abort_request is deprecated in kernel_base. It is only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
-        if isinstance(msg_ids, string_types):
+        if isinstance(msg_ids, str):
             msg_ids = [msg_ids]
         if not msg_ids:
             self._abort_queues()

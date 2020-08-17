@@ -9,7 +9,6 @@ import logging
 from traitlets.config import LoggingConfigurable
 
 from ipython_genutils.importstring import import_item
-from ipython_genutils.py3compat import string_types
 from traitlets import Instance, Unicode, Dict, Any, default
 
 from .comm import Comm
@@ -34,7 +33,7 @@ class CommManager(LoggingConfigurable):
 
         f can be a Python callable or an import string for one.
         """
-        if isinstance(f, string_types):
+        if isinstance(f, str):
             f = import_item(f)
 
         self.targets[target_name] = f

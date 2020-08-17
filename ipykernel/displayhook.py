@@ -7,7 +7,6 @@ import sys
 
 from IPython.core.displayhook import DisplayHook
 from ipykernel.jsonutil import encode_images, json_clean
-from ipython_genutils.py3compat import builtin_mod
 from traitlets import Instance, Dict, Any
 from jupyter_client.session import extract_header, Session
 
@@ -30,7 +29,7 @@ class ZMQDisplayHook(object):
         if obj is None:
             return
 
-        builtin_mod._ = obj
+        builtins._ = obj
         sys.stdout.flush()
         sys.stderr.flush()
         contents = {'execution_count': self.get_execution_count(),

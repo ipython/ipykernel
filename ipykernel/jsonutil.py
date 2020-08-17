@@ -12,7 +12,7 @@ import numbers
 
 
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type, iteritems
+from ipython_genutils.py3compat import iteritems
 from ipython_genutils.encoding import DEFAULT_ENCODING
 next_attr_name = '__next__' if py3compat.PY3 else 'next'
 
@@ -130,7 +130,7 @@ def json_clean(obj):
 
     """
     # types that are 'atomic' and ok in json as-is.
-    atomic_ok = (unicode_type, type(None))
+    atomic_ok = (str, type(None))
 
     # containers that we need to convert into lists
     container_to_list = (tuple, set, types.GeneratorType)
@@ -181,14 +181,14 @@ def json_clean(obj):
         # key collisions after stringification.  This can happen with keys like
         # True and 'true' or 1 and '1', which collide in JSON.
         nkeys = len(obj)
-        nkeys_collapsed = len(set(map(unicode_type, obj)))
+        nkeys_collapsed = len(set(map(str, obj)))
         if nkeys != nkeys_collapsed:
             raise ValueError('dict cannot be safely converted to JSON: '
                              'key collision would lead to dropped values')
         # If all OK, proceed by making the new dict that will be json-safe
         out = {}
         for k,v in iteritems(obj):
-            out[unicode_type(k)] = json_clean(v)
+            out[str(k)] = json_clean(v)
         return out
     if isinstance(obj, datetime):
         return obj.strftime(ISO8601)

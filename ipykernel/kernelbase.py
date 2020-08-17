@@ -28,7 +28,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from traitlets.config.configurable import SingletonConfigurable
 from IPython.core.error import StdinNotImplementedError
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type, string_types
+from ipython_genutils.py3compat import string_types
 from ipykernel.jsonutil import json_clean
 from traitlets import (
     Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
@@ -75,7 +75,7 @@ class Kernel(SingletonConfigurable):
 
     @default('ident')
     def _default_ident(self):
-        return unicode_type(uuid.uuid4())
+        return str(uuid.uuid4())
 
     # This should be overridden by wrapper kernels that implement any real
     # language.

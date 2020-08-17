@@ -156,7 +156,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         content = dict(wait=wait)
         self._flush_streams()
         self.session.send(
-            self.pub_socket, u'clear_output', content,
+            self.pub_socket, 'clear_output', content,
             parent=self.parent_header, ident=self.topic,
         )
 
@@ -541,9 +541,9 @@ class ZMQInteractiveShell(InteractiveShell):
         sys.stderr.flush()
 
         exc_content = {
-            u'traceback' : stb,
-            u'ename' : unicode_type(etype.__name__),
-            u'evalue' : py3compat.safe_unicode(evalue),
+            'traceback' : stb,
+            'ename' : unicode_type(etype.__name__),
+            'evalue' : py3compat.safe_unicode(evalue),
         }
 
         dh = self.displayhook
@@ -553,7 +553,7 @@ class ZMQInteractiveShell(InteractiveShell):
         if dh.topic:
             topic = dh.topic.replace(b'execute_result', b'error')
 
-        exc_msg = dh.session.send(dh.pub_socket, u'error', json_clean(exc_content),
+        exc_msg = dh.session.send(dh.pub_socket, 'error', json_clean(exc_content),
                                   dh.parent_header, ident=topic)
 
         # FIXME - Once we rely on Python 3, the traceback is stored on the

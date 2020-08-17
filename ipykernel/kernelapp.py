@@ -383,12 +383,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             e_stderr = None if self.quiet else sys.__stderr__
 
             sys.stdout = outstream_factory(self.session, self.iopub_thread,
-                                           u'stdout',
+                                           'stdout',
                                            echo=e_stdout)
             if sys.stderr is not None:
                 sys.stderr.flush()
             sys.stderr = outstream_factory(self.session, self.iopub_thread,
-                                           u'stderr',
+                                           'stderr',
                                            echo=e_stderr)
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))

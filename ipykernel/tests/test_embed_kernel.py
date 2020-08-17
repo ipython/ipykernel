@@ -103,7 +103,7 @@ def test_embed_kernel_basic():
         msg_id = client.execute("c=a*2")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        assert content['status'] == u'ok'
+        assert content['status'] == 'ok'
 
         # oinfo c (should be 10)
         msg_id = client.inspect('c')
@@ -134,7 +134,7 @@ def test_embed_kernel_namespace():
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        assert u'5' in text
+        assert '5' in text
 
         # oinfo b (str)
         msg_id = client.inspect('b')
@@ -142,7 +142,7 @@ def test_embed_kernel_namespace():
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        assert u'hi there' in text
+        assert 'hi there' in text
 
         # oinfo c (undefined)
         msg_id = client.inspect('c')

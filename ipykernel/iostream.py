@@ -379,8 +379,8 @@ class OutStream(TextIOBase):
             # since pub_thread is itself fork-safe.
             # There should be a better way to do this.
             self.session.pid = os.getpid()
-            content = {u'name':self.name, u'text':data}
-            self.session.send(self.pub_thread, u'stream', content=content,
+            content = {'name':self.name, 'text':data}
+            self.session.send(self.pub_thread, 'stream', content=content,
                 parent=self.parent_header, ident=self.topic)
 
     def write(self, string):
@@ -428,7 +428,7 @@ class OutStream(TextIOBase):
 
         This should only be called in the IO thread.
         """
-        data = u''
+        data = ''
         if self._buffer is not None:
             buf = self._buffer
             self._new_buffer()

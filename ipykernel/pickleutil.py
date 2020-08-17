@@ -11,7 +11,6 @@ import sys
 import pickle
 from types import FunctionType
 
-from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
 from ipython_genutils.py3compat import buffer_to_bytes, buffer_to_bytes_py2
 
@@ -36,7 +35,7 @@ def _get_cell_type(a=None):
     """
     def inner():
         return a
-    return type(py3compat.get_closure(inner)[0])
+    return type(inner.__closure__[0])
 
 cell_type = _get_cell_type()
 
@@ -179,7 +178,7 @@ class CannedCell(CannedObject):
         cell_contents = uncan(self.cell_contents, g)
         def inner():
             return cell_contents
-        return py3compat.get_closure(inner)[0]
+        return inner.__closure__[0]
 
 
 class CannedFunction(CannedObject):
@@ -192,7 +191,7 @@ class CannedFunction(CannedObject):
         else:
             self.defaults = None
         
-        closure = py3compat.get_closure(f)
+        closure = f.__closure__
         if closure:
             self.closure = tuple( can(cell) for cell in closure )
         else:

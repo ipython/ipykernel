@@ -25,12 +25,8 @@ except ImportError:
 
 from traitlets.log import get_logger
 
-if py3compat.PY3:
-    buffer = memoryview
-    class_type = type
-else:
-    from types import ClassType
-    class_type = (type, ClassType)
+buffer = memoryview
+class_type = type
 
 PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 
@@ -281,10 +277,6 @@ class CannedArray(CannedObject):
             # we just pickled it
             return pickle.loads(buffer_to_bytes_py2(data))
         else:
-            if not py3compat.PY3 and isinstance(data, memoryview):
-                # frombuffer doesn't accept memoryviews on Python 2,
-                # so cast to old-style buffer
-                data = buffer(data.tobytes())
             return frombuffer(data, dtype=self.dtype).reshape(self.shape)
 
 

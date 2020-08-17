@@ -8,7 +8,7 @@ import signal
 import sys
 
 from IPython.core import release
-from ipython_genutils.py3compat import builtin_mod, PY3, safe_unicode
+from ipython_genutils.py3compat import builtin_mod, safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from tornado import gen
 from traitlets import Instance, Type, Any, List, Bool
@@ -127,7 +127,7 @@ class IPythonKernel(KernelBase):
             'name': 'ipython',
             'version': sys.version_info[0]
         },
-        'pygments_lexer': 'ipython%d' % (3 if PY3 else 2),
+        'pygments_lexer': 'ipython%d' % 3,
         'nbconvert_exporter': 'python',
         'file_extension': '.py'
     }
@@ -181,24 +181,15 @@ class IPythonKernel(KernelBase):
         """
         self._allow_stdin = allow_stdin
 
-        if PY3:
-            self._sys_raw_input = builtin_mod.input
-            builtin_mod.input = self.raw_input
-        else:
-            self._sys_raw_input = builtin_mod.raw_input
-            self._sys_eval_input = builtin_mod.input
-            builtin_mod.raw_input = self.raw_input
-            builtin_mod.input = lambda prompt='': eval(self.raw_input(prompt))
+        self._sys_raw_input = builtin_mod.input
+        builtin_mod.input = self.raw_input
+
         self._save_getpass = getpass.getpass
         getpass.getpass = self.getpass
 
     def _restore_input(self):
         """Restore raw_input, getpass"""
-        if PY3:
-            builtin_mod.input = self._sys_raw_input
-        else:
-            builtin_mod.raw_input = self._sys_raw_input
-            builtin_mod.input = self._sys_eval_input
+        builtin_mod.input = self._sys_raw_input
 
         getpass.getpass = self._save_getpass
 

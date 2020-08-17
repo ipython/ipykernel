@@ -6,7 +6,7 @@
 import atexit
 from binascii import b2a_hex
 from collections import deque
-from importlib import lock_held as import_lock_held
+from imp import lock_held as import_lock_held
 import os
 import sys
 import threading

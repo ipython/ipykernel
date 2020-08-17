@@ -516,7 +516,7 @@ class Kernel(SingletonConfigurable):
 
         try:
             content = parent['content']
-            code = py3compat.cast_unicode_py2(content['code'])
+            code = content['code']
             silent = content['silent']
             store_history = content.get('store_history', not silent)
             user_expressions = content.get('user_expressions', {})

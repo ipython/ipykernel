@@ -12,7 +12,7 @@ import pickle
 from types import FunctionType
 
 from ipython_genutils.importstring import import_item
-from ipython_genutils.py3compat import buffer_to_bytes, buffer_to_bytes_py2
+from ipython_genutils.py3compat import buffer_to_bytes
 
 # This registers a hook when it's imported
 try:
@@ -274,7 +274,7 @@ class CannedArray(CannedObject):
         data = self.buffers[0]
         if self.pickled:
             # we just pickled it
-            return pickle.loads(buffer_to_bytes_py2(data))
+            return pickle.loads(data)
         else:
             return frombuffer(data, dtype=self.dtype).reshape(self.shape)
 

@@ -12,7 +12,6 @@ import numbers
 
 
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import iteritems
 from ipython_genutils.encoding import DEFAULT_ENCODING
 next_attr_name = '__next__' if py3compat.PY3 else 'next'
 
@@ -187,7 +186,7 @@ def json_clean(obj):
                              'key collision would lead to dropped values')
         # If all OK, proceed by making the new dict that will be json-safe
         out = {}
-        for k,v in iteritems(obj):
+        for k,v in obj.items():
             out[str(k)] = json_clean(v)
         return out
     if isinstance(obj, datetime):

@@ -13,7 +13,7 @@ from types import FunctionType
 
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
-from ipython_genutils.py3compat import iteritems, buffer_to_bytes, buffer_to_bytes_py2
+from ipython_genutils.py3compat import buffer_to_bytes, buffer_to_bytes_py2
 
 # This registers a hook when it's imported
 try:
@@ -344,7 +344,7 @@ def can(obj):
     
     import_needed = False
     
-    for cls,canner in iteritems(can_map):
+    for cls,canner in can_map.items():
         if isinstance(cls, str):
             import_needed = True
             break
@@ -369,7 +369,7 @@ def can_dict(obj):
     """can the *values* of a dict"""
     if istype(obj, dict):
         newobj = {}
-        for k, v in iteritems(obj):
+        for k, v in obj.items():
             newobj[k] = can(v)
         return newobj
     else:
@@ -389,7 +389,7 @@ def uncan(obj, g=None):
     """invert canning"""
     
     import_needed = False
-    for cls,uncanner in iteritems(uncan_map):
+    for cls,uncanner in uncan_map.items():
         if isinstance(cls, str):
             import_needed = True
             break
@@ -407,7 +407,7 @@ def uncan(obj, g=None):
 def uncan_dict(obj, g=None):
     if istype(obj, dict):
         newobj = {}
-        for k, v in iteritems(obj):
+        for k, v in obj.items():
             newobj[k] = uncan(v,g)
         return newobj
     else:

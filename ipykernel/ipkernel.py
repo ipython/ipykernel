@@ -8,7 +8,7 @@ import signal
 import sys
 
 from IPython.core import release
-from ipython_genutils.py3compat import builtin_mod, safe_unicode
+from ipython_genutils.py3compat import safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from tornado import gen
 from traitlets import Instance, Type, Any, List, Bool
@@ -181,15 +181,15 @@ class IPythonKernel(KernelBase):
         """
         self._allow_stdin = allow_stdin
 
-        self._sys_raw_input = builtin_mod.input
-        builtin_mod.input = self.raw_input
+        self._sys_raw_input = builtins.input
+        builtins.input = self.raw_input
 
         self._save_getpass = getpass.getpass
         getpass.getpass = self.getpass
 
     def _restore_input(self):
         """Restore raw_input, getpass"""
-        builtin_mod.input = self._sys_raw_input
+        builtins.input = self._sys_raw_input
 
         getpass.getpass = self._save_getpass
 

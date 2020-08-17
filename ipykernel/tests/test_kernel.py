@@ -90,7 +90,6 @@ def test_subprocess_print():
         flush_channels(kc)
         np = 5
         code = '\n'.join([
-            "from __future__ import print_function",
             "import time",
             "import multiprocessing as mp",
             "pool = [mp.Process(target=print, args=('hello', i,)) for i in range(%i)]" % np,

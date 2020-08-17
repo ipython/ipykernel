@@ -8,12 +8,8 @@ warnings.warn("ipykernel.pickleutil is deprecated. It has moved to ipyparallel."
 
 import copy
 import sys
+import pickle
 from types import FunctionType
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 from ipython_genutils import py3compat
 from ipython_genutils.importstring import import_item
@@ -36,10 +32,7 @@ else:
     from types import ClassType
     class_type = (type, ClassType)
 
-try:
-    PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
-except AttributeError:
-    PICKLE_PROTOCOL = pickle.HIGHEST_PROTOCOL
+PICKLE_PROTOCOL = pickle.DEFAULT_PROTOCOL
 
 def _get_cell_type(a=None):
     """the type of a closure cell doesn't seem to be importable,

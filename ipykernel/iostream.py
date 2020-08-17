@@ -6,10 +6,7 @@
 import atexit
 from binascii import b2a_hex
 from collections import deque
-try:
-    from importlib import lock_held as import_lock_held
-except ImportError:
-    from imp import lock_held as import_lock_held
+from importlib import lock_held as import_lock_held
 import os
 import sys
 import threading

@@ -14,12 +14,9 @@ Reference: A. Tremols, P Cogolo, "Python Cookbook," p 302-305
 import warnings
 warnings.warn("ipykernel.codeutil is deprecated since IPykernel 4.3.1. It has moved to ipyparallel.serialize", DeprecationWarning)
 
+import copyreg
 import sys
 import types
-try:
-    import copyreg  # Py 3
-except ImportError:
-    import copy_reg as copyreg  # Py 2
 
 def code_ctor(*args):
     return types.CodeType(*args)

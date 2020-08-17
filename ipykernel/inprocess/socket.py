@@ -4,11 +4,8 @@
 # Distributed under the terms of the Modified BSD License.
 
 import abc
+from queue import Queue
 import warnings
-try:
-    from queue import Queue  # Py 3
-except ImportError:
-    from Queue import Queue  # Py 2
 
 import zmq
 

@@ -4,11 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
-try:
-    from queue import Queue
-except ImportError:
-    # py2
-    from Queue import Queue
+from queue import Queue
 from threading import Thread
 import unittest
 

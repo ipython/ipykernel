@@ -6,10 +6,7 @@
 import re
 import sys
 from distutils.version import LooseVersion as V
-try:
-    from queue import Empty  # Py 3
-except ImportError:
-    from Queue import Empty  # Py 2
+from queue import Empty
 
 import nose.tools as nt
 from nose.plugins.skip import SkipTest

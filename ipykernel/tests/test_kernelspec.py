@@ -7,11 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock # py2
+from unittest import mock
 
 from jupyter_core.paths import jupyter_data_dir
 

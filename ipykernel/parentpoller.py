@@ -9,10 +9,7 @@ import os
 import platform
 import signal
 import time
-try:
-    from _thread import interrupt_main  # Py 3
-except ImportError:
-    from thread import interrupt_main  # Py 2
+from _thread import interrupt_main  # Py 3
 from threading import Thread
 
 from traitlets.log import get_logger

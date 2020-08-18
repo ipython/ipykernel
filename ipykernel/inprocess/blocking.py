@@ -8,11 +8,8 @@ Useful for test suites and blocking terminal interfaces.
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING.txt, distributed as part of this software.
 #-----------------------------------------------------------------------------
+from queue import Queue, Empty
 import sys
-try:
-    from queue import Queue, Empty  # Py 3
-except ImportError:
-    from Queue import Queue, Empty  # Py 2
 
 # IPython imports
 from traitlets import Type

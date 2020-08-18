@@ -1,17 +1,12 @@
-# coding: utf-8
 """Wrappers for forwarding stdout/stderr over zmq"""
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
 import atexit
 from binascii import b2a_hex
 from collections import deque
-try:
-    from importlib import lock_held as import_lock_held
-except ImportError:
-    from imp import lock_held as import_lock_held
+from imp import lock_held as import_lock_held
 import os
 import sys
 import threading
@@ -25,7 +20,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from jupyter_client.session import extract_header
 
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -396,7 +390,7 @@ class OutStream(TextIOBase):
             raise ValueError('I/O operation on closed file')
         else:
             # Make sure that we're handling unicode
-            if not isinstance(string, unicode_type):
+            if not isinstance(string, str):
                 string = string.decode(self.encoding, 'replace')
 
             is_child = (not self._is_master_process())

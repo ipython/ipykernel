@@ -1,4 +1,3 @@
-# encoding: utf-8
 """Event loop integration for the ZeroMQ-based kernels."""
 
 # Copyright (c) IPython Development Team.

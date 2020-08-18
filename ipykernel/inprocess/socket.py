@@ -4,22 +4,18 @@
 # Distributed under the terms of the Modified BSD License.
 
 import abc
+from queue import Queue
 import warnings
-try:
-    from queue import Queue  # Py 3
-except ImportError:
-    from Queue import Queue  # Py 2
 
 import zmq
 
 from traitlets import HasTraits, Instance, Int
-from ipython_genutils.py3compat import with_metaclass
 
 #-----------------------------------------------------------------------------
 # Generic socket interface
 #-----------------------------------------------------------------------------
 
-class SocketABC(with_metaclass(abc.ABCMeta, object)):
+class SocketABC(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def recv_multipart(self, flags=0, copy=True, track=False):

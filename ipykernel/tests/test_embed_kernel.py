@@ -15,7 +15,6 @@ from flaky import flaky
 from jupyter_client import BlockingKernelClient
 from jupyter_core import paths
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type
 
 
 SETUP_TIMEOUT = 60
@@ -173,7 +172,7 @@ def test_embed_kernel_reentrant():
             content = msg['content']
             assert content['found']
             text = content['data']['text/plain']
-            assert unicode_type(i) in text
+            assert str(i) in text
 
             # exit from embed_kernel
             client.execute("get_ipython().exit_now = True")

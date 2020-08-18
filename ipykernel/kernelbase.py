@@ -3,8 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 from datetime import datetime
 from functools import partial
 import itertools
@@ -30,7 +28,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from traitlets.config.configurable import SingletonConfigurable
 from IPython.core.error import StdinNotImplementedError
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type, string_types
 from ipykernel.jsonutil import json_clean
 from traitlets import (
     Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
@@ -77,7 +74,7 @@ class Kernel(SingletonConfigurable):
 
     @default('ident')
     def _default_ident(self):
-        return unicode_type(uuid.uuid4())
+        return str(uuid.uuid4())
 
     # This should be overridden by wrapper kernels that implement any real
     # language.
@@ -519,7 +516,7 @@ class Kernel(SingletonConfigurable):
 
         try:
             content = parent['content']
-            code = py3compat.cast_unicode_py2(content['code'])
+            code = content['code']
             silent = content['silent']
             store_history = content.get('store_history', not silent)
             user_expressions = content.get('user_expressions', {})
@@ -754,7 +751,7 @@ class Kernel(SingletonConfigurable):
         """abort a specific msg by id"""
         self.log.warning("abort_request is deprecated in kernel_base. It is only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
-        if isinstance(msg_ids, string_types):
+        if isinstance(msg_ids, str):
             msg_ids = [msg_ids]
         if not msg_ids:
             self._abort_queues()

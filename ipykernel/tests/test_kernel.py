@@ -1,4 +1,3 @@
-# coding: utf-8
 """test the IPython Kernel"""
 
 # Copyright (c) IPython Development Team.
@@ -17,7 +16,6 @@ from packaging import version
 
 from IPython.testing import decorators as dec, tools as tt
 import IPython
-from ipython_genutils import py3compat
 from IPython.paths import locate_profile
 from ipython_genutils.tempdir import TemporaryDirectory
 
@@ -90,7 +88,6 @@ def test_subprocess_print():
         flush_channels(kc)
         np = 5
         code = '\n'.join([
-            "from __future__ import print_function",
             "import time",
             "import multiprocessing as mp",
             "pool = [mp.Process(target=print, args=('hello', i,)) for i in range(%i)]" % np,
@@ -157,11 +154,11 @@ def test_subprocess_error():
 # raw_input tests
 
 def test_raw_input():
-    """test [raw_]input"""
+    """test input"""
     with kernel() as kc:
         iopub = kc.iopub_channel
 
-        input_f = "input" if py3compat.PY3 else "raw_input"
+        input_f = "input"
         theprompt = "prompt> "
         code = 'print({input_f}("{theprompt}"))'.format(**locals())
         msg_id = kc.execute(code, allow_stdin=True)
@@ -175,27 +172,6 @@ def test_raw_input():
         assert reply['content']['status'] == 'ok'
         stdout, stderr = assemble_output(iopub)
         assert stdout == text + "\n"
-
-
-@dec.skipif(py3compat.PY3)
-def test_eval_input():
-    """test input() on Python 2"""
-    with kernel() as kc:
-        iopub = kc.iopub_channel
-
-        input_f = "input" if py3compat.PY3 else "raw_input"
-        theprompt = "prompt> "
-        code = 'print(input("{theprompt}"))'.format(**locals())
-        msg_id = kc.execute(code, allow_stdin=True)
-        msg = kc.get_stdin_msg(block=True, timeout=TIMEOUT)
-        assert msg['header']['msg_type'] == 'input_request'
-        content = msg['content']
-        assert content['prompt'] == theprompt
-        kc.input("1+1")
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
-        assert reply['content']['status'] == 'ok'
-        stdout, stderr = assemble_output(iopub)
-        assert stdout == "2\n"
 
 
 def test_save_history():

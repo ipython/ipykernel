@@ -6,10 +6,7 @@
 import re
 import sys
 from distutils.version import LooseVersion as V
-try:
-    from queue import Empty  # Py 3
-except ImportError:
-    from Queue import Empty  # Py 2
+from queue import Empty
 
 import nose.tools as nt
 from nose.plugins.skip import SkipTest
@@ -17,7 +14,6 @@ from nose.plugins.skip import SkipTest
 from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum
 )
-from ipython_genutils.py3compat import string_types, iteritems
 
 from .utils import TIMEOUT, start_global_kernel, flush_channels, execute
 
@@ -99,9 +95,9 @@ class MimeBundle(Reference):
     metadata = Dict()
     data = Dict()
     def _data_changed(self, name, old, new):
-        for k,v in iteritems(new):
+        for k,v in new.items():
             assert mime_pat.match(k)
-            assert isinstance(v, string_types)
+            assert isinstance(v, str)
 
 
 # shell replies

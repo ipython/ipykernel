@@ -3,18 +3,13 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 import atexit
 import os
 import sys
 
 from contextlib import contextmanager
+from queue import Empty
 from subprocess import PIPE, STDOUT
-try:
-    from queue import Empty  # Py 3
-except ImportError:
-    from Queue import Empty  # Py 2
 
 import nose
 

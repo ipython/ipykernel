@@ -1,8 +1,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
+from io import StringIO
 import sys
 import unittest
 
@@ -12,12 +11,6 @@ from ipykernel.inprocess.ipkernel import InProcessKernel
 from ipykernel.tests.utils import assemble_output
 from IPython.testing.decorators import skipif_not_matplotlib
 from IPython.utils.io import capture_output
-from ipython_genutils import py3compat
-
-if py3compat.PY3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
 
 
 def _init_asyncio_patch():
@@ -78,10 +71,7 @@ class InProcessKernelTestCase(unittest.TestCase):
         sys_stdin = sys.stdin
         sys.stdin = io
         try:
-            if py3compat.PY3:
-                self.kc.execute('x = input()')
-            else:
-                self.kc.execute('x = raw_input()')
+            self.kc.execute('x = input()')
         finally:
             sys.stdin = sys_stdin
         assert self.km.kernel.shell.user_ns.get('x') == 'foobar'

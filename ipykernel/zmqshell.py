@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A ZMQ-based subclass of InteractiveShell.
 
 This code is meant to ease the refactoring of the base InteractiveShell into
@@ -14,8 +13,6 @@ machinery.  This should thus be thought of as scaffolding.
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-
-from __future__ import print_function
 
 import os
 import sys
@@ -44,7 +41,6 @@ from IPython.utils import openpy
 from ipykernel.jsonutil import json_clean, encode_images
 from IPython.utils.process import arg_split, system
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type
 from traitlets import (
     Instance, Type, Dict, CBool, CBytes, Any, default, observe
 )
@@ -542,7 +538,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
         exc_content = {
             'traceback' : stb,
-            'ename' : unicode_type(etype.__name__),
+            'ename' : str(etype.__name__),
             'evalue' : py3compat.safe_unicode(evalue),
         }
 

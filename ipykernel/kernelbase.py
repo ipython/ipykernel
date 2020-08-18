@@ -795,6 +795,7 @@ class Kernel(SingletonConfigurable):
         self._aborting = True
 
         def stop_aborting(f):
+            self.log.info("Finishing abort")
             self._aborting = False
 
         self.io_loop.add_future(gen.sleep(self.stop_on_error_timeout), stop_aborting)

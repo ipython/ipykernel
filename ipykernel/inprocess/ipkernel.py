@@ -95,7 +95,7 @@ class InProcessKernel(IPythonKernel):
 
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))
-        msg = self.session.msg(u'input_request', content, parent)
+        msg = self.session.msg('input_request', content, parent)
         for frontend in self.frontends:
             if frontend.session.session == parent['header']['session']:
                 frontend.stdin_channel.call_handlers(msg)
@@ -148,11 +148,11 @@ class InProcessKernel(IPythonKernel):
 
     @default('stdout')
     def _default_stdout(self):
-        return OutStream(self.session, self.iopub_thread, u'stdout')
+        return OutStream(self.session, self.iopub_thread, 'stdout')
 
     @default('stderr')
     def _default_stderr(self):
-        return OutStream(self.session, self.iopub_thread, u'stderr')
+        return OutStream(self.session, self.iopub_thread, 'stderr')
 
 #-----------------------------------------------------------------------------
 # Interactive shell subclass

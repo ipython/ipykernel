@@ -184,10 +184,10 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg)
-        self._publish_status(u'busy')
+        self._publish_status('busy')
         if self._aborting:
             self._send_abort_reply(self.control_stream, msg, idents)
-            self._publish_status(u'idle')
+            self._publish_status('idle')
             return
 
         header = msg['header']
@@ -204,7 +204,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status(u'idle')
+        self._publish_status('idle')
         # flush to ensure reply is sent
         self.control_stream.flush(zmq.POLLOUT)
 
@@ -234,11 +234,11 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg)
-        self._publish_status(u'busy')
+        self._publish_status('busy')
 
         if self._aborting:
             self._send_abort_reply(stream, msg, idents)
-            self._publish_status(u'idle')
+            self._publish_status('idle')
             # flush to ensure reply is sent before
             # handling the next request
             stream.flush(zmq.POLLOUT)
@@ -276,7 +276,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status(u'idle')
+        self._publish_status('idle')
         # flush to ensure reply is sent before
         # handling the next request
         stream.flush(zmq.POLLOUT)
@@ -456,16 +456,16 @@ class Kernel(SingletonConfigurable):
     def _publish_execute_input(self, code, parent, execution_count):
         """Publish the code request on the iopub stream."""
 
-        self.session.send(self.iopub_socket, u'execute_input',
-                            {u'code':code, u'execution_count': execution_count},
-                            parent=parent, ident=self._topic('execute_input')
+        self.session.send(self.iopub_socket, 'execute_input',
+                          {'code':code, 'execution_count': execution_count},
+                          parent=parent, ident=self._topic('execute_input')
         )
 
     def _publish_status(self, status, parent=None):
         """send status (busy/idle) on IOPub"""
         self.session.send(self.iopub_socket,
-                          u'status',
-                          {u'execution_state': status},
+                          'status',
+                          {'execution_state': status},
                           parent=parent or self._parent_header,
                           ident=self._topic('status'),
                           )
@@ -518,10 +518,10 @@ class Kernel(SingletonConfigurable):
         """handle an execute_request"""
 
         try:
-            content = parent[u'content']
-            code = py3compat.cast_unicode_py2(content[u'code'])
-            silent = content[u'silent']
-            store_history = content.get(u'store_history', not silent)
+            content = parent['content']
+            code = py3compat.cast_unicode_py2(content['code'])
+            silent = content['silent']
+            store_history = content.get('store_history', not silent)
             user_expressions = content.get('user_expressions', {})
             allow_stdin = content.get('allow_stdin', False)
         except:
@@ -559,13 +559,13 @@ class Kernel(SingletonConfigurable):
         reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
-        reply_msg = self.session.send(stream, u'execute_reply',
+        reply_msg = self.session.send(stream, 'execute_reply',
                                       reply_content, parent, metadata=metadata,
                                       ident=ident)
 
         self.log.debug("%s", reply_msg)
 
-        if not silent and reply_msg['content']['status'] == u'error' and stop_on_error:
+        if not silent and reply_msg['content']['status'] == 'error' and stop_on_error:
             yield self._abort_queues()
 
     def do_execute(self, code, silent, store_history=True,
@@ -681,9 +681,9 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def shutdown_request(self, stream, ident, parent):
         content = yield gen.maybe_future(self.do_shutdown(parent['content']['restart']))
-        self.session.send(stream, u'shutdown_reply', content, parent, ident=ident)
+        self.session.send(stream, 'shutdown_reply', content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
-        self._shutdown_message = self.session.msg(u'shutdown_reply',
+        self._shutdown_message = self.session.msg('shutdown_reply',
                                                   content, parent
         )
 
@@ -722,8 +722,8 @@ class Kernel(SingletonConfigurable):
     def apply_request(self, stream, ident, parent):
         self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
         try:
-            content = parent[u'content']
-            bufs = parent[u'buffers']
+            content = parent['content']
+            bufs = parent['buffers']
             msg_id = parent['header']['msg_id']
         except:
             self.log.error("Got bad msg: %s", parent, exc_info=True)
@@ -739,7 +739,7 @@ class Kernel(SingletonConfigurable):
 
         md = self.finish_metadata(parent, md, reply_content)
 
-        self.session.send(stream, u'apply_reply', reply_content,
+        self.session.send(stream, 'apply_reply', reply_content,
                     parent=parent, ident=ident,buffers=result_buf, metadata=md)
 
     def do_apply(self, content, bufs, msg_id, reply_metadata):
@@ -880,7 +880,7 @@ class Kernel(SingletonConfigurable):
 
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))
-        self.session.send(self.stdin_socket, u'input_request', content, parent,
+        self.session.send(self.stdin_socket, 'input_request', content, parent,
                           ident=ident)
 
         # Await a response.

@@ -16,19 +16,19 @@ def test_ipython_start_kernel_userns():
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        assert u'123' in text
+        assert '123' in text
 
         # user_module should be an instance of DummyMod
         msg_id = client.execute("usermod = get_ipython().user_module")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        assert content['status'] == u'ok'
+        assert content['status'] == 'ok'
         msg_id = client.inspect('usermod')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        assert u'DummyMod' in text
+        assert 'DummyMod' in text
 
 
 @flaky(max_runs=3)
@@ -42,10 +42,10 @@ def test_ipython_start_kernel_no_userns():
         msg_id = client.execute("usermod = get_ipython().user_module")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
-        assert content['status'] == u'ok'
+        assert content['status'] == 'ok'
         msg_id = client.inspect('usermod')
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
-        assert u'DummyMod' not in text
+        assert 'DummyMod' not in text

@@ -33,10 +33,10 @@ class ZMQDisplayHook(object):
         builtin_mod._ = obj
         sys.stdout.flush()
         sys.stderr.flush()
-        contents = {u'execution_count': self.get_execution_count(),
-                    u'data': {'text/plain': repr(obj)},
-                    u'metadata': {}}
-        self.session.send(self.pub_socket, u'execute_result', contents,
+        contents = {'execution_count': self.get_execution_count(),
+                    'data': {'text/plain': repr(obj)},
+                    'metadata': {}}
+        self.session.send(self.pub_socket, 'execute_result', contents,
                           parent=self.parent_header, ident=self.topic)
 
     def set_parent(self, parent):
@@ -58,7 +58,7 @@ class ZMQShellDisplayHook(DisplayHook):
         self.parent_header = extract_header(parent)
 
     def start_displayhook(self):
-        self.msg = self.session.msg(u'execute_result', {
+        self.msg = self.session.msg('execute_result', {
             'data': {},
             'metadata': {},
         }, parent=self.parent_header)

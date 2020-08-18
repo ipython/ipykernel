@@ -313,14 +313,14 @@ class IPythonKernel(KernelBase):
             err = res.error_in_exec
 
         if res.success:
-            reply_content[u'status'] = u'ok'
+            reply_content['status'] = 'ok'
         else:
-            reply_content[u'status'] = u'error'
+            reply_content['status'] = 'error'
 
             reply_content.update({
-                u'traceback': shell._last_traceback or [],
-                u'ename': unicode_type(type(err).__name__),
-                u'evalue': safe_unicode(err),
+                'traceback': shell._last_traceback or [],
+                'ename': unicode_type(type(err).__name__),
+                'evalue': safe_unicode(err),
             })
 
             # FIXME: deprecated piece for ipyparallel (remove in 5.0):
@@ -339,16 +339,16 @@ class IPythonKernel(KernelBase):
         # At this point, we can tell whether the main code execution succeeded
         # or not.  If it did, we proceed to evaluate user_expressions
         if reply_content['status'] == 'ok':
-            reply_content[u'user_expressions'] = \
+            reply_content['user_expressions'] = \
                          shell.user_expressions(user_expressions or {})
         else:
             # If there was an error, don't even try to compute expressions
-            reply_content[u'user_expressions'] = {}
+            reply_content['user_expressions'] = {}
 
         # Payloads should be retrieved regardless of outcome, so we can both
         # recover partial output (that could have been generated early in a
         # block, before an error) and always clear the payload system.
-        reply_content[u'payload'] = shell.payload_manager.read_payload()
+        reply_content['payload'] = shell.payload_manager.read_payload()
         # Be aggressive about clearing the payload because we don't want
         # it to sit in memory until the next execute_request comes in.
         shell.payload_manager.clear_payload()
@@ -504,16 +504,16 @@ class IPythonKernel(KernelBase):
             # invoke IPython traceback formatting
             shell.showtraceback()
             reply_content = {
-                u'traceback': shell._last_traceback or [],
-                u'ename': unicode_type(type(e).__name__),
-                u'evalue': safe_unicode(e),
+                'traceback': shell._last_traceback or [],
+                'ename': unicode_type(type(e).__name__),
+                'evalue': safe_unicode(e),
             }
             # FIXME: deprecated piece for ipyparallel (remove in 5.0):
             e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
             reply_content['engine_info'] = e_info
 
-            self.send_response(self.iopub_socket, u'error', reply_content,
-                                ident=self._topic('error'))
+            self.send_response(self.iopub_socket, 'error', reply_content,
+                               ident=self._topic('error'))
             self.log.info("Exception in apply request:\n%s", '\n'.join(reply_content['traceback']))
             result_buf = []
             reply_content['status'] = 'error'

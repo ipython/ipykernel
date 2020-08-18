@@ -166,7 +166,7 @@ def test_raw_input():
         code = 'print({input_f}("{theprompt}"))'.format(**locals())
         msg_id = kc.execute(code, allow_stdin=True)
         msg = kc.get_stdin_msg(block=True, timeout=TIMEOUT)
-        assert msg['header']['msg_type'] == u'input_request'
+        assert msg['header']['msg_type'] == 'input_request'
         content = msg['content']
         assert content['prompt'] == theprompt
         text = "some text"
@@ -188,7 +188,7 @@ def test_eval_input():
         code = 'print(input("{theprompt}"))'.format(**locals())
         msg_id = kc.execute(code, allow_stdin=True)
         msg = kc.get_stdin_msg(block=True, timeout=TIMEOUT)
-        assert msg['header']['msg_type'] == u'input_request'
+        assert msg['header']['msg_type'] == 'input_request'
         content = msg['content']
         assert content['prompt'] == theprompt
         kc.input("1+1")
@@ -203,23 +203,23 @@ def test_save_history():
     # unicode problems on Python 2.
     with kernel() as kc, TemporaryDirectory() as td:
         file = os.path.join(td, 'hist.out')
-        execute(u'a=1', kc=kc)
+        execute('a=1', kc=kc)
         wait_for_idle(kc)
-        execute(u'b=u"abcþ"', kc=kc)
+        execute('b="abcþ"', kc=kc)
         wait_for_idle(kc)
         _, reply = execute("%hist -f " + file, kc=kc)
         assert reply['status'] == 'ok'
         with io.open(file, encoding='utf-8') as f:
             content = f.read()
-        assert u'a=1' in content
-        assert u'b=u"abcþ"' in content
+        assert 'a=1' in content
+        assert 'b="abcþ"' in content
 
 
 @dec.skip_without('faulthandler')
 def test_smoke_faulthandler():
     with kernel() as kc:
         # Note: faulthandler.register is not available on windows.
-        code = u'\n'.join([
+        code = '\n'.join([
             'import sys',
             'import faulthandler',
             'import signal',
@@ -262,7 +262,7 @@ def test_is_complete():
 @dec.skipif(sys.platform != 'win32', "only run on Windows")
 def test_complete():
     with kernel() as kc:
-        execute(u'a = 1', kc=kc)
+        execute('a = 1', kc=kc)
         wait_for_idle(kc)
         cell = 'import IPython\nb = a.'
         kc.complete(cell)
@@ -355,7 +355,7 @@ def test_shutdown():
     """Kernel exits after polite shutdown_request"""
     with new_kernel() as kc:
         km = kc.parent
-        execute(u'a = 1', kc=kc)
+        execute('a = 1', kc=kc)
         wait_for_idle(kc)
         kc.shutdown()
         for i in range(300): # 30s timeout

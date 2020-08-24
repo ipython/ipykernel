@@ -150,12 +150,13 @@ def test_install_display_name_overrides_profile():
     dict(spam="spam", foo='bar')
 ])
 def test_install_env(tmp_path, env):
+    # python 3.5 // tmp_path must be converted to str
     with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
-            [tmp_path]):
+            [str(tmp_path)]):
         install(env=env)
 
     spec = tmp_path / 'kernels' / KERNEL_NAME / "kernel.json"
-    with open(spec) as f:
+    with spec.open() as f:
         spec = json.load(f)
 
     if env:

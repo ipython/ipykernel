@@ -1,0 +1,78 @@
+<h1>Contributing</h1>
+
+<p>Welcome!</p>
+
+<p>For contributing tips, follow the <a href="https://jupyter.readthedocs.io/en/latest/contributor/content-contributor.html">Jupyter Contributing Guide</a>.
+Please make sure to follow the <a href="https://github.com/jupyter/governance/blob/master/conduct/code_of_conduct.md">Jupyter Code of Conduct</a>.</p>
+
+<h2>Installing ipykernel for development</h2>
+
+<p>ipykernel is a pure Python package, so setting up for development is the same as most other Python projects:</p>
+
+<p>```bash</p>
+
+<h1>clone the repo</h1>
+
+<p>git clone https://github.com/ipython/ipykernel
+cd ipykernel</p>
+
+<h1>do a 'development' or 'editable' install with pip:</h1>
+
+<p>pip install -e .
+```</p>
+
+<h2>Releasing ipykernel</h2>
+
+<p>Releasing ipykernel is <em>almost</em> standard for a Python package:</p>
+
+<ul>
+<li>set version for release</li>
+<li>make and publish tag</li>
+<li>publish release to PyPI</li>
+<li>set version back to development</li>
+</ul>
+
+<p>The one extra step for ipykernel is that we need to make separate wheels for Python 2 and 3
+because the bundled kernelspec has different contents for Python 2 and 3. This
+affects only the 4.x branch of ipykernel as the 5+ version is only compatible
+Python 3.</p>
+
+<p>The full release process is available below:</p>
+
+<p>```bash</p>
+
+<h1>make sure version is set in ipykernel/_version.py</h1>
+
+<p>VERSION="4.9.0"</p>
+
+<h1>commit the version and make a release tag</h1>
+
+<p>git add ipykernel/_version.py
+git commit -m "release $VERSION"
+git tag -am "release $VERSION" $VERSION</p>
+
+<h1>push the changes to the repo</h1>
+
+<p>git push
+git push --tags</p>
+
+<h1>publish the release to PyPI</h1>
+
+<h1>note the extra <code>python2 setup.py bdist_wheel</code> for creating</h1>
+
+<h1>the wheel for Python 2</h1>
+
+<p>pip install --upgrade twine
+git clean -xfd
+python3 setup.py sdist bdist<em>wheel
+python2 setup.py bdist</em>wheel  # the extra step for the 4.x branch.
+twine upload dist/*</p>
+
+<h1>set the version back to '.dev' in ipykernel/_version.py</h1>
+
+<h1>e.g. 4.10.0.dev if we just released 4.9.0</h1>
+
+<p>git add ipykernel/_version.py
+git commit -m "back to dev"
+git push
+```</p>

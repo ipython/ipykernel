@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A ZMQ-based subclass of InteractiveShell.
 
 This code is meant to ease the refactoring of the base InteractiveShell into
@@ -14,8 +13,6 @@ machinery.  This should thus be thought of as scaffolding.
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-
-from __future__ import print_function
 
 import os
 import sys
@@ -42,9 +39,8 @@ from ipykernel import (
 )
 from IPython.utils import openpy
 from ipykernel.jsonutil import json_clean, encode_images
-from IPython.utils.process import arg_split
+from IPython.utils.process import arg_split, system
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type
 from traitlets import (
     Instance, Type, Dict, CBool, CBytes, Any, default, observe
 )
@@ -156,7 +152,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         content = dict(wait=wait)
         self._flush_streams()
         self.session.send(
-            self.pub_socket, u'clear_output', content,
+            self.pub_socket, 'clear_output', content,
             parent=self.parent_header, ident=self.topic,
         )
 
@@ -423,8 +419,8 @@ class KernelMagics(Magics):
 
         try:
             interval = int(arg_s)
-        except ValueError:
-            raise UsageError("%%autosave requires an integer, got %r" % arg_s)
+        except ValueError as e:
+            raise UsageError("%%autosave requires an integer, got %r" % arg_s) from e
 
         # javascript wants milliseconds
         milliseconds = 1000 * interval
@@ -485,7 +481,7 @@ class ZMQInteractiveShell(InteractiveShell):
             real_enable_gui(gui)
             self.active_eventloop = gui
         except ValueError as e:
-            raise UsageError("%s" % e)
+            raise UsageError("%s" % e) from e
 
     def init_environment(self):
         """Configure the user's environment."""
@@ -541,9 +537,9 @@ class ZMQInteractiveShell(InteractiveShell):
         sys.stderr.flush()
 
         exc_content = {
-            u'traceback' : stb,
-            u'ename' : unicode_type(etype.__name__),
-            u'evalue' : py3compat.safe_unicode(evalue),
+            'traceback' : stb,
+            'ename' : str(etype.__name__),
+            'evalue' : py3compat.safe_unicode(evalue),
         }
 
         dh = self.displayhook
@@ -553,7 +549,7 @@ class ZMQInteractiveShell(InteractiveShell):
         if dh.topic:
             topic = dh.topic.replace(b'execute_result', b'error')
 
-        exc_msg = dh.session.send(dh.pub_socket, u'error', json_clean(exc_content),
+        exc_msg = dh.session.send(dh.pub_socket, 'error', json_clean(exc_content),
                                   dh.parent_header, ident=topic)
 
         # FIXME - Once we rely on Python 3, the traceback is stored on the
@@ -600,6 +596,42 @@ class ZMQInteractiveShell(InteractiveShell):
         # it inside the virtualenv.
         # https://ipython.readthedocs.io/en/latest/install/kernel_install.html
         pass
+
+    def system_piped(self, cmd):
+        """Call the given cmd in a subprocess, piping stdout/err
+
+        Parameters
+        ----------
+        cmd : str
+          Command to execute (can not end in '&', as background processes are
+          not supported.  Should not be a command that expects input
+          other than simple text.
+        """
+        if cmd.rstrip().endswith('&'):
+            # this is *far* from a rigorous test
+            # We do not support backgrounding processes because we either use
+            # pexpect or pipes to read from.  Users can always just call
+            # os.system() or use ip.system=ip.system_raw
+            # if they really want a background process.
+            raise OSError("Background processes not supported.")
+
+        # we explicitly do NOT return the subprocess status code, because
+        # a non-None value would trigger :func:`sys.displayhook` calls.
+        # Instead, we store the exit_code in user_ns.
+        # Also, protect system call from UNC paths on Windows here too
+        # as is done in InteractiveShell.system_raw
+        if sys.platform == 'win32':
+            cmd = self.var_expand(cmd, depth=1)
+            from IPython.utils._process_win32 import AvoidUNCPath
+            with AvoidUNCPath() as path:
+                if path is not None:
+                    cmd = 'pushd %s &&%s' % (path, cmd)
+                self.user_ns['_exit_code'] = system(cmd)
+        else:
+            self.user_ns['_exit_code'] = system(self.var_expand(cmd, depth=1))
+
+    # Ensure new system_piped implementation is used
+    system = system_piped
 
 
 InteractiveShellABC.register(ZMQInteractiveShell)

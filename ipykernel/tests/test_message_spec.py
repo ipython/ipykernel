@@ -6,10 +6,7 @@
 import re
 import sys
 from distutils.version import LooseVersion as V
-try:
-    from queue import Empty  # Py 3
-except ImportError:
-    from Queue import Empty  # Py 2
+from queue import Empty
 
 import nose.tools as nt
 from nose.plugins.skip import SkipTest
@@ -17,7 +14,6 @@ from nose.plugins.skip import SkipTest
 from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum
 )
-from ipython_genutils.py3compat import string_types, iteritems
 
 from .utils import TIMEOUT, start_global_kernel, flush_channels, execute
 
@@ -99,14 +95,14 @@ class MimeBundle(Reference):
     metadata = Dict()
     data = Dict()
     def _data_changed(self, name, old, new):
-        for k,v in iteritems(new):
+        for k,v in new.items():
             assert mime_pat.match(k)
-            assert isinstance(v, string_types)
+            assert isinstance(v, str)
 
 
 # shell replies
 class Reply(Reference):
-    status = Enum((u'ok', u'error'), default_value=u'ok')
+    status = Enum(('ok', 'error'), default_value='ok')
 
 
 class ExecuteReply(Reply):
@@ -143,7 +139,7 @@ class ArgSpec(Reference):
 
 
 class Status(Reference):
-    execution_state = Enum((u'busy', u'idle', u'starting'), default_value=u'busy')
+    execution_state = Enum(('busy', 'idle', 'starting'), default_value='busy')
 
 
 class CompleteReply(Reply):
@@ -183,7 +179,7 @@ class CommInfoReply(Reply):
 
 
 class IsCompleteReply(Reference):
-    status = Enum((u'complete', u'incomplete', u'invalid', u'unknown'), default_value=u'complete')
+    status = Enum(('complete', 'incomplete', 'invalid', 'unknown'), default_value='complete')
 
     def check(self, d):
         Reference.check(self, d)
@@ -208,7 +204,7 @@ class Error(ExecuteReplyError):
 
 
 class Stream(Reference):
-    name = Enum((u'stdout', u'stderr'), default_value=u'stdout')
+    name = Enum(('stdout', 'stderr'), default_value='stdout')
     text = Unicode()
 
 
@@ -357,10 +353,10 @@ def test_user_expressions():
 
     msg_id, reply = execute(code='x=1', user_expressions=dict(foo='x+1'))
     user_expressions = reply['user_expressions']
-    nt.assert_equal(user_expressions, {u'foo': {
-        u'status': u'ok',
-        u'data': {u'text/plain': u'2'},
-        u'metadata': {},
+    nt.assert_equal(user_expressions, {'foo': {
+        'status': 'ok',
+        'data': {'text/plain': '2'},
+        'metadata': {},
     }})
 
 
@@ -535,15 +531,15 @@ def test_stream():
     stdout = KC.iopub_channel.get_msg(timeout=TIMEOUT)
     validate_message(stdout, 'stream', msg_id)
     content = stdout['content']
-    assert content['text'] == u'hi\n'
+    assert content['text'] == 'hi\n'
 
 
 def test_display_data():
     flush_channels()
 
-    msg_id, reply = execute("from IPython.core.display import display; display(1)")
+    msg_id, reply = execute("from IPython.display import display; display(1)")
 
     display = KC.iopub_channel.get_msg(timeout=TIMEOUT)
     validate_message(display, 'display_data', parent=msg_id)
     data = display['content']['data']
-    assert data['text/plain'] == u'1'
+    assert data['text/plain'] == '1'

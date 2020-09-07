@@ -1,4 +1,3 @@
-# coding: utf-8
 """Test suite for our JSON utilities."""
 
 # Copyright (c) IPython Development Team.
@@ -105,6 +104,6 @@ def test_exception():
 
 
 def test_unicode_dict():
-    data = {u'üniço∂e': u'üniço∂e'}
+    data = {'üniço∂e': 'üniço∂e'}
     clean = jsonutil.json_clean(data)
     assert data == clean

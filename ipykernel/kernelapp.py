@@ -3,11 +3,10 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 import atexit
 import os
 import sys
+import errno
 import signal
 import traceback
 import logging
@@ -71,6 +70,10 @@ kernel_flags.update({
         {'IPKernelApp' : {'pylab' : 'auto'}},
         """Pre-load matplotlib and numpy for interactive use with
         the default matplotlib backend."""),
+    'trio-loop' : (
+        {'InteractiveShell' : {'trio_loop' : False}},
+        'Enable Trio as main event loop.'
+    ),
 })
 
 # inherit flags&aliases for any IPython shell apps
@@ -112,6 +115,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     kernel = Any()
     poller = Any() # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
+
+    context = Any()
+    shell_socket = Any()
+    control_socket = Any()
+    stdin_socket = Any()
+    iopub_socket = Any()
+    iopub_thread = Any()
+
     ports = Dict()
 
     subcommands = {
@@ -138,6 +149,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     # streams, etc.
     no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
     no_stderr = Bool(False, help="redirect stderr to the null device").tag(config=True)
+    trio_loop = Bool(False, help="Set main event loop.").tag(config=True)
     quiet = Bool(True, help="Only send stdout/stderr to output stream").tag(config=True)
     outstream_class = DottedObjectName('ipykernel.iostream.OutStream',
         help="The importstring for the OutStream factory").tag(config=True)
@@ -171,7 +183,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             # Parent polling doesn't work if ppid == 1 to start with.
             self.poller = ParentPollerUnix()
 
-    def _bind_socket(self, s, port):
+    def _try_bind_socket(self, s, port):
         iface = '%s://%s' % (self.transport, self.ip)
         if self.transport == 'tcp':
             if port <= 0:
@@ -189,6 +201,25 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                 path = "%s-%i" % (self.ip, port)
             s.bind("ipc://%s" % path)
         return port
+
+    def _bind_socket(self, s, port):
+        try:
+            win_in_use = errno.WSAEADDRINUSE
+        except AttributeError:
+            win_in_use = None
+
+        # Try up to 100 times to bind a port when in conflict to avoid
+        # infinite attempts in bad setups
+        max_attempts = 1 if port else 100
+        for attempt in range(max_attempts):
+            try:
+                return self._try_bind_socket(s, port)
+            except zmq.ZMQError as ze:
+                # Raise if we have any error not related to socket binding
+                if ze.errno != errno.EADDRINUSE and ze.errno != win_in_use:
+                    raise
+                if attempt == max_attempts - 1:
+                    raise
 
     def write_connection_file(self):
         """write connection info to JSON file"""
@@ -229,9 +260,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def init_sockets(self):
         # Create a context, a session, and the kernel sockets.
         self.log.info("Starting the kernel at pid: %i", os.getpid())
-        context = zmq.Context.instance()
-        # Uncomment this to try closing the context.
-        # atexit.register(context.term)
+        assert self.context is None, "init_sockets cannot be called twice!"
+        self.context = context = zmq.Context()
+        atexit.register(self.close)
 
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
@@ -278,6 +309,27 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.hb_port = self.heartbeat.port
         self.log.debug("Heartbeat REP Channel on port: %i" % self.hb_port)
         self.heartbeat.start()
+
+    def close(self):
+        """Close zmq sockets in an orderly fashion"""
+        # un-capture IO before we start closing channels
+        self.reset_io()
+        self.log.info("Cleaning up sockets")
+        if self.heartbeat:
+            self.log.debug("Closing heartbeat channel")
+            self.heartbeat.context.term()
+        if self.iopub_thread:
+            self.log.debug("Closing iopub channel")
+            self.iopub_thread.stop()
+            self.iopub_thread.close()
+        for channel in ('shell', 'control', 'stdin'):
+            self.log.debug("Closing %s channel", channel)
+            socket = getattr(self, channel + "_socket", None)
+            if socket and not socket.closed:
+                socket.close()
+        self.log.debug("Terminating zmq context")
+        self.context.term()
+        self.log.debug("Terminated zmq context")
 
     def log_connection_info(self):
         """display connection info, and store ports"""
@@ -329,12 +381,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             e_stderr = None if self.quiet else sys.__stderr__
 
             sys.stdout = outstream_factory(self.session, self.iopub_thread,
-                                           u'stdout',
+                                           'stdout',
                                            echo=e_stdout)
             if sys.stderr is not None:
                 sys.stderr.flush()
             sys.stderr = outstream_factory(self.session, self.iopub_thread,
-                                           u'stderr',
+                                           'stderr',
                                            echo=e_stderr)
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
@@ -342,6 +394,15 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             sys.displayhook = self.displayhook
 
         self.patch_io()
+
+    def reset_io(self):
+        """restore original io
+
+        restores state after init_io
+        """
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+        sys.displayhook = sys.__displayhook__
 
     def patch_io(self):
         """Patch important libraries that can't handle sys.stdout forwarding"""
@@ -430,18 +491,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         if self.shell:
             self.shell.configurables.append(self)
 
-    def init_extensions(self):
-        super(IPKernelApp, self).init_extensions()
-        # BEGIN HARDCODED WIDGETS HACK
-        # Ensure ipywidgets extension is loaded if available
-        extension_man = self.shell.extension_manager
-        if 'ipywidgets' not in extension_man.loaded:
-            try:
-                extension_man.load_extension('ipywidgets')
-            except ImportError as e:
-                self.log.debug('ipywidgets package not installed.  Widgets will not be available.')
-        # END HARDCODED WIDGETS HACK
-
     def configure_tornado_logger(self):
         """ Configure the tornado logging.Logger.
 
@@ -456,13 +505,60 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
+    def _init_asyncio_patch(self):
+        """set default asyncio policy to be compatible with tornado
+
+        Tornado 6 (at least) is not compatible with the default
+        asyncio implementation on Windows
+
+        Pick the older SelectorEventLoopPolicy on Windows
+        if the known-incompatible default policy is in use.
+
+        do this as early as possible to make it a low priority and overrideable
+
+        ref: https://github.com/tornadoweb/tornado/issues/2608
+
+        FIXME: if/when tornado supports the defaults in asyncio,
+               remove and bump tornado requirement for py38
+        """
+        if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+            import asyncio
+            try:
+                from asyncio import (
+                    WindowsProactorEventLoopPolicy,
+                    WindowsSelectorEventLoopPolicy,
+                )
+            except ImportError:
+                pass
+                # not affected
+            else:
+                if type(asyncio.get_event_loop_policy()) is WindowsProactorEventLoopPolicy:
+                    # WindowsProactorEventLoopPolicy is not compatible with tornado 6
+                    # fallback to the pre-3.8 default of Selector
+                    asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
+
+    def init_pdb(self):
+        """Replace pdb with IPython's version that is interruptible.
+        
+        With the non-interruptible version, stopping pdb() locks up the kernel in a
+        non-recoverable state.
+        """
+        import pdb
+        from IPython.core import debugger
+        if hasattr(debugger, "InterruptiblePdb"):
+            # Only available in newer IPython releases:
+            debugger.Pdb = debugger.InterruptiblePdb
+            pdb.Pdb = debugger.Pdb
+            pdb.set_trace = debugger.set_trace
+
     @catch_config_error
     def initialize(self, argv=None):
+        self._init_asyncio_patch()
         super(IPKernelApp, self).initialize(argv)
         if self.subapp is not None:
             return
-        # register zmq IOLoop with tornado
-        zmq_ioloop.install()
+
+        self.init_pdb()
         self.init_blackhole()
         self.init_connection_file()
         self.init_poller()
@@ -477,8 +573,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         try:
             self.init_signal()
         except:
-            # Catch exception when initializing signal fails, eg when running the 
-            # kernel on a separate thread 
+            # Catch exception when initializing signal fails, eg when running the
+            # kernel on a separate thread
             if self.log_level < logging.CRITICAL:
                 self.log.error("Unable to initialize signal:", exc_info=True)
         self.init_kernel()
@@ -501,12 +597,23 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.poller.start()
         self.kernel.start()
         self.io_loop = ioloop.IOLoop.current()
-        try:
-            self.io_loop.start()
-        except KeyboardInterrupt:
-            pass
+        if self.trio_loop:
+            from ipykernel.trio_runner import TrioRunner
+            tr = TrioRunner()
+            tr.initialize(self.kernel, self.io_loop)
+            try:
+                tr.run()
+            except KeyboardInterrupt:
+                pass
+        else:
+            try:
+                self.io_loop.start()
+            except KeyboardInterrupt:
+                pass
+
 
 launch_new_instance = IPKernelApp.launch_instance
+
 
 def main():
     """Run an IPKernel as an application"""

@@ -1,11 +1,29 @@
 language: python
-python:
-  - "nightly"
-  - "3.7-dev"
-  - 3.6
-  - 3.5
-  - 3.4
+matrix:
+  include:
+    - arch: arm64
+      python: "nightly"
+      dist: bionic
+    - arch: amd64
+      python: "nightly"
+    - arch: arm64
+      python: 3.5
+    - arch: amd64
+      python: 3.5
+    - arch: arm64
+      python: 3.6
+    - arch: amd64
+      python: 3.6
+    - arch: arm64
+      python: 3.7
+    - arch: amd64
+      python: 3.7
+    - arch: arm64
+      python: 3.8
+    - arch: amd64
+      python: 3.8
 sudo: false
+dist: xenial
 install:
   - |
     # pip install
@@ -39,11 +57,7 @@ after_success:
   - codecov
 matrix:
   include:
-    - python: 3.5
-      env:
-        - TORNADO="4.5.*"
-        - IPYTHON=master
-    - python: 3.6
+    - python: 3.7
       env:
         - IPYTHON=master
   allow_failures:

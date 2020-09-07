@@ -3,11 +3,11 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import builtins
 import sys
 
 from IPython.core.displayhook import DisplayHook
 from ipykernel.jsonutil import encode_images, json_clean
-from ipython_genutils.py3compat import builtin_mod
 from traitlets import Instance, Dict, Any
 from jupyter_client.session import extract_header, Session
 
@@ -30,13 +30,13 @@ class ZMQDisplayHook(object):
         if obj is None:
             return
 
-        builtin_mod._ = obj
+        builtins._ = obj
         sys.stdout.flush()
         sys.stderr.flush()
-        contents = {u'execution_count': self.get_execution_count(),
-                    u'data': {'text/plain': repr(obj)},
-                    u'metadata': {}}
-        self.session.send(self.pub_socket, u'execute_result', contents,
+        contents = {'execution_count': self.get_execution_count(),
+                    'data': {'text/plain': repr(obj)},
+                    'metadata': {}}
+        self.session.send(self.pub_socket, 'execute_result', contents,
                           parent=self.parent_header, ident=self.topic)
 
     def set_parent(self, parent):
@@ -58,7 +58,7 @@ class ZMQShellDisplayHook(DisplayHook):
         self.parent_header = extract_header(parent)
 
     def start_displayhook(self):
-        self.msg = self.session.msg(u'execute_result', {
+        self.msg = self.session.msg('execute_result', {
             'data': {},
             'metadata': {},
         }, parent=self.parent_header)

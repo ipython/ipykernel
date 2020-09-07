@@ -41,6 +41,7 @@ class InProcessKernelClient(KernelClient):
     shell_channel_class = Type(InProcessChannel)
     iopub_channel_class = Type(InProcessChannel)
     stdin_channel_class = Type(InProcessChannel)
+    control_channel_class = Type(InProcessChannel)
     hb_channel_class = Type(InProcessHBChannel)
 
     kernel = Instance('ipykernel.inprocess.ipkernel.InProcessKernel',
@@ -81,6 +82,12 @@ class InProcessKernelClient(KernelClient):
         if self._stdin_channel is None:
             self._stdin_channel = self.stdin_channel_class(self)
         return self._stdin_channel
+
+    @property
+    def control_channel(self):
+        if self._control_channel is None:
+            self._control_channel = self.control_channel_class(self)
+        return self._control_channel
 
     @property
     def hb_channel(self):
@@ -171,9 +178,6 @@ class InProcessKernelClient(KernelClient):
 
         idents, reply_msg = self.session.recv(stream, copy=False)
         self.shell_channel.call_handlers_later(reply_msg)
-
-    def flush(self):
-        """no-op to comply with stream API"""
 
 
 #-----------------------------------------------------------------------------

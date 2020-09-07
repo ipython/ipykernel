@@ -23,7 +23,7 @@ def teardown():
 
 
 async_code = """
-from ipykernel.tests._asyncio import async_func
+from ipykernel.tests._asyncio_utils import async_func
 async_func()
 """
 

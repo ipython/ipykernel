@@ -3,15 +3,17 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 import matplotlib
-from matplotlib.backends.backend_agg import new_figure_manager, FigureCanvasAgg # analysis: ignore
+from matplotlib.backends.backend_agg import (
+    new_figure_manager,
+    FigureCanvasAgg,
+    new_figure_manager_given_figure,
+) # analysis: ignore
 from matplotlib import colors
 from matplotlib._pylab_helpers import Gcf
 
 from IPython.core.getipython import get_ipython
-from IPython.core.display import display
+from IPython.display import display
 
 from .config import InlineBackend
 

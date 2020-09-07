@@ -1,10 +1,7 @@
 #!/usr/bin/env python
-# coding: utf-8
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-
-from __future__ import print_function
 
 # the name of the package
 name = 'ipykernel'
@@ -17,8 +14,8 @@ import sys
 import re
 
 v = sys.version_info
-if v[:2] < (3, 4):
-    error = "ERROR: %s requires Python version 3.4 or above." % name
+if v[:2] < (3, 5):
+    error = "ERROR: %s requires Python version 3.5 or above." % name
     print(error, file=sys.stderr)
     sys.exit(1)
 
@@ -86,17 +83,19 @@ setup_args = dict(
     long_description="The IPython kernel for Jupyter",
     platforms="Linux, Mac OS X, Windows",
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     install_requires=[
         'ipython>=5.0.0',
         'traitlets>=4.1.0',
         'jupyter_client',
         'tornado>=4.2',
+        'appnope;platform_system=="Darwin"',
     ],
     extras_require={
         'test': [
-            'pytest',
+            'pytest !=5.3.4',
             'pytest-cov',
+            'flaky',
             'nose',  # nose because there are still a few nose.tools imports hanging around
         ],
     },
@@ -111,10 +110,15 @@ setup_args = dict(
 )
 
 
-if any(a.startswith(('bdist', 'build', 'install')) for a in sys.argv):
+if any(a.startswith(('bdist', 'install')) for a in sys.argv):
     from ipykernel.kernelspec import write_kernel_spec, make_ipkernel_cmd, KERNEL_NAME
 
-    argv = make_ipkernel_cmd(executable='python')
+    # When building a wheel, the executable specified in the kernelspec is simply 'python'.
+    if any(a.startswith('bdist') for a in sys.argv):
+        argv = make_ipkernel_cmd(executable='python')
+    # When installing from source, the full `sys.executable` can be used.
+    if any(a.startswith('install') for a in sys.argv):
+        argv = make_ipkernel_cmd()
     dest = os.path.join(here, 'data_kernelspec')
     if os.path.exists(dest):
         shutil.rmtree(dest)

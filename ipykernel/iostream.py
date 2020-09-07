@@ -1,17 +1,12 @@
-# coding: utf-8
 """Wrappers for forwarding stdout/stderr over zmq"""
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
 import atexit
 from binascii import b2a_hex
 from collections import deque
-try:
-    from importlib import lock_held as import_lock_held
-except ImportError:
-    from imp import lock_held as import_lock_held
+from imp import lock_held as import_lock_held
 import os
 import sys
 import threading
@@ -25,7 +20,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from jupyter_client.session import extract_header
 
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -167,14 +161,14 @@ class IOPubThread(object):
             return MASTER
         else:
             return CHILD
-    
+
     def start(self):
         """Start the IOPub thread"""
         self.thread.start()
         # make sure we don't prevent process exit
         # I'm not sure why setting daemon=True above isn't enough, but it doesn't appear to be.
         atexit.register(self.stop)
-    
+
     def stop(self):
         """Stop the IOPub thread"""
         if not self.thread.is_alive():
@@ -183,8 +177,10 @@ class IOPubThread(object):
         self.thread.join()
         if hasattr(self._local, 'event_pipe'):
             self._local.event_pipe.close()
-    
+
     def close(self):
+        if self.closed:
+            return
         self.socket.close()
         self.socket = None
 
@@ -206,11 +202,11 @@ class IOPubThread(object):
 
     def send_multipart(self, *args, **kwargs):
         """send_multipart schedules actual zmq send in my thread.
-        
+
         If my thread isn't running (e.g. forked process), send immediately.
         """
         self.schedule(lambda : self._really_send(*args, **kwargs))
-    
+
     def _really_send(self, msg, *args, **kwargs):
         """The callback that actually sends messages"""
         mp_mode = self._check_mp_mode()
@@ -231,10 +227,10 @@ class IOPubThread(object):
 class BackgroundSocket(object):
     """Wrapper around IOPub thread that provides zmq send[_multipart]"""
     io_thread = None
-    
+
     def __init__(self, io_thread):
         self.io_thread = io_thread
-    
+
     def __getattr__(self, attr):
         """Wrap socket attr access for backward-compatibility"""
         if attr.startswith('__') and attr.endswith('__'):
@@ -245,7 +241,7 @@ class BackgroundSocket(object):
                 DeprecationWarning, stacklevel=2)
             return getattr(self.io_thread.socket, attr)
         super(BackgroundSocket, self).__getattr__(attr)
-    
+
     def __setattr__(self, attr, value):
         if attr == 'io_thread' or (attr.startswith('__' and attr.endswith('__'))):
             super(BackgroundSocket, self).__setattr__(attr, value)
@@ -253,7 +249,7 @@ class BackgroundSocket(object):
             warnings.warn("Setting zmq Socket attribute %s on BackgroundSocket" % attr,
                 DeprecationWarning, stacklevel=2)
             setattr(self.io_thread.socket, attr, value)
-    
+
     def send(self, msg, *args, **kwargs):
         return self.send_multipart([msg], *args, **kwargs)
 
@@ -264,7 +260,7 @@ class BackgroundSocket(object):
 
 class OutStream(TextIOBase):
     """A file like object that publishes the stream to a 0MQ PUB socket.
-    
+
     Output is handed off to an IO Thread
     """
 
@@ -294,6 +290,7 @@ class OutStream(TextIOBase):
         self.parent_header = {}
         self._master_pid = os.getpid()
         self._flush_pending = False
+        self._subprocess_flush_pending = False
         self._io_loop = pub_thread.io_loop
         self._new_buffer()
         self.echo = None
@@ -336,7 +333,7 @@ class OutStream(TextIOBase):
 
         send will happen in the background thread
         """
-        if self.pub_thread.thread.is_alive():
+        if self.pub_thread and self.pub_thread.thread is not None and self.pub_thread.thread.is_alive():
             # request flush on the background thread
             self.pub_thread.schedule(self._flush)
             # wait for flush to actually get through, if we can.
@@ -360,6 +357,7 @@ class OutStream(TextIOBase):
         unless the thread has been destroyed (e.g. forked subprocess).
         """
         self._flush_pending = False
+        self._subprocess_flush_pending = False
 
         if self.echo is not None:
             try:
@@ -375,8 +373,8 @@ class OutStream(TextIOBase):
             # since pub_thread is itself fork-safe.
             # There should be a better way to do this.
             self.session.pid = os.getpid()
-            content = {u'name':self.name, u'text':data}
-            self.session.send(self.pub_thread, u'stream', content=content,
+            content = {'name':self.name, 'text':data}
+            self.session.send(self.pub_thread, 'stream', content=content,
                 parent=self.parent_header, ident=self.topic)
 
     def write(self, string):
@@ -392,18 +390,20 @@ class OutStream(TextIOBase):
             raise ValueError('I/O operation on closed file')
         else:
             # Make sure that we're handling unicode
-            if not isinstance(string, unicode_type):
+            if not isinstance(string, str):
                 string = string.decode(self.encoding, 'replace')
 
             is_child = (not self._is_master_process())
             # only touch the buffer in the IO thread to avoid races
             self.pub_thread.schedule(lambda : self._buffer.write(string))
             if is_child:
-                # newlines imply flush in subprocesses
                 # mp.Pool cannot be trusted to flush promptly (or ever),
                 # and this helps.
-                if '\n' in string:
-                    self.flush()
+                if self._subprocess_flush_pending:
+                    return
+                self._subprocess_flush_pending = True
+                # We can not rely on self._io_loop.call_later from a subprocess
+                self.pub_thread.schedule(self._flush)
             else:
                 self._schedule_flush()
 
@@ -419,10 +419,10 @@ class OutStream(TextIOBase):
 
     def _flush_buffer(self):
         """clear the current buffer and return the current buffer data.
-        
+
         This should only be called in the IO thread.
         """
-        data = u''
+        data = ''
         if self._buffer is not None:
             buf = self._buffer
             self._new_buffer()

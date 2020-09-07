@@ -10,11 +10,8 @@ import types
 from datetime import datetime
 import numbers
 
-
-from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type, iteritems
 from ipython_genutils.encoding import DEFAULT_ENCODING
-next_attr_name = '__next__' if py3compat.PY3 else 'next'
+next_attr_name = '__next__'
 
 #-----------------------------------------------------------------------------
 # Globals and constants
@@ -70,40 +67,7 @@ def encode_images(format_dict):
     # no need for handling of ambiguous bytestrings on Python 3,
     # where bytes objects always represent binary data and thus
     # base64-encoded.
-    if py3compat.PY3:
-        return format_dict
-
-    encoded = format_dict.copy()
-
-    pngdata = format_dict.get('image/png')
-    if isinstance(pngdata, bytes):
-        # make sure we don't double-encode
-        if not pngdata.startswith(PNG64):
-            pngdata = b2a_base64(pngdata)
-        encoded['image/png'] = pngdata.decode('ascii')
-
-    jpegdata = format_dict.get('image/jpeg')
-    if isinstance(jpegdata, bytes):
-        # make sure we don't double-encode
-        if not jpegdata.startswith(JPEG64):
-            jpegdata = b2a_base64(jpegdata)
-        encoded['image/jpeg'] = jpegdata.decode('ascii')
-        
-    gifdata = format_dict.get('image/gif')
-    if isinstance(gifdata, bytes):
-        # make sure we don't double-encode
-        if not gifdata.startswith((GIF_64, GIF89_64)):
-            gifdata = b2a_base64(gifdata)
-        encoded['image/gif'] = gifdata.decode('ascii')
-
-    pdfdata = format_dict.get('application/pdf')
-    if isinstance(pdfdata, bytes):
-        # make sure we don't double-encode
-        if not pdfdata.startswith(PDF64):
-            pdfdata = b2a_base64(pdfdata)
-        encoded['application/pdf'] = pdfdata.decode('ascii')
-
-    return encoded
+    return format_dict
 
 
 def json_clean(obj):
@@ -130,7 +94,7 @@ def json_clean(obj):
 
     """
     # types that are 'atomic' and ok in json as-is.
-    atomic_ok = (unicode_type, type(None))
+    atomic_ok = (str, type(None))
 
     # containers that we need to convert into lists
     container_to_list = (tuple, set, types.GeneratorType)
@@ -155,19 +119,9 @@ def json_clean(obj):
         return obj
     
     if isinstance(obj, bytes):
-        if py3compat.PY3:
-            # unanmbiguous binary data is base64-encoded
-            # (this probably should have happened upstream)
-            return b2a_base64(obj).decode('ascii')
-        else:
-            # Python 2 bytestr is ambiguous,
-            # needs special handling for possible binary bytestrings.
-            # imperfect workaround: if ascii, assume text.
-            # otherwise assume binary, base64-encode (py3 behavior).
-            try:
-                return obj.decode('ascii')
-            except UnicodeDecodeError:
-                return b2a_base64(obj).decode('ascii')
+        # unanmbiguous binary data is base64-encoded
+        # (this probably should have happened upstream)
+        return b2a_base64(obj).decode('ascii')
 
     if isinstance(obj, container_to_list) or (
         hasattr(obj, '__iter__') and hasattr(obj, next_attr_name)):
@@ -181,14 +135,14 @@ def json_clean(obj):
         # key collisions after stringification.  This can happen with keys like
         # True and 'true' or 1 and '1', which collide in JSON.
         nkeys = len(obj)
-        nkeys_collapsed = len(set(map(unicode_type, obj)))
+        nkeys_collapsed = len(set(map(str, obj)))
         if nkeys != nkeys_collapsed:
             raise ValueError('dict cannot be safely converted to JSON: '
                              'key collision would lead to dropped values')
         # If all OK, proceed by making the new dict that will be json-safe
         out = {}
-        for k,v in iteritems(obj):
-            out[unicode_type(k)] = json_clean(v)
+        for k,v in obj.items():
+            out[str(k)] = json_clean(v)
         return out
     if isinstance(obj, datetime):
         return obj.strftime(ISO8601)

@@ -3,8 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 import errno
 import json
 import os
@@ -94,7 +92,11 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None, conda_env
 
 
 def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None,
+<<<<<<< HEAD
             prefix=None, profile=None, conda_env=False):
+=======
+            prefix=None, profile=None, env=None):
+>>>>>>> master
     """Install the IPython kernelspec for Jupyter
 
     Parameters
@@ -115,9 +117,16 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
     prefix: str, optional
         Specify an install prefix for the kernelspec.
         This is needed to install into a non-default location, such as a conda/virtual-env.
+<<<<<<< HEAD
     conda_env: bool, optional
         Format the kernelspec so that it properly activates the conda environment, if your kernel
         is running the python executable out of a conda environment.
+=======
+    env: dict, optional
+        A dictionary of extra environment variables for the kernel.
+        These will be added to the current environment variables before the
+        kernel is started
+>>>>>>> master
 
     Returns
     -------
@@ -140,7 +149,13 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
             overrides["display_name"] = 'Python %i [profile=%s]' % (sys.version_info[0], profile)
     else:
         extra_arguments = None
+<<<<<<< HEAD
     path = write_kernel_spec(overrides=overrides, extra_arguments=extra_arguments, conda_env=conda_env)
+=======
+    if env:
+        overrides['env'] = env
+    path = write_kernel_spec(overrides=overrides, extra_arguments=extra_arguments)
+>>>>>>> master
     dest = kernel_spec_manager.install_kernel_spec(
         path, kernel_name=kernel_name, user=user, prefix=prefix)
     # cleanup afterward
@@ -182,6 +197,7 @@ class InstallIPythonKernelSpecApp(Application):
         parser.add_argument('--sys-prefix', action='store_const', const=sys.prefix, dest='prefix',
             help="Install to Python's sys.prefix."
             " Shorthand for --prefix='%s'. For use in conda/virtual-envs." % sys.prefix)
+<<<<<<< HEAD
         parser.add_argument('--conda', action='store_true', dest='conda_env',
             default=False,
             help="Ensure that the conda environment is properly activated for kernel launch")
@@ -199,6 +215,16 @@ class InstallIPythonKernelSpecApp(Application):
         try:
             dest = install(user=opts.user, kernel_name=opts.name, profile=opts.profile,
                            prefix=opts.prefix, display_name=opts.display_name, conda_env=opts.conda_env)
+=======
+        parser.add_argument('--env', action='append', nargs=2, metavar=('ENV', 'VALUE'),
+            help="Set environment variables for the kernel.")
+        opts = parser.parse_args(self.argv)
+        if opts.env:
+            opts.env = {k:v for (k, v) in opts.env}
+        try:
+            dest = install(user=opts.user, kernel_name=opts.name, profile=opts.profile,
+                           prefix=opts.prefix, display_name=opts.display_name, env=opts.env)
+>>>>>>> master
         except OSError as e:
             if e.errno == errno.EACCES:
                 print(e, file=sys.stderr)

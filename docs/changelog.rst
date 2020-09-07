@@ -1,8 +1,102 @@
 Changes in IPython kernel
 =========================
 
+5.3
+---
+
+5.3.4
+*****
+- Only run Qt eventloop in the shell stream. (:ghpull:`531`)
+
+5.3.3
+*****
+- Fix QSocketNotifier in the Qt event loop not being disabled for the control channel. (:ghpull:`525`)
+
+5.3.2
+*****
+- Restore timer based event loop as a Windows-compatible fallback. (:ghpull:`523`)
+
+5.3.1
+*****
+
+- Fix #520: run post_execute and post_run_cell on async cells (:ghpull:`521`)
+- Fix exception causes in zmqshell.py (:ghpull:`516`)
+- Make pdb on Windows interruptible (:ghpull:`490`)
+
+5.3.0
+*****
+
+5.3.0 Adds support for Trio event loops and has some bug fixes.
+
+- Fix ipython display imports (:ghpull:`509`)
+- Skip test_unc_paths if OS is not Windows (:ghpull:`507`)
+- Allow interrupting input() on Windows, as part of effort to make pdb interruptible (:ghpull:`498`)
+- Add Trio Loop (:ghpull:`479`)
+- Flush from process even without newline (:ghpull:`478`)
+
+
+5.2
+---
+
+5.2.1
+*****
+
+- Handle system commands that use UNC paths on Windows (:ghpull:`500`)
+- Add offset argument to seek in io test (:ghpull:`496`)
+
+5.2.0
+*****
+
+5.2.0 Includes several bugfixes and internal logic improvements.
+
+- Produce better traceback when kernel is interrupted (:ghpull:`491`)
+- Add ``InProcessKernelClient.control_channel`` for compatibility with jupyter-client v6.0.0 (:ghpull:`489`)
+- Drop support for Python 3.4 (:ghpull:`483`)
+- Work around issue related to Tornado with python3.8 on Windows (:ghpull:`480`, :ghpull:`481`)
+- Prevent entering event loop if it is None (:ghpull:`464`)
+- Use ``shell.input_transformer_manager`` when available (:ghpull:`411`)
+
 5.1
 ---
+
+5.1.4
+*****
+
+5.1.4 Includes a few bugfixes,
+especially for compatibility with Python 3.8 on Windows.
+
+- Fix pickle issues when using inline matplotlib backend (:ghpull:`476`)
+- Fix an error during kernel shutdown (:ghpull:`463`)
+- Fix compatibility issues with Python 3.8 (:ghpull:`456`, :ghpull:`461`)
+- Remove some dead code (:ghpull:`474`, :ghpull:`467`)
+
+5.1.3
+*****
+
+5.1.3 Includes several bugfixes and internal logic improvements.
+
+- Fix comm shutdown behavior by adding a ``deleting`` option to ``close`` which can be set to prevent registering new comm channels during shutdown (:ghpull: `433`, :ghpull: `435`)
+- Fix ``Heartbeat._bind_socket`` to return on the first bind (:ghpull: `431`)
+- Moved ``InProcessKernelClient.flush`` to ``DummySocket`` (:gphull: `437`)
+- Don't redirect stdout if nose machinery is not present (:ghpull: `427`)
+- Rename `_asyncio.py` to `_asyncio_utils.py` to avoid name conflicts on Python 3.6+  (:ghpull: `426`)
+- Only generate kernelspec when installing or building wheel (:ghpull: `425`)
+- Fix priority ordering of control-channel messages in some cases (:ghpull:`443`)
+
+
+5.1.2
+*****
+
+5.1.2 fixes some socket-binding race conditions that caused testing failures in
+nbconvert.
+
+- Fix socket-binding race conditions (:ghpull: `412`, :ghpull: `419`)
+- Add a no-op ``flush`` method to ``DummySocket`` and comply with stream API
+  (:ghpull: `405`)
+- Update kernel version to indicate kernel v5.3 support (:ghpull: `394`)
+- Add testing for upcoming Python 3.8 and PEP 570 positional parameters
+ (:ghpull: `396`, :ghpull: `408`)
+
 
 5.1.1
 *****

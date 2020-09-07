@@ -3,8 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 from datetime import datetime
 from functools import partial
 import itertools
@@ -30,7 +28,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 from traitlets.config.configurable import SingletonConfigurable
 from IPython.core.error import StdinNotImplementedError
 from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type, string_types
 from ipykernel.jsonutil import json_clean
 from traitlets import (
     Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
@@ -43,7 +40,6 @@ from ._version import kernel_protocol_version
 
 CONTROL_PRIORITY = 1
 SHELL_PRIORITY = 10
-ABORT_PRIORITY = 20
 
 
 class Kernel(SingletonConfigurable):
@@ -77,7 +73,7 @@ class Kernel(SingletonConfigurable):
 
     @default('ident')
     def _default_ident(self):
-        return unicode_type(uuid.uuid4())
+        return str(uuid.uuid4())
 
     # This should be overridden by wrapper kernels that implement any real
     # language.
@@ -184,10 +180,10 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg)
-        self._publish_status(u'busy')
+        self._publish_status('busy')
         if self._aborting:
             self._send_abort_reply(self.control_stream, msg, idents)
-            self._publish_status(u'idle')
+            self._publish_status('idle')
             return
 
         header = msg['header']
@@ -204,7 +200,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status(u'idle')
+        self._publish_status('idle')
         # flush to ensure reply is sent
         self.control_stream.flush(zmq.POLLOUT)
 
@@ -225,10 +221,6 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def dispatch_shell(self, stream, msg):
         """dispatch shell requests"""
-        # flush control requests first
-        if self.control_stream:
-            self.control_stream.flush()
-
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
@@ -238,11 +230,11 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg)
-        self._publish_status(u'busy')
+        self._publish_status('busy')
 
         if self._aborting:
             self._send_abort_reply(stream, msg, idents)
-            self._publish_status(u'idle')
+            self._publish_status('idle')
             # flush to ensure reply is sent before
             # handling the next request
             stream.flush(zmq.POLLOUT)
@@ -280,7 +272,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status(u'idle')
+        self._publish_status('idle')
         # flush to ensure reply is sent before
         # handling the next request
         stream.flush(zmq.POLLOUT)
@@ -299,6 +291,10 @@ class Kernel(SingletonConfigurable):
         self.log.info("Entering eventloop %s", self.eventloop)
         # record handle, so we can check when this changes
         eventloop = self.eventloop
+        if eventloop is None:
+            self.log.info("Exiting as there is no eventloop")
+            return
+
         def advance_eventloop():
             # check if eventloop changed:
             if self.eventloop is not eventloop:
@@ -373,6 +369,9 @@ class Kernel(SingletonConfigurable):
         """
 
         while True:
+            # ensure control stream is flushed before processing shell messages
+            if self.control_stream:
+                self.control_stream.flush()
             # receive the next message and handle it
             try:
                 yield self.process_one()
@@ -453,16 +452,16 @@ class Kernel(SingletonConfigurable):
     def _publish_execute_input(self, code, parent, execution_count):
         """Publish the code request on the iopub stream."""
 
-        self.session.send(self.iopub_socket, u'execute_input',
-                            {u'code':code, u'execution_count': execution_count},
-                            parent=parent, ident=self._topic('execute_input')
+        self.session.send(self.iopub_socket, 'execute_input',
+                          {'code':code, 'execution_count': execution_count},
+                          parent=parent, ident=self._topic('execute_input')
         )
 
     def _publish_status(self, status, parent=None):
         """send status (busy/idle) on IOPub"""
         self.session.send(self.iopub_socket,
-                          u'status',
-                          {u'execution_state': status},
+                          'status',
+                          {'execution_state': status},
                           parent=parent or self._parent_header,
                           ident=self._topic('status'),
                           )
@@ -515,10 +514,10 @@ class Kernel(SingletonConfigurable):
         """handle an execute_request"""
 
         try:
-            content = parent[u'content']
-            code = py3compat.cast_unicode_py2(content[u'code'])
-            silent = content[u'silent']
-            store_history = content.get(u'store_history', not silent)
+            content = parent['content']
+            code = content['code']
+            silent = content['silent']
+            store_history = content.get('store_history', not silent)
             user_expressions = content.get('user_expressions', {})
             allow_stdin = content.get('allow_stdin', False)
         except:
@@ -556,13 +555,13 @@ class Kernel(SingletonConfigurable):
         reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
-        reply_msg = self.session.send(stream, u'execute_reply',
+        reply_msg = self.session.send(stream, 'execute_reply',
                                       reply_content, parent, metadata=metadata,
                                       ident=ident)
 
         self.log.debug("%s", reply_msg)
 
-        if not silent and reply_msg['content']['status'] == u'error' and stop_on_error:
+        if not silent and reply_msg['content']['status'] == 'error' and stop_on_error:
             yield self._abort_queues()
 
     def do_execute(self, code, silent, store_history=True,
@@ -576,7 +575,7 @@ class Kernel(SingletonConfigurable):
         content = parent['content']
         code = content['code']
         cursor_pos = content['cursor_pos']
-        
+
         matches = yield gen.maybe_future(self.do_complete(code, cursor_pos))
         matches = json_clean(matches)
         completion_msg = self.session.send(stream, 'complete_reply',
@@ -678,9 +677,9 @@ class Kernel(SingletonConfigurable):
     @gen.coroutine
     def shutdown_request(self, stream, ident, parent):
         content = yield gen.maybe_future(self.do_shutdown(parent['content']['restart']))
-        self.session.send(stream, u'shutdown_reply', content, parent, ident=ident)
+        self.session.send(stream, 'shutdown_reply', content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
-        self._shutdown_message = self.session.msg(u'shutdown_reply',
+        self._shutdown_message = self.session.msg('shutdown_reply',
                                                   content, parent
         )
 
@@ -719,8 +718,8 @@ class Kernel(SingletonConfigurable):
     def apply_request(self, stream, ident, parent):
         self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
         try:
-            content = parent[u'content']
-            bufs = parent[u'buffers']
+            content = parent['content']
+            bufs = parent['buffers']
             msg_id = parent['header']['msg_id']
         except:
             self.log.error("Got bad msg: %s", parent, exc_info=True)
@@ -736,7 +735,7 @@ class Kernel(SingletonConfigurable):
 
         md = self.finish_metadata(parent, md, reply_content)
 
-        self.session.send(stream, u'apply_reply', reply_content,
+        self.session.send(stream, 'apply_reply', reply_content,
                     parent=parent, ident=ident,buffers=result_buf, metadata=md)
 
     def do_apply(self, content, bufs, msg_id, reply_metadata):
@@ -751,7 +750,7 @@ class Kernel(SingletonConfigurable):
         """abort a specific msg by id"""
         self.log.warning("abort_request is deprecated in kernel_base. It is only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
-        if isinstance(msg_ids, string_types):
+        if isinstance(msg_ids, str):
             msg_ids = [msg_ids]
         if not msg_ids:
             self._abort_queues()
@@ -792,16 +791,11 @@ class Kernel(SingletonConfigurable):
             stream.flush()
         self._aborting = True
 
-        self.schedule_dispatch(
-            ABORT_PRIORITY,
-            self._dispatch_abort,
-        )
+        def stop_aborting(f):
+            self.log.info("Finishing abort")
+            self._aborting = False
 
-    @gen.coroutine
-    def _dispatch_abort(self):
-        self.log.info("Finishing abort")
-        yield gen.sleep(self.stop_on_error_timeout)
-        self._aborting = False
+        self.io_loop.add_future(gen.sleep(self.stop_on_error_timeout), stop_aborting)
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""
@@ -864,6 +858,7 @@ class Kernel(SingletonConfigurable):
         # Flush output before making the request.
         sys.stderr.flush()
         sys.stdout.flush()
+
         # flush the stdin socket, to purge stale replies
         while True:
             try:
@@ -876,20 +871,31 @@ class Kernel(SingletonConfigurable):
 
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))
-        self.session.send(self.stdin_socket, u'input_request', content, parent,
+        self.session.send(self.stdin_socket, 'input_request', content, parent,
                           ident=ident)
 
         # Await a response.
         while True:
             try:
-                ident, reply = self.session.recv(self.stdin_socket, 0)
-            except Exception:
-                self.log.warning("Invalid Message:", exc_info=True)
+                # Use polling with select() so KeyboardInterrupts can get
+                # through; doing a blocking recv() means stdin reads are
+                # uninterruptible on Windows. We need a timeout because
+                # zmq.select() is also uninterruptible, but at least this
+                # way reads get noticed immediately and KeyboardInterrupts
+                # get noticed fairly quickly by human response time standards.
+                rlist, _, xlist = zmq.select(
+                    [self.stdin_socket], [], [self.stdin_socket], 0.01
+                )
+                if rlist or xlist:
+                    ident, reply = self.session.recv(self.stdin_socket)
+                    if (ident, reply) != (None, None):
+                        break
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
-                raise KeyboardInterrupt
-            else:
-                break
+                raise KeyboardInterrupt("Interrupted by user") from None
+            except Exception as e:
+                self.log.warning("Invalid Message:", exc_info=True)
+        
         try:
             value = py3compat.unicode_to_str(reply['content']['value'])
         except:

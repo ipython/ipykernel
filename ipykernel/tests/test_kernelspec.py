@@ -7,11 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock # py2
+from unittest import mock
 
 from jupyter_core.paths import jupyter_data_dir
 
@@ -24,6 +20,8 @@ from ipykernel.kernelspec import (
     KERNEL_NAME,
     RESOURCES,
 )
+
+import pytest
 
 import nose.tools as nt
 
@@ -144,3 +142,27 @@ def test_install_display_name_overrides_profile():
     with open(spec) as f:
         spec = json.load(f)
     assert spec["display_name"] == "Display"
+
+
+@pytest.mark.parametrize("env", [
+    None,
+    dict(spam="spam"),
+    dict(spam="spam", foo='bar')
+])
+def test_install_env(tmp_path, env):
+    # python 3.5 // tmp_path must be converted to str
+    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
+            [str(tmp_path)]):
+        install(env=env)
+
+    spec = tmp_path / 'kernels' / KERNEL_NAME / "kernel.json"
+    with spec.open() as f:
+        spec = json.load(f)
+
+    if env:
+        assert len(env) == len(spec['env'])
+        for k, v in env.items():
+            assert spec['env'][k] == v
+    else:
+        assert 'env' not in spec
+

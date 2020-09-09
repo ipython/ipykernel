@@ -12,7 +12,7 @@ from IPython.core import release
 from ipython_genutils.py3compat import safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from tornado import gen
-from traitlets import Instance, Type, Any, List, Bool
+from traitlets import Instance, Type, Any, List, Bool, observe, observe_compat
 
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
@@ -43,14 +43,18 @@ class IPythonKernel(KernelBase):
     ).tag(config=True)
 
     user_module = Any()
-    def _user_module_changed(self, name, old, new):
+    @observe('user_module')
+    @observe_compat
+    def _user_module_changed(self, change):
         if self.shell is not None:
-            self.shell.user_module = new
+            self.shell.user_module = change['new']
 
     user_ns = Instance(dict, args=None, allow_none=True)
-    def _user_ns_changed(self, name, old, new):
+    @observe('user_ns')
+    @observe_compat
+    def _user_ns_changed(self, change):
         if self.shell is not None:
-            self.shell.user_ns = new
+            self.shell.user_ns = change['new']
             self.shell.init_user_ns()
 
     # A reference to the Python builtin 'raw_input' function.

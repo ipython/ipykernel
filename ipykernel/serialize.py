@@ -13,10 +13,19 @@ import pickle
 
 from itertools import chain
 
-from ipykernel.pickleutil import (
-    can, uncan, can_sequence, uncan_sequence, CannedObject,
-    istype, sequence_types, PICKLE_PROTOCOL,
-)
+try:
+    # available since ipyparallel 5.0.0
+    from ipyparallel.serialize.canning import (
+        can, uncan, can_sequence, uncan_sequence, CannedObject,
+        istype, sequence_types,
+    )
+    from ipyparallel.serialize.serialize import PICKLE_PROTOCOL
+except ImportError:
+    # Deprecated since ipykernel 4.3.0
+    from ipykernel.pickleutil import (
+        can, uncan, can_sequence, uncan_sequence, CannedObject,
+        istype, sequence_types, PICKLE_PROTOCOL,
+    )
 from jupyter_client.session import MAX_ITEMS, MAX_BYTES
 
 

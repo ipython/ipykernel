@@ -14,7 +14,11 @@ import warnings
 from io import StringIO, TextIOBase
 
 import zmq
-from zmq.eventloop.ioloop import IOLoop
+if zmq.pyzmq_version_info() >= (17, 0):
+    from tornado.ioloop import IOLoop
+else:
+    # deprecated since pyzmq 17
+    from zmq.eventloop.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from jupyter_client.session import extract_header

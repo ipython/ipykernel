@@ -4,7 +4,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 import warnings
-warnings.warn("ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize", DeprecationWarning)
+warnings.warn("ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import pickle
 

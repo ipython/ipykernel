@@ -4,7 +4,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 import warnings
-warnings.warn("ipykernel.pickleutil is deprecated. It has moved to ipyparallel.", DeprecationWarning)
+warnings.warn("ipykernel.pickleutil is deprecated. It has moved to ipyparallel.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import copy
 import sys

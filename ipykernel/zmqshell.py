@@ -49,6 +49,13 @@ from ipykernel.displayhook import ZMQShellDisplayHook
 from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_client.session import extract_header, Session
 
+try:
+    # available since ipyparallel 5.0.0
+    from ipyparallel.engine.datapub import ZMQDataPublisher
+except ImportError:
+    # Deprecated since ipykernel 4.3.0
+    from ipykernel.datapub import ZMQDataPublisher
+
 #-----------------------------------------------------------------------------
 # Functions and classes
 #-----------------------------------------------------------------------------
@@ -438,7 +445,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
-    data_pub_class = Type('ipykernel.datapub.ZMQDataPublisher')
+    data_pub_class = Type(ZMQDataPublisher)
     kernel = Any()
     parent_header = Any()
 

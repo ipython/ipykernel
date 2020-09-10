@@ -2,7 +2,10 @@
 """
 
 import warnings
-warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub", DeprecationWarning)
+warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
@@ -10,7 +13,12 @@ warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.data
 from traitlets.config import Configurable
 from traitlets import Instance, Dict, CBytes, Any
 from ipykernel.jsonutil import json_clean
-from ipykernel.serialize import serialize_object
+try:
+    # available since ipyparallel 5.0.0
+    from ipyparallel.serialize import serialize_object
+except ImportError:
+    # Deprecated since ipykernel 4.3.0
+    from ipykernel.serialize import serialize_object
 from jupyter_client.session import Session, extract_header
 
 
@@ -56,7 +64,10 @@ def publish_data(data):
     data : dict
         The data to be published. Think of it as a namespace.
     """
-    warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub", DeprecationWarning)
+    warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
+        DeprecationWarning,
+        stacklevel=2
+    )
     
     from ipykernel.zmqshell import ZMQInteractiveShell
     ZMQInteractiveShell.instance().data_pub.publish_data(data)

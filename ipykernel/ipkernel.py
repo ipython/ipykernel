@@ -62,8 +62,9 @@ class IPythonKernel(KernelBase):
 
         # Initialize the InteractiveShell subclass
         self._existing_shell = False
-        if kwargs.get('shell'):
-            self.shell = kwargs['shell']
+        assert "shell" in kwargs
+        if kwargs.get("shell"):
+            self.shell = kwargs["shell"]
             self._existing_shell = True
         else:
             self.shell = self.shell_class.instance(parent=self,

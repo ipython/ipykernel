@@ -587,10 +587,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         # shell init steps
         self.init_path()
         self.init_shell()
-        #if self.shell:
-        #    self.init_gui_pylab()
-        #    self.init_extensions()
-        #    self.init_code()
+        if self.shell and not shell:
+            self.init_gui_pylab()
+            self.init_extensions()
+            self.init_code()
         # flush stdout/stderr, so that anything written to these streams during
         # initialization do not get associated with the first execution request
         sys.stdout.flush()

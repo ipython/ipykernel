@@ -382,9 +382,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             e_stdout = None if self.quiet else sys.__stdout__
             e_stderr = None if self.quiet else sys.__stderr__
 
-            sys.stdout = outstream_factory(
-                self.session, self.iopub_thread, u"stdout", echo=e_stdout
-            )
+            # sys.stdout = outstream_factory(self.session, self.iopub_thread,
+            #                               u'stdout',
+            #                               echo=e_stdout)
             if sys.stderr is not None:
                 sys.stderr.flush()
             sys.stderr = outstream_factory(
@@ -442,23 +442,16 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         kernel_factory = self.kernel_class.instance
 
-        if shell is not None:
-            user_ns = self.user_ns
-        else:
-            user_ns = None
-
-        kernel = kernel_factory(
-            parent=self,
-            session=self.session,
-            control_stream=control_stream,
-            shell_streams=[shell_stream, control_stream],
-            iopub_thread=self.iopub_thread,
-            iopub_socket=self.iopub_socket,
-            stdin_socket=self.stdin_socket,
-            log=self.log,ü
-            profile_dir=self.profile_dir,
-            user_ns=user_ns,
-            shell=shell,
+        kernel = kernel_factory(parent=self, session=self.session,
+                                control_stream=control_stream,
+                                shell_streams=[shell_stream, control_stream],
+                                iopub_thread=self.iopub_thread,
+                                iopub_socket=self.iopub_socket,
+                                stdin_socket=self.stdin_socket,
+                                log=self.log,
+                                profile_dir=self.profile_dir,
+                                #user_ns=self.user_ns,
+                                shell=shell
         )
         kernel.record_ports({
             name + '_port': port for name, port in self.ports.items()
@@ -592,10 +585,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         # shell init steps
         self.init_path()
         self.init_shell()
-        if self.shell:
-            self.init_gui_pylab()
-            self.init_extensions()
-            self.init_code()
+        #if self.shell:
+        #    self.init_gui_pylab()
+        #    self.init_extensions()
+        #    self.init_code()
         # flush stdout/stderr, so that anything written to these streams during
         # initialization do not get associated with the first execution request
         sys.stdout.flush()

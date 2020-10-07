@@ -442,16 +442,18 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         kernel_factory = self.kernel_class.instance
 
-        kernel = kernel_factory(parent=self, session=self.session,
-                                control_stream=control_stream,
-                                shell_streams=[shell_stream, control_stream],
-                                iopub_thread=self.iopub_thread,
-                                iopub_socket=self.iopub_socket,
-                                stdin_socket=self.stdin_socket,
-                                log=self.log,
-                                profile_dir=self.profile_dir,
-                                #user_ns=self.user_ns,
-                                shell=shell
+        kernel = kernel_factory(
+            parent=self,
+            session=self.session,
+            control_stream=control_stream,
+            shell_streams=[shell_stream, control_stream],
+            iopub_thread=self.iopub_thread,
+            iopub_socket=self.iopub_socket,
+            stdin_socket=self.stdin_socket,
+            log=self.log,
+            profile_dir=self.profile_dir,
+            user_ns=self.user_ns,
+            shell=shell,
         )
         kernel.record_ports({
             name + '_port': port for name, port in self.ports.items()

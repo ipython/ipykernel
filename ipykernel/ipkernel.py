@@ -58,6 +58,8 @@ class IPythonKernel(KernelBase):
     _sys_eval_input = Any()
 
     def __init__(self, **kwargs):
+        if kwargs.get("user_ns", None) is None:
+            kwargs.pop("user_ns")
         super(IPythonKernel, self).__init__(**kwargs)
 
         # Initialize the InteractiveShell subclass

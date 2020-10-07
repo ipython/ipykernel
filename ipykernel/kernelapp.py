@@ -382,9 +382,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             e_stdout = None if self.quiet else sys.__stdout__
             e_stderr = None if self.quiet else sys.__stderr__
 
-            # sys.stdout = outstream_factory(self.session, self.iopub_thread,
-            #                               u'stdout',
-            #                               echo=e_stdout)
+            sys.stdout = outstream_factory(
+                self.session, self.iopub_thread, u"stdout", echo=e_stdout
+            )
             if sys.stderr is not None:
                 sys.stderr.flush()
             sys.stderr = outstream_factory(

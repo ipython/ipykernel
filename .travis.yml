@@ -22,6 +22,8 @@ matrix:
       python: 3.8
     - arch: amd64
       python: 3.8
+    - arch: amd64
+      python: "3.9-dev"
 sudo: false
 dist: xenial
 install:
@@ -57,7 +59,7 @@ after_success:
   - codecov
 matrix:
   include:
-    - python: 3.7
+    - python: 3.8
       env:
         - IPYTHON=master
   allow_failures:

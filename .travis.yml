@@ -62,5 +62,9 @@ matrix:
     - python: 3.8
       env:
         - IPYTHON=master
+    - python: 3.8
+      env:
+        - IPYTHON=master
+      arch: ppc64le
   allow_failures:
     - python: "nightly"

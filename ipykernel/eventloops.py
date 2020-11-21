@@ -17,9 +17,9 @@ from traitlets.config.application import Application
 def _use_appnope():
     """Should we use appnope for dealing with OS X app nap?
 
-    Checks if we are on OS X 10.9 or greater.
+    Checks if we are on OS X 10.9 or greater and not on Apple Silicon.
     """
-    return sys.platform == 'darwin' and V(platform.mac_ver()[0]) >= V('10.9')
+    return sys.platform == 'darwin' and V(platform.mac_ver()[0]) >= V('10.9') and platform.mac_ver()[2] != 'arm64'
 
 
 def _notify_stream_qt(kernel, stream):

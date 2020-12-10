@@ -5,6 +5,10 @@ from io import StringIO
 import sys
 import unittest
 
+import pytest
+
+import tornado
+
 from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
 from ipykernel.inprocess.manager import InProcessKernelManager
 from ipykernel.inprocess.ipkernel import InProcessKernel
@@ -29,7 +33,7 @@ def _init_asyncio_patch():
     FIXME: if/when tornado supports the defaults in asyncio,
            remove and bump tornado requirement for py38
     """
-    if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+    if sys.platform.startswith("win") and sys.version_info >= (3, 8) and tornado.version_info < (6, 1):
         import asyncio
         try:
             from asyncio import (
@@ -76,6 +80,10 @@ class InProcessKernelTestCase(unittest.TestCase):
             sys.stdin = sys_stdin
         assert self.km.kernel.shell.user_ns.get('x') == 'foobar'
 
+    @pytest.mark.skipif(
+        '__pypy__' in sys.builtin_module_names,
+        reason="fails on pypy"
+    )
     def test_stdout(self):
         """ Does the in-process kernel correctly capture IO?
         """

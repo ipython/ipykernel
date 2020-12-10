@@ -78,7 +78,10 @@ def test_sys_path_profile_dir():
 
 
 @flaky(max_runs=3)
-@dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
+@dec.skipif(
+    sys.platform == 'win32' or (sys.platform == "darwin" and sys.version_info >=(3, 8)),
+    "subprocess prints fail on Windows and MacOS Python 3.8+"
+)
 def test_subprocess_print():
     """printing from forked mp.Process"""
     with new_kernel() as kc:
@@ -130,7 +133,10 @@ def test_subprocess_noprint():
 
 
 @flaky(max_runs=3)
-@dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
+@dec.skipif(
+    sys.platform == 'win32' or (sys.platform == "darwin" and sys.version_info >=(3, 8)),
+    "subprocess prints fail on Windows and MacOS Python 3.8+"
+)
 def test_subprocess_error():
     """error in mp.Process doesn't crash"""
     with new_kernel() as kc:
@@ -297,7 +303,7 @@ def test_message_order():
             assert reply['parent_header']['msg_id'] == msg_id
 
 
-@dec.skipif(sys.platform.startswith('linux'))
+@dec.skipif(sys.platform.startswith('linux') or sys.platform.startswith('darwin'))
 def test_unc_paths():
     with kernel() as kc, TemporaryDirectory() as td:
         drive_file_path = os.path.join(td, 'unc.txt')
@@ -345,7 +351,7 @@ def test_shutdown():
 def test_interrupt_during_input():
     """
     The kernel exits after being interrupted while waiting in input().
-    
+
     input() appears to have issues other functions don't, and it needs to be
     interruptible in order for pdb to be interruptible.
     """

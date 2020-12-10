@@ -1,6 +1,8 @@
 import os
 import sys
 
+import tornado
+
 from ipykernel.inprocess import InProcessKernelManager
 from jupyter_console.ptshell import ZMQTerminalInteractiveShell
 
@@ -20,7 +22,7 @@ def init_asyncio_patch():
     FIXME: if/when tornado supports the defaults in asyncio,
            remove and bump tornado requirement for py38
     """
-    if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+    if sys.platform.startswith("win") and sys.version_info >= (3, 8) and tornado.version_info < (6, 1):
         import asyncio
         try:
             from asyncio import (

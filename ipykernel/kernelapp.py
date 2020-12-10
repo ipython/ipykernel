@@ -11,7 +11,9 @@ import signal
 import traceback
 import logging
 
+import tornado
 from tornado import ioloop
+
 import zmq
 from zmq.eventloop import ioloop as zmq_ioloop
 from zmq.eventloop.zmqstream import ZMQStream
@@ -521,7 +523,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         FIXME: if/when tornado supports the defaults in asyncio,
                remove and bump tornado requirement for py38
         """
-        if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+        if sys.platform.startswith("win") and sys.version_info >= (3, 8) and tornado.version_info < (6, 1):
             import asyncio
             try:
                 from asyncio import (
@@ -539,7 +541,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     def init_pdb(self):
         """Replace pdb with IPython's version that is interruptible.
-        
+
         With the non-interruptible version, stopping pdb() locks up the kernel in a
         non-recoverable state.
         """

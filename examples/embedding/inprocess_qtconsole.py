@@ -1,6 +1,8 @@
 import os
 import sys
 
+import tornado
+
 from qtconsole.rich_ipython_widget import RichIPythonWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 from IPython.lib import guisupport
@@ -21,7 +23,7 @@ def init_asyncio_patch():
     FIXME: if/when tornado supports the defaults in asyncio,
            remove and bump tornado requirement for py38
     """
-    if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+    if sys.platform.startswith("win") and sys.version_info >= (3, 8) and tornado.version_info < (6, 1):
         import asyncio
         try:
             from asyncio import (

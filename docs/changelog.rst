@@ -1,6 +1,22 @@
 Changes in IPython kernel
 =========================
 
+5.4
+---
+
+5.4.0
+*****
+
+5.4.0 is generally focused on code quality improvements and tornado asyncio compatibility.
+
+- Add github actions, bail on asyncio patch for tornado 6.1.  (:ghpull:`564`)
+- Start testing on Python 3.9.  (:ghpull:`551`)
+- Fix stack levels for ipykernel's deprecation warnings and stop using some deprecated APIs.  (:ghpull:`547`) 
+- Add env parameter to kernel installation  (:ghpull:`541`)
+- Fix stop_on_error_timeout blocking other messages in queue.  (:ghpull:`539`)
+- Remove most of the python 2 compat code.  (:ghpull:`537`)
+- Remove u-prefix from strings.  (:ghpull:`538`)
+
 5.3
 ---
 
@@ -94,8 +110,7 @@ nbconvert.
 - Add a no-op ``flush`` method to ``DummySocket`` and comply with stream API
   (:ghpull: `405`)
 - Update kernel version to indicate kernel v5.3 support (:ghpull: `394`)
-- Add testing for upcoming Python 3.8 and PEP 570 positional parameters
- (:ghpull: `396`, :ghpull: `408`)
+- Add testing for upcoming Python 3.8 and PEP 570 positional parameters (:ghpull: `396`, :ghpull: `408`)
 
 
 5.1.1

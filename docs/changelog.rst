@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.4
 ---
 
+5.4.2
+*****
+- Revert "Fix stop_on_error_timeout blocking other messages in queue".  (:ghpull:`570`)
+
 5.4.1
 *****
 - Invalid syntax in ipykernel/log.py.  (:ghpull:`567`)

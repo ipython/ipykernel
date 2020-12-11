@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.4
 ---
 
+5.4.1
+*****
+- Invalid syntax in ipykernel/log.py.  (:ghpull:`567`)
+
 5.4.0
 *****
 

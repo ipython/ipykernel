@@ -391,3 +391,29 @@ def test_interrupt_during_pdb_set_trace():
         validate_message(reply, 'execute_reply', msg_id)
         reply = kc.get_shell_msg(timeout=TIMEOUT)
         validate_message(reply, 'execute_reply', msg_id2)
+
+def test_abort_execute_requests():
+    """test that execute_request's are aborted after an error"""
+    with kernel() as kc:
+        msg_id1 = kc.execute(code="assert False")
+        msg_id2 = kc.execute(code="assert True")
+        reply1 = kc.get_shell_msg(timeout=TIMEOUT)
+        reply2 = kc.get_shell_msg(timeout=TIMEOUT)
+        assert reply1['content']['status'] == 'error'
+        assert reply2['content']['status'] == 'aborted'
+
+def test_dont_abort_non_execute_requests():
+    """test that kernel_info, comm_info and inspect requests are not aborted after an error"""
+    with kernel() as kc:
+        msg_id1 = kc.execute(code="assert False")
+        msg_id2 = kc.kernel_info()
+        msg_id3 = kc.comm_info()
+        msg_id4 = kc.inspect(code="pri")
+        reply1 = kc.get_shell_msg(timeout=TIMEOUT) # execute
+        reply2 = kc.get_shell_msg(timeout=TIMEOUT) # kernel_info
+        reply3 = kc.get_shell_msg(timeout=TIMEOUT) # comm_info
+        reply4 = kc.get_shell_msg(timeout=TIMEOUT) # inspect
+        assert reply1['content']['status'] == 'error'
+        assert reply2['content']['status'] == 'ok'
+        assert reply3['content']['status'] == 'ok'
+        assert reply4['content']['status'] == 'ok'

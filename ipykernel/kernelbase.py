@@ -181,10 +181,6 @@ class Kernel(SingletonConfigurable):
         # Set the parent message for side effects.
         self.set_parent(idents, msg)
         self._publish_status('busy')
-        if self._aborting:
-            self._send_abort_reply(self.control_stream, msg, idents)
-            self._publish_status('idle')
-            return
 
         header = msg['header']
         msg_type = header['msg_type']
@@ -232,15 +228,16 @@ class Kernel(SingletonConfigurable):
         self.set_parent(idents, msg)
         self._publish_status('busy')
 
-        if self._aborting:
+        msg_type = msg['header']['msg_type']
+
+        # Only abort execute requests
+        if self._aborting and msg_type == 'execute_request':
             self._send_abort_reply(stream, msg, idents)
             self._publish_status('idle')
             # flush to ensure reply is sent before
             # handling the next request
             stream.flush(zmq.POLLOUT)
             return
-
-        msg_type = msg['header']['msg_type']
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each

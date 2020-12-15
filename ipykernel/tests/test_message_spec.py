@@ -114,6 +114,8 @@ class ExecuteReply(Reply):
             ExecuteReplyOkay().check(d)
         elif d['status'] == 'error':
             ExecuteReplyError().check(d)
+        elif d['status'] == 'aborted':
+            ExecuteReplyAborted().check(d)
 
 
 class ExecuteReplyOkay(Reply):
@@ -122,9 +124,14 @@ class ExecuteReplyOkay(Reply):
 
 
 class ExecuteReplyError(Reply):
+    status = Enum(('error',))
     ename = Unicode()
     evalue = Unicode()
     traceback = List(Unicode())
+
+
+class ExecuteReplyAborted(Reply):
+    status = Enum(('aborted',))
 
 
 class InspectReply(Reply, MimeBundle):
@@ -345,6 +352,30 @@ def test_execute_stop_on_error():
     msg_id = KC.execute(code='print("Hello")')
     KC.get_shell_msg(timeout=TIMEOUT)
     reply = KC.get_shell_msg(timeout=TIMEOUT)
+    assert reply['content']['status'] == 'ok'
+
+
+def test_non_execute_stop_on_error():
+    """test that non-execute_request's are not aborted after an error"""
+    flush_channels()
+
+    fail = '\n'.join([
+        # sleep to ensure subsequent message is waiting in the queue to be aborted
+        'import time',
+        'time.sleep(0.5)',
+        'raise ValueError',
+    ])
+    KC.execute(code=fail)
+    KC.kernel_info()
+    KC.comm_info()
+    KC.inspect(code="print")
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # execute
+    assert reply['content']['status'] == 'error'
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # kernel_info
+    assert reply['content']['status'] == 'ok'
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # comm_info
+    assert reply['content']['status'] == 'ok'
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # inspect
     assert reply['content']['status'] == 'ok'
 
 

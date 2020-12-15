@@ -114,6 +114,8 @@ class ExecuteReply(Reply):
             ExecuteReplyOkay().check(d)
         elif d['status'] == 'error':
             ExecuteReplyError().check(d)
+        elif d['status'] == 'aborted':
+            ExecuteReplyAborted().check(d)
 
 
 class ExecuteReplyOkay(Reply):
@@ -122,9 +124,14 @@ class ExecuteReplyOkay(Reply):
 
 
 class ExecuteReplyError(Reply):
+    status = Enum(('error',))
     ename = Unicode()
     evalue = Unicode()
     traceback = List(Unicode())
+
+
+class ExecuteReplyAborted(Reply):
+    status = Enum(('aborted',))
 
 
 class InspectReply(Reply, MimeBundle):

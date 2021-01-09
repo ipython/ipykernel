@@ -2,7 +2,7 @@
 
 Welcome!
 
-For contributing tips, follow the [Jupyter Contributing Guide](https://jupyter.readthedocs.io/en/latest/contributor/content-contributor.html).
+For contributing tips, follow the [Jupyter Contributing Guide](https://jupyter.readthedocs.io/en/latest/contributing/content-contributor.html).
 Please make sure to follow the [Jupyter Code of Conduct](https://github.com/jupyter/governance/blob/master/conduct/code_of_conduct.md).
 
 ## Installing ipykernel for development

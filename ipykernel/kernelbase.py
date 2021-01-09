@@ -808,7 +808,7 @@ class Kernel(SingletonConfigurable):
         )
 
     def _no_raw_input(self):
-        """Raise StdinNotImplentedError if active frontend doesn't support
+        """Raise StdinNotImplementedError if active frontend doesn't support
         stdin."""
         raise StdinNotImplementedError("raw_input was called, but this "
                                        "frontend does not support stdin.")
@@ -818,7 +818,7 @@ class Kernel(SingletonConfigurable):
 
         Raises
         ------
-        StdinNotImplentedError if active frontend doesn't support stdin.
+        StdinNotImplementedError if active frontend doesn't support stdin.
         """
         if not self._allow_stdin:
             raise StdinNotImplementedError(
@@ -839,7 +839,7 @@ class Kernel(SingletonConfigurable):
 
         Raises
         ------
-        StdinNotImplentedError if active frontend doesn't support stdin.
+        StdinNotImplementedError if active frontend doesn't support stdin.
         """
         if not self._allow_stdin:
             raise StdinNotImplementedError(

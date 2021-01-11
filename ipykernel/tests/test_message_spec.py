@@ -15,7 +15,8 @@ from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum
 )
 
-from .utils import TIMEOUT, start_global_kernel, flush_channels, execute
+from .utils import (TIMEOUT, start_global_kernel, flush_channels, execute,
+                   get_reply, )
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -271,7 +272,7 @@ def test_execute():
     flush_channels()
 
     msg_id = KC.execute(code='x=1')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'execute_reply', msg_id)
 
 
@@ -374,7 +375,7 @@ def test_oinfo():
     flush_channels()
 
     msg_id = KC.inspect('a')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
 
 
@@ -384,7 +385,7 @@ def test_oinfo_found():
     msg_id, reply = execute(code='a=5')
 
     msg_id = KC.inspect('a')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
     content = reply['content']
     assert content['found']
@@ -399,7 +400,7 @@ def test_oinfo_detail():
     msg_id, reply = execute(code='ip=get_ipython()')
 
     msg_id = KC.inspect('ip.object_inspect', cursor_pos=10, detail_level=1)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
     content = reply['content']
     assert content['found']
@@ -412,7 +413,7 @@ def test_oinfo_not_found():
     flush_channels()
 
     msg_id = KC.inspect('dne')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
     content = reply['content']
     assert not content['found']
@@ -424,7 +425,7 @@ def test_complete():
     msg_id, reply = execute(code="alpha = albert = 5")
 
     msg_id = KC.complete('al', 2)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'complete_reply', msg_id)
     matches = reply['content']['matches']
     for name in ('alpha', 'albert'):
@@ -435,7 +436,7 @@ def test_kernel_info_request():
     flush_channels()
 
     msg_id = KC.kernel_info()
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'kernel_info_reply', msg_id)
 
 
@@ -446,7 +447,7 @@ def test_connect_request():
     return msg['header']['msg_id']
 
     msg_id = KC.kernel_info()
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'connect_reply', msg_id)
 
 
@@ -455,7 +456,7 @@ def test_comm_info_request():
     if not hasattr(KC, 'comm_info'):
         raise SkipTest()
     msg_id = KC.comm_info()
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'comm_info_reply', msg_id)
 
 
@@ -481,7 +482,7 @@ def test_is_complete():
     flush_channels()
 
     msg_id = KC.is_complete("a = 1")
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'is_complete_reply', msg_id)
 
 def test_history_range():
@@ -491,7 +492,7 @@ def test_history_range():
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'range', raw = True, output = True, start = 1, stop = 2, session = 0)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
     assert len(content['history']) == 1
@@ -503,7 +504,7 @@ def test_history_tail():
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'tail', raw = True, output = True, n = 1, session = 0)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
     assert len(content['history']) == 1
@@ -515,7 +516,7 @@ def test_history_search():
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'search', raw = True, output = True, n = 1, pattern = '*', session = 0)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
     assert len(content['history']) == 1

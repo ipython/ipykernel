@@ -6,6 +6,7 @@
 import atexit
 import os
 import sys
+from time import time
 
 from contextlib import contextmanager
 from queue import Empty
@@ -52,13 +53,26 @@ def flush_channels(kc=None):
                 validate_message(msg)
 
 
+def get_reply(kc, msg_id, timeout):
+    timeout = TIMEOUT
+    t0 = time()
+    while True:
+        reply = kc.get_shell_msg(timeout=timeout)
+        if reply['parent_header']['msg_id'] == msg_id:
+            break
+        t1 = time()
+        timeout -= t1 - t0
+        t0 = t1
+    return reply
+
+
 def execute(code='', kc=None, **kwargs):
     """wrapper for doing common steps for validating an execution request"""
     from .test_message_spec import validate_message
     if kc is None:
         kc = KC
     msg_id = kc.execute(code=code, **kwargs)
-    reply = kc.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(kc, msg_id, TIMEOUT)
     validate_message(reply, 'execute_reply', msg_id)
     busy = kc.get_iopub_msg(timeout=TIMEOUT)
     validate_message(busy, 'status', msg_id)

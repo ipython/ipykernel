@@ -97,6 +97,7 @@ setup_args = dict(
             'pytest-cov',
             'flaky',
             'nose',  # nose because there are still a few nose.tools imports hanging around
+            'jedi<=0.17.2'
         ],
     },
     classifiers=[

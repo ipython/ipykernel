@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.4
 ---
 
+5.4.3
+*****
+- Rework wait_for_ready logic. (:ghpull:`578`)
+
 5.4.2
 *****
 - Revert "Fix stop_on_error_timeout blocking other messages in queue".  (:ghpull:`570`)

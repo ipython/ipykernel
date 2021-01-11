@@ -21,7 +21,7 @@ from ipython_genutils.tempdir import TemporaryDirectory
 
 from .utils import (
     new_kernel, kernel, TIMEOUT, assemble_output, execute,
-    flush_channels, wait_for_idle,
+    flush_channels, wait_for_idle, get_reply,
 )
 
 
@@ -360,9 +360,9 @@ def test_interrupt_during_input():
         msg_id = kc.execute("input()")
         time.sleep(1)  # Make sure it's actually waiting for input.
         km.interrupt_kernel()
-        # If we failed to interrupt interrupt, this will timeout:
-        reply = kc.get_shell_msg(timeout=TIMEOUT)
         from .test_message_spec import validate_message
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = get_reply(kc, msg_id, TIMEOUT)
         validate_message(reply, 'execute_reply', msg_id)
 
 
@@ -385,9 +385,10 @@ def test_interrupt_during_pdb_set_trace():
         msg_id2 = kc.execute("3 + 4")
         time.sleep(1)  # Make sure it's actually waiting for input.
         km.interrupt_kernel()
-        # If we failed to interrupt interrupt, this will timeout:
         from .test_message_spec import validate_message
-        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = get_reply(kc, msg_id, TIMEOUT)
         validate_message(reply, 'execute_reply', msg_id)
-        reply = kc.get_shell_msg(timeout=TIMEOUT)
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = get_reply(kc, msg_id2, TIMEOUT)
         validate_message(reply, 'execute_reply', msg_id2)

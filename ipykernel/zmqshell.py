@@ -573,6 +573,16 @@ class ZMQInteractiveShell(InteractiveShell):
         )
         self.payload_manager.write_payload(payload)
 
+    def run_next_input(self, text, replace=False):
+        """Send the specified text to the frontend to be presented
+        and run at the next input cell."""
+        payload = dict(
+            source='run_next_input',
+            text=text,
+            replace=replace,
+        )
+        self.payload_manager.write_payload(payload)
+
     def set_parent(self, parent):
         """Set the parent header for associating output with its triggering input"""
         self.parent_header = parent

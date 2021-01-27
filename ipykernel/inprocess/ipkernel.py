@@ -49,10 +49,10 @@ class InProcessKernel(IPythonKernel):
     #-------------------------------------------------------------------------
 
     shell_class = Type(allow_none=True)
-    shell_streams = List()
-    control_stream = Any()
     _underlying_iopub_socket = Instance(DummySocket, ())
     iopub_thread = Instance(IOPubThread)
+
+    shell_stream = Instance(DummySocket, ())
 
     @default('iopub_thread')
     def _default_iopub_thread(self):

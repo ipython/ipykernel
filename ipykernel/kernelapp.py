@@ -36,6 +36,7 @@ from jupyter_client.connect import ConnectionFileMixin
 
 # local imports
 from .iostream import IOPubThread
+from .control import ControlThread
 from .heartbeat import Heartbeat
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
@@ -124,6 +125,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     stdin_socket = Any()
     iopub_socket = Any()
     iopub_thread = Any()
+    control_thread = Any()
 
     ports = Dict()
 
@@ -276,6 +278,17 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
         self.log.debug("stdin ROUTER Channel on port: %i" % self.stdin_port)
 
+        if hasattr(zmq, 'ROUTER_HANDOVER'):
+            # set router-handover to workaround zeromq reconnect problems
+            # in certain rare circumstances
+            # see ipython/ipykernel#270 and zeromq/libzmq#2892
+            self.shell_socket.router_handover = \
+                self.stdin_socket.router_handover = 1
+
+        self.init_control(context)
+        self.init_iopub(context)
+
+    def init_control(self, context):
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
@@ -285,11 +298,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             # set router-handover to workaround zeromq reconnect problems
             # in certain rare circumstances
             # see ipython/ipykernel#270 and zeromq/libzmq#2892
-            self.shell_socket.router_handover = \
-                self.control_socket.router_handover = \
-                self.stdin_socket.router_handover = 1
+            self.control_socket.router_handover = 1
 
-        self.init_iopub(context)
+        self.control_thread = ControlThread(self.control_socket)
+        self.control_thread.start()
 
     def init_iopub(self, context):
         self.iopub_socket = context.socket(zmq.PUB)
@@ -437,13 +449,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def init_kernel(self):
         """Create the Kernel object itself"""
         shell_stream = ZMQStream(self.shell_socket)
-        control_stream = ZMQStream(self.control_socket)
+        control_stream = ZMQStream(self.control_socket, self.control_thread.io_loop)
 
         kernel_factory = self.kernel_class.instance
 
         kernel = kernel_factory(parent=self, session=self.session,
                                 control_stream=control_stream,
-                                shell_streams=[shell_stream, control_stream],
+                                shell_stream=shell_stream, 
                                 iopub_thread=self.iopub_thread,
                                 iopub_socket=self.iopub_socket,
                                 stdin_socket=self.stdin_socket,

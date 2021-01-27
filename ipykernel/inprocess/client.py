@@ -12,7 +12,6 @@
 #-----------------------------------------------------------------------------
 
 # IPython imports
-from ipykernel.inprocess.socket import DummySocket
 from traitlets import Type, Instance, default
 from jupyter_client.clientabc import KernelClientABC
 from jupyter_client.client import KernelClient
@@ -171,10 +170,10 @@ class InProcessKernelClient(KernelClient):
         if kernel is None:
             raise RuntimeError('Cannot send request. No kernel exists.')
 
-        stream = DummySocket()
+        stream = kernel.shell_stream
         self.session.send(stream, msg)
         msg_parts = stream.recv_multipart()
-        kernel.dispatch_shell(stream, msg_parts)
+        kernel.dispatch_shell(msg_parts)
 
         idents, reply_msg = self.session.recv(stream, copy=False)
         self.shell_channel.call_handlers_later(reply_msg)

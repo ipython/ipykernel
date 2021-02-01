@@ -74,6 +74,8 @@ class IPythonKernel(KernelBase):
     _sys_raw_input = Any()
     _sys_eval_input = Any()
 
+    comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
+
     def __init__(self, **kwargs):
         super(IPythonKernel, self).__init__(**kwargs)
 
@@ -102,8 +104,7 @@ class IPythonKernel(KernelBase):
         self.comm_manager = CommManager(parent=self, kernel=self)
 
         self.shell.configurables.append(self.comm_manager)
-        comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
-        for msg_type in comm_msg_types:
+        for msg_type in self.comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
 
         if _use_appnope() and self._darwin_app_nap:
@@ -582,6 +583,16 @@ class IPythonKernel(KernelBase):
     def do_clear(self):
         self.shell.reset(False)
         return dict(status='ok')
+
+    def should_dispatch_immediately(self, msg):
+        try:
+            msg_type = msg['header']['msg_type']
+            if msg_type in self.comm_msg_types:
+                return True
+        except ValueError:
+            pass
+
+        return False
 
 
 # This exists only for backwards compatibility - use IPythonKernel instead

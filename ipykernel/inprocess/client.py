@@ -173,10 +173,8 @@ class InProcessKernelClient(KernelClient):
             raise RuntimeError('Cannot send request. No kernel exists.')
 
         stream = kernel.shell_stream
-        self.session.send(stream, msg)
-        msg_parts = stream.recv_multipart()
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(kernel.dispatch_shell(msg_parts))
+        loop.run_until_complete(kernel.dispatch_shell(msg))
         idents, reply_msg = self.session.recv(stream, copy=False)
         self.shell_channel.call_handlers_later(reply_msg)
 

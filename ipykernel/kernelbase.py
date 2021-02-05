@@ -11,6 +11,7 @@ from signal import signal, default_int_handler, SIGINT
 import sys
 import time
 import uuid
+import warnings
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -58,6 +59,15 @@ class Kernel(SingletonConfigurable):
     session = Instance(Session, allow_none=True)
     profile_dir = Instance('IPython.core.profiledir.ProfileDir', allow_none=True)
     shell_stream = Instance(ZMQStream, allow_none=True)
+
+    @property
+    def shell_streams(self):
+        warnings.warn(
+            'Property shell_streams is deprecated in favor of shell_stream',
+            DeprecationWarning
+        )
+        return [shell_stream]
+
     control_stream = Instance(ZMQStream, allow_none=True)
     iopub_socket = Any()
     iopub_thread = Any()

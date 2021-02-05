@@ -90,8 +90,8 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parent_header = Dict()
-    _parent_ident = Any(b'')
+    _parent_header = Dict({'shell': {}, 'control': {}})
+    _parent_ident = Dict({'shell': b'', 'control': b''})
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the
     # execute cycle, it helps prevent output synchronization problems for
@@ -176,7 +176,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("Control received: %s", msg)
 
         # Set the parent message for side effects.
-        self.set_parent(idents, msg)
+        self.set_parent(idents, msg, channel='control')
         self._publish_status('busy')
 
         header = msg['header']
@@ -222,7 +222,7 @@ class Kernel(SingletonConfigurable):
             return
 
         # Set the parent message for side effects.
-        self.set_parent(idents, msg)
+        self.set_parent(idents, msg, channel='shell')
         self._publish_status('busy')
 
         msg_type = msg['header']['msg_type']
@@ -440,11 +440,11 @@ class Kernel(SingletonConfigurable):
         self.session.send(self.iopub_socket,
                           'status',
                           {'execution_state': status},
-                          parent=parent or self._parent_header,
+                          parent=parent or self._parent_header['shell'],
                           ident=self._topic('status'),
                           )
 
-    def set_parent(self, ident, parent):
+    def set_parent(self, ident, parent, channel='shell'):
         """Set the current parent_header
 
         Side effects (IOPub messages) and replies are associated with
@@ -453,11 +453,11 @@ class Kernel(SingletonConfigurable):
         The parent identity is used to route input_request messages
         on the stdin channel.
         """
-        self._parent_ident = ident
-        self._parent_header = parent
+        self._parent_ident[channel] = ident
+        self._parent_header[channel] = parent
 
     def send_response(self, stream, msg_or_type, content=None, ident=None,
-             buffers=None, track=False, header=None, metadata=None):
+             buffers=None, track=False, header=None, metadata=None, channel='shell'):
         """Send a response to the message we're currently processing.
 
         This accepts all the parameters of :meth:`jupyter_client.session.Session.send`
@@ -466,7 +466,7 @@ class Kernel(SingletonConfigurable):
         This relies on :meth:`set_parent` having been called for the current
         message.
         """
-        return self.session.send(stream, msg_or_type, content, self._parent_header,
+        return self.session.send(stream, msg_or_type, content, self._parent_header[channel],
                                  ident, buffers, track, header, metadata)
 
     def init_metadata(self, parent):
@@ -809,8 +809,8 @@ class Kernel(SingletonConfigurable):
             warnings.warn("The `stream` parameter of `getpass.getpass` will have no effect when using ipykernel",
                     UserWarning, stacklevel=2)
         return self._input_request(prompt,
-            self._parent_ident,
-            self._parent_header,
+            self._parent_ident['shell'],
+            self._parent_header['shell'],
             password=True,
         )
 
@@ -826,8 +826,8 @@ class Kernel(SingletonConfigurable):
                 "raw_input was called, but this frontend does not support input requests."
             )
         return self._input_request(str(prompt),
-            self._parent_ident,
-            self._parent_header,
+            self._parent_ident['shell'],
+            self._parent_header['shell'],
             password=False,
         )
 

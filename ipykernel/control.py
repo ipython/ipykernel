@@ -10,9 +10,8 @@ else:
 
 class ControlThread(Thread):
 
-    def __init__(self, context):
-        Thread.__init__(self)
-        self.context = context
+    def __init__(self, **kwargs):
+        Thread.__init__(self, **kwargs)
         self.io_loop = IOLoop(make_current=False)
 
     def run(self): 

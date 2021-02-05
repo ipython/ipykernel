@@ -300,7 +300,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             # see ipython/ipykernel#270 and zeromq/libzmq#2892
             self.control_socket.router_handover = 1
 
-        self.control_thread = ControlThread(self.control_socket)
+        self.control_thread = ControlThread(daemon=True)
         self.control_thread.start()
 
     def init_iopub(self, context):

@@ -672,9 +672,17 @@ class Kernel(SingletonConfigurable):
         )
 
         self._at_shutdown()
-        # call sys.exit after a short delay
-        loop = ioloop.IOLoop.current()
-        loop.add_timeout(time.time()+0.1, loop.stop)
+
+        # Flush to ensure reply is sent before stopping loop
+        self.control_stream.flush(zmq.POLLOUT)
+
+        self.log.debug('Stopping control ioloop')
+        control_io_loop = self.control_stream.io_loop
+        control_io_loop.add_callback(control_io_loop.stop)
+
+        self.log.debug('Stopping shell ioloop')
+        shell_io_loop = self.shell_stream.io_loop
+        shell_io_loop.add_callback(shell_io_loop.stop)
 
     def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the

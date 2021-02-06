@@ -1,4 +1,3 @@
-
 from threading import Thread
 import zmq
 if zmq.pyzmq_version_info() >= (17, 0):

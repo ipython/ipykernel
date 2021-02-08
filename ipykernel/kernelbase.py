@@ -405,13 +405,7 @@ class Kernel(SingletonConfigurable):
         self.msg_queue = Queue()
         self.io_loop.add_callback(self.dispatch_queue)
 
-        self.control_stream.on_recv(
-            partial(
-                self.schedule_dispatch,
-                self.dispatch_control,
-            ),
-            copy=False,
-        )
+        self.control_stream.on_recv(self.dispatch_control, copy=False)
 
         self.shell_stream.on_recv(
             partial(

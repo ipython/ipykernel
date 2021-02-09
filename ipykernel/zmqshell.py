@@ -597,6 +597,15 @@ class ZMQInteractiveShell(InteractiveShell):
         self.register_magics(KernelMagics)
         self.magics_manager.register_alias('ed', 'edit')
 
+    def enable_matplotlib(self, gui=None):
+        gui, backend = super(ZMQInteractiveShell, self).enable_matplotlib(gui)
+
+        from ipykernel.pylab.backend_inline import configure_inline_support
+
+        configure_inline_support(self, backend)
+
+        return gui, backend
+
     def init_virtualenv(self):
         # Overridden not to do virtualenv detection, because it's probably
         # not appropriate in a kernel. To use a kernel in a virtualenv, install

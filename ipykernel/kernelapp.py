@@ -122,6 +122,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     context = Any()
     shell_socket = Any()
     control_socket = Any()
+    debugpy_socket = Any()
+    debug_shell_socket = Any()
     stdin_socket = Any()
     iopub_socket = Any()
     iopub_thread = Any()
@@ -294,6 +296,16 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
         self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
 
+        self.debugpy_socket = context.socket(zmq.STREAM)
+        self.debugpy_socket.linger = 1000
+        self.debugpy_port = 0
+        self.debugpy_port = self._bind_socket(self.debugpy_socket, self.debugpy_port)
+        self.log.debug("debugpy STREAM Channel on port: %i" % self.debugpy_port)
+
+        self.debug_shell_socket = context.socket(zmq.DEALER)
+        self.debug_shell_socket.linger = 1000
+        self.debug_shell_socket.connect(self.shell_socket.getsockopt(zmq.LAST_ENDPOINT))
+
         if hasattr(zmq, 'ROUTER_HANDOVER'):
             # set router-handover to workaround zeromq reconnect problems
             # in certain rare circumstances
@@ -335,6 +347,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.log.debug("Closing iopub channel")
             self.iopub_thread.stop()
             self.iopub_thread.close()
+
+        self.debug_shell_socket.close()
+
         for channel in ('shell', 'control', 'stdin'):
             self.log.debug("Closing %s channel", channel)
             socket = getattr(self, channel + "_socket", None)
@@ -449,11 +464,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         """Create the Kernel object itself"""
         shell_stream = ZMQStream(self.shell_socket)
         control_stream = ZMQStream(self.control_socket, self.control_thread.io_loop)
+        debugpy_stream = ZMQStream(self.debugpy_socket, self.control_thread.io_loop)
         self.control_thread.start()
         kernel_factory = self.kernel_class.instance
 
         kernel = kernel_factory(parent=self, session=self.session,
                                 control_stream=control_stream,
+                                debugpy_stream=debugpy_stream,
+                                debug_shell_socket=self.debug_shell_socket,
                                 shell_stream=shell_stream, 
                                 iopub_thread=self.iopub_thread,
                                 iopub_socket=self.iopub_socket,

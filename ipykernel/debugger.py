@@ -2,9 +2,10 @@ import logging
 import os
 
 from zmq.utils import jsonapi
-from traitlets import Instance
+#from traitlets import Instance
+#from traitlets.config.configurable import SingletonConfigurable
 
-from asyncio import Queue
+from asyncio import (Event, Queue)
 
 class DebugpyMessageQueue:
 
@@ -26,7 +27,6 @@ class DebugpyMessageQueue:
         self.message_pos = -1
 
     def _put_message(self, raw_msg):
-        # TODO: forward to iopub if this is an event message
         msg = jsonapi.loads(raw_msg)
         if mes['type'] == 'event':
             self.event_callback(msg)
@@ -72,23 +72,23 @@ class DebugpyMessageQueue:
 
 class DebugpyClient:
 
-    def __init__(self, debugpy_socket, debugpy_stream):
-        self.debugpy_socket = debugpy_socket
+    def __init__(self, debugpy_stream, event_callback):
         self.debugpy_stream = debugpy_stream
+        self.event_callback = event_callback
         self.message_queue = DebugpyMessageQueue(self._forward_event)
         self.wait_for_attach = True
-        self.init_event = asyncio.Event()
+        self.init_event = Event()
 
     def _forward_event(self, msg):
         if msg['event'] == 'initialized':
             self.init_event.set()
-        #TODO: send event to iopub
+        self.event_callback(msg)
 
     def _send_request(self, msg):
         content = jsonapi.dumps(msg)
         content_length = len(content)
         buf = DebugpyMessageQueue.HEADER + content_length + DebugpyMessageQueue.SEPARATOR + content_msg
-        self.debugpy_socket.send(buf) # TODO: pass routing_id 
+        self.debugpy_stream.send(buf) # TODO: pass routing_id 
     
     async def _wait_for_reponse(self):
         # Since events are never pushed to the message_queue
@@ -115,6 +115,9 @@ class DebugpyClient:
         attach_rep = await self._wait_for_response()
         return attach_rep
 
+    def receive_dap_frame(self, frame):
+        self.message_queue.put_tcp_frame(frame)
+
     async def send_dap_request(self, msg):
         self._send_request(msg)
         if self.wait_for_attach and msg['command'] == 'attach':
@@ -140,19 +143,20 @@ class Debugger:
         'debugInfo', 'inspectVariables'
     ]
 
-    log = Instance(logging.Logger, allow_none=True)
+    #log = Instance(logging.Logger, allow_none=True)
 
-    def __init__(self):
+    def __init__(self, debugpy_stream, event_callback, shell_socket, session):
+        self.debugpy_client = DebugpyClient(debugpy_stream, event_callback)
+        self.shell_socket = shell_socket
+        self.session = session
         self.is_started = False
-
-        self.header = ''
         
         self.started_debug_handlers = {}
-        for msg_type in started_debug_msg_types:
+        for msg_type in Debugger.started_debug_msg_types:
             self.started_debug_handlers[msg_type] = getattr(self, msg_type)
 
         self.static_debug_handlers = {}
-        for msg_type in static_debug_msg_types:
+        for msg_type in Debugger.static_debug_msg_types:
             self.static_debug_handlers[msg_type] = getattr(self, msg_type)
 
         self.breakpoint_list = {}
@@ -161,10 +165,27 @@ class Debugger:
     async def _forward_message(self, msg):
         return await self.debugpy_client.send_dap_request(msg)
 
+    @property
+    def tcp_client(self):
+        return self.debugpy_client
+
     def start(self):
+        endpoint = self.debugpy_client.debugpy_stream.socket.getsockopt(zmq.LAST_ENDPOINT)
+        index = endpoit.rfind(':')
+        port = endpoint[index+1:]
+        code = 'import debugpy;'
+        code += 'debugpy.listen(("127.0.0.1",' + port + '))'
+        content = {
+            'code': code,
+            'slient': True
+        }
+        self.session.send(self.shell_socket, 'execute_request', content,
+                          None, (self.shell_socket.getsockopt(zmq.ROUTING_ID)))
+                          
         return False
 
     def stop(self):
+        # TODO 
         pass
 
     def dumpCell(self, message):
@@ -198,7 +219,7 @@ class Debugger:
 
     async def stackTrace(self, message):
         reply = await self._forward_message(message)
-        reply['body']['stackFrames'] =
+        reply['body']['stackFrames'] = \
             [frame for frame in reply['body']['stackFrames'] if frame['source']['path'] != '<string>']
         return reply
 
@@ -215,7 +236,7 @@ class Debugger:
         message['arguments']['logToFile'] = True
         return await self._forward_message(message)
 
-    def configurationDone(self, message):
+    async def configurationDone(self, message):
         reply = {
             'seq': message['seq'],
             'type': 'response',
@@ -225,7 +246,13 @@ class Debugger:
         }
         return reply;
 
-    def debugInfo(self, message):
+    async def debugInfo(self, message):
+        breakpoint_list = []
+        for key, value in self.breakpoint_list.items():
+            breakpoint_list.append({
+                'source': key,
+                'breakpoints': value
+            })
         reply = {
             'type': 'response',
             'request_seq': message['seq'],
@@ -235,18 +262,21 @@ class Debugger:
                 'isStarted': self.is_started,
                 'hashMethod': 'Murmur2',
                 'hashSeed': 0,
-                'tmpFilePrefix': 'coincoin',
+                'tmpFilePrefix': '/tmp/ipykernel_debugger',
                 'tmpFileSuffix': '.py',
-                'breakpoints': self.breakpoint_list,
+                'breakpoints': breakpoint_list,
                 'stoppedThreads': self.stopped_threads
             }
         }
+        #self.log.info("returning reply %s", reply)
+        print("DEBUGGER: ", reply)
         return reply
 
     def inspectVariables(self, message):
+        # TODO
         return {}
 
-    async def process_request(self, header, message):
+    async def process_request(self, message):
         reply = {}
 
         if message['command'] == 'initialize':
@@ -269,11 +299,10 @@ class Debugger:
         if handler is not None:
             reply = await handler(message)
         elif self.is_started:
-            self.header = header
             handler = self.started_debug_handlers.get(message['command'], None)
             if handler is not None:
                 reply = await handler(message)
-            else
+            else:
                 reply = await self._forward_message(message)
 
         if message['command'] == 'disconnect':

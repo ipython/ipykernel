@@ -366,12 +366,7 @@ class Kernel(SingletonConfigurable):
         Ensures that only one message is processing at a time,
         even when the handler is async
         """
-
         while True:
-            # ensure control stream is flushed before processing shell messages
-            if self.control_stream:
-                self.control_stream.flush()
-            # receive the next message and handle it
             try:
                 yield self.process_one()
             except Exception:
@@ -666,9 +661,6 @@ class Kernel(SingletonConfigurable):
         )
 
         self._at_shutdown()
-
-        # Flush to ensure reply is sent before stopping loop
-        self.control_stream.flush(zmq.POLLOUT)
 
         self.log.debug('Stopping control ioloop')
         control_io_loop = self.control_stream.io_loop

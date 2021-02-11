@@ -289,6 +289,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.init_iopub(context)
 
     def init_control(self, context):
+        self.log.debug('IN INIT_CONTROL')
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
@@ -301,7 +302,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.control_socket.router_handover = 1
 
         self.control_thread = ControlThread(daemon=True)
-        self.control_thread.start()
 
     def init_iopub(self, context):
         self.iopub_socket = context.socket(zmq.PUB)
@@ -448,9 +448,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
     def init_kernel(self):
         """Create the Kernel object itself"""
+        self.log.debug('IN INIT_KERNEL')
         shell_stream = ZMQStream(self.shell_socket)
         control_stream = ZMQStream(self.control_socket, self.control_thread.io_loop)
-
+        self.control_thread.start()
         kernel_factory = self.kernel_class.instance
 
         kernel = kernel_factory(parent=self, session=self.session,
@@ -569,6 +570,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     def initialize(self, argv=None):
         self._init_asyncio_patch()
         super(IPKernelApp, self).initialize(argv)
+        self.log.debug('IN INITIALIZE')
         if self.subapp is not None:
             return
 
@@ -605,6 +607,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         sys.stderr.flush()
 
     def start(self):
+        self.log.debug('IN START')
         if self.subapp is not None:
             return self.subapp.start()
         if self.poller is not None:

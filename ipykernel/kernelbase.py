@@ -187,7 +187,7 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg, channel='control')
-        self._publish_status('busy')
+        self._publish_status('busy', 'control')
 
         header = msg['header']
         msg_type = header['msg_type']
@@ -203,7 +203,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status('idle')
+        self._publish_status('idle', 'control')
         # flush to ensure reply is sent
         self.control_stream.flush(zmq.POLLOUT)
 
@@ -233,14 +233,14 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg, channel='shell')
-        self._publish_status('busy')
+        self._publish_status('busy', 'shell')
 
         msg_type = msg['header']['msg_type']
 
         # Only abort execute requests
         if self._aborting and msg_type == 'execute_request':
             self._send_abort_reply(self.shell_stream, msg, idents)
-            self._publish_status('idle')
+            self._publish_status('idle', 'shell')
             # flush to ensure reply is sent before
             # handling the next request
             self.shell_stream.flush(zmq.POLLOUT)
@@ -276,7 +276,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status('idle')
+        self._publish_status('idle', 'shell')
         # flush to ensure reply is sent before
         # handling the next request
         self.shell_stream.flush(zmq.POLLOUT)
@@ -411,7 +411,7 @@ class Kernel(SingletonConfigurable):
         )
 
         # publish idle status
-        self._publish_status('starting')
+        self._publish_status('starting', 'shell')
 
 
     def record_ports(self, ports):
@@ -434,12 +434,12 @@ class Kernel(SingletonConfigurable):
                           parent=parent, ident=self._topic('execute_input')
         )
 
-    def _publish_status(self, status, parent=None):
+    def _publish_status(self, status, channel, parent=None):
         """send status (busy/idle) on IOPub"""
         self.session.send(self.iopub_socket,
                           'status',
                           {'execution_state': status},
-                          parent=parent or self._parent_header['shell'],
+                          parent=parent or self._parent_header[channel],
                           ident=self._topic('status'),
                           )
 

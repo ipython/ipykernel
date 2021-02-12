@@ -80,6 +80,7 @@ setup_args = dict(
         'traitlets>=4.1.0',
         'jupyter_client',
         'tornado>=4.2',
+        'matplotlib-inline>=0.1.0,<0.2.0'
         'appnope;platform_system=="Darwin"',
     ],
     extras_require={

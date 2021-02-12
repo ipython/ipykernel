@@ -1,24 +1,25 @@
 import logging
 import os
 
+import zmq
 from zmq.utils import jsonapi
-#from traitlets import Instance
-#from traitlets.config.configurable import SingletonConfigurable
 
-from asyncio import (Event, Queue)
+from tornado.queues import Queue
+from tornado.locks import Event
 
 class DebugpyMessageQueue:
 
-    HEADER = 'Content Length: '
+    HEADER = 'Content-Length: '
     HEADER_LENGTH = 16
     SEPARATOR = '\r\n\r\n'
     SEPARATOR_LENGTH = 4
 
-    def __init__(self, event_callback):
+    def __init__(self, event_callback, log):
         self.tcp_buffer = ''
         self._reset_tcp_pos()
         self.event_callback = event_callback
-        self.message_queue = Queue
+        self.message_queue = Queue()
+        self.log = log
 
     def _reset_tcp_pos(self):
         self.header_pos = -1
@@ -27,42 +28,56 @@ class DebugpyMessageQueue:
         self.message_pos = -1
 
     def _put_message(self, raw_msg):
+        self.log.debug('QUEUE - _put_message:')
         msg = jsonapi.loads(raw_msg)
-        if mes['type'] == 'event':
+        if msg['type'] == 'event':
+            self.log.debug('QUEUE - received event:')
+            self.log.debug(msg)
             self.event_callback(msg)
         else:
+            self.log.debug('QUEUE - put message:')
+            self.log.debug(msg)
             self.message_queue.put_nowait(msg)
 
     def put_tcp_frame(self, frame):
         self.tcp_buffer += frame
-        # TODO: not sure this is required
-        #self.tcp_buffer += frame.decode("utf-8")
 
+        self.log.debug('QUEUE - received frame')
         # Finds header
         if self.header_pos == -1:
-            self.header_pos = self.tcp_buffer.find(DebugpyMessageQueue.HEADER, hint)
+            self.header_pos = self.tcp_buffer.find(DebugpyMessageQueue.HEADER)
         if self.header_pos == -1:
             return
         
+        self.log.debug('QUEUE - found header at pos %i', self.header_pos)
+
         #Finds separator
         if self.separator_pos == -1:
-            hint = self.header_pos + DebugpyMessageQueue.HEADER_lenth
+            hint = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
             self.separator_pos = self.tcp_buffer.find(DebugpyMessageQueue.SEPARATOR, hint)
         if self.separator_pos == -1:
             return
 
-        if self.message_pos == -1:
-            size_pos = self.header_pos + DebugpyMessageQueue.HEADER_lenth
-            self.message_pos = self.separator_pos + DebugpyMessageQueue.SEPARATOR_LENGTH
-            self.message_size = int(self.tcp_buf[size_pos:self.separator_pos])
+        self.log.debug('QUEUE - found separator at pos %i', self.separator_pos)
 
-        if len(self.tcp_buffer - self.message_pos) < self.message_size:
+        if self.message_pos == -1:
+            size_pos = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
+            self.message_pos = self.separator_pos + DebugpyMessageQueue.SEPARATOR_LENGTH
+            self.message_size = int(self.tcp_buffer[size_pos:self.separator_pos])
+
+        self.log.debug('QUEUE - found message at pos %i', self.message_pos)
+        self.log.debug('QUEUE - message size is %i', self.message_size)
+
+        if len(self.tcp_buffer) - self.message_pos < self.message_size:
             return
 
-        self._put_message(self.tcp_buf[self.message_pos:self.message_size])
-        if len(self.tcp_buffer - self_message_pos) == self.message_size:
-            self.reset_buffer()
+        self._put_message(self.tcp_buffer[self.message_pos:self.message_pos + self.message_size])
+        if len(self.tcp_buffer) - self.message_pos == self.message_size:
+            self.log.debug('QUEUE - resetting tcp_buffer')
+            self.tcp_buffer = ''
+            self._reset_tcp_pos()
         else:
+            self.log.debug('QUEUE - slicing tcp_buffer')
             self.tcp_buffer = self.tcp_buffer[self.message_pos + self.message_size:]
             self._reset_tcp_pos()
 
@@ -72,29 +87,40 @@ class DebugpyMessageQueue:
 
 class DebugpyClient:
 
-    def __init__(self, debugpy_stream, event_callback):
+    def __init__(self, log, debugpy_stream, event_callback):
+        self.log = log
         self.debugpy_stream = debugpy_stream
+        self.routing_id = None
         self.event_callback = event_callback
-        self.message_queue = DebugpyMessageQueue(self._forward_event)
+        self.message_queue = DebugpyMessageQueue(self._forward_event, self.log)
         self.wait_for_attach = True
         self.init_event = Event()
+        self.init_event_seq = -1
 
     def _forward_event(self, msg):
         if msg['event'] == 'initialized':
             self.init_event.set()
+            self.init_event_seq = msg['seq']
         self.event_callback(msg)
 
     def _send_request(self, msg):
+        if self.routing_id is None:
+            self.routing_id = self.debugpy_stream.socket.getsockopt(zmq.ROUTING_ID)
         content = jsonapi.dumps(msg)
-        content_length = len(content)
-        buf = DebugpyMessageQueue.HEADER + content_length + DebugpyMessageQueue.SEPARATOR + content_msg
-        self.debugpy_stream.send(buf) # TODO: pass routing_id 
+        content_length = str(len(content))
+        buf = (DebugpyMessageQueue.HEADER + content_length + DebugpyMessageQueue.SEPARATOR).encode('ascii')
+        buf += content
+        self.log.debug("DEBUGPYCLIENT:")
+        self.log.debug(self.routing_id)
+        self.log.debug(buf)
+        self.debugpy_stream.send_multipart((self.routing_id, buf))
+        #self.debugpy_stream.send(buf) # TODO: pass routing_id 
     
-    async def _wait_for_reponse(self):
+    async def _wait_for_response(self):
         # Since events are never pushed to the message_queue
         # we can safely assume the next message in queue
         # will be an answer to the previous request
-        return await self.message_queue.get()
+        return await self.message_queue.get_message()
 
     async def _handle_init_sequence(self):
         # 1] Waits for initialized event
@@ -103,7 +129,7 @@ class DebugpyClient:
         # 2] Sends configurationDone request
         configurationDone = {
             'type': 'request',
-            'seq': int(self.init_event_message['seq']) + 1,
+            'seq': int(self.init_event_seq) + 1,
             'command': 'configurationDone'
         }
         self._send_request(configurationDone)
@@ -125,7 +151,9 @@ class DebugpyClient:
             self.wait_for_attach = False
             return rep
         else:
-            rep = await self._wait_for_reponse()
+            rep = await self._wait_for_response()
+            self.log.debug('DEBUGPYCLIENT - returning:')
+            self.log.debug(rep)
             return rep
 
 class Debugger:
@@ -143,10 +171,9 @@ class Debugger:
         'debugInfo', 'inspectVariables'
     ]
 
-    #log = Instance(logging.Logger, allow_none=True)
-
-    def __init__(self, debugpy_stream, event_callback, shell_socket, session):
-        self.debugpy_client = DebugpyClient(debugpy_stream, event_callback)
+    def __init__(self, log, debugpy_stream, event_callback, shell_socket, session):
+        self.log = log
+        self.debugpy_client = DebugpyClient(log, debugpy_stream, event_callback)
         self.shell_socket = shell_socket
         self.session = session
         self.is_started = False
@@ -162,6 +189,9 @@ class Debugger:
         self.breakpoint_list = {}
         self.stopped_threads = []
 
+        self.debugpy_host = '127.0.0.1'
+        self.debugpy_port = 0
+
     async def _forward_message(self, msg):
         return await self.debugpy_client.send_dap_request(msg)
 
@@ -170,25 +200,30 @@ class Debugger:
         return self.debugpy_client
 
     def start(self):
-        endpoint = self.debugpy_client.debugpy_stream.socket.getsockopt(zmq.LAST_ENDPOINT)
-        index = endpoit.rfind(':')
-        port = endpoint[index+1:]
+        socket = self.debugpy_client.debugpy_stream.socket
+        socket.bind_to_random_port('tcp://' + self.debugpy_host)
+        endpoint = socket.getsockopt(zmq.LAST_ENDPOINT).decode('utf-8')
+        socket.unbind(endpoint)
+        index = endpoint.rfind(':')
+        self.debugpy_port = endpoint[index+1:]
         code = 'import debugpy;'
-        code += 'debugpy.listen(("127.0.0.1",' + port + '))'
+        code += 'debugpy.listen(("' + self.debugpy_host + '",' + self.debugpy_port + '))'
         content = {
             'code': code,
-            'slient': True
+            'silent': True
         }
         self.session.send(self.shell_socket, 'execute_request', content,
                           None, (self.shell_socket.getsockopt(zmq.ROUTING_ID)))
                           
-        return False
+        self.session.recv(self.shell_socket, mode=0)
+        socket.connect(endpoint)
+        return True
 
     def stop(self):
         # TODO 
         pass
 
-    def dumpCell(self, message):
+    async def dumpCell(self, message):
         return {}
 
     async def setBreakpoints(self, message):
@@ -196,7 +231,7 @@ class Debugger:
         self.breakpoint_list[source] = message['arguments']['breakpoints']
         return await self._forward_message(message);
 
-    def source(self, message):
+    async def source(self, message):
         reply = {
             'type': 'response',
             'request_seq': message['seq'],
@@ -268,11 +303,9 @@ class Debugger:
                 'stoppedThreads': self.stopped_threads
             }
         }
-        #self.log.info("returning reply %s", reply)
-        print("DEBUGGER: ", reply)
         return reply
 
-    def inspectVariables(self, message):
+    async def inspectVariables(self, message):
         # TODO
         return {}
 

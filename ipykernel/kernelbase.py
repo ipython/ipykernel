@@ -179,15 +179,18 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.debugger = Debugger(self.debugpy_stream,
+        self.debugger = Debugger(self.log,
+                                 self.debugpy_stream,
                                  self._publish_debug_event,
                                  self.debug_shell_socket,
                                  self.session)
 
     @gen.coroutine
     def dispatch_debugpy(self, msg):
-        self.log.debug("Debugpy received: %s", msg)
-        selg.debugger.tcp_client.receive_dap_frame(msg)
+        # The first frame is the socket id, we can drop it
+        frame = msg[1].bytes.decode('utf-8')
+        self.log.debug("Debugpy received: %s", frame)
+        self.debugger.tcp_client.receive_dap_frame(frame)
 
     @gen.coroutine
     def dispatch_control(self, msg):
@@ -548,7 +551,6 @@ class Kernel(SingletonConfigurable):
             )
         )
 
-        self.log.debug("EXECUTE_REPLY: %s", reply_content)
         # Flush output before sending the reply.
         sys.stdout.flush()
         sys.stderr.flush()

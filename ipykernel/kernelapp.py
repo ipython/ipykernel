@@ -298,9 +298,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         self.debugpy_socket = context.socket(zmq.STREAM)
         self.debugpy_socket.linger = 1000
-        self.debugpy_port = 0
-        self.debugpy_port = self._bind_socket(self.debugpy_socket, self.debugpy_port)
-        self.log.debug("debugpy STREAM Channel on port: %i" % self.debugpy_port)
 
         self.debug_shell_socket = context.socket(zmq.DEALER)
         self.debug_shell_socket.linger = 1000

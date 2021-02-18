@@ -7,6 +7,7 @@ import errno
 import json
 import os
 import shutil
+import stat
 import sys
 import tempfile
 
@@ -70,6 +71,12 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
     
     # stage resources
     shutil.copytree(RESOURCES, path)
+
+    # ensure path is writable
+    mask = os.stat(path).st_mode
+    if not mask & stat.S_IWUSR:
+        os.chmod(path, mask | stat.S_IWUSR)
+
     # write kernel.json
     kernel_dict = get_kernel_dict(extra_arguments)
 

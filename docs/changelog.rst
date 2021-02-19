@@ -1,6 +1,14 @@
 Changes in IPython kernel
 =========================
 
+5.5
+---
+
+5.5.0
+-----
+- Kernelspec: ensure path is writable before writing ``kernel.json``. (:ghpull:`593`) 
+- Add ``configure_inline_support`` and call it in the shell. (:ghpull:`590`)
+
 5.4
 ---
 

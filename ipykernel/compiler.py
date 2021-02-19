@@ -10,6 +10,8 @@ def get_tmp_hash_seed():
 
 def get_file_name(code):
     name = murmurhash.mrmr.hash(code, seed = get_tmp_hash_seed(), murmur_version=2)
+    if name < 0:
+        name += 2**32
     return get_tmp_directory() + str(name) + '.py'
 
 class XCachingCompiler(CachingCompiler):

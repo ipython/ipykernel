@@ -120,7 +120,6 @@ class DebugpyClient:
         self.log.debug(self.routing_id)
         self.log.debug(buf)
         self.debugpy_stream.send_multipart((self.routing_id, buf))
-        #self.debugpy_stream.send(buf) # TODO: pass routing_id 
     
     async def _wait_for_response(self):
         # Since events are never pushed to the message_queue

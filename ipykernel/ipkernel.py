@@ -19,6 +19,8 @@ from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
 from .eventloops import _use_appnope
 
+from .compiler import XCachingCompiler
+
 try:
     from IPython.core.interactiveshell import _asyncio_runner
 except ImportError:
@@ -71,6 +73,7 @@ class IPythonKernel(KernelBase):
             user_module = self.user_module,
             user_ns     = self.user_ns,
             kernel      = self,
+            compiler_class = XCachingCompiler,
         )
         self.shell.displayhook.session = self.session
         self.shell.displayhook.pub_socket = self.iopub_socket

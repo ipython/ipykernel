@@ -7,6 +7,10 @@ from zmq.utils import jsonapi
 from tornado.queues import Queue
 from tornado.locks import Event
 
+from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
+
+import debugpy
+
 class DebugpyMessageQueue:
 
     HEADER = 'Content-Length: '
@@ -43,43 +47,45 @@ class DebugpyMessageQueue:
         self.tcp_buffer += frame
 
         self.log.debug('QUEUE - received frame')
-        # Finds header
-        if self.header_pos == -1:
-            self.header_pos = self.tcp_buffer.find(DebugpyMessageQueue.HEADER)
-        if self.header_pos == -1:
-            return
+        while True:
+            # Finds header
+            if self.header_pos == -1:
+                self.header_pos = self.tcp_buffer.find(DebugpyMessageQueue.HEADER)
+            if self.header_pos == -1:
+                return
         
-        self.log.debug('QUEUE - found header at pos %i', self.header_pos)
+            self.log.debug('QUEUE - found header at pos %i', self.header_pos)
 
-        #Finds separator
-        if self.separator_pos == -1:
-            hint = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
-            self.separator_pos = self.tcp_buffer.find(DebugpyMessageQueue.SEPARATOR, hint)
-        if self.separator_pos == -1:
-            return
+            #Finds separator
+            if self.separator_pos == -1:
+                hint = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
+                self.separator_pos = self.tcp_buffer.find(DebugpyMessageQueue.SEPARATOR, hint)
+            if self.separator_pos == -1:
+                return
 
-        self.log.debug('QUEUE - found separator at pos %i', self.separator_pos)
+            self.log.debug('QUEUE - found separator at pos %i', self.separator_pos)
 
-        if self.message_pos == -1:
-            size_pos = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
-            self.message_pos = self.separator_pos + DebugpyMessageQueue.SEPARATOR_LENGTH
-            self.message_size = int(self.tcp_buffer[size_pos:self.separator_pos])
+            if self.message_pos == -1:
+                size_pos = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
+                self.message_pos = self.separator_pos + DebugpyMessageQueue.SEPARATOR_LENGTH
+                self.message_size = int(self.tcp_buffer[size_pos:self.separator_pos])
 
-        self.log.debug('QUEUE - found message at pos %i', self.message_pos)
-        self.log.debug('QUEUE - message size is %i', self.message_size)
+            self.log.debug('QUEUE - found message at pos %i', self.message_pos)
+            self.log.debug('QUEUE - message size is %i', self.message_size)
 
-        if len(self.tcp_buffer) - self.message_pos < self.message_size:
-            return
+            if len(self.tcp_buffer) - self.message_pos < self.message_size:
+                return
 
-        self._put_message(self.tcp_buffer[self.message_pos:self.message_pos + self.message_size])
-        if len(self.tcp_buffer) - self.message_pos == self.message_size:
-            self.log.debug('QUEUE - resetting tcp_buffer')
-            self.tcp_buffer = ''
-            self._reset_tcp_pos()
-        else:
-            self.log.debug('QUEUE - slicing tcp_buffer')
-            self.tcp_buffer = self.tcp_buffer[self.message_pos + self.message_size:]
-            self._reset_tcp_pos()
+            self._put_message(self.tcp_buffer[self.message_pos:self.message_pos + self.message_size])
+            if len(self.tcp_buffer) - self.message_pos == self.message_size:
+                self.log.debug('QUEUE - resetting tcp_buffer')
+                self.tcp_buffer = ''
+                self._reset_tcp_pos()
+                return
+            else:
+                self.tcp_buffer = self.tcp_buffer[self.message_pos + self.message_size:]
+                self.log.debug('QUEUE - slicing tcp_buffer: %s', self.tcp_buffer)
+                self._reset_tcp_pos()
 
     async def get_message(self):
         return await self.message_queue.get()
@@ -217,6 +223,7 @@ class Debugger:
                           
         self.session.recv(self.shell_socket, mode=0)
         socket.connect(endpoint)
+        debugpy.trace_this_thread(False)
         return True
 
     def stop(self):
@@ -224,7 +231,22 @@ class Debugger:
         pass
 
     async def dumpCell(self, message):
-        return {}
+        code = message['arguments']['code']
+        file_name = get_file_name(code)
+
+        with open(file_name, 'w') as f:
+            f.write(code)
+
+        reply = {
+            'type': 'response',
+            'request_seq': message['seq'],
+            'success': True,
+            'command': message['command'],
+            'body': {
+                'sourcePath': file_name
+            }
+        }
+        return reply
 
     async def setBreakpoints(self, message):
         source = message['arguments']['source']['path'];
@@ -244,7 +266,6 @@ class Debugger:
                 reply['body'] = {
                     'content': f.read()
                 }
-
         else:
             reply['success'] = False
             reply['message'] = 'source unavailable'
@@ -258,9 +279,14 @@ class Debugger:
             [frame for frame in reply['body']['stackFrames'] if frame['source']['path'] != '<string>']
         return reply
 
+    def accept_variable(self, variable):
+        return variable['type'] != 'list' and variable['type'] != 'ZMQExitAutocall' and variable['type'] != 'dict'
+
     async def variables(self, message):
         reply = await self._forward_message(message)
         # TODO : check start and count arguments work as expected in debugpy
+        reply['body']['variables'] = \
+            [var for var in reply['body']['variables'] if self.accept_variable(var)]
         return reply
 
     async def attach(self, message):
@@ -296,8 +322,8 @@ class Debugger:
             'body': {
                 'isStarted': self.is_started,
                 'hashMethod': 'Murmur2',
-                'hashSeed': 0,
-                'tmpFilePrefix': '/tmp/ipykernel_debugger',
+                'hashSeed': get_tmp_hash_seed(),
+                'tmpFilePrefix': get_tmp_directory(),
                 'tmpFileSuffix': '.py',
                 'breakpoints': breakpoint_list,
                 'stoppedThreads': self.stopped_threads

@@ -40,6 +40,8 @@ class Heartbeat(Thread):
             self.pick_port()
         self.addr = (self.ip, self.port)
         self.daemon = True
+        self.pydev_do_not_trace = True
+        self.is_pydev_daemon_thread = True
 
     def pick_port(self):
         if self.transport == 'tcp':

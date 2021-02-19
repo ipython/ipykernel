@@ -9,9 +9,11 @@ else:
 
 class ControlThread(Thread):
 
-    def __init__(self, **kwargs):
+    def __init__(self, log=None, **kwargs):
         Thread.__init__(self, **kwargs)
         self.io_loop = IOLoop(make_current=False)
+        self.pydev_do_not_trace = True
+        self.is_pydev_daemon_thread = True
 
     def run(self): 
         self.io_loop.make_current()

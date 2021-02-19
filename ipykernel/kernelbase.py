@@ -75,6 +75,7 @@ class Kernel(SingletonConfigurable):
 
     debug_shell_socket = Any()
 
+    control_thread = Any()
     iopub_socket = Any()
     iopub_thread = Any()
     stdin_socket = Any()
@@ -185,6 +186,10 @@ class Kernel(SingletonConfigurable):
                                  self.debug_shell_socket,
                                  self.session)
 
+        self.control_queue = Queue()
+        kwargs['control_thread'].io_loop.add_callback(self.poll_control_queue)
+
+
     @gen.coroutine
     def dispatch_debugpy(self, msg):
         # The first frame is the socket id, we can drop it
@@ -194,6 +199,16 @@ class Kernel(SingletonConfigurable):
 
     @gen.coroutine
     def dispatch_control(self, msg):
+        self.control_queue.put_nowait(msg)
+
+    @gen.coroutine
+    def poll_control_queue(self):
+        while True:
+            msg = yield self.control_queue.get()
+            yield self.process_control(msg)
+
+    @gen.coroutine
+    def process_control(self, msg):
         """dispatch control requests"""
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:

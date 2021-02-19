@@ -71,6 +71,8 @@ class IOPubThread(object):
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main)
         self.thread.daemon = True
+        self.thread.pydev_do_not_trace = True
+        self.thread.is_pydev_daemon_thread = True
 
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""

@@ -11,8 +11,8 @@ git tag $version; true;
 git push --all
 git push --tags
 rm -rf dist build
-python setup.py sdist
-python setup.py bdist_wheel
+pip install build twine
+python -m build .
 pip install twine
 twine check dist/* 
 twine upload dist/*

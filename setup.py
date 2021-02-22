@@ -65,6 +65,9 @@ if not loose_pep440re.match(current_version):
     raise ValueError("Version number '%s' is not valid (should match [N!]N(.N)*[{a|b|rc}N][.postN][.devN])" % current_version)
 
 
+with open(pjoin(here, 'README.md')) as fid:
+    LONG_DESCRIPTION = fid.read()
+
 setup_args = dict(
     name=name,
     version=current_version,
@@ -76,11 +79,12 @@ setup_args = dict(
     py_modules=['ipykernel_launcher'],
     package_data=package_data,
     description="IPython Kernel for Jupyter",
+    long_description_content_type="text/markdown",
     author='IPython Development Team',
     author_email='ipython-dev@scipy.org',
     url='https://ipython.org',
     license='BSD',
-    long_description="The IPython kernel for Jupyter",
+    long_description=LONG_DESCRIPTION,
     platforms="Linux, Mac OS X, Windows",
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
     python_requires='>=3.5',
@@ -112,6 +116,7 @@ setup_args = dict(
 
 
 if any(a.startswith(('bdist', 'install')) for a in sys.argv):
+    sys.path.insert(0, here)
     from ipykernel.kernelspec import write_kernel_spec, make_ipkernel_cmd, KERNEL_NAME
 
     # When building a wheel, the executable specified in the kernelspec is simply 'python'.

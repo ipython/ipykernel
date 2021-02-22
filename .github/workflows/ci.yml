@@ -60,6 +60,11 @@ jobs:
       timeout-minutes: 30
       run: |
         pytest ipykernel -vv -s --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10
+    - name: Build and check the dist files
+      run: |
+        pip install build twine
+        python -m build .
+        twine check dist/*
     - name: Coverage
       run: |
         codecov

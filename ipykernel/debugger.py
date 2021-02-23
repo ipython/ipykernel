@@ -10,7 +10,6 @@ from tornado.locks import Event
 from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 
 import debugpy
-import time
 
 class DebugpyMessageQueue:
 
@@ -163,7 +162,6 @@ class DebugpyClient:
             self.debugpy_port = self.endpoint[index+1:]
         return self.debugpy_host, self.debugpy_port
 
-
     def connect_tcp_socket(self):
         self.debugpy_stream.socket.connect(self._get_endpoint())
         self.routing_id = self.debugpy_stream.socket.getsockopt(zmq.ROUTING_ID)
@@ -238,6 +236,9 @@ class Debugger:
 
     def start(self):
         if not self.debugpy_initialized:
+            tmp_dir = get_tmp_directory()
+            if not os.path.exists(tmp_dir):
+                os.makedirs(tmp_dir)
             host, port = self.debugpy_client.get_host_port()
             code = 'import debugpy;'
             code += 'debugpy.listen(("' + host + '",' + port + '))'
@@ -350,7 +351,7 @@ class Debugger:
                 'isStarted': self.is_started,
                 'hashMethod': 'Murmur2',
                 'hashSeed': get_tmp_hash_seed(),
-                'tmpFilePrefix': get_tmp_directory(),
+                'tmpFilePrefix': get_tmp_directory() + '/',
                 'tmpFileSuffix': '.py',
                 'breakpoints': breakpoint_list,
                 'stoppedThreads': self.stopped_threads

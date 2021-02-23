@@ -1,8 +1,12 @@
 from IPython.core.compilerop import CachingCompiler
 import murmurhash.mrmr
+import tempfile
+import os
 
 def get_tmp_directory():
-    return '/tmp/ipykernel_debugger/'
+    tmp_dir = tempfile.gettempdir()
+    pid = os.getpid()
+    return tmp_dir + '/ipykernel_' + str(pid)
 
 def get_tmp_hash_seed():
     hash_seed = 0xc70f6907
@@ -12,7 +16,7 @@ def get_file_name(code):
     name = murmurhash.mrmr.hash(code, seed = get_tmp_hash_seed(), murmur_version=2)
     if name < 0:
         name += 2**32
-    return get_tmp_directory() + str(name) + '.py'
+    return get_tmp_directory() + '/' + str(name) + '.py'
 
 class XCachingCompiler(CachingCompiler):
 

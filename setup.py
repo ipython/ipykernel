@@ -89,11 +89,13 @@ setup_args = dict(
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
     python_requires='>=3.5',
     install_requires=[
-        'ipython>=5.0.0',
+        'debugpy>=1.0.0',
+        'ipython>=7.21.0',
         'traitlets>=4.1.0',
         'jupyter_client',
         'tornado>=4.2',
         'appnope;platform_system=="Darwin"',
+        #'murmurhash>=1.0.0' requires https://github.com/explosion/murmurhash/pull/24
     ],
     extras_require={
         'test': [

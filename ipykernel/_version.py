@@ -1,4 +1,4 @@
-version_info = (5, 6, 0, 'dev0')
+version_info = (6, 0, 0, 'dev0')
 __version__ = '.'.join(map(str, version_info[:3]))
 
 # pep440 is annoying, beta/alpha/rc should _not_ have dots or pip/setuptools

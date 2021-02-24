@@ -11,6 +11,7 @@ import os
 import sys
 import threading
 import warnings
+from weakref import WeakSet
 from io import StringIO, TextIOBase
 
 import zmq
@@ -66,6 +67,7 @@ class IOPubThread(object):
             self._setup_pipe_in()
         self._local = threading.local()
         self._events = deque()
+        self._event_pipes = WeakSet()
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main)
         self.thread.daemon = True
@@ -100,6 +102,9 @@ class IOPubThread(object):
             event_pipe.linger = 0
             event_pipe.connect(self._event_interface)
             self._local.event_pipe = event_pipe
+            # WeakSet so that event pipes will be closed by garbage collection
+            # when their threads are terminated
+            self._event_pipes.add(event_pipe)
         return event_pipe
 
     def _handle_event(self, msg):
@@ -179,8 +184,11 @@ class IOPubThread(object):
             return
         self.io_loop.add_callback(self.io_loop.stop)
         self.thread.join()
-        if hasattr(self._local, 'event_pipe'):
-            self._local.event_pipe.close()
+        # close *all* event pipes, created in any thread
+        # event pipes can only be used from other threads while self.thread.is_alive()
+        # so after thread.join, this should be safe
+        for event_pipe in self._event_pipes:
+            event_pipe.close()
 
     def close(self):
         if self.closed:

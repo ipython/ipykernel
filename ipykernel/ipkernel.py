@@ -145,11 +145,11 @@ class IPythonKernel(KernelBase):
         self.shell.exit_now = False
         super(IPythonKernel, self).start()
 
-    def set_parent(self, ident, parent):
+    def set_parent(self, ident, parent, channel='shell'):
         """Overridden from parent to tell the display hook and output streams
         about the parent message.
         """
-        super(IPythonKernel, self).set_parent(ident, parent)
+        super(IPythonKernel, self).set_parent(ident, parent, channel)
         self.shell.set_parent(parent)
 
     def init_metadata(self, parent):
@@ -509,7 +509,7 @@ class IPythonKernel(KernelBase):
             reply_content['engine_info'] = e_info
 
             self.send_response(self.iopub_socket, 'error', reply_content,
-                               ident=self._topic('error'))
+                               ident=self._topic('error'), channel='shell')
             self.log.info("Exception in apply request:\n%s", '\n'.join(reply_content['traceback']))
             result_buf = []
             reply_content['status'] = 'error'

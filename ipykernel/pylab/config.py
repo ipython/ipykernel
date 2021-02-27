@@ -39,23 +39,10 @@ class InlineBackendConfig(SingletonConfigurable):
 class InlineBackend(InlineBackendConfig):
     """An object to store configuration of the inline backend."""
 
-    # The typical default figure size is too large for inline use,
-    # so we shrink the figure size to 6x4, and tweak fonts to
-    # make that fit.
-    rc = Dict({'figure.figsize': (6.0,4.0),
-        # play nicely with white background in the Qt and notebook frontend
-        'figure.facecolor': (1,1,1,0),
-        'figure.edgecolor': (1,1,1,0),
-        # 12pt labels get cutoff on 6x4 logplots, so use 10pt.
-        'font.size': 10,
-        # 72 dpi matches SVG/qtconsole
-        # this only affects PNG export, as SVG has no dpi setting
-        'figure.dpi': 72,
-        # 10pt still needs a little more room on the xlabel:
-        'figure.subplot.bottom' : .125
-        },
-        help="""Subset of matplotlib rcParams that should be different for the
-        inline backend."""
+    # rc attribute was previously used to override default and user settings in matplotlibrc.
+    # It was left for compatibility.
+    rc = Dict({}, help="""rc attribute was previously used to override default
+                  and user settings in matplotlibrc. It was left for compatibility."""
     ).tag(config=True)
 
     figure_formats = Set({'png'},

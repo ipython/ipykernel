@@ -95,7 +95,6 @@ setup_args = dict(
         'jupyter_client',
         'tornado>=4.2',
         'appnope;platform_system=="Darwin"',
-        #'murmurhash>=1.0.0' requires https://github.com/explosion/murmurhash/pull/24
     ],
     extras_require={
         'test': [

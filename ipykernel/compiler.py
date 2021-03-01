@@ -1,7 +1,38 @@
 from IPython.core.compilerop import CachingCompiler
-import murmurhash.mrmr
 import tempfile
 import os
+
+def murmur2_x86(data, seed):
+    m = 0x5bd1e995
+    length = len(data)
+    h = seed ^ length
+    rounded_end = (length & 0xfffffffc)
+    for i in range(0, rounded_end, 4):
+        k = (ord(data[i]) & 0xff) | ((ord(data[i + 1]) & 0xff) << 8) | \
+           ((ord(data[i + 2]) & 0xff) << 16) | (ord(data[i + 3]) << 24)
+        k = (k * m) & 0xffffffff
+        k ^= k >> 24
+        k = (k * m) & 0xffffffff
+
+        h = (h * m) & 0xffffffff
+        h ^= k
+
+    val = length & 0x03
+    k = 0
+    if val == 3:
+        k = (ord(data[rounded_end + 2]) & 0xff) << 16
+    if val in [2, 3]:
+        k |= (ord(data[rounded_end + 1]) & 0xff) << 8
+    if val in [1, 2, 3]:
+        k |= ord(data[rounded_end]) & 0xff
+        h ^= k
+        h = (h * m) & 0xffffffff
+
+    h ^= h >> 13
+    h = (h * m) & 0xffffffff
+    h ^= h >> 15
+
+    return h
 
 def get_tmp_directory():
     tmp_dir = tempfile.gettempdir()
@@ -13,9 +44,7 @@ def get_tmp_hash_seed():
     return hash_seed
 
 def get_file_name(code):
-    name = murmurhash.mrmr.hash(code, seed = get_tmp_hash_seed(), murmur_version=2)
-    if name < 0:
-        name += 2**32
+    name = murmur2_x86(code, get_tmp_hash_seed())
     return get_tmp_directory() + '/' + str(name) + '.py'
 
 class XCachingCompiler(CachingCompiler):

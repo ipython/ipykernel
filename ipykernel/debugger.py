@@ -232,7 +232,10 @@ class Debugger:
         if msg['event'] == 'stopped':
             self.stopped_threads.append(msg['body']['threadId'])
         elif msg['event'] == 'continued':
-            self.stopped_threads.remove(msg['body']['threadId'])
+            try:
+                self.stopped_threads.remove(msg['body']['threadId'])
+            except:
+                pass
         self.event_callback(msg)
 
     async def _forward_message(self, msg):
@@ -324,7 +327,10 @@ class Debugger:
         return reply
 
     def accept_variable(self, variable):
-        return variable['type'] != 'list' and variable['type'] != 'ZMQExitAutocall' and variable['type'] != 'dict'
+        cond = variable['type'] != 'list' and variable['type'] != 'ZMQExitAutocall' and variable['type'] != 'dict'
+        cond = cond and variable['name'] not in ['debugpy', 'get_ipython', '_']
+        cond = cond and variable['name'][0:2] != '_i'
+        return cond
 
     async def variables(self, message):
         reply = await self._forward_message(message)

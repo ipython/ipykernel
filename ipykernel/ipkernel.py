@@ -153,7 +153,8 @@ class IPythonKernel(KernelBase):
         about the parent message.
         """
         super(IPythonKernel, self).set_parent(ident, parent, channel)
-        self.shell.set_parent(parent)
+        if channel == 'shell':
+            self.shell.set_parent(parent)
 
     def init_metadata(self, parent):
         """Initialize metadata.

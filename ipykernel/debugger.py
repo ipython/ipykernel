@@ -205,10 +205,11 @@ class Debugger:
 
     def __init__(self, log, debugpy_stream, event_callback, shell_socket, session):
         self.log = log
-        self.debugpy_client = DebugpyClient(log, debugpy_stream, event_callback)
+        self.debugpy_client = DebugpyClient(log, debugpy_stream, self._handle_event)
         self.shell_socket = shell_socket
         self.session = session
         self.is_started = False
+        self.event_callback = event_callback
         
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:
@@ -226,6 +227,13 @@ class Debugger:
         self.debugpy_host = '127.0.0.1'
         self.debugpy_port = 0
         self.endpoint = None
+
+    def _handle_event(self, msg):
+        if msg['event'] == 'stopped':
+            self.stopped_threads.append(msg['body']['threadId'])
+        elif msg['event'] == 'continued':
+            self.stopped_threads.remove(msg['body']['threadId'])
+        self.event_callback(msg)
 
     async def _forward_message(self, msg):
         return await self.debugpy_client.send_dap_request(msg)
@@ -302,11 +310,11 @@ class Debugger:
 
     async def stackTrace(self, message):
         reply = await self._forward_message(message)
-        # We stackFrames array has the following content:
+        # The stackFrames array has the following content:
         # { frames from the notebook}
         # ...
         # { 'id': xxx, 'name': '<module>', ... } <= this is the first frame of the code from the notebook
-        # { frame from ipykernel }
+        # { frames from ipykernel }
         # ...
         # {'id': yyy, 'name': '<module>', ... } <= this is the first frame of ipykernel code
         # We want to remove all the frames from ipykernel

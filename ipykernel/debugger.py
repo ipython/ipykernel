@@ -302,8 +302,17 @@ class Debugger:
 
     async def stackTrace(self, message):
         reply = await self._forward_message(message)
-        reply['body']['stackFrames'] = \
-            [frame for frame in reply['body']['stackFrames'] if frame['source']['path'] != '<string>']
+        # We stackFrames array has the following content:
+        # { frames from the notebook}
+        # ...
+        # { 'id': xxx, 'name': '<module>', ... } <= this is the first frame of the code from the notebook
+        # { frame from ipykernel }
+        # ...
+        # {'id': yyy, 'name': '<module>', ... } <= this is the first frame of ipykernel code
+        # We want to remove all the frames from ipykernel
+        sf_list = reply['body']['stackFrames']
+        module_idx = len(sf_list) - next(i for i, v in enumerate(reversed(sf_list), 1) if v['name'] == '<module>' and i != 1)
+        reply['body']['stackFrames'] = reply['body']['stackFrames'][:module_idx+1]
         return reply
 
     def accept_variable(self, variable):

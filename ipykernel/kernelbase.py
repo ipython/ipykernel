@@ -187,8 +187,8 @@ class Kernel(SingletonConfigurable):
                                  self.session)
 
         self.control_queue = Queue()
-        kwargs['control_thread'].io_loop.add_callback(self.poll_control_queue)
-
+        if 'control_thread' in kwargs:
+            kwargs['control_thread'].io_loop.add_callback(self.poll_control_queue)
 
     @gen.coroutine
     def dispatch_debugpy(self, msg):

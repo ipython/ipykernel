@@ -301,7 +301,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
         self.debug_shell_socket = context.socket(zmq.DEALER)
         self.debug_shell_socket.linger = 1000
-        self.debug_shell_socket.connect(self.shell_socket.getsockopt(zmq.LAST_ENDPOINT))
+        if self.shell_socket.getsockopt(zmq.LAST_ENDPOINT):
+            self.debug_shell_socket.connect(self.shell_socket.getsockopt(zmq.LAST_ENDPOINT))
 
         if hasattr(zmq, 'ROUTER_HANDOVER'):
             # set router-handover to workaround zeromq reconnect problems
@@ -345,7 +346,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.iopub_thread.stop()
             self.iopub_thread.close()
 
-        self.debug_shell_socket.close()
+        if self.debugpy_socket and not self.debugpy_socket.closed:
+            self.debugpy_socket.close()
+        if self.debug_shell_socket and not self.debug_shell_socket.closed:
+            self.debug_shell_socket.close()
 
         for channel in ('shell', 'control', 'stdin'):
             self.log.debug("Closing %s channel", channel)

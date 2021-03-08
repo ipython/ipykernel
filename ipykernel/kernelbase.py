@@ -29,7 +29,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from traitlets.config.configurable import SingletonConfigurable
 from IPython.core.error import StdinNotImplementedError
-from ipython_genutils import py3compat
 from ipykernel.jsonutil import json_clean
 from traitlets import (
     Any, Instance, Float, Dict, List, Set, Integer, Unicode, Bool,
@@ -824,7 +823,7 @@ class Kernel(SingletonConfigurable):
         """prefixed topic for IOPub messages"""
         base = "kernel.%s" % self.ident
 
-        return py3compat.cast_bytes("%s.%s" % (base, topic))
+        return ("%s.%s" % (base, topic)).encode()
 
     _aborting = Bool(False)
 
@@ -939,8 +938,8 @@ class Kernel(SingletonConfigurable):
                 self.log.warning("Invalid Message:", exc_info=True)
         
         try:
-            value = py3compat.unicode_to_str(reply['content']['value'])
-        except:
+            value = reply["content"]["value"]
+        except Exception:
             self.log.error("Bad input_reply: %s", parent)
             value = ''
         if value == '\x04':

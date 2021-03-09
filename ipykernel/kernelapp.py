@@ -29,7 +29,7 @@ from ipython_genutils.path import filefind, ensure_dir_exists
 from traitlets import (
     Any, Instance, Dict, Unicode, Integer, Bool, DottedObjectName, Type, default
 )
-from ipython_genutils.importstring import import_item
+from traitlets.utils.importstring import import_item
 from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_client import write_connection_file
 from jupyter_client.connect import ConnectionFileMixin

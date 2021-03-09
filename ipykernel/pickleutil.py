@@ -14,7 +14,7 @@ import sys
 import pickle
 from types import FunctionType
 
-from ipython_genutils.importstring import import_item
+from traitlets.utils.importstring import import_item
 from ipython_genutils.py3compat import buffer_to_bytes
 
 # This registers a hook when it's imported

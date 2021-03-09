@@ -8,7 +8,7 @@ import logging
 
 from traitlets.config import LoggingConfigurable
 
-from ipython_genutils.importstring import import_item
+from traitlets.utils.importstring import import_item
 from traitlets import Instance, Unicode, Dict, Any, default
 
 from .comm import Comm

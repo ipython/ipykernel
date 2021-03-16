@@ -60,6 +60,11 @@ jobs:
       timeout-minutes: 30
       run: |
         pytest ipykernel -vv -s --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10
+    - name: Build the docs
+      run: |
+        cd docs
+        pip install -r requirements.txt
+        make html
     - name: Build and check the dist files
       run: |
         pip install build twine

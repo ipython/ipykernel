@@ -4,9 +4,13 @@ Changes in IPython kernel
 5.5
 ---
 
+5.5.1
+-----
+- Fix Handling of ``shell.should_run_async``. (:ghpull:`605`)
+
 5.5.0
 -----
-- Kernelspec: ensure path is writable before writing ``kernel.json``. (:ghpull:`593`) 
+- Kernelspec: ensure path is writable before writing ``kernel.json``. (:ghpull:`593`)
 - Add ``configure_inline_support`` and call it in the shell. (:ghpull:`590`)
 
 5.4
@@ -31,7 +35,7 @@ Changes in IPython kernel
 
 - Add github actions, bail on asyncio patch for tornado 6.1.  (:ghpull:`564`)
 - Start testing on Python 3.9.  (:ghpull:`551`)
-- Fix stack levels for ipykernel's deprecation warnings and stop using some deprecated APIs.  (:ghpull:`547`) 
+- Fix stack levels for ipykernel's deprecation warnings and stop using some deprecated APIs.  (:ghpull:`547`)
 - Add env parameter to kernel installation  (:ghpull:`541`)
 - Fix stop_on_error_timeout blocking other messages in queue.  (:ghpull:`539`)
 - Remove most of the python 2 compat code.  (:ghpull:`537`)

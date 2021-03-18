@@ -282,9 +282,16 @@ class IPythonKernel(KernelBase):
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
             # not just asyncio
+            preprocessing_exc_tuple = None
+            try:
+                transformed_cell = self.shell.transform_cell(code)
+            except Exception:
+                transformed_cell = code
+                preprocessing_exc_tuple = sys.exc_info()
+
             if (
                 _asyncio_runner
-                and should_run_async(code)
+                and should_run_async(code, transformed_cell=transformed_cell, preprocessing_exc_tuple=preprocessing_exc_tuple)
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
             ):
@@ -376,14 +383,14 @@ class IPythonKernel(KernelBase):
 
     def _experimental_do_complete(self, code, cursor_pos):
         """
-        Experimental completions from IPython, using Jedi. 
+        Experimental completions from IPython, using Jedi.
         """
         if cursor_pos is None:
             cursor_pos = len(code)
         with _provisionalcompleter():
             raw_completions = self.shell.Completer.completions(code, cursor_pos)
             completions = list(_rectify_completions(code, raw_completions))
-            
+
             comps = []
             for comp in completions:
                 comps.append(dict(

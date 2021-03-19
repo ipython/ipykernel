@@ -3,32 +3,17 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-# the name of the package
-name = 'ipykernel'
-
-#-----------------------------------------------------------------------------
-# Minimal Python version sanity check
-#-----------------------------------------------------------------------------
-
 import sys
 import re
-
-v = sys.version_info
-if v[:2] < (3, 5):
-    error = "ERROR: %s requires Python version 3.5 or above." % name
-    print(error, file=sys.stderr)
-    sys.exit(1)
-
-#-----------------------------------------------------------------------------
-# get on with it
-#-----------------------------------------------------------------------------
-
 from glob import glob
 import os
 import shutil
 
 from setuptools import setup
 from setuptools.command.bdist_egg import bdist_egg
+
+# the name of the package
+name = 'ipykernel'
 
 
 class bdist_egg_disabled(bdist_egg):
@@ -87,7 +72,7 @@ setup_args = dict(
     long_description=LONG_DESCRIPTION,
     platforms="Linux, Mac OS X, Windows",
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
-    python_requires='>=3.5',
+    python_requires='>=3.7',
     install_requires=[
         'debugpy>=1.0.0',
         'ipython>=7.21.0',

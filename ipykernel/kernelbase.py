@@ -12,7 +12,6 @@ import sys
 import time
 import uuid
 import warnings
-import asyncio
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -40,7 +39,6 @@ from jupyter_client.session import Session
 
 from ._version import kernel_protocol_version
 
-from .debugger import Debugger
 
 class Kernel(SingletonConfigurable):
 
@@ -71,7 +69,6 @@ class Kernel(SingletonConfigurable):
         return [shell_stream]
 
     control_stream = Instance(ZMQStream, allow_none=True)
-    debugpy_stream = Instance(ZMQStream, allow_none=True)
 
     debug_shell_socket = Any()
 
@@ -180,22 +177,9 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.debugger = Debugger(self.log,
-                                 self.debugpy_stream,
-                                 self._publish_debug_event,
-                                 self.debug_shell_socket,
-                                 self.session)
-
         self.control_queue = Queue()
         if 'control_thread' in kwargs:
             kwargs['control_thread'].io_loop.add_callback(self.poll_control_queue)
-
-    @gen.coroutine
-    def dispatch_debugpy(self, msg):
-        # The first frame is the socket id, we can drop it
-        frame = msg[1].bytes.decode('utf-8')
-        self.log.debug("Debugpy received: %s", frame)
-        self.debugger.tcp_client.receive_dap_frame(frame)
 
     @gen.coroutine
     def dispatch_control(self, msg):
@@ -440,7 +424,6 @@ class Kernel(SingletonConfigurable):
         self.io_loop.add_callback(self.dispatch_queue)
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
-        self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
 
         self.shell_stream.on_recv(
             partial(
@@ -752,7 +735,7 @@ class Kernel(SingletonConfigurable):
 
     @gen.coroutine
     def do_debug_request(self, msg):
-        return (yield self.debugger.process_request(msg))
+        raise NotImplementedError
 
     #---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)

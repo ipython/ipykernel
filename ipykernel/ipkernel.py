@@ -13,12 +13,13 @@ from ipython_genutils.py3compat import safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from tornado import gen
 from traitlets import Instance, Type, Any, List, Bool, observe, observe_compat
+from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
 from .eventloops import _use_appnope
-
+from .debugger import Debugger
 from .compiler import XCachingCompiler
 
 try:
@@ -44,6 +45,8 @@ class IPythonKernel(KernelBase):
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
     ).tag(config=True)
 
+    debugpy_stream = Instance(ZMQStream, allow_none=True)
+
     user_module = Any()
     @observe('user_module')
     @observe_compat
@@ -66,6 +69,13 @@ class IPythonKernel(KernelBase):
 
     def __init__(self, **kwargs):
         super(IPythonKernel, self).__init__(**kwargs)
+
+        # Initialize the Debugger
+        self.debugger = Debugger(self.log,
+                                 self.debugpy_stream,
+                                 self._publish_debug_event,
+                                 self.debug_shell_socket,
+                                 self.session)
 
         # Initialize the InteractiveShell subclass
         self.shell = self.shell_class.instance(parent=self,
@@ -140,12 +150,20 @@ class IPythonKernel(KernelBase):
         'file_extension': '.py'
     }
 
+    @gen.coroutine
+    def dispatch_debugpy(self, msg):
+        # The first frame is the socket id, we can drop it
+        frame = msg[1].bytes.decode('utf-8')
+        self.log.debug("Debugpy received: %s", frame)
+        self.debugger.tcp_client.receive_dap_frame(frame)
+
     @property
     def banner(self):
         return self.shell.banner
 
     def start(self):
         self.shell.exit_now = False
+        self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
         super(IPythonKernel, self).start()
 
     def set_parent(self, ident, parent, channel='shell'):
@@ -380,6 +398,10 @@ class IPythonKernel(KernelBase):
                 'cursor_start' : cursor_pos - len(txt),
                 'metadata' : {},
                 'status' : 'ok'}
+
+    @gen.coroutine
+    def do_debug_request(self, msg):
+        return (yield self.debugger.process_request(msg))
 
     def _experimental_do_complete(self, code, cursor_pos):
         """

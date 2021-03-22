@@ -937,4 +937,4 @@ class Kernel(SingletonConfigurable):
         if self._shutdown_message is not None:
             self.session.send(self.iopub_socket, self._shutdown_message, ident=self._topic('shutdown'))
             self.log.debug("%s", self._shutdown_message)
-        self.shell_stream.flush(zmq.POLLOUT)
+        self.control_stream.flush(zmq.POLLOUT)

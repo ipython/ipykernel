@@ -5,6 +5,7 @@
 ### 5.5.0
 * kernelspec: ensure path is writable before writing `kernel.json`. [#593](https://github.com/ipython/ipykernel/pull/593)
 * Add `configure_inline_support` and call it in the shell. [#590](https://github.com/ipython/ipykernel/pull/590)
+* Fix `stop_on_error_timeout` to now properly abort `execute_request`'s that fall within the timeout after an error. [#572](https://github.com/ipython/ipykernel/pull/572)
 
 ## 5.4
 

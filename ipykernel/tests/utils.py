@@ -18,7 +18,7 @@ from jupyter_client import manager
 
 
 STARTUP_TIMEOUT = 60
-TIMEOUT = 15
+TIMEOUT = 60
 
 KM = None
 KC = None

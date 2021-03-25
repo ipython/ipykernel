@@ -41,7 +41,7 @@ def test_make_ipkernel_cmd():
 
 def assert_kernel_dict(d):
     assert d['argv'] == make_ipkernel_cmd()
-    assert d['display_name'] == 'Python %i' % sys.version_info[0]
+    assert d['display_name'] == 'Python %i (ipykernel)' % sys.version_info[0]
     assert d['language'] == 'python'
 
 
@@ -53,7 +53,7 @@ def test_get_kernel_dict():
 def assert_kernel_dict_with_profile(d):
     nt.assert_equal(d['argv'], make_ipkernel_cmd(
         extra_arguments=["--profile", "test"]))
-    assert d['display_name'] == 'Python %i' % sys.version_info[0]
+    assert d['display_name'] == 'Python %i (ipykernel)' % sys.version_info[0]
     assert d['language'] == 'python'
 
 

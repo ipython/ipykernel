@@ -24,7 +24,6 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from jupyter_client.session import extract_header
 
-from ipython_genutils import py3compat
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -288,8 +287,12 @@ class OutStream(TextIOBase):
 
     def __init__(self, session, pub_thread, name, pipe=None, echo=None):
         if pipe is not None:
-            warnings.warn("pipe argument to OutStream is deprecated and ignored",
-                DeprecationWarning)
+            warnings.warn(
+                "pipe argument to OutStream is deprecated and ignored",
+                " since ipykernel 4.2.3.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         # This is necessary for compatibility with Python built-in streams
         self.session = session
         if not isinstance(pub_thread, IOPubThread):
@@ -300,7 +303,7 @@ class OutStream(TextIOBase):
             pub_thread.start()
         self.pub_thread = pub_thread
         self.name = name
-        self.topic = b'stream.' + py3compat.cast_bytes(name)
+        self.topic = b"stream." + name.encode()
         self.parent_header = {}
         self._master_pid = os.getpid()
         self._flush_pending = False

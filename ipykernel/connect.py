@@ -11,7 +11,6 @@ import warnings
 from IPython.core.profiledir import ProfileDir
 from IPython.paths import get_ipython_dir
 from ipython_genutils.path import filefind
-from ipython_genutils.py3compat import str_to_bytes
 
 import jupyter_client
 from jupyter_client import write_connection_file
@@ -131,7 +130,7 @@ def get_connection_info(connection_file=None, unpack=False, profile=None):
     if unpack:
         info = json.loads(info)
         # ensure key is bytes:
-        info['key'] = str_to_bytes(info.get('key', ''))
+        info["key"] = info.get("key", "").encode()
     return info
 
 

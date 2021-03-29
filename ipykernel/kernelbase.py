@@ -110,7 +110,7 @@ class Kernel(SingletonConfigurable):
     _poll_interval = Float(0.01).tag(config=True)
 
     stop_on_error_timeout = Float(
-        0.1,
+        0.0,
         config=True,
         help="""time (in seconds) to wait for messages to arrive
         when aborting queued requests after an error.

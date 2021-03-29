@@ -1,5 +1,7 @@
 # Changes in IPython kernel
 
+* Set `stop_on_error_timeout` default to 0.0 matching pre 5.5.0 default behavior with correctly working flag from 5.5.0.
+
 ## 5.5
 
 ### 5.5.0

@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.5
 ---
 
+5.5.2
+-----
+- Changed default timeout to 0.0 seconds for stop_on_error_timeout. (:ghpull:`618`)
+
 5.5.1
 -----
 - Fix Handling of ``shell.should_run_async``. (:ghpull:`605`)

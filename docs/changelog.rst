@@ -4,12 +4,20 @@ Changes in IPython kernel
 5.5
 ---
 
+5.5.3
+-----
+- Revert Backport of #605: Fix Handling of ``shell.should_run_async`` (:ghpull:`622`)
+
 5.5.2
 -----
+**Note:** This release was deleted from PyPI since it had breaking changes.
+
 - Changed default timeout to 0.0 seconds for stop_on_error_timeout. (:ghpull:`618`)
 
 5.5.1
 -----
+**Note:** This release was deleted from PyPI since it had breaking changes.
+
 - Fix Handling of ``shell.should_run_async``. (:ghpull:`605`)
 
 5.5.0

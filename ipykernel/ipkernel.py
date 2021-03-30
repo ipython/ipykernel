@@ -278,16 +278,9 @@ class IPythonKernel(KernelBase):
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
             # not just asyncio
-            preprocessing_exc_tuple = None
-            try:
-                transformed_cell = self.shell.transform_cell(code)
-            except Exception:
-                transformed_cell = code
-                preprocessing_exc_tuple = sys.exc_info()
-
             if (
                 _asyncio_runner
-                and should_run_async(code, transformed_cell=transformed_cell, preprocessing_exc_tuple=preprocessing_exc_tuple)
+                and should_run_async(code)
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
             ):

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 import zmq
 from zmq.utils import jsonapi
@@ -9,6 +10,7 @@ from tornado.locks import Event
 
 from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 
+from IPython.core.getipython import get_ipython
 import debugpy
 
 class DebugpyMessageQueue:
@@ -326,17 +328,39 @@ class Debugger:
         reply['body']['stackFrames'] = reply['body']['stackFrames'][:module_idx+1]
         return reply
 
-    def accept_variable(self, variable):
-        cond = variable['type'] != 'list' and variable['type'] != 'ZMQExitAutocall' and variable['type'] != 'dict'
-        cond = cond and variable['name'] not in ['debugpy', 'get_ipython', '_']
-        cond = cond and variable['name'][0:2] != '_i'
+    def accept_variable(self, variable_name):
+        forbid_list = [
+            '__name__',
+            '__doc__',
+            '__package__',
+            '__loader__',
+            '__spec__',
+            '__annotations__',
+            '__builtins__',
+            '__builtin__',
+            '__display__',
+            'get_ipython',
+            'debugpy',
+            'exit',
+            'quit',
+            'In',
+            'Out',
+            '_oh',
+            '_dh',
+            '_',
+            '__',
+            '___'
+        ]
+        cond = variable_name not in forbid_list
+        cond = cond and not bool(re.search(r'^_\d', variable_name))
+        cond = cond and variable_name[0:2] != '_i'
         return cond
 
     async def variables(self, message):
         reply = await self._forward_message(message)
         # TODO : check start and count arguments work as expected in debugpy
         reply['body']['variables'] = \
-            [var for var in reply['body']['variables'] if self.accept_variable(var)]
+            [var for var in reply['body']['variables'] if self.accept_variable(var['name'])]
         return reply
 
     async def attach(self, message):
@@ -383,8 +407,24 @@ class Debugger:
         return reply
 
     async def inspectVariables(self, message):
-        # TODO
-        return {}
+        var_list = []
+        for k, v in get_ipython().user_ns.items():
+            if self.accept_variable(k):
+                var_list.append({
+                    'name': k,
+                    'value': v,
+                    'variablesReference': 0
+                })
+        reply = {
+            'type': 'response',
+            'request_seq': message['seq'],
+            'success': True,
+            'command': message['command'],
+            'body': {
+                'variables': var_list
+            }
+        }
+        return reply
 
     async def process_request(self, message):
         reply = {}
@@ -398,11 +438,11 @@ class Debugger:
                     self.log.info('The debugger has started')
                 else:
                     reply = {
-                        'command', 'initialize',
-                        'request_seq', message['seq'],
-                        'seq', 3,
-                        'success', False,
-                        'type', 'response'
+                        'command': 'initialize',
+                        'request_seq': message['seq'],
+                        'seq': 3,
+                        'success': False,
+                        'type': 'response'
                     }
 
         handler = self.static_debug_handlers.get(message['command'], None)

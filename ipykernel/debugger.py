@@ -413,6 +413,7 @@ class Debugger:
                 var_list.append({
                     'name': k,
                     'value': v,
+                    'type': str(type(v))[8:-2],
                     'variablesReference': 0
                 })
         reply = {

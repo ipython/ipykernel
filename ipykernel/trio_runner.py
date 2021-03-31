@@ -39,7 +39,7 @@ class TrioRunner:
                 exc)
 
         async def trio_main():
-            self._trio_token = trio.hazmat.current_trio_token()
+            self._trio_token = trio.lowlevel.current_trio_token()
             async with trio.open_nursery() as nursery:
                 # TODO This hack prevents the nursery from cancelling all child
                 # tasks when an uncaught exception occurs, but it's ugly.

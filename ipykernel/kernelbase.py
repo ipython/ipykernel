@@ -825,9 +825,9 @@ class Kernel(SingletonConfigurable):
         """Send a reply to an aborted request"""
         self.log.info("Aborting:")
         self.log.info("%s", msg)
-        reply_type = msg['header']['msg_type'].rsplit('_', 1)[0] + '_reply'
-        status = {'status': 'aborted'}
-        md = {'engine': self.ident}
+        reply_type = msg["header"]["msg_type"].rsplit("_", 1)[0] + "_reply"
+        status = {"status": "aborted"}
+        md = {"engine": self.ident}
         md.update(status)
         self.session.send(
             stream, reply_type, metadata=md,

@@ -10,6 +10,8 @@ import errno
 import signal
 import traceback
 import logging
+from io import TextIOWrapper, FileIO
+from logging import StreamHandler
 
 import tornado
 from tornado import ioloop
@@ -414,9 +416,24 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                                            echo=e_stdout)
             if sys.stderr is not None:
                 sys.stderr.flush()
-            sys.stderr = outstream_factory(self.session, self.iopub_thread,
-                                           'stderr',
-                                           echo=e_stderr)
+            sys.stderr = outstream_factory(
+                self.session, self.iopub_thread, "stderr", echo=e_stderr
+            )
+            self.log.error("this %s", hasattr(sys.stderr, "_original_stdstream_copy"))
+            if hasattr(sys.stderr, "_original_stdstream_copy"):
+
+                for handler in self.log.handlers:
+                    if isinstance(handler, StreamHandler) and (
+                        handler.stream.buffer.fileno() == 2
+                    ):
+                        self.log.debug(
+                            "Seeing logger to stderr, rerouting to raw filedescriptor."
+                        )
+
+                        handler.stream = TextIOWrapper(
+                            FileIO(sys.stderr._original_stdstream_copy, "w")
+                        )
+                        self.log.error("Redirected to raw FD.")
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             self.displayhook = displayhook_factory(self.session, self.iopub_socket)

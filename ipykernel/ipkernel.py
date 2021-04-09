@@ -9,7 +9,6 @@ import signal
 import sys
 
 from IPython.core import release
-from ipython_genutils.py3compat import safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
 from tornado import gen
 from traitlets import Instance, Type, Any, List, Bool, observe, observe_compat
@@ -351,7 +350,7 @@ class IPythonKernel(KernelBase):
             reply_content.update({
                 'traceback': shell._last_traceback or [],
                 'ename': str(type(err).__name__),
-                'evalue': safe_unicode(err),
+                'evalue': str(err),
             })
 
             # FIXME: deprecated piece for ipyparallel (remove in 5.0):

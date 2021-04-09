@@ -40,7 +40,6 @@ from ipykernel import (
 from IPython.utils import openpy
 from ipykernel.jsonutil import json_clean, encode_images
 from IPython.utils.process import arg_split, system
-from ipython_genutils import py3compat
 from traitlets import (
     Instance, Type, Dict, CBool, CBytes, Any, default, observe
 )
@@ -546,7 +545,7 @@ class ZMQInteractiveShell(InteractiveShell):
         exc_content = {
             'traceback' : stb,
             'ename' : str(etype.__name__),
-            'evalue' : py3compat.safe_unicode(evalue),
+            'evalue' : str(evalue),
         }
 
         dh = self.displayhook

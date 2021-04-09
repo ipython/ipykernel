@@ -74,16 +74,16 @@ class InProcessKernel(IPythonKernel):
         self._underlying_iopub_socket.observe(self._io_dispatch, names=['message_sent'])
         self.shell.kernel = self
 
-    def execute_request(self, stream, ident, parent):
+    async def execute_request(self, stream, ident, parent):
         """ Override for temporary IO redirection. """
         with self._redirected_io():
-            super(InProcessKernel, self).execute_request(stream, ident, parent)
+            await super(InProcessKernel, self).execute_request(stream, ident, parent)
 
     def start(self):
         """ Override registration of dispatchers for streams. """
         self.shell.exit_now = False
 
-    def _abort_queues(self):
+    async def _abort_queues(self):
         """ The in-process kernel doesn't abort requests. """
         pass
 

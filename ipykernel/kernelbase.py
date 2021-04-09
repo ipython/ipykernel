@@ -3,6 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 from datetime import datetime
 from functools import partial
 import itertools
@@ -21,7 +22,6 @@ except ImportError:
     now = datetime.now
 
 from tornado import ioloop
-from tornado import gen
 from tornado.queues import Queue, QueueEmpty
 import zmq
 from zmq.eventloop.zmqstream import ZMQStream
@@ -206,18 +206,15 @@ class Kernel(SingletonConfigurable):
 
         self.control_queue = Queue()
 
-    @gen.coroutine
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
 
-    @gen.coroutine
-    def poll_control_queue(self):
+    async def poll_control_queue(self):
         while True:
-            msg = yield self.control_queue.get()
-            yield self.process_control(msg)
+            msg = await self.control_queue.get()
+            await self.process_control(msg)
 
-    @gen.coroutine
-    def process_control(self, msg):
+    async def process_control(self, msg):
         """dispatch control requests"""
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
@@ -240,7 +237,7 @@ class Kernel(SingletonConfigurable):
             self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
         else:
             try:
-                yield gen.maybe_future(handler(self.control_stream, idents, msg))
+                await handler(self.control_stream, idents, msg)
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)
 
@@ -263,8 +260,7 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
-    @gen.coroutine
-    def dispatch_shell(self, msg):
+    async def dispatch_shell(self, msg):
         """dispatch shell requests"""
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
@@ -307,7 +303,7 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                yield gen.maybe_future(handler(self.shell_stream, idents, msg))
+                await handler(self.shell_stream, idents, msg)
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)
             finally:
@@ -372,8 +368,7 @@ class Kernel(SingletonConfigurable):
         # begin polling the eventloop
         schedule_next()
 
-    @gen.coroutine
-    def do_one_iteration(self):
+    async def do_one_iteration(self):
         """Process a single shell message
 
         Any pending control messages will be flushed as well
@@ -384,25 +379,23 @@ class Kernel(SingletonConfigurable):
         # flush messages off of shell stream into the message queue
         self.shell_stream.flush()
         # process at most one shell message per iteration
-        yield self.process_one(wait=False)
+        await self.process_one(wait=False)
 
-    @gen.coroutine
-    def process_one(self, wait=True):
+    async def process_one(self, wait=True):
         """Process one request
 
         Returns None if no message was handled.
         """
         if wait:
-            t, dispatch, args = yield self.msg_queue.get()
+            t, dispatch, args = await self.msg_queue.get()
         else:
             try:
                 t, dispatch, args = self.msg_queue.get_nowait()
-            except QueueEmpty:
+            except asyncio.QueueEmpty:
                 return None
-        yield gen.maybe_future(dispatch(*args))
+        await dispatch(*args)
 
-    @gen.coroutine
-    def dispatch_queue(self):
+    async def dispatch_queue(self):
         """Coroutine to preserve order of message handling
 
         Ensures that only one message is processing at a time,
@@ -411,7 +404,7 @@ class Kernel(SingletonConfigurable):
 
         while True:
             try:
-                yield self.process_one()
+                await self.process_one()
             except Exception:
                 self.log.exception("Error in message handler")
 
@@ -450,7 +443,7 @@ class Kernel(SingletonConfigurable):
         else:
             control_loop = self.io_loop
 
-        control_loop.add_callback(self.poll_control_queue)
+        asyncio.run_coroutine_threadsafe(self.poll_control_queue(), control_loop.asyncio_loop)
 
         self.shell_stream.on_recv(
             partial(
@@ -543,8 +536,7 @@ class Kernel(SingletonConfigurable):
         """
         return metadata
 
-    @gen.coroutine
-    def execute_request(self, stream, ident, parent):
+    async def execute_request(self, stream, ident, parent):
         """handle an execute_request"""
 
         try:
@@ -569,11 +561,9 @@ class Kernel(SingletonConfigurable):
             self.execution_count += 1
             self._publish_execute_input(code, parent, self.execution_count)
 
-        reply_content = yield gen.maybe_future(
-            self.do_execute(
-                code, silent, store_history,
-                user_expressions, allow_stdin,
-            )
+        reply_content = await self.do_execute(
+            code, silent, store_history,
+            user_expressions, allow_stdin,
         )
 
         # Flush output before sending the reply.
@@ -596,25 +586,24 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", reply_msg)
 
         if not silent and reply_msg['content']['status'] == 'error' and stop_on_error:
-            yield self._abort_queues()
+            await self._abort_queues()
 
-    def do_execute(self, code, silent, store_history=True,
+    async def do_execute(self, code, silent, store_history=True,
                    user_expressions=None, allow_stdin=False):
         """Execute user code. Must be overridden by subclasses.
         """
         raise NotImplementedError
 
-    @gen.coroutine
-    def complete_request(self, stream, ident, parent):
+    async def complete_request(self, stream, ident, parent):
         content = parent['content']
         code = content['code']
         cursor_pos = content['cursor_pos']
 
-        matches = yield gen.maybe_future(self.do_complete(code, cursor_pos))
+        matches = await self.do_complete(code, cursor_pos)
         matches = json_clean(matches)
         self.session.send(stream, "complete_reply", matches, parent, ident)
 
-    def do_complete(self, code, cursor_pos):
+    async def do_complete(self, code, cursor_pos):
         """Override in subclasses to find completions.
         """
         return {'matches' : [],
@@ -623,15 +612,12 @@ class Kernel(SingletonConfigurable):
                 'metadata' : {},
                 'status' : 'ok'}
 
-    @gen.coroutine
-    def inspect_request(self, stream, ident, parent):
+    async def inspect_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = yield gen.maybe_future(
-            self.do_inspect(
-                content['code'], content['cursor_pos'],
-                content.get('detail_level', 0),
-            )
+        reply_content = await self.do_inspect(
+            content['code'], content['cursor_pos'],
+            content.get('detail_level', 0),
         )
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
@@ -639,29 +625,28 @@ class Kernel(SingletonConfigurable):
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    def do_inspect(self, code, cursor_pos, detail_level=0):
+    async def do_inspect(self, code, cursor_pos, detail_level=0):
         """Override in subclasses to allow introspection.
         """
         return {'status': 'ok', 'data': {}, 'metadata': {}, 'found': False}
 
-    @gen.coroutine
-    def history_request(self, stream, ident, parent):
+    async def history_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = yield gen.maybe_future(self.do_history(**content))
+        reply_content = await self.do_history(**content)
 
         reply_content = json_clean(reply_content)
         msg = self.session.send(stream, 'history_reply',
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    def do_history(self, hist_access_type, output, raw, session=None, start=None,
+    async def do_history(self, hist_access_type, output, raw, session=None, start=None,
                    stop=None, n=None, pattern=None, unique=False):
         """Override in subclasses to access history.
         """
         return {'status': 'ok', 'history': []}
 
-    def connect_request(self, stream, ident, parent):
+    async def connect_request(self, stream, ident, parent):
         if self._recorded_ports is not None:
             content = self._recorded_ports.copy()
         else:
@@ -682,14 +667,14 @@ class Kernel(SingletonConfigurable):
             'help_links': self.help_links,
         }
 
-    def kernel_info_request(self, stream, ident, parent):
+    async def kernel_info_request(self, stream, ident, parent):
         content = {'status': 'ok'}
         content.update(self.kernel_info)
         msg = self.session.send(stream, 'kernel_info_reply',
                                 content, parent, ident)
         self.log.debug("%s", msg)
 
-    def comm_info_request(self, stream, ident, parent):
+    async def comm_info_request(self, stream, ident, parent):
         content = parent['content']
         target_name = content.get('target_name', None)
 
@@ -707,9 +692,8 @@ class Kernel(SingletonConfigurable):
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    @gen.coroutine
-    def shutdown_request(self, stream, ident, parent):
-        content = yield gen.maybe_future(self.do_shutdown(parent['content']['restart']))
+    async def shutdown_request(self, stream, ident, parent):
+        content = await self.do_shutdown(parent['content']['restart'])
         self.session.send(stream, 'shutdown_reply', content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg('shutdown_reply',
@@ -726,48 +710,44 @@ class Kernel(SingletonConfigurable):
         shell_io_loop = self.shell_stream.io_loop
         shell_io_loop.add_callback(shell_io_loop.stop)
 
-    def do_shutdown(self, restart):
+    async def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the
         kernel.
         """
         return {'status': 'ok', 'restart': restart}
 
-    @gen.coroutine
-    def is_complete_request(self, stream, ident, parent):
+    async def is_complete_request(self, stream, ident, parent):
         content = parent['content']
         code = content['code']
 
-        reply_content = yield gen.maybe_future(self.do_is_complete(code))
+        reply_content = await self.do_is_complete(code)
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, 'is_complete_reply',
                                       reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
-    def do_is_complete(self, code):
+    async def do_is_complete(self, code):
         """Override in subclasses to find completions.
         """
-        return {'status' : 'unknown',
-                }
+        return { 'status' : 'unknown'}
 
-    @gen.coroutine
-    def debug_request(self, stream, ident, parent):
+    async def debug_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = yield gen.maybe_future(self.do_debug_request(content))
+        reply_content = await self.do_debug_request(content)
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, 'debug_reply', reply_content,
                                       parent, ident)
         self.log.debug("%s", reply_msg)
 
-    @gen.coroutine
-    def do_debug_request(self, msg):
+    async def do_debug_request(self, msg):
         raise NotImplementedError
 
     #---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)
     #---------------------------------------------------------------------------
 
-    def apply_request(self, stream, ident, parent):
+    async def apply_request(self, stream, ident, parent):
         self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
         try:
             content = parent['content']
@@ -790,7 +770,7 @@ class Kernel(SingletonConfigurable):
         self.session.send(stream, 'apply_reply', reply_content,
                     parent=parent, ident=ident,buffers=result_buf, metadata=md)
 
-    def do_apply(self, content, bufs, msg_id, reply_metadata):
+    async def do_apply(self, content, bufs, msg_id, reply_metadata):
         """DEPRECATED"""
         raise NotImplementedError
 
@@ -798,7 +778,7 @@ class Kernel(SingletonConfigurable):
     # Control messages (DEPRECATED)
     #---------------------------------------------------------------------------
 
-    def abort_request(self, stream, ident, parent):
+    async def abort_request(self, stream, ident, parent):
         """abort a specific msg by id"""
         self.log.warning("abort_request is deprecated in kernel_base. It is only part of IPython parallel")
         msg_ids = parent['content'].get('msg_ids', None)
@@ -814,14 +794,14 @@ class Kernel(SingletonConfigurable):
                 parent=parent, ident=ident)
         self.log.debug("%s", reply_msg)
 
-    def clear_request(self, stream, idents, parent):
+    async def clear_request(self, stream, idents, parent):
         """Clear our namespace."""
         self.log.warning("clear_request is deprecated in kernel_base. It is only part of IPython parallel")
         content = self.do_clear()
         self.session.send(stream, 'clear_reply', ident=idents, parent=parent,
                 content = content)
 
-    def do_clear(self):
+    async def do_clear(self):
         """DEPRECATED since 4.0.3"""
         raise NotImplementedError
 
@@ -837,16 +817,13 @@ class Kernel(SingletonConfigurable):
 
     _aborting = Bool(False)
 
-    @gen.coroutine
-    def _abort_queues(self):
+    async def _abort_queues(self):
         self.shell_stream.flush()
         self._aborting = True
-
-        def stop_aborting(f):
+        def stop_aborting():
             self.log.info("Finishing abort")
             self._aborting = False
-
-        self.io_loop.add_future(gen.sleep(self.stop_on_error_timeout), stop_aborting)
+        asyncio.get_event_loop().call_later(self.stop_on_error_timeout, stop_aborting)
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""

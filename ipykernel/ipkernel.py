@@ -10,7 +10,6 @@ import sys
 
 from IPython.core import release
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
-from tornado import gen
 from traitlets import Instance, Type, Any, List, Bool, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
@@ -149,8 +148,7 @@ class IPythonKernel(KernelBase):
         'file_extension': '.py'
     }
 
-    @gen.coroutine
-    def dispatch_debugpy(self, msg):
+    async def dispatch_debugpy(self, msg):
         # The first frame is the socket id, we can drop it
         frame = msg[1].bytes.decode('utf-8')
         self.log.debug("Debugpy received: %s", frame)
@@ -279,9 +277,8 @@ class IPythonKernel(KernelBase):
             # restore the previous sigint handler
             signal.signal(signal.SIGINT, save_sigint)
 
-    @gen.coroutine
-    def do_execute(self, code, silent, store_history=True,
-                   user_expressions=None, allow_stdin=False):
+    async def do_execute(self, code, silent, store_history=True,
+                         user_expressions=None, allow_stdin=False):
         shell = self.shell # we'll need this a lot here
 
         self._forward_input(allow_stdin)
@@ -294,8 +291,7 @@ class IPythonKernel(KernelBase):
             should_run_async = lambda cell: False
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
-            @gen.coroutine
-            def run_cell(*args, **kwargs):
+            async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
         try:
 
@@ -327,7 +323,7 @@ class IPythonKernel(KernelBase):
                 with self._cancel_on_sigint(coro_future):
                     res = None
                     try:
-                        res = yield coro_future
+                        res = await coro_future
                     finally:
                         shell.events.trigger('post_execute')
                         if not silent:
@@ -388,7 +384,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content
 
-    def do_complete(self, code, cursor_pos):
+    async def do_complete(self, code, cursor_pos):
         if _use_experimental_60_completion and self.use_experimental_completions:
             return self._experimental_do_complete(code, cursor_pos)
 
@@ -407,9 +403,8 @@ class IPythonKernel(KernelBase):
                 'metadata' : {},
                 'status' : 'ok'}
 
-    @gen.coroutine
-    def do_debug_request(self, msg):
-        return (yield self.debugger.process_request(msg))
+    async def do_debug_request(self, msg):
+        return self.debugger.process_request(msg)
 
     def _experimental_do_complete(self, code, cursor_pos):
         """
@@ -445,9 +440,7 @@ class IPythonKernel(KernelBase):
                 'metadata': {_EXPERIMENTAL_KEY_NAME: comps},
                 'status': 'ok'}
 
-
-
-    def do_inspect(self, code, cursor_pos, detail_level=0):
+    async def do_inspect(self, code, cursor_pos, detail_level=0):
         name = token_at_cursor(code, cursor_pos)
 
         reply_content = {'status' : 'ok'}
@@ -468,7 +461,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content
 
-    def do_history(self, hist_access_type, output, raw, session=0, start=0,
+    async def do_history(self, hist_access_type, output, raw, session=0, start=0,
                    stop=None, n=None, pattern=None, unique=False):
         if hist_access_type == 'tail':
             hist = self.shell.history_manager.get_tail(n, raw=raw, output=output,
@@ -489,11 +482,11 @@ class IPythonKernel(KernelBase):
             'history' : list(hist),
         }
 
-    def do_shutdown(self, restart):
+    async def do_shutdown(self, restart):
         self.shell.exit_now = True
         return dict(status='ok', restart=restart)
 
-    def do_is_complete(self, code):
+    async def do_is_complete(self, code):
         transformer_manager = getattr(self.shell, 'input_transformer_manager', None)
         if transformer_manager is None:
             # input_splitter attribute is deprecated
@@ -504,7 +497,7 @@ class IPythonKernel(KernelBase):
             r['indent'] = ' ' * indent_spaces
         return r
 
-    def do_apply(self, content, bufs, msg_id, reply_metadata):
+    async def do_apply(self, content, bufs, msg_id, reply_metadata):
         from .serialize import serialize_object, unpack_apply_message
         shell = self.shell
         try:
@@ -559,7 +552,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content, result_buf
 
-    def do_clear(self):
+    async def do_clear(self):
         self.shell.reset(False)
         return dict(status='ok')
 

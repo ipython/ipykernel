@@ -65,7 +65,7 @@ class InProcessKernelTestCase(unittest.TestCase):
         """Does %pylab work in the in-process kernel?"""
         kc = self.kc
         kc.execute('%pylab')
-        out, err = assemble_output(kc.iopub_channel)
+        out, err = assemble_output(kc.get_iopub_msg)
         self.assertIn('matplotlib', out)
 
     def test_raw_input(self):
@@ -96,7 +96,7 @@ class InProcessKernelTestCase(unittest.TestCase):
         kc = BlockingInProcessKernelClient(kernel=kernel, session=kernel.session)
         kernel.frontends.append(kc)
         kc.execute('print("bar")')
-        out, err = assemble_output(kc.iopub_channel)
+        out, err = assemble_output(kc.get_iopub_msg)
         assert out == 'bar\n'
 
     def test_getpass_stream(self):

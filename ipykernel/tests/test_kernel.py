@@ -28,7 +28,7 @@ from .utils import (
 def _check_master(kc, expected=True, stream="stdout"):
     execute(kc=kc, code="import sys")
     flush_channels(kc)
-    msg_id, content = execute(kc=kc, code="print (sys.%s._is_master_process())" % stream)
+    msg_id, content = execute(kc=kc, code="print(sys.%s._is_master_process())" % stream)
     stdout, stderr = assemble_output(kc.get_iopub_msg)
     assert stdout.strip() == repr(expected)
 
@@ -49,6 +49,18 @@ def test_simple_print():
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == 'hi\n'
         assert stderr == ''
+        _check_master(kc, expected=True)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not meant to work on windows")
+def test_capture_fd():
+    """simple print statement in kernel"""
+    with kernel() as kc:
+        iopub = kc.iopub_channel
+        msg_id, content = execute(kc=kc, code="import os; os.system('echo capsys')")
+        stdout, stderr = assemble_output(iopub)
+        assert stdout == "capsys\n"
+        assert stderr == ""
         _check_master(kc, expected=True)
 
 

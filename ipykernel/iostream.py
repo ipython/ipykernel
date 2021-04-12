@@ -14,6 +14,7 @@ import warnings
 from weakref import WeakSet
 import traceback
 from io import StringIO, TextIOBase
+import io
 import os
 
 import zmq
@@ -295,7 +296,7 @@ class OutStream(TextIOBase):
         if getattr(self, '_original_stdstream_copy', None) is not None:
             return self._original_stdstream_copy
         else:
-            raise UnsupportedOperation('fileno')
+            raise io.UnsupportedOperation("fileno")
 
     def _watch_pipe_fd(self):
         """

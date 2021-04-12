@@ -66,7 +66,9 @@ def test_capture_fd():
         _check_master(kc, expected=True)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not meant to work on windows")
+@pytest.mark.skip(
+    reason="Currently don't capture during test as pytest does its own capturing"
+)
 def test_subprocess_peek_at_stream_fileno():
     """"""
     with kernel() as kc:

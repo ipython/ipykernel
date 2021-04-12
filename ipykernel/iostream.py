@@ -286,6 +286,16 @@ class OutStream(TextIOBase):
     topic = None
     encoding = 'UTF-8'
 
+
+    def fileno(self):
+        """
+        Things like subprocess will peak and write to the fileno() of stderr/stdout.
+        """
+        if getattr(self, '_original_stdstream_copy', None) is not None:
+            return self._original_stdstream_copy
+        else:
+            raise UnsupportedOperation('fileno')
+
     def _watch_pipe_fd(self):
         """
         We've redirected standards steams 0 and 1 into a pipe.

@@ -45,7 +45,7 @@ def test_simple_print():
     """simple print statement in kernel"""
     with kernel() as kc:
         iopub = kc.iopub_channel
-        msg_id, content = execute(kc=kc, code="print ('hi')")
+        msg_id, content = execute(kc=kc, code="print('hi')")
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == 'hi\n'
         assert stderr == ''
@@ -60,6 +60,21 @@ def test_capture_fd():
         msg_id, content = execute(kc=kc, code="import os; os.system('echo capsys')")
         stdout, stderr = assemble_output(iopub)
         assert stdout == "capsys\n"
+        assert stderr == ""
+        _check_master(kc, expected=True)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Not meant to work on windows")
+def test_subprocess_peek_at_stream_fileno():
+    """"""
+    with kernel() as kc:
+        iopub = kc.iopub_channel
+        msg_id, content = execute(
+            kc=kc,
+            code="import subprocess, sys; subprocess.run(['python', '-c', 'import os; os.system(\"echo CAP1\"); print(\"CAP2\")'], stderr=sys.stderr)",
+        )
+        stdout, stderr = assemble_output(iopub)
+        assert stdout == "CAP1\nCAP2\n"
         assert stderr == ""
         _check_master(kc, expected=True)
 

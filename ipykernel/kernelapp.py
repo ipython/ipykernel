@@ -419,7 +419,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             sys.stderr = outstream_factory(
                 self.session, self.iopub_thread, "stderr", echo=e_stderr
             )
-            self.log.error("this %s", hasattr(sys.stderr, "_original_stdstream_copy"))
             if hasattr(sys.stderr, "_original_stdstream_copy"):
 
                 for handler in self.log.handlers:
@@ -433,7 +432,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                         handler.stream = TextIOWrapper(
                             FileIO(sys.stderr._original_stdstream_copy, "w")
                         )
-                        self.log.error("Redirected to raw FD.")
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             self.displayhook = displayhook_factory(self.session, self.iopub_socket)

@@ -14,6 +14,7 @@ import warnings
 from weakref import WeakSet
 import traceback
 from io import StringIO, TextIOBase
+import os
 
 import zmq
 if zmq.pyzmq_version_info() >= (17, 0):
@@ -364,9 +365,13 @@ class OutStream(TextIOBase):
         self._new_buffer()
         self.echo = None
 
-        if watchfd and (
-            sys.platform.startswith("linux") or sys.platform.startswith("darwin")
+        if (
+            watchfd
+            and (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
+            and ("PYTEST_CURRENT_TEST" not in os.environ)
         ):
+            # Pytest set its own capture. Dont redirect from within pytest.
+
             self._should_watch = True
             self._setup_stream_redirects(name)
 

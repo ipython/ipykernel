@@ -52,7 +52,9 @@ def test_simple_print():
         _check_master(kc, expected=True)
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Not meant to work on windows")
+@pytest.mark.skip(
+    reason="Currently don't capture during test as pytest does its own capturing"
+)
 def test_capture_fd():
     """simple print statement in kernel"""
     with kernel() as kc:

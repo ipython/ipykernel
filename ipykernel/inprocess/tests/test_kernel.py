@@ -99,9 +99,8 @@ class InProcessKernelTestCase(unittest.TestCase):
         out, err = assemble_output(kc.get_iopub_msg)
         assert out == 'bar\n'
 
-    @pytest.mark.skipif(
-        sys.platform == 'win32',
-        reason="not ment to work on windows"
+    @pytest.mark.skip(
+        reason="Currently don't capture during test as pytest does its own capturing"
     )
     def test_capfd(self):
         """ Does correctly capture fd

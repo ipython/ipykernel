@@ -288,21 +288,21 @@ def test_execute_silent():
     msg_id, reply = execute(code='x=1', silent=True)
 
     # flush status=idle
-    status = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    status = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(status, 'status', msg_id)
     assert status['content']['execution_state'] == 'idle'
 
-    nt.assert_raises(Empty, KC.iopub_channel.get_msg, timeout=0.1)
+    nt.assert_raises(Empty, KC.get_iopub_msg, timeout=0.1)
     count = reply['execution_count']
 
     msg_id, reply = execute(code='x=2', silent=True)
 
     # flush status=idle
-    status = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    status = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(status, 'status', msg_id)
     assert status['content']['execution_state'] == 'idle'
 
-    nt.assert_raises(Empty, KC.iopub_channel.get_msg, timeout=0.1)
+    nt.assert_raises(Empty, KC.get_iopub_msg, timeout=0.1)
     count_2 = reply['execution_count']
     assert count_2 == count
 
@@ -314,7 +314,7 @@ def test_execute_error():
     assert reply['status'] == 'error'
     assert reply['ename'] == 'ZeroDivisionError'
 
-    error = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    error = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(error, 'error', msg_id)
 
 
@@ -560,7 +560,7 @@ def test_stream():
 
     msg_id, reply = execute("print('hi')")
 
-    stdout = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    stdout = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(stdout, 'stream', msg_id)
     content = stdout['content']
     assert content['text'] == 'hi\n'
@@ -571,7 +571,7 @@ def test_display_data():
 
     msg_id, reply = execute("from IPython.display import display; display(1)")
 
-    display = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    display = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(display, 'display_data', parent=msg_id)
     data = display['content']['data']
     assert data['text/plain'] == '1'

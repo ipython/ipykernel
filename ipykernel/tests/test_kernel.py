@@ -29,7 +29,7 @@ def _check_master(kc, expected=True, stream="stdout"):
     execute(kc=kc, code="import sys")
     flush_channels(kc)
     msg_id, content = execute(kc=kc, code="print (sys.%s._is_master_process())" % stream)
-    stdout, stderr = assemble_output(kc.iopub_channel)
+    stdout, stderr = assemble_output(kc.get_iopub_msg)
     assert stdout.strip() == repr(expected)
 
 
@@ -46,7 +46,7 @@ def test_simple_print():
     with kernel() as kc:
         iopub = kc.iopub_channel
         msg_id, content = execute(kc=kc, code="print ('hi')")
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == 'hi\n'
         assert stderr == ''
         _check_master(kc, expected=True)
@@ -56,7 +56,7 @@ def test_sys_path():
     """test that sys.path doesn't get messed up by default"""
     with kernel() as kc:
         msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
-        stdout, stderr = assemble_output(kc.iopub_channel)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
     # for error-output on failure
     sys.stderr.write(stderr)
 
@@ -69,7 +69,7 @@ def test_sys_path_profile_dir():
 
     with new_kernel(['--profile-dir', locate_profile('default')]) as kc:
         msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
-        stdout, stderr = assemble_output(kc.iopub_channel)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
     # for error-output on failure
     sys.stderr.write(stderr)
 
@@ -100,7 +100,7 @@ def test_subprocess_print():
         ])
 
         msg_id, content = execute(kc=kc, code=code)
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         nt.assert_equal(stdout.count("hello"), np, stdout)
         for n in range(np):
             nt.assert_equal(stdout.count(str(n)), 1, stdout)
@@ -124,7 +124,7 @@ def test_subprocess_noprint():
         ])
 
         msg_id, content = execute(kc=kc, code=code)
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == ''
         assert stderr == ''
 
@@ -150,7 +150,7 @@ def test_subprocess_error():
         ])
 
         msg_id, content = execute(kc=kc, code=code)
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == ''
         assert "ValueError" in stderr
 
@@ -176,7 +176,7 @@ def test_raw_input():
         kc.input(text)
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == text + "\n"
 
 
@@ -318,14 +318,14 @@ def test_unc_paths():
         kc.execute("cd {0:s}".format(unc_file_path))
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
-        out, err = assemble_output(iopub)
+        out, err = assemble_output(kc.get_iopub_msg)
         assert unc_file_path in out
 
         flush_channels(kc)
         kc.execute(code="ls")
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
-        out, err = assemble_output(iopub)
+        out, err = assemble_output(kc.get_iopub_msg)
         assert 'unc.txt' in out
 
         kc.execute(code="cd")

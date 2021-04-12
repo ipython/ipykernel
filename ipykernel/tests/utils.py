@@ -43,10 +43,10 @@ def flush_channels(kc=None):
 
     if kc is None:
         kc = KC
-    for channel in (kc.shell_channel, kc.iopub_channel):
+    for get_msg in (kc.get_shell_msg, kc.get_iopub_msg):
         while True:
             try:
-                msg = channel.get_msg(block=True, timeout=0.1)
+                msg = get_msg(block=True, timeout=0.1)
             except Empty:
                 break
             else:
@@ -149,12 +149,12 @@ def new_kernel(argv=None):
         kwargs['extra_arguments'] = argv
     return manager.run_kernel(**kwargs)
 
-def assemble_output(iopub):
+def assemble_output(get_msg):
     """assemble stdout/err from an execution"""
     stdout = ''
     stderr = ''
     while True:
-        msg = iopub.get_msg(block=True, timeout=1)
+        msg = get_msg(block=True, timeout=1)
         msg_type = msg['msg_type']
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':
@@ -174,7 +174,7 @@ def assemble_output(iopub):
 
 def wait_for_idle(kc):
     while True:
-        msg = kc.iopub_channel.get_msg(block=True, timeout=1)
+        msg = kc.get_iopub_msg(block=True, timeout=1)
         msg_type = msg['msg_type']
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':

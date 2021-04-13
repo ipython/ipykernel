@@ -15,7 +15,6 @@ from weakref import WeakSet
 import traceback
 from io import StringIO, TextIOBase
 import io
-import os
 
 import zmq
 if zmq.pyzmq_version_info() >= (17, 0):
@@ -38,6 +37,7 @@ CHILD = 1
 #-----------------------------------------------------------------------------
 # IO classes
 #-----------------------------------------------------------------------------
+
 
 class IOPubThread(object):
     """An object for sending IOPub messages in a background thread
@@ -293,7 +293,7 @@ class OutStream(TextIOBase):
         """
         Things like subprocess will peak and write to the fileno() of stderr/stdout.
         """
-        if getattr(self, '_original_stdstream_copy', None) is not None:
+        if getattr(self, "_original_stdstream_copy", None) is not None:
             return self._original_stdstream_copy
         else:
             raise io.UnsupportedOperation("fileno")

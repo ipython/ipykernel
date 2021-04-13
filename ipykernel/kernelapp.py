@@ -17,7 +17,6 @@ import tornado
 from tornado import ioloop
 
 import zmq
-from zmq.eventloop import ioloop as zmq_ioloop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from IPython.core.application import (

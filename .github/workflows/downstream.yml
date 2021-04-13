@@ -1,0 +1,32 @@
+name: Test downstream projects
+
+on:
+  push:
+    branches: "*"
+  pull_request:
+    branches: "*"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .
+          pip install pytest nbclient[test] ipyparallel[test]
+          pip freeze
+
+      - name: Run tests
+        run: |
+          pytest --pyargs nbclient
+          pytest --pyargs ipyparallel

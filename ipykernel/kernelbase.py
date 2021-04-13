@@ -65,7 +65,7 @@ class Kernel(SingletonConfigurable):
             'Property shell_streams is deprecated in favor of shell_stream',
             DeprecationWarning
         )
-        return [shell_stream]
+        return [self.shell_stream]
 
     control_stream = Instance(ZMQStream, allow_none=True)
 

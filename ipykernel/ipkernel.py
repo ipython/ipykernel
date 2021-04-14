@@ -162,7 +162,10 @@ class IPythonKernel(KernelBase):
 
     def start(self):
         self.shell.exit_now = False
-        self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
+        if self.debugpy_stream is None:
+            self.log.warning("debugpy_stream undefined, debugging will not be enabled")
+        else:
+            self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
         super(IPythonKernel, self).start()
 
     def set_parent(self, ident, parent, channel='shell'):

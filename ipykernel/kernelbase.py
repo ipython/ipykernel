@@ -59,13 +59,41 @@ class Kernel(SingletonConfigurable):
     profile_dir = Instance('IPython.core.profiledir.ProfileDir', allow_none=True)
     shell_stream = Instance(ZMQStream, allow_none=True)
 
-    @property
-    def shell_streams(self):
+    shell_streams = List(
+        help="""Deprecated shell_streams alias. Use shell_stream
+
+        .. versionchanged:: 6.0
+            shell_streams is deprecated. Use shell_stream.
+        """
+    )
+
+    @default("shell_streams")
+    def _shell_streams_default(self):
         warnings.warn(
-            'Property shell_streams is deprecated in favor of shell_stream',
-            DeprecationWarning
+            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
+            DeprecationWarning,
+            stacklevel=2,
         )
-        return [self.shell_stream]
+        if self.shell_stream is not None:
+            return [self.shell_stream]
+        else:
+            return []
+
+    @observe("shell_streams")
+    def _shell_streams_changed(self, change):
+        warnings.warn(
+            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if len(change.new) > 1:
+            warnings.warn(
+                "Kernel only supports one shell stream. Additional streams will be ignored.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        if change.new:
+            self.shell_stream = change.new[0]
 
     control_stream = Instance(ZMQStream, allow_none=True)
 

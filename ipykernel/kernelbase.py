@@ -205,8 +205,6 @@ class Kernel(SingletonConfigurable):
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
         self.control_queue = Queue()
-        if 'control_thread' in kwargs:
-            kwargs['control_thread'].io_loop.add_callback(self.poll_control_queue)
 
     @gen.coroutine
     def dispatch_control(self, msg):
@@ -451,6 +449,13 @@ class Kernel(SingletonConfigurable):
         self.io_loop.add_callback(self.dispatch_queue)
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
+
+        if self.control_thread:
+            control_loop = self.control_thread.io_loop
+        else:
+            control_loop = self.io_loop
+
+        control_loop.add_callback(self.poll_control_queue)
 
         self.shell_stream.on_recv(
             partial(

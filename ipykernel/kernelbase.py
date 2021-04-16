@@ -8,6 +8,7 @@ from datetime import datetime
 from functools import partial
 import itertools
 import logging
+import inspect
 from signal import signal, default_int_handler, SIGINT
 import sys
 import time
@@ -237,7 +238,9 @@ class Kernel(SingletonConfigurable):
             self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
         else:
             try:
-                await handler(self.control_stream, idents, msg)
+                result = handler(self.control_stream, idents, msg)
+                if inspect.isawaitable(result):
+                    await result
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)
 
@@ -303,7 +306,9 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                await handler(self.shell_stream, idents, msg)
+                result = handler(self.shell_stream, idents, msg)
+                if inspect.isawaitable(result):
+                    await result
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)
             finally:

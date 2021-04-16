@@ -411,10 +411,6 @@ class Kernel(SingletonConfigurable):
         """
 
         while True:
-            # ensure control stream is flushed before processing shell messages
-            if self.control_stream:
-                self.control_stream.flush()
-            # receive the next message and handle it
             try:
                 yield self.process_one()
             except Exception:

@@ -50,10 +50,9 @@ class IOPubThread(object):
 
         Parameters
         ----------
-
-        socket: zmq.PUB Socket
+        socket : zmq.PUB Socket
             the socket on which messages will be sent.
-        pipe: bool
+        pipe : bool
             Whether this process should listen for IOPub messages
             piped from subprocesses.
         """

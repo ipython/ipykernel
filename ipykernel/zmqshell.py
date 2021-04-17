@@ -16,11 +16,8 @@ machinery.  This should thus be thought of as scaffolding.
 
 import os
 import sys
-import time
 import warnings
 from threading import local
-
-from tornado import ioloop
 
 from IPython.core.interactiveshell import (
     InteractiveShell, InteractiveShellABC
@@ -59,6 +56,9 @@ except ImportError:
 # Functions and classes
 #-----------------------------------------------------------------------------
 
+_sentinel = object()
+
+
 class ZMQDisplayPublisher(DisplayPublisher):
     """A display publisher that publishes data using a ZeroMQ PUB socket."""
 
@@ -93,7 +93,12 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def publish(self, data, metadata=None, source=None, transient=None,
+    def publish(
+        self,
+        data,
+        metadata=None,
+        source=_sentinel,
+        transient=None,
         update=False,
     ):
         """Publish a display-data message
@@ -110,7 +115,23 @@ class ZMQDisplayPublisher(DisplayPublisher):
             Transient data should not be persisted to documents.
         update: bool, optional, keyword-only
             If True, send an update_display_data message instead of display_data.
+        source : unused
+            Value will have no effect on function behavior. Parameter is still
+            present for backward compatibility but will be removed in the
+            future.
+
+            .. deprecated:: 4.0.1
+
+                `source` has been deprecated and no-op since ipykernel 4.0.1
+                (2015)
         """
+        if source is not _sentinel:
+            warnings.warn(
+                "`source` has been deprecated since ipykernel 4.0.1 "
+                "and will have no effect",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self._flush_streams()
         if metadata is None:
             metadata = {}
@@ -555,8 +576,13 @@ class ZMQInteractiveShell(InteractiveShell):
         if dh.topic:
             topic = dh.topic.replace(b'execute_result', b'error')
 
-        exc_msg = dh.session.send(dh.pub_socket, 'error', json_clean(exc_content),
-                                  dh.parent_header, ident=topic)
+        dh.session.send(
+            dh.pub_socket,
+            "error",
+            json_clean(exc_content),
+            dh.parent_header,
+            ident=topic,
+        )
 
         # FIXME - Once we rely on Python 3, the traceback is stored on the
         # exception object, so we shouldn't need to store it here.

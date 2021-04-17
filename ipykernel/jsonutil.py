@@ -50,13 +50,11 @@ def encode_images(format_dict):
 
     Parameters
     ----------
-
     format_dict : dict
         A dictionary of display data keyed by mime-type
 
     Returns
     -------
-
     format_dict : dict
         A copy of the same dictionary,
         but binary image data ('image/png', 'image/jpeg' or 'application/pdf')
@@ -87,10 +85,9 @@ def json_clean(obj):
     Returns
     -------
     out : object
-
-      A version of the input which will not cause an encoding error when
-      encoded as JSON.  Note that this function does not *encode* its inputs,
-      it simply sanitizes it so that there will be no encoding errors later.
+        A version of the input which will not cause an encoding error when
+        encoded as JSON.  Note that this function does not *encode* its inputs,
+        it simply sanitizes it so that there will be no encoding errors later.
 
     """
     # types that are 'atomic' and ok in json as-is.

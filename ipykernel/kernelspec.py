@@ -28,16 +28,13 @@ def make_ipkernel_cmd(mod='ipykernel_launcher', executable=None, extra_arguments
     ----------
     mod : str, optional (default 'ipykernel')
         A string of an IPython module whose __main__ starts an IPython kernel
-
     executable : str, optional (default sys.executable)
         The Python executable to use for the kernel process.
-
     extra_arguments : list, optional
         A list of extra arguments to pass when executing the launch code.
 
     Returns
     -------
-
     A Popen command list
     """
     if executable is None:
@@ -61,10 +58,10 @@ def get_kernel_dict(extra_arguments=None):
 
 def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
     """Write a kernel spec directory to `path`
-    
+
     If `path` is not specified, a temporary directory is created.
     If `overrides` is given, the kernelspec JSON is updated before writing.
-    
+
     The path to the kernelspec is always returned.
     """
     if path is None:
@@ -92,33 +89,31 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
 def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None,
             prefix=None, profile=None, env=None):
     """Install the IPython kernelspec for Jupyter
-    
+
     Parameters
     ----------
-    
-    kernel_spec_manager: KernelSpecManager [optional]
+    kernel_spec_manager : KernelSpecManager [optional]
         A KernelSpecManager to use for installation.
         If none provided, a default instance will be created.
-    user: bool [default: False]
+    user : bool [default: False]
         Whether to do a user-only install, or system-wide.
-    kernel_name: str, optional
+    kernel_name : str, optional
         Specify a name for the kernelspec.
         This is needed for having multiple IPython kernels for different environments.
-    display_name: str, optional
+    display_name : str, optional
         Specify the display name for the kernelspec
-    profile: str, optional
+    profile : str, optional
         Specify a custom profile to be loaded by the kernel.
-    prefix: str, optional
+    prefix : str, optional
         Specify an install prefix for the kernelspec.
         This is needed to install into a non-default location, such as a conda/virtual-env.
-    env: dict, optional
+    env : dict, optional
         A dictionary of extra environment variables for the kernel.
         These will be added to the current environment variables before the
         kernel is started
 
     Returns
     -------
-    
     The path where the kernelspec was installed.
     """
     if kernel_spec_manager is None:

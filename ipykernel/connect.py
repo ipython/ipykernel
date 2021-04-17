@@ -36,7 +36,7 @@ def get_connection_file(app=None):
 
 def find_connection_file(filename='kernel-*.json', profile=None):
     """DEPRECATED: find a connection file, and return its absolute path.
-    
+
     THIS FUNCTION IS DEPRECATED. Use jupyter_client.find_connection_file instead.
 
     Parameters
@@ -80,7 +80,7 @@ def find_connection_file(filename='kernel-*.json', profile=None):
 
 def _find_connection_file(connection_file, profile=None):
     """Return the absolute path for a connection file
-    
+
     - If nothing specified, return current Kernel's connection file
     - If profile specified, show deprecation warning about finding connection files in profiles
     - Otherwise, call jupyter_client.find_connection_file

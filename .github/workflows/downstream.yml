@@ -28,5 +28,5 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest --pyargs nbclient
+          #pytest --pyargs nbclient
           pytest --pyargs ipyparallel

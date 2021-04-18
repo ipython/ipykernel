@@ -128,6 +128,9 @@ class CannedObject(object):
         hook : callable (optional)
             An optional extra callable,
             which can do additional processing of the uncanned object.
+
+        Notes
+        -----
         large data may be offloaded into the buffers list,
         used for zero-copy transfers.
         """

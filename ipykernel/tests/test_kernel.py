@@ -28,7 +28,7 @@ from .utils import (
 def _check_master(kc, expected=True, stream="stdout"):
     execute(kc=kc, code="import sys")
     flush_channels(kc)
-    msg_id, content = execute(kc=kc, code="print (sys.%s._is_master_process())" % stream)
+    msg_id, content = execute(kc=kc, code="print(sys.%s._is_master_process())" % stream)
     stdout, stderr = assemble_output(kc.get_iopub_msg)
     assert stdout.strip() == repr(expected)
 
@@ -44,11 +44,41 @@ def _check_status(content):
 def test_simple_print():
     """simple print statement in kernel"""
     with kernel() as kc:
-        iopub = kc.iopub_channel
-        msg_id, content = execute(kc=kc, code="print ('hi')")
+        msg_id, content = execute(kc=kc, code="print('hi')")
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == 'hi\n'
         assert stderr == ''
+        _check_master(kc, expected=True)
+
+
+@pytest.mark.skip(
+    reason="Currently don't capture during test as pytest does its own capturing"
+)
+def test_capture_fd():
+    """simple print statement in kernel"""
+    with kernel() as kc:
+        iopub = kc.iopub_channel
+        msg_id, content = execute(kc=kc, code="import os; os.system('echo capsys')")
+        stdout, stderr = assemble_output(iopub)
+        assert stdout == "capsys\n"
+        assert stderr == ""
+        _check_master(kc, expected=True)
+
+
+@pytest.mark.skip(
+    reason="Currently don't capture during test as pytest does its own capturing"
+)
+def test_subprocess_peek_at_stream_fileno():
+    """"""
+    with kernel() as kc:
+        iopub = kc.iopub_channel
+        msg_id, content = execute(
+            kc=kc,
+            code="import subprocess, sys; subprocess.run(['python', '-c', 'import os; os.system(\"echo CAP1\"); print(\"CAP2\")'], stderr=sys.stderr)",
+        )
+        stdout, stderr = assemble_output(iopub)
+        assert stdout == "CAP1\nCAP2\n"
+        assert stderr == ""
         _check_master(kc, expected=True)
 
 
@@ -85,7 +115,6 @@ def test_sys_path_profile_dir():
 def test_subprocess_print():
     """printing from forked mp.Process"""
     with new_kernel() as kc:
-        iopub = kc.iopub_channel
 
         _check_master(kc, expected=True)
         flush_channels(kc)
@@ -113,7 +142,6 @@ def test_subprocess_print():
 def test_subprocess_noprint():
     """mp.Process without print doesn't trigger iostream mp_mode"""
     with kernel() as kc:
-        iopub = kc.iopub_channel
 
         np = 5
         code = '\n'.join([
@@ -140,7 +168,6 @@ def test_subprocess_noprint():
 def test_subprocess_error():
     """error in mp.Process doesn't crash"""
     with new_kernel() as kc:
-        iopub = kc.iopub_channel
 
         code = '\n'.join([
             "import multiprocessing as mp",
@@ -312,8 +339,6 @@ def test_unc_paths():
         unc_root = '\\\\localhost\\C$'
         file_path = os.path.splitdrive(os.path.dirname(drive_file_path))[1]
         unc_file_path = os.path.join(unc_root, file_path[1:])
-
-        iopub = kc.iopub_channel
 
         kc.execute("cd {0:s}".format(unc_file_path))
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)

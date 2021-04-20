@@ -12,7 +12,9 @@ import sys
 import threading
 import warnings
 from weakref import WeakSet
+import traceback
 from io import StringIO, TextIOBase
+import io
 
 import zmq
 if zmq.pyzmq_version_info() >= (17, 0):
@@ -35,6 +37,7 @@ CHILD = 1
 #-----------------------------------------------------------------------------
 # IO classes
 #-----------------------------------------------------------------------------
+
 
 class IOPubThread(object):
     """An object for sending IOPub messages in a background thread
@@ -284,7 +287,54 @@ class OutStream(TextIOBase):
     topic = None
     encoding = 'UTF-8'
 
-    def __init__(self, session, pub_thread, name, pipe=None, echo=None):
+
+    def fileno(self):
+        """
+        Things like subprocess will peak and write to the fileno() of stderr/stdout.
+        """
+        if getattr(self, "_original_stdstream_copy", None) is not None:
+            return self._original_stdstream_copy
+        else:
+            raise io.UnsupportedOperation("fileno")
+
+    def _watch_pipe_fd(self):
+        """
+        We've redirected standards steams 0 and 1 into a pipe.
+
+        We need to watch in a thread and redirect them to the right places.
+
+        1) the ZMQ channels to show in notebook interfaces,
+        2) the original stdout/err, to capture errors in terminals.
+
+        We cannot schedule this on the ioloop thread, as this might be blocking.
+
+        """
+
+        try:
+            bts = os.read(self._fid, 1000)
+            while bts and self._should_watch:
+                self.write(bts.decode())
+                os.write(self._original_stdstream_copy, bts)
+                bts = os.read(self._fid, 1000)
+        except Exception:
+            self._exc = sys.exc_info()
+
+    def __init__(
+        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True
+    ):
+        """
+        Parameters
+        ----------
+        name : str {'stderr', 'stdout'}
+            the name of the standard stream to replace
+        watchfd : bool (default, True)
+            Watch the file descripttor corresponding to the replaced stream.
+            This is useful if you know some underlying code will write directly
+            the file descriptor by its number. It will spawn a watching thread,
+            that will swap the give file descriptor for a pipe, read from the
+            pipe, and insert this into the current Stream.
+
+        """
         if pipe is not None:
             warnings.warn(
                 "pipe argument to OutStream is deprecated and ignored",
@@ -296,8 +346,12 @@ class OutStream(TextIOBase):
         self.session = session
         if not isinstance(pub_thread, IOPubThread):
             # Backward-compat: given socket, not thread. Wrap in a thread.
-            warnings.warn("OutStream should be created with IOPubThread, not %r" % pub_thread,
-                DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                "Since IPykernel 4.3, OutStream should be created with "
+                "IOPubThread, not %r" % pub_thread,
+                DeprecationWarning,
+                stacklevel=2,
+            )
             pub_thread = IOPubThread(pub_thread)
             pub_thread.start()
         self.pub_thread = pub_thread
@@ -311,11 +365,34 @@ class OutStream(TextIOBase):
         self._new_buffer()
         self.echo = None
 
+        if (
+            watchfd
+            and (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
+            and ("PYTEST_CURRENT_TEST" not in os.environ)
+        ):
+            # Pytest set its own capture. Dont redirect from within pytest.
+
+            self._should_watch = True
+            self._setup_stream_redirects(name)
+
         if echo:
             if hasattr(echo, 'read') and hasattr(echo, 'write'):
                 self.echo = echo
             else:
                 raise ValueError("echo argument must be a file like object")
+
+    def _setup_stream_redirects(self, name):
+        pr, pw = os.pipe()
+        fno = getattr(sys, name).fileno()
+        self._original_stdstream_copy = os.dup(fno)
+        os.dup2(pw, fno)
+
+        self._fid = pr
+
+        self._exc = None
+        self.watch_fd_thread = threading.Thread(target=self._watch_pipe_fd)
+        self.watch_fd_thread.daemon = True
+        self.watch_fd_thread.start()
 
     def _is_master_process(self):
         return os.getpid() == self._master_pid
@@ -324,6 +401,12 @@ class OutStream(TextIOBase):
         self.parent_header = extract_header(parent)
 
     def close(self):
+        if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
+            self._should_watch = False
+            self.watch_fd_thread.join()
+        if self._exc:
+            etype, value, tb = self._exc
+            traceback.print_exception(etype, value, tb)
         self.pub_thread = None
 
     @property

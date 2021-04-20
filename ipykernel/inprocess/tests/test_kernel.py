@@ -99,6 +99,24 @@ class InProcessKernelTestCase(unittest.TestCase):
         out, err = assemble_output(kc.get_iopub_msg)
         assert out == 'bar\n'
 
+    @pytest.mark.skip(
+        reason="Currently don't capture during test as pytest does its own capturing"
+    )
+    def test_capfd(self):
+        """Does correctly capture fd"""
+        kernel = InProcessKernel()
+
+        with capture_output() as io:
+            kernel.shell.run_cell('print("foo")')
+        assert io.stdout == "foo\n"
+
+        kc = BlockingInProcessKernelClient(kernel=kernel, session=kernel.session)
+        kernel.frontends.append(kc)
+        kc.execute("import os")
+        kc.execute('os.system("echo capfd")')
+        out, err = assemble_output(kc.iopub_channel)
+        assert out == "capfd\n"
+
     def test_getpass_stream(self):
         "Tests that kernel getpass accept the stream parameter"
         kernel = InProcessKernel()

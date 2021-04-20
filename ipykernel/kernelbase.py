@@ -257,7 +257,6 @@ class Kernel(SingletonConfigurable):
         """
         msg_id = msg['header']['msg_id']
         if msg_id in self.aborted:
-            msg_type = msg['header']['msg_type']
             # is it safe to assume a msg_id will not be resubmitted?
             self.aborted.remove(msg_id)
             self._send_abort_reply(stream, msg, idents)
@@ -613,8 +612,7 @@ class Kernel(SingletonConfigurable):
 
         matches = yield gen.maybe_future(self.do_complete(code, cursor_pos))
         matches = json_clean(matches)
-        completion_msg = self.session.send(stream, 'complete_reply',
-                                           matches, parent, ident)
+        self.session.send(stream, "complete_reply", matches, parent, ident)
 
     def do_complete(self, code, cursor_pos):
         """Override in subclasses to find completions.
@@ -854,9 +852,9 @@ class Kernel(SingletonConfigurable):
         """Send a reply to an aborted request"""
         self.log.info("Aborting:")
         self.log.info("%s", msg)
-        reply_type = msg['header']['msg_type'].rsplit('_', 1)[0] + '_reply'
-        status = {'status': 'aborted'}
-        md = {'engine': self.ident}
+        reply_type = msg["header"]["msg_type"].rsplit("_", 1)[0] + "_reply"
+        status = {"status": "aborted"}
+        md = {"engine": self.ident}
         md.update(status)
         self.session.send(
             stream, reply_type, metadata=md,

@@ -38,6 +38,8 @@ jobs:
           ${{ runner.os }}-pip-
     - name: Install the Python dependencies
       run: |
+        if: ${{ matrix.os == 'windows' &&  matrix.python-version == '3.7'}}
+            pip install importlib-metadata<4
         pip install --pre --upgrade --upgrade-strategy=eager .[test] codecov
     - name: Install matplotlib
       if: ${{ matrix.os != 'macos' && matrix.python-version != 'pypy3' }}

@@ -566,10 +566,12 @@ class Kernel(SingletonConfigurable):
             self.execution_count += 1
             self._publish_execute_input(code, parent, self.execution_count)
 
-        reply_content = await self.do_execute(
+        reply_content = self.do_execute(
             code, silent, store_history,
             user_expressions, allow_stdin,
         )
+        if inspect.isawaitable(reply_content):
+            reply_content = await reply_content
 
         # Flush output before sending the reply.
         sys.stdout.flush()
@@ -593,7 +595,7 @@ class Kernel(SingletonConfigurable):
         if not silent and reply_msg['content']['status'] == 'error' and stop_on_error:
             await self._abort_queues()
 
-    async def do_execute(self, code, silent, store_history=True,
+    def do_execute(self, code, silent, store_history=True,
                    user_expressions=None, allow_stdin=False):
         """Execute user code. Must be overridden by subclasses.
         """
@@ -604,11 +606,14 @@ class Kernel(SingletonConfigurable):
         code = content['code']
         cursor_pos = content['cursor_pos']
 
-        matches = await self.do_complete(code, cursor_pos)
+        matches = self.do_complete(code, cursor_pos)
+        if inspect.isawaitable(matches):
+            matches = await matches
+
         matches = json_clean(matches)
         self.session.send(stream, "complete_reply", matches, parent, ident)
 
-    async def do_complete(self, code, cursor_pos):
+    def do_complete(self, code, cursor_pos):
         """Override in subclasses to find completions.
         """
         return {'matches' : [],
@@ -620,17 +625,20 @@ class Kernel(SingletonConfigurable):
     async def inspect_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = await self.do_inspect(
+        reply_content = self.do_inspect(
             content['code'], content['cursor_pos'],
             content.get('detail_level', 0),
         )
+        if inspect.isawaitable(reply_content):
+            reply_content = await reply_content 
+
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
         msg = self.session.send(stream, 'inspect_reply',
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    async def do_inspect(self, code, cursor_pos, detail_level=0):
+    def do_inspect(self, code, cursor_pos, detail_level=0):
         """Override in subclasses to allow introspection.
         """
         return {'status': 'ok', 'data': {}, 'metadata': {}, 'found': False}
@@ -638,14 +646,16 @@ class Kernel(SingletonConfigurable):
     async def history_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = await self.do_history(**content)
+        reply_content = self.do_history(**content)
+        if inspect.isawaitable(reply_content):
+            reply_content = await reply_content
 
         reply_content = json_clean(reply_content)
         msg = self.session.send(stream, 'history_reply',
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    async def do_history(self, hist_access_type, output, raw, session=None, start=None,
+    def do_history(self, hist_access_type, output, raw, session=None, start=None,
                    stop=None, n=None, pattern=None, unique=False):
         """Override in subclasses to access history.
         """
@@ -698,7 +708,9 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", msg)
 
     async def shutdown_request(self, stream, ident, parent):
-        content = await self.do_shutdown(parent['content']['restart'])
+        content = self.do_shutdown(parent['content']['restart'])
+        if inspect.isawaitable(content):
+            content = await content
         self.session.send(stream, 'shutdown_reply', content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg('shutdown_reply',
@@ -715,7 +727,7 @@ class Kernel(SingletonConfigurable):
         shell_io_loop = self.shell_stream.io_loop
         shell_io_loop.add_callback(shell_io_loop.stop)
 
-    async def do_shutdown(self, restart):
+    def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the
         kernel.
         """
@@ -725,13 +737,15 @@ class Kernel(SingletonConfigurable):
         content = parent['content']
         code = content['code']
 
-        reply_content = await self.do_is_complete(code)
+        reply_content = self.do_is_complete(code)
+        if inspect.isawaitable(reply_content):
+            reply_content = await reply_content
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, 'is_complete_reply',
                                       reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
-    async def do_is_complete(self, code):
+    def do_is_complete(self, code):
         """Override in subclasses to find completions.
         """
         return { 'status' : 'unknown'}
@@ -739,7 +753,9 @@ class Kernel(SingletonConfigurable):
     async def debug_request(self, stream, ident, parent):
         content = parent['content']
 
-        reply_content = await self.do_debug_request(content)
+        reply_content = self.do_debug_request(content)
+        if inspect.isawaitable(reply_content):
+            reply_content = await reply_content
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, 'debug_reply', reply_content,
                                       parent, ident)
@@ -775,7 +791,7 @@ class Kernel(SingletonConfigurable):
         self.session.send(stream, 'apply_reply', reply_content,
                     parent=parent, ident=ident,buffers=result_buf, metadata=md)
 
-    async def do_apply(self, content, bufs, msg_id, reply_metadata):
+    def do_apply(self, content, bufs, msg_id, reply_metadata):
         """DEPRECATED"""
         raise NotImplementedError
 
@@ -806,7 +822,7 @@ class Kernel(SingletonConfigurable):
         self.session.send(stream, 'clear_reply', ident=idents, parent=parent,
                 content = content)
 
-    async def do_clear(self):
+    def do_clear(self):
         """DEPRECATED since 4.0.3"""
         raise NotImplementedError
 

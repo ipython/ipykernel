@@ -384,7 +384,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content
 
-    async def do_complete(self, code, cursor_pos):
+    def do_complete(self, code, cursor_pos):
         if _use_experimental_60_completion and self.use_experimental_completions:
             return self._experimental_do_complete(code, cursor_pos)
 
@@ -404,7 +404,7 @@ class IPythonKernel(KernelBase):
                 'status' : 'ok'}
 
     async def do_debug_request(self, msg):
-        return self.debugger.process_request(msg)
+        return await self.debugger.process_request(msg)
 
     def _experimental_do_complete(self, code, cursor_pos):
         """
@@ -440,7 +440,7 @@ class IPythonKernel(KernelBase):
                 'metadata': {_EXPERIMENTAL_KEY_NAME: comps},
                 'status': 'ok'}
 
-    async def do_inspect(self, code, cursor_pos, detail_level=0):
+    def do_inspect(self, code, cursor_pos, detail_level=0):
         name = token_at_cursor(code, cursor_pos)
 
         reply_content = {'status' : 'ok'}
@@ -461,7 +461,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content
 
-    async def do_history(self, hist_access_type, output, raw, session=0, start=0,
+    def do_history(self, hist_access_type, output, raw, session=0, start=0,
                    stop=None, n=None, pattern=None, unique=False):
         if hist_access_type == 'tail':
             hist = self.shell.history_manager.get_tail(n, raw=raw, output=output,
@@ -482,11 +482,11 @@ class IPythonKernel(KernelBase):
             'history' : list(hist),
         }
 
-    async def do_shutdown(self, restart):
+    def do_shutdown(self, restart):
         self.shell.exit_now = True
         return dict(status='ok', restart=restart)
 
-    async def do_is_complete(self, code):
+    def do_is_complete(self, code):
         transformer_manager = getattr(self.shell, 'input_transformer_manager', None)
         if transformer_manager is None:
             # input_splitter attribute is deprecated
@@ -497,7 +497,7 @@ class IPythonKernel(KernelBase):
             r['indent'] = ' ' * indent_spaces
         return r
 
-    async def do_apply(self, content, bufs, msg_id, reply_metadata):
+    def do_apply(self, content, bufs, msg_id, reply_metadata):
         from .serialize import serialize_object, unpack_apply_message
         shell = self.shell
         try:
@@ -552,7 +552,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content, result_buf
 
-    async def do_clear(self):
+    def do_clear(self):
         self.shell.reset(False)
         return dict(status='ok')
 

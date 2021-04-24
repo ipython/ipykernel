@@ -11,6 +11,8 @@
 # Imports
 #-----------------------------------------------------------------------------
 
+import asyncio
+
 # IPython imports
 from traitlets import Type, Instance, default
 from jupyter_client.clientabc import KernelClientABC
@@ -173,8 +175,8 @@ class InProcessKernelClient(KernelClient):
         stream = kernel.shell_stream
         self.session.send(stream, msg)
         msg_parts = stream.recv_multipart()
-        kernel.dispatch_shell(msg_parts)
-
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(kernel.dispatch_shell(msg_parts))
         idents, reply_msg = self.session.recv(stream, copy=False)
         self.shell_channel.call_handlers_later(reply_msg)
 

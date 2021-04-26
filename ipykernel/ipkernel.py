@@ -148,7 +148,7 @@ class IPythonKernel(KernelBase):
         'file_extension': '.py'
     }
 
-    async def dispatch_debugpy(self, msg):
+    def dispatch_debugpy(self, msg):
         # The first frame is the socket id, we can drop it
         frame = msg[1].bytes.decode('utf-8')
         self.log.debug("Debugpy received: %s", frame)

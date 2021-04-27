@@ -44,8 +44,11 @@ def get_tmp_hash_seed():
     return hash_seed
 
 def get_file_name(code):
-    name = murmur2_x86(code, get_tmp_hash_seed())
-    return get_tmp_directory() + '/' + str(name) + '.py'
+    cell_name = os.environ.get("IPYKERNEL_CELL_NAME")
+    if cell_name is None:
+        name = murmur2_x86(code, get_tmp_hash_seed())
+        cell_name = get_tmp_directory() + '/' + str(name) + '.py'
+    return cell_name
 
 class XCachingCompiler(CachingCompiler):
 

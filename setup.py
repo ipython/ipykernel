@@ -76,10 +76,11 @@ setup_args = dict(
     install_requires=[
         'importlib-metadata<4;python_version<"3.8.0"',
         'debugpy>=1.0.0',
-        'ipython>=7.21.0',
+        'ipython>=7.23.0',
         'traitlets>=4.1.0',
         'jupyter_client',
         'tornado>=4.2',
+        'matplotlib-inline>=0.1.0,<0.2.0'
         'appnope;platform_system=="Darwin"',
     ],
     extras_require={

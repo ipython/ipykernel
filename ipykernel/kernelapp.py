@@ -512,7 +512,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         # but lower priority than anything else (mpl.use() for instance).
         # This only affects matplotlib >= 1.5
         if not os.environ.get('MPLBACKEND'):
-            os.environ['MPLBACKEND'] = 'module://ipykernel.pylab.backend_inline'
+            os.environ['MPLBACKEND'] = 'module://matplotlib_inline.backend_inline'
 
         # Provide a wrapper for :meth:`InteractiveShellApp.init_gui_pylab`
         # to ensure that any exception is printed straight to stderr.

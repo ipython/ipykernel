@@ -3,4 +3,13 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import warnings
+
 from matplotlib_inline.backend_inline import * # analysis: ignore
+
+
+warnings.warn(
+    "`ipykernel.pylab.backend_inline` is deprecated, directly "
+    "use `matplotlib_inline.backend_inline`",
+    DeprecationWarning
+)

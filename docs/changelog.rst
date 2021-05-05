@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.5
 ---
 
+5.5.4
+-----
+- Import ``configure_inline_support`` from ``matplotlib_inline`` if available (:ghpull:`654`)
+   
 5.5.3
 -----
 - Revert Backport of #605: Fix Handling of ``shell.should_run_async`` (:ghpull:`622`)

@@ -600,7 +600,10 @@ class ZMQInteractiveShell(InteractiveShell):
     def enable_matplotlib(self, gui=None):
         gui, backend = super(ZMQInteractiveShell, self).enable_matplotlib(gui)
 
-        from ipykernel.pylab.backend_inline import configure_inline_support
+        try:
+            from matplotlib_inline.backend_inline import configure_inline_support
+        except ImportError:
+            from ipykernel.pylab.backend_inline import configure_inline_support
 
         configure_inline_support(self, backend)
 

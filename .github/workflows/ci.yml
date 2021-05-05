@@ -39,6 +39,7 @@ jobs:
     - name: Install the Python dependencies
       run: |
         pip install --pre --upgrade --upgrade-strategy=eager .[test] codecov
+        pip install jupyter_client==6.1.*
     - name: Install matplotlib
       if: ${{ matrix.os != 'macos' && matrix.python-version != 'pypy3' }}
       run: |

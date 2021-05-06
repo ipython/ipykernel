@@ -23,7 +23,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install .
-          pip install pytest nbclient[test] ipyparallel[test]
+          pip install pytest nbclient[test] "ipyparallel[test] @ git+git://github.com/ipython/ipyparallel.git@main"
           pip freeze
 
       - name: Run tests

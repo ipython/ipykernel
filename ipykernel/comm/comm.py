@@ -66,7 +66,7 @@ class Comm(LoggingConfigurable):
         self.kernel.session.send(self.kernel.iopub_socket, msg_type,
             content,
             metadata=json_clean(metadata),
-            parent=self.kernel.get_parent_header("shell"),
+            parent=self.kernel.get_header("shell"),
             ident=self.topic,
             buffers=buffers,
         )

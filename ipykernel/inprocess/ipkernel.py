@@ -97,7 +97,7 @@ class InProcessKernel(IPythonKernel):
         content = json_clean(dict(prompt=prompt, password=password))
         msg = self.session.msg('input_request', content, parent)
         for frontend in self.frontends:
-            if frontend.session.session == parent['header']['session']:
+            if frontend.session.session == parent['session']:
                 frontend.stdin_channel.call_handlers(msg)
                 break
         else:

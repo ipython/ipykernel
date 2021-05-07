@@ -142,7 +142,9 @@ class Kernel(SingletonConfigurable):
             DeprecationWarning,
             stacklevel=2,
         )
-        return self.get_parent_header(channel="shell")
+        # _parent_header wasn't actually the header, it was the *message*
+        # but only promised access to the header
+        return {"header": self.get_parent_header(channel="shell")}
 
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the
@@ -538,6 +540,8 @@ class Kernel(SingletonConfigurable):
         on the stdin channel.
         """
         self._parent_ident[channel] = ident
+        if parent and 'header' in parent:
+            parent = parent['header']
         self._parent_headers[channel] = parent
 
     def send_response(self, stream, msg_or_type, content=None, ident=None,

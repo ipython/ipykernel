@@ -53,13 +53,15 @@ def flush_channels(kc=None):
                 validate_message(msg)
 
 
-def get_reply(kc, msg_id, timeout):
-    timeout = TIMEOUT
+def get_reply(kc, msg_id, timeout=TIMEOUT, channel='shell'):
     t0 = time()
     while True:
-        reply = kc.get_shell_msg(timeout=timeout)
+        get_msg = getattr(kc, f'get_{channel}_msg')
+        reply = get_msg(timeout=timeout)
         if reply['parent_header']['msg_id'] == msg_id:
             break
+        # Allow debugging ignored replies
+        print(f"Ignoring reply not to {msg_id}: {reply}")
         t1 = time()
         timeout -= t1 - t0
         t0 = t1

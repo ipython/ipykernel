@@ -30,6 +30,6 @@ jobs:
 
       - name: Run tests
         run: |
-          IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
+          #IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
           pytest --pyargs ipyparallel
           pytest --pyargs jupyter_client

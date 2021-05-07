@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import asyncio
+import concurrent.futures
 from datetime import datetime
 from functools import partial
 import itertools
@@ -213,7 +214,33 @@ class Kernel(SingletonConfigurable):
     async def poll_control_queue(self):
         while True:
             msg = await self.control_queue.get()
+            # handle tracers from _flush_control_queue
+            if isinstance(msg, (concurrent.futures.Future, asyncio.Future)):
+                msg.set_result(None)
+                continue
             await self.process_control(msg)
+
+    async def _flush_control_queue(self):
+        """Flush the control queue, wait for processing of any pending messages"""
+        if self.control_thread:
+            control_loop = self.control_thread.io_loop
+            # concurrent.futures.Futures are threadsafe
+            # and can be used to await across threads
+            tracer_future = concurrent.futures.Future()
+            awaitable_future = asyncio.wrap_future(tracer_future)
+        else:
+            control_loop = self.io_loop
+            tracer_future = awaitable_future = asyncio.Future()
+
+        def _flush():
+            # control_stream.flush puts messages on the queue
+            self.control_stream.flush()
+            # put Future on the queue after all of those,
+            # so we can wait for all queued messages to be processed
+            self.control_queue.put(tracer_future)
+
+        control_loop.add_callback(_flush)
+        return awaitable_future
 
     async def process_control(self, msg):
         """dispatch control requests"""
@@ -265,6 +292,10 @@ class Kernel(SingletonConfigurable):
 
     async def dispatch_shell(self, msg):
         """dispatch shell requests"""
+
+        # flush control queue before handling shell requests
+        await self._flush_control_queue()
+
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
@@ -630,7 +661,7 @@ class Kernel(SingletonConfigurable):
             content.get('detail_level', 0),
         )
         if inspect.isawaitable(reply_content):
-            reply_content = await reply_content 
+            reply_content = await reply_content
 
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
@@ -944,7 +975,7 @@ class Kernel(SingletonConfigurable):
                 raise KeyboardInterrupt("Interrupted by user") from None
             except Exception as e:
                 self.log.warning("Invalid Message:", exc_info=True)
-        
+
         try:
             value = reply["content"]["value"]
         except Exception:

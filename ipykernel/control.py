@@ -15,7 +15,16 @@ class ControlThread(Thread):
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
 
-    def run(self): 
+    def run(self):
         self.io_loop.make_current()
-        self.io_loop.start()
-        self.io_loop.close(all_fds=True)
+        try:
+            self.io_loop.start()
+        finally:
+            self.io_loop.close()
+
+    def stop(self):
+        """Stop the thread.
+
+        This method is threadsafe.
+        """
+        self.io_loop.add_callback(self.io_loop.stop)

@@ -132,8 +132,18 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parent_header = Dict({'shell': {}, 'control': {}})
+    _parent_headers = Dict({"shell": {}, "control": {}})
     _parent_ident = Dict({'shell': b'', 'control': b''})
+
+    @property
+    def _parent_header(self):
+        warnings.warn(
+            "Kernel._parent_header is deprecated in ipykernel 6. Use .get_parent_header()",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_parent_header(channel="shell")
+
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the
     # execute cycle, it helps prevent output synchronization problems for
@@ -206,6 +216,23 @@ class Kernel(SingletonConfigurable):
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
         self.control_queue = Queue()
+
+    def get_parent_header(self, channel="shell"):
+        """Get the parent header associated with a channel.
+
+        .. versionadded:: 6
+
+        Parameters
+        ----------
+        channel : str
+            the name of the channel ('shell' or 'control')
+
+        Returns
+        -------
+        header : dict
+            the parent header for the most recent request on the channel.
+        """
+        return self._parent_headers.get(channel, {})
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -484,18 +511,21 @@ class Kernel(SingletonConfigurable):
 
     def _publish_status(self, status, channel, parent=None):
         """send status (busy/idle) on IOPub"""
-        self.session.send(self.iopub_socket,
-                          'status',
-                          {'execution_state': status},
-                          parent=parent or self._parent_header[channel],
-                          ident=self._topic('status'),
-                          )
+        self.session.send(
+            self.iopub_socket,
+            "status",
+            {"execution_state": status},
+            parent=parent or self.get_parent_header(channel),
+            ident=self._topic("status"),
+        )
+
     def _publish_debug_event(self, event):
-        self.session.send(self.iopub_socket,
-                          'debug_event',
-                          event,
-                          parent=self._parent_header['control'],
-                          ident=self._topic('debug_event')
+        self.session.send(
+            self.iopub_socket,
+            "debug_event",
+            event,
+            parent=self.get_parent_header("control"),
+            ident=self._topic("debug_event"),
         )
 
     def set_parent(self, ident, parent, channel='shell'):
@@ -508,7 +538,7 @@ class Kernel(SingletonConfigurable):
         on the stdin channel.
         """
         self._parent_ident[channel] = ident
-        self._parent_header[channel] = parent
+        self._parent_headers[channel] = parent
 
     def send_response(self, stream, msg_or_type, content=None, ident=None,
              buffers=None, track=False, header=None, metadata=None, channel='shell'):
@@ -520,8 +550,17 @@ class Kernel(SingletonConfigurable):
         This relies on :meth:`set_parent` having been called for the current
         message.
         """
-        return self.session.send(stream, msg_or_type, content, self._parent_header[channel],
-                                 ident, buffers, track, header, metadata)
+        return self.session.send(
+            stream,
+            msg_or_type,
+            content,
+            self.get_parent_header(channel),
+            ident,
+            buffers,
+            track,
+            header,
+            metadata,
+        )
 
     def init_metadata(self, parent):
         """Initialize metadata.
@@ -630,7 +669,7 @@ class Kernel(SingletonConfigurable):
             content.get('detail_level', 0),
         )
         if inspect.isawaitable(reply_content):
-            reply_content = await reply_content 
+            reply_content = await reply_content
 
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
@@ -878,11 +917,16 @@ class Kernel(SingletonConfigurable):
             )
         if stream is not None:
             import warnings
-            warnings.warn("The `stream` parameter of `getpass.getpass` will have no effect when using ipykernel",
-                    UserWarning, stacklevel=2)
-        return self._input_request(prompt,
-            self._parent_ident['shell'],
-            self._parent_header['shell'],
+
+            warnings.warn(
+                "The `stream` parameter of `getpass.getpass` will have no effect when using ipykernel",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self._input_request(
+            prompt,
+            self._parent_ident["shell"],
+            self.get_parent_header("shell"),
             password=True,
         )
 
@@ -897,9 +941,10 @@ class Kernel(SingletonConfigurable):
             raise StdinNotImplementedError(
                 "raw_input was called, but this frontend does not support input requests."
             )
-        return self._input_request(str(prompt),
-            self._parent_ident['shell'],
-            self._parent_header['shell'],
+        return self._input_request(
+            str(prompt),
+            self._parent_ident["shell"],
+            self.get_parent_header("shell"),
             password=False,
         )
 
@@ -944,7 +989,7 @@ class Kernel(SingletonConfigurable):
                 raise KeyboardInterrupt("Interrupted by user") from None
             except Exception as e:
                 self.log.warning("Invalid Message:", exc_info=True)
-        
+
         try:
             value = reply["content"]["value"]
         except Exception:

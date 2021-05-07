@@ -25,7 +25,7 @@ jobs:
           pip install .
           pip install pytest "nbclient[test] @ git+git://github.com/jupyter/nbclient.git@master" \
                              "ipyparallel[test] @ git+git://github.com/ipython/ipyparallel.git@main" \
-                             jupyter_client[test]
+                             "jupyter_client[test] @ git+git://github.com/jupyter/jupyter_client.git@master"
           pip freeze
 
       - name: Run tests

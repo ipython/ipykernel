@@ -133,17 +133,17 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parent_headers = Dict({"shell": {}, "control": {}})
+    _parents = Dict({"shell": {}, "control": {}})
     _parent_ident = Dict({'shell': b'', 'control': b''})
 
     @property
     def _parent_header(self):
         warnings.warn(
-            "Kernel._parent_header is deprecated in ipykernel 6. Use .get_parent_header()",
+            "Kernel._parent_header is deprecated in ipykernel 6. Use .get_parent()",
             DeprecationWarning,
             stacklevel=2,
         )
-        return self.get_parent_header(channel="shell")
+        return self.get_parent(channel="shell")
 
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the
@@ -217,23 +217,6 @@ class Kernel(SingletonConfigurable):
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
         self.control_queue = Queue()
-
-    def get_parent_header(self, channel="shell"):
-        """Get the parent header associated with a channel.
-
-        .. versionadded:: 6
-
-        Parameters
-        ----------
-        channel : str
-            the name of the channel ('shell' or 'control')
-
-        Returns
-        -------
-        header : dict
-            the parent header for the most recent request on the channel.
-        """
-        return self._parent_headers.get(channel, {})
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -546,7 +529,7 @@ class Kernel(SingletonConfigurable):
             self.iopub_socket,
             "status",
             {"execution_state": status},
-            parent=parent or self.get_parent_header(channel),
+            parent=parent or self.get_parent(channel),
             ident=self._topic("status"),
         )
 
@@ -555,12 +538,12 @@ class Kernel(SingletonConfigurable):
             self.iopub_socket,
             "debug_event",
             event,
-            parent=self.get_parent_header("control"),
+            parent=self.get_parent("control"),
             ident=self._topic("debug_event"),
         )
 
     def set_parent(self, ident, parent, channel='shell'):
-        """Set the current parent_header
+        """Set the current parent request
 
         Side effects (IOPub messages) and replies are associated with
         the request that caused them via the parent_header.
@@ -569,7 +552,24 @@ class Kernel(SingletonConfigurable):
         on the stdin channel.
         """
         self._parent_ident[channel] = ident
-        self._parent_headers[channel] = parent
+        self._parents[channel] = parent
+
+    def get_parent(self, channel="shell"):
+        """Get the parent request associated with a channel.
+
+        .. versionadded:: 6
+
+        Parameters
+        ----------
+        channel : str
+            the name of the channel ('shell' or 'control')
+
+        Returns
+        -------
+        message : dict
+            the parent message for the most recent request on the channel.
+        """
+        return self._parents.get(channel, {})
 
     def send_response(self, stream, msg_or_type, content=None, ident=None,
              buffers=None, track=False, header=None, metadata=None, channel='shell'):
@@ -585,7 +585,7 @@ class Kernel(SingletonConfigurable):
             stream,
             msg_or_type,
             content,
-            self.get_parent_header(channel),
+            self.get_parent(channel),
             ident,
             buffers,
             track,
@@ -957,7 +957,7 @@ class Kernel(SingletonConfigurable):
         return self._input_request(
             prompt,
             self._parent_ident["shell"],
-            self.get_parent_header("shell"),
+            self.get_parent("shell"),
             password=True,
         )
 
@@ -975,7 +975,7 @@ class Kernel(SingletonConfigurable):
         return self._input_request(
             str(prompt),
             self._parent_ident["shell"],
-            self.get_parent_header("shell"),
+            self.get_parent("shell"),
             password=False,
         )
 

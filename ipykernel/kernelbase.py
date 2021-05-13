@@ -261,6 +261,9 @@ class Kernel(SingletonConfigurable):
                 yield gen.maybe_future(handler(stream, idents, msg))
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)
+            except KeyboardInterrupt:
+                # Ctrl-c shouldn't crash the kernel here.
+                self.log.error("KeyboardInterrupt caught in kernel.")	
             finally:
                 try:
                     self.post_handler_hook()

@@ -5,23 +5,23 @@
 ## 5.5
 
 ### 5.5.5
-- Keep preferring SelectorEventLoop on Windows. [#669](https://github.com/ipython/ipykernel/pull/669)
+* Keep preferring SelectorEventLoop on Windows. [#669](https://github.com/ipython/ipykernel/pull/669)
 
 ### 5.5.4
-- Import ``configure_inline_support`` from ``matplotlib_inline`` if available [#654](https://github.com/ipython/ipykernel/pull/654)
+* Import ``configure_inline_support`` from ``matplotlib_inline`` if available [#654](https://github.com/ipython/ipykernel/pull/654)
    
 ### 5.5.3
-- Revert Backport of #605: Fix Handling of ``shell.should_run_async`` [#622](https://github.com/ipython/ipykernel/pull/622)
+* Revert Backport of #605: Fix Handling of ``shell.should_run_async`` [#622](https://github.com/ipython/ipykernel/pull/622)
 
 ### 5.5.2
 **Note:** This release was deleted from PyPI since it had breaking changes.
 
-- Changed default timeout to 0.0 seconds for stop_on_error_timeout. [#618](https://github.com/ipython/ipykernel/pull/618)
+* Changed default timeout to 0.0 seconds for stop_on_error_timeout. [#618](https://github.com/ipython/ipykernel/pull/618)
 
 ### 5.5.1
 **Note:** This release was deleted from PyPI since it had breaking changes.
 
-- Fix Handling of ``shell.should_run_async``. [#605](https://github.com/ipython/ipykernel/pull/605)
+* Fix Handling of ``shell.should_run_async``. [#605](https://github.com/ipython/ipykernel/pull/605)
 
 ### 5.5.0
 * kernelspec: ensure path is writable before writing `kernel.json`. [#593](https://github.com/ipython/ipykernel/pull/593)

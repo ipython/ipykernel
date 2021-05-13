@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.5
 ---
 
+5.5.5
+-----
+- Keep preferring SelectorEventLoop on Windows. (:ghpull:`669`)
+
 5.5.4
 -----
 - Import ``configure_inline_support`` from ``matplotlib_inline`` if available (:ghpull:`654`)

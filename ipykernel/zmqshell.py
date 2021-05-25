@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A ZMQ-based subclass of InteractiveShell.
 
 This code is meant to ease the refactoring of the base InteractiveShell into
@@ -15,15 +14,10 @@ machinery.  This should thus be thought of as scaffolding.
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 import os
 import sys
-import time
 import warnings
 from threading import local
-
-from tornado import ioloop
 
 from IPython.core.interactiveshell import (
     InteractiveShell, InteractiveShellABC
@@ -42,9 +36,7 @@ from ipykernel import (
 )
 from IPython.utils import openpy
 from ipykernel.jsonutil import json_clean, encode_images
-from IPython.utils.process import arg_split
-from ipython_genutils import py3compat
-from ipython_genutils.py3compat import unicode_type
+from IPython.utils.process import arg_split, system
 from traitlets import (
     Instance, Type, Dict, CBool, CBytes, Any, default, observe
 )
@@ -53,9 +45,19 @@ from ipykernel.displayhook import ZMQShellDisplayHook
 from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_client.session import extract_header, Session
 
+try:
+    # available since ipyparallel 5.0.0
+    from ipyparallel.engine.datapub import ZMQDataPublisher
+except ImportError:
+    # Deprecated since ipykernel 4.3.0
+    from ipykernel.datapub import ZMQDataPublisher
+
 #-----------------------------------------------------------------------------
 # Functions and classes
 #-----------------------------------------------------------------------------
+
+_sentinel = object()
+
 
 class ZMQDisplayPublisher(DisplayPublisher):
     """A display publisher that publishes data using a ZeroMQ PUB socket."""
@@ -91,24 +93,45 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def publish(self, data, metadata=None, source=None, transient=None,
+    def publish(
+        self,
+        data,
+        metadata=None,
+        source=_sentinel,
+        transient=None,
         update=False,
     ):
         """Publish a display-data message
 
         Parameters
         ----------
-        data: dict
+        data : dict
             A mime-bundle dict, keyed by mime-type.
-        metadata: dict, optional
+        metadata : dict, optional
             Metadata associated with the data.
-        transient: dict, optional, keyword-only
+        transient : dict, optional, keyword-only
             Transient data that may only be relevant during a live display,
             such as display_id.
             Transient data should not be persisted to documents.
-        update: bool, optional, keyword-only
+        update : bool, optional, keyword-only
             If True, send an update_display_data message instead of display_data.
+        source : unused
+            Value will have no effect on function behavior. Parameter is still
+            present for backward compatibility but will be removed in the
+            future.
+
+            .. deprecated:: 4.0.1
+
+                `source` has been deprecated and no-op since ipykernel 4.0.1
+                (2015)
         """
+        if source is not _sentinel:
+            warnings.warn(
+                "`source` has been deprecated since ipykernel 4.0.1 "
+                "and will have no effect",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self._flush_streams()
         if metadata is None:
             metadata = {}
@@ -147,7 +170,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
         Parameters
         ----------
-        wait: bool (default: False)
+        wait : bool (default: False)
             If True, the output will not be cleared immediately,
             instead waiting for the next display before clearing.
             This reduces bounce during repeated clear & display loops.
@@ -156,7 +179,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         content = dict(wait=wait)
         self._flush_streams()
         self.session.send(
-            self.pub_socket, u'clear_output', content,
+            self.pub_socket, 'clear_output', content,
             parent=self.parent_header, ident=self.topic,
         )
 
@@ -171,7 +194,6 @@ class ZMQDisplayPublisher(DisplayPublisher):
         Returns
         -------
         Either a publishable message, or `None`.
-
         The DisplayHook objects must return a message from
         the __call__ method if they still require the
         `session.send` method to be called after transformation.
@@ -186,13 +208,13 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
         Parameters
         ----------
-        hook: Any callable object which has previously been
-              registered as a hook.
+        hook : Any callable object which has previously been
+            registered as a hook.
 
         Returns
         -------
         bool - `True` if the hook was removed, `False` if it wasn't
-               found.
+            found.
         """
         try:
             self._hooks.remove(hook)
@@ -423,8 +445,8 @@ class KernelMagics(Magics):
 
         try:
             interval = int(arg_s)
-        except ValueError:
-            raise UsageError("%%autosave requires an integer, got %r" % arg_s)
+        except ValueError as e:
+            raise UsageError("%%autosave requires an integer, got %r" % arg_s) from e
 
         # javascript wants milliseconds
         milliseconds = 1000 * interval
@@ -442,7 +464,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
-    data_pub_class = Type('ipykernel.datapub.ZMQDataPublisher')
+    data_pub_class = Type(ZMQDataPublisher)
     kernel = Any()
     parent_header = Any()
 
@@ -485,7 +507,7 @@ class ZMQInteractiveShell(InteractiveShell):
             real_enable_gui(gui)
             self.active_eventloop = gui
         except ValueError as e:
-            raise UsageError("%s" % e)
+            raise UsageError("%s" % e) from e
 
     def init_environment(self):
         """Configure the user's environment."""
@@ -541,9 +563,9 @@ class ZMQInteractiveShell(InteractiveShell):
         sys.stderr.flush()
 
         exc_content = {
-            u'traceback' : stb,
-            u'ename' : unicode_type(etype.__name__),
-            u'evalue' : py3compat.safe_unicode(evalue),
+            'traceback' : stb,
+            'ename' : str(etype.__name__),
+            'evalue' : str(evalue),
         }
 
         dh = self.displayhook
@@ -553,8 +575,13 @@ class ZMQInteractiveShell(InteractiveShell):
         if dh.topic:
             topic = dh.topic.replace(b'execute_result', b'error')
 
-        exc_msg = dh.session.send(dh.pub_socket, u'error', json_clean(exc_content),
-                                  dh.parent_header, ident=topic)
+        dh.session.send(
+            dh.pub_socket,
+            "error",
+            json_clean(exc_content),
+            dh.parent_header,
+            ident=topic,
+        )
 
         # FIXME - Once we rely on Python 3, the traceback is stored on the
         # exception object, so we shouldn't need to store it here.
@@ -600,6 +627,42 @@ class ZMQInteractiveShell(InteractiveShell):
         # it inside the virtualenv.
         # https://ipython.readthedocs.io/en/latest/install/kernel_install.html
         pass
+
+    def system_piped(self, cmd):
+        """Call the given cmd in a subprocess, piping stdout/err
+
+        Parameters
+        ----------
+        cmd : str
+            Command to execute (can not end in '&', as background processes are
+            not supported.  Should not be a command that expects input
+            other than simple text.
+        """
+        if cmd.rstrip().endswith('&'):
+            # this is *far* from a rigorous test
+            # We do not support backgrounding processes because we either use
+            # pexpect or pipes to read from.  Users can always just call
+            # os.system() or use ip.system=ip.system_raw
+            # if they really want a background process.
+            raise OSError("Background processes not supported.")
+
+        # we explicitly do NOT return the subprocess status code, because
+        # a non-None value would trigger :func:`sys.displayhook` calls.
+        # Instead, we store the exit_code in user_ns.
+        # Also, protect system call from UNC paths on Windows here too
+        # as is done in InteractiveShell.system_raw
+        if sys.platform == 'win32':
+            cmd = self.var_expand(cmd, depth=1)
+            from IPython.utils._process_win32 import AvoidUNCPath
+            with AvoidUNCPath() as path:
+                if path is not None:
+                    cmd = 'pushd %s &&%s' % (path, cmd)
+                self.user_ns['_exit_code'] = system(cmd)
+        else:
+            self.user_ns['_exit_code'] = system(self.var_expand(cmd, depth=1))
+
+    # Ensure new system_piped implementation is used
+    system = system_piped
 
 
 InteractiveShellABC.register(ZMQInteractiveShell)

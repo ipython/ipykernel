@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 """Utilities to enable code objects to be pickled.
 
 Any process that import this module will be able to pickle code objects.  This
@@ -14,14 +12,14 @@ Reference: A. Tremols, P Cogolo, "Python Cookbook," p 302-305
 # Distributed under the terms of the Modified BSD License.
 
 import warnings
-warnings.warn("ipykernel.codeutil is deprecated since IPykernel 4.3.1. It has moved to ipyparallel.serialize", DeprecationWarning)
+warnings.warn("ipykernel.codeutil is deprecated since IPykernel 4.3.1. It has moved to ipyparallel.serialize",
+    DeprecationWarning,
+    stacklevel=2
+)
 
+import copyreg
 import sys
 import types
-try:
-    import copyreg  # Py 3
-except ImportError:
-    import copy_reg as copyreg  # Py 2
 
 def code_ctor(*args):
     return types.CodeType(*args)
@@ -33,6 +31,8 @@ def reduce_code(co):
             co.co_lnotab, co.co_freevars, co.co_cellvars]
     if sys.version_info[0] >= 3:
         args.insert(1, co.co_kwonlyargcount)
+    if sys.version_info > (3, 8, 0, 'alpha', 3):
+        args.insert(1, co.co_posonlyargcount)
     return code_ctor, tuple(args)
 
 copyreg.pickle(types.CodeType, reduce_code)

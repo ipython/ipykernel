@@ -1,4 +1,3 @@
-# encoding: utf-8
 """Event loop integration for the ZeroMQ-based kernels."""
 
 # Copyright (c) IPython Development Team.
@@ -115,9 +114,7 @@ def loop_qt4(kernel):
 
     kernel.app = get_app_qt4([" "])
     kernel.app.setQuitOnLastWindowClosed(False)
-
-    for s in kernel.shell_streams:
-        _notify_stream_qt(kernel, s)
+    _notify_stream_qt(kernel, kernel.shell_stream)
 
     _loop_qt(kernel.app)
 
@@ -154,21 +151,14 @@ def loop_wx(kernel):
 
     import wx
 
-    if _use_appnope() and kernel._darwin_app_nap:
-        # we don't hook up App Nap contexts for Wx,
-        # just disable it outright.
-        from appnope import nope
-        nope()
-
      # Wx uses milliseconds
     poll_interval = int(1000 * kernel._poll_interval)
 
     def wake():
         """wake from wx"""
-        for stream in kernel.shell_streams:
-            if stream.flush(limit=1):
-                kernel.app.ExitMainLoop()
-                return
+        if kernel.shell_stream.flush(limit=1):
+            kernel.app.ExitMainLoop()
+            return
 
     # We have to put the wx.Timer in a wx.Frame for it to fire properly.
     # We make the Frame hidden when we create it in the main app below.
@@ -222,29 +212,61 @@ def loop_tk(kernel):
 
     from tkinter import Tk, READABLE
 
-    def process_stream_events(stream, *a, **kw):
-        """fall back to main loop when there's a socket event"""
-        if stream.flush(limit=1):
-            app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
-            app.quit()
+    app = Tk()
+    # Capability detection:
+    # per https://docs.python.org/3/library/tkinter.html#file-handlers
+    # file handlers are not available on Windows
+    if hasattr(app, 'createfilehandler'):
+        # A basic wrapper for structural similarity with the Windows version
+        class BasicAppWrapper(object):
+            def __init__(self, app):
+                self.app = app
+                self.app.withdraw()
 
-    # For Tkinter, we create a Tk object and call its withdraw method.
-    kernel.app = app = Tk()
-    kernel.app.withdraw()
-    for stream in kernel.shell_streams:
-        notifier = partial(process_stream_events, stream)
+        def process_stream_events(stream, *a, **kw):
+            """fall back to main loop when there's a socket event"""
+            if stream.flush(limit=1):
+                app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
+                app.quit()
+
+        # For Tkinter, we create a Tk object and call its withdraw method.
+        kernel.app_wrapper = BasicAppWrapper(app)
+
+        notifier = partial(process_stream_events, shell_stream)
         # seems to be needed for tk
-        notifier.__name__ = 'notifier'
-        app.tk.createfilehandler(stream.getsockopt(zmq.FD), READABLE, notifier)
+        notifier.__name__ = "notifier"
+        app.tk.createfilehandler(shell_stream.getsockopt(zmq.FD), READABLE, notifier)
         # schedule initial call after start
         app.after(0, notifier)
 
-    app.mainloop()
+        app.mainloop()
+
+    else:
+        doi = kernel.do_one_iteration
+        # Tk uses milliseconds
+        poll_interval = int(1000 * kernel._poll_interval)
+
+        class TimedAppWrapper(object):
+            def __init__(self, app, func):
+                self.app = app
+                self.app.withdraw()
+                self.func = func
+
+            def on_timer(self):
+                self.func()
+                self.app.after(poll_interval, self.on_timer)
+
+            def start(self):
+                self.on_timer()  # Call it once to get things going.
+                self.app.mainloop()
+
+        kernel.app_wrapper = TimedAppWrapper(app, doi)
+        kernel.app_wrapper.start()
 
 
 @loop_tk.exit
 def loop_tk_exit(kernel):
-    kernel.app.destroy()
+    kernel.app_wrapper.app.destroy()
 
 
 @register_integration('gtk')
@@ -302,10 +324,9 @@ def loop_cocoa(kernel):
                 # don't let interrupts during mainloop invoke crash_handler:
                 sys.excepthook = handle_int
                 mainloop(kernel._poll_interval)
-                for stream in kernel.shell_streams:
-                    if stream.flush(limit=1):
-                        # events to process, return control to kernel
-                        return
+                if kernel_shell_stream.flush(limit=1):
+                    # events to process, return control to kernel
+                    return
             except:
                 raise
         except KeyboardInterrupt:
@@ -343,11 +364,9 @@ def loop_asyncio(kernel):
         if stream.flush(limit=1):
             loop.stop()
 
-    for stream in kernel.shell_streams:
-        fd = stream.getsockopt(zmq.FD)
-        notifier = partial(process_stream_events, stream)
-        loop.add_reader(fd, notifier)
-        loop.call_soon(notifier)
+    notifier = partial(process_stream_events, shell_stream)
+    loop.add_reader(shell_stream.getsockopt(zmq.FD), notifier)
+    loop.call_soon(notifier)
 
     while True:
         error = None

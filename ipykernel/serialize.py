@@ -4,27 +4,30 @@
 # Distributed under the terms of the Modified BSD License.
 
 import warnings
-warnings.warn("ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize", DeprecationWarning)
+warnings.warn("ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize",
+    DeprecationWarning,
+    stacklevel=2
+)
 
-try:
-    import cPickle
-    pickle = cPickle
-except:
-    cPickle = None
-    import pickle
+import pickle
 
 from itertools import chain
 
-from ipython_genutils.py3compat import PY3, buffer_to_bytes_py2
-from ipykernel.pickleutil import (
-    can, uncan, can_sequence, uncan_sequence, CannedObject,
-    istype, sequence_types, PICKLE_PROTOCOL,
-)
+try:
+    # available since ipyparallel 5.0.0
+    from ipyparallel.serialize.canning import (
+        can, uncan, can_sequence, uncan_sequence, CannedObject,
+        istype, sequence_types,
+    )
+    from ipyparallel.serialize.serialize import PICKLE_PROTOCOL
+except ImportError:
+    # Deprecated since ipykernel 4.3.0
+    from ipykernel.pickleutil import (
+        can, uncan, can_sequence, uncan_sequence, CannedObject,
+        istype, sequence_types, PICKLE_PROTOCOL,
+    )
 from jupyter_client.session import MAX_ITEMS, MAX_BYTES
 
-
-if PY3:
-    buffer = memoryview
 
 #-----------------------------------------------------------------------------
 # Serialization Functions
@@ -44,8 +47,6 @@ def _extract_buffers(obj, threshold=MAX_BYTES):
             # because pickling buffer objects just results in broken pointers
             elif isinstance(buf, memoryview):
                 obj.buffers[i] = buf.tobytes()
-            elif isinstance(buf, buffer):
-                obj.buffers[i] = bytes(buf)
     return buffers
 
 def _restore_buffers(obj, buffers):
@@ -60,7 +61,6 @@ def serialize_object(obj, buffer_threshold=MAX_BYTES, item_threshold=MAX_ITEMS):
 
     Parameters
     ----------
-
     obj : object
         The object to be serialized
     buffer_threshold : int
@@ -98,18 +98,15 @@ def deserialize_object(buffers, g=None):
 
     Parameters
     ----------
-
-    bufs : list of buffers/bytes
-
+    buffers : list of buffers/bytes
     g : globals to be used when uncanning
 
     Returns
     -------
-
     (newobj, bufs) : unpacked object, and the list of remaining unused buffers.
     """
     bufs = list(buffers)
-    pobj = buffer_to_bytes_py2(bufs.pop(0))
+    pobj = bufs.pop(0)
     canned = pickle.loads(pobj)
     if istype(canned, sequence_types) and len(canned) < MAX_ITEMS:
         for c in canned:
@@ -164,9 +161,9 @@ def unpack_apply_message(bufs, g=None, copy=True):
     Returns: original f,args,kwargs"""
     bufs = list(bufs) # allow us to pop
     assert len(bufs) >= 2, "not enough buffers!"
-    pf = buffer_to_bytes_py2(bufs.pop(0))
+    pf = bufs.pop(0)
     f = uncan(pickle.loads(pf), g)
-    pinfo = buffer_to_bytes_py2(bufs.pop(0))
+    pinfo = bufs.pop(0)
     info = pickle.loads(pinfo)
     arg_bufs, kwarg_bufs = bufs[:info['narg_bufs']], bufs[info['narg_bufs']:]
 

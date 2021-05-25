@@ -3,8 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import absolute_import
-
 import json
 import sys
 from subprocess import Popen, PIPE
@@ -13,7 +11,6 @@ import warnings
 from IPython.core.profiledir import ProfileDir
 from IPython.paths import get_ipython_dir
 from ipython_genutils.path import filefind
-from ipython_genutils.py3compat import str_to_bytes, PY3
 
 import jupyter_client
 from jupyter_client import write_connection_file
@@ -39,8 +36,8 @@ def get_connection_file(app=None):
 
 def find_connection_file(filename='kernel-*.json', profile=None):
     """DEPRECATED: find a connection file, and return its absolute path.
-    
-    THIS FUNCTION IS DEPRECATED. Use juptyer_client.find_connection_file instead.
+
+    THIS FUNCTION IS DEPRECATED. Use jupyter_client.find_connection_file instead.
 
     Parameters
     ----------
@@ -83,7 +80,7 @@ def find_connection_file(filename='kernel-*.json', profile=None):
 
 def _find_connection_file(connection_file, profile=None):
     """Return the absolute path for a connection file
-    
+
     - If nothing specified, return current Kernel's connection file
     - If profile specified, show deprecation warning about finding connection files in profiles
     - Otherwise, call jupyter_client.find_connection_file
@@ -133,7 +130,7 @@ def get_connection_info(connection_file=None, unpack=False, profile=None):
     if unpack:
         info = json.loads(info)
         # ensure key is bytes:
-        info['key'] = str_to_bytes(info.get('key', ''))
+        info["key"] = info.get("key", "").encode()
     return info
 
 
@@ -170,10 +167,9 @@ def connect_qtconsole(connection_file=None, argv=None, profile=None):
     ])
 
     kwargs = {}
-    if PY3:
-        # Launch the Qt console in a separate session & process group, so
-        # interrupting the kernel doesn't kill it. This kwarg is not on Py2.
-        kwargs['start_new_session'] = True
+    # Launch the Qt console in a separate session & process group, so
+    # interrupting the kernel doesn't kill it.
+    kwargs['start_new_session'] = True
 
     return Popen([sys.executable, '-c', cmd, '--existing', cf] + argv,
         stdout=PIPE, stderr=PIPE, close_fds=(sys.platform != 'win32'),

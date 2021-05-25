@@ -3,18 +3,14 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from __future__ import print_function
-
 import atexit
 import os
 import sys
+from time import time
 
 from contextlib import contextmanager
+from queue import Empty
 from subprocess import PIPE, STDOUT
-try:
-    from queue import Empty  # Py 3
-except ImportError:
-    from Queue import Empty  # Py 2
 
 import nose
 
@@ -22,7 +18,7 @@ from jupyter_client import manager
 
 
 STARTUP_TIMEOUT = 60
-TIMEOUT = 15
+TIMEOUT = 60
 
 KM = None
 KC = None
@@ -33,11 +29,11 @@ def start_new_kernel(**kwargs):
 
     Integrates with our output capturing for tests.
     """
+    kwargs['stderr'] = STDOUT
     try:
-        stdout = nose.iptest_stdstreams_fileno()
+        kwargs['stdout'] = nose.iptest_stdstreams_fileno()
     except AttributeError:
-        stdout = open(os.devnull)
-    kwargs.update(dict(stdout=stdout, stderr=STDOUT))
+        pass
     return manager.start_new_kernel(startup_timeout=STARTUP_TIMEOUT, **kwargs)
 
 
@@ -47,14 +43,29 @@ def flush_channels(kc=None):
 
     if kc is None:
         kc = KC
-    for channel in (kc.shell_channel, kc.iopub_channel):
+    for get_msg in (kc.get_shell_msg, kc.get_iopub_msg):
         while True:
             try:
-                msg = channel.get_msg(block=True, timeout=0.1)
+                msg = get_msg(block=True, timeout=0.1)
             except Empty:
                 break
             else:
                 validate_message(msg)
+
+
+def get_reply(kc, msg_id, timeout=TIMEOUT, channel='shell'):
+    t0 = time()
+    while True:
+        get_msg = getattr(kc, f'get_{channel}_msg')
+        reply = get_msg(timeout=timeout)
+        if reply['parent_header']['msg_id'] == msg_id:
+            break
+        # Allow debugging ignored replies
+        print(f"Ignoring reply not to {msg_id}: {reply}")
+        t1 = time()
+        timeout -= t1 - t0
+        t0 = t1
+    return reply
 
 
 def execute(code='', kc=None, **kwargs):
@@ -63,7 +74,7 @@ def execute(code='', kc=None, **kwargs):
     if kc is None:
         kc = KC
     msg_id = kc.execute(code=code, **kwargs)
-    reply = kc.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(kc, msg_id, TIMEOUT)
     validate_message(reply, 'execute_reply', msg_id)
     busy = kc.get_iopub_msg(timeout=TIMEOUT)
     validate_message(busy, 'status', msg_id)
@@ -131,18 +142,21 @@ def new_kernel(argv=None):
     -------
     kernel_client: connected KernelClient instance
     """
-    stdout = getattr(nose, 'iptest_stdstreams_fileno', open(os.devnull))
-    kwargs = dict(stdout=stdout, stderr=STDOUT)
+    kwargs = {'stderr': STDOUT}
+    try:
+        kwargs['stdout'] = nose.iptest_stdstreams_fileno()
+    except AttributeError:
+        pass
     if argv is not None:
         kwargs['extra_arguments'] = argv
     return manager.run_kernel(**kwargs)
 
-def assemble_output(iopub):
+def assemble_output(get_msg):
     """assemble stdout/err from an execution"""
     stdout = ''
     stderr = ''
     while True:
-        msg = iopub.get_msg(block=True, timeout=1)
+        msg = get_msg(block=True, timeout=1)
         msg_type = msg['msg_type']
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':
@@ -162,7 +176,7 @@ def assemble_output(iopub):
 
 def wait_for_idle(kc):
     while True:
-        msg = kc.iopub_channel.get_msg(block=True, timeout=1)
+        msg = kc.get_iopub_msg(block=True, timeout=1)
         msg_type = msg['msg_type']
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':

@@ -49,10 +49,10 @@ class InProcessKernel(IPythonKernel):
     #-------------------------------------------------------------------------
 
     shell_class = Type(allow_none=True)
-    shell_streams = List()
-    control_stream = Any()
     _underlying_iopub_socket = Instance(DummySocket, ())
     iopub_thread = Instance(IOPubThread)
+
+    shell_stream = Instance(DummySocket, ())
 
     @default('iopub_thread')
     def _default_iopub_thread(self):
@@ -74,17 +74,21 @@ class InProcessKernel(IPythonKernel):
         self._underlying_iopub_socket.observe(self._io_dispatch, names=['message_sent'])
         self.shell.kernel = self
 
-    def execute_request(self, stream, ident, parent):
+    async def execute_request(self, stream, ident, parent):
         """ Override for temporary IO redirection. """
         with self._redirected_io():
-            super(InProcessKernel, self).execute_request(stream, ident, parent)
+            await super(InProcessKernel, self).execute_request(stream, ident, parent)
 
     def start(self):
         """ Override registration of dispatchers for streams. """
         self.shell.exit_now = False
 
-    def _abort_queues(self):
+    async def _abort_queues(self):
         """ The in-process kernel doesn't abort requests. """
+        pass
+
+    async def _flush_control_queue(self):
+        """No need to flush control queues for in-process"""
         pass
 
     def _input_request(self, prompt, ident, parent, password=False):
@@ -95,7 +99,7 @@ class InProcessKernel(IPythonKernel):
 
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))
-        msg = self.session.msg(u'input_request', content, parent)
+        msg = self.session.msg('input_request', content, parent)
         for frontend in self.frontends:
             if frontend.session.session == parent['header']['session']:
                 frontend.stdin_channel.call_handlers(msg)
@@ -148,11 +152,11 @@ class InProcessKernel(IPythonKernel):
 
     @default('stdout')
     def _default_stdout(self):
-        return OutStream(self.session, self.iopub_thread, u'stdout')
+        return OutStream(self.session, self.iopub_thread, 'stdout')
 
     @default('stderr')
     def _default_stderr(self):
-        return OutStream(self.session, self.iopub_thread, u'stderr')
+        return OutStream(self.session, self.iopub_thread, 'stderr')
 
 #-----------------------------------------------------------------------------
 # Interactive shell subclass

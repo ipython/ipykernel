@@ -5,11 +5,7 @@ import os
 import shutil
 import sys
 import tempfile
-
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+from unittest.mock import patch
 
 from jupyter_core import paths as jpaths
 from IPython import paths as ipaths

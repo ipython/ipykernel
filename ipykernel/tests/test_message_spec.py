@@ -6,10 +6,7 @@
 import re
 import sys
 from distutils.version import LooseVersion as V
-try:
-    from queue import Empty  # Py 3
-except ImportError:
-    from Queue import Empty  # Py 2
+from queue import Empty
 
 import nose.tools as nt
 from nose.plugins.skip import SkipTest
@@ -17,9 +14,9 @@ from nose.plugins.skip import SkipTest
 from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum
 )
-from ipython_genutils.py3compat import string_types, iteritems
 
-from .utils import TIMEOUT, start_global_kernel, flush_channels, execute
+from .utils import (TIMEOUT, start_global_kernel, flush_channels, execute,
+                   get_reply, )
 
 #-----------------------------------------------------------------------------
 # Globals
@@ -99,14 +96,14 @@ class MimeBundle(Reference):
     metadata = Dict()
     data = Dict()
     def _data_changed(self, name, old, new):
-        for k,v in iteritems(new):
+        for k,v in new.items():
             assert mime_pat.match(k)
-            assert isinstance(v, string_types)
+            assert isinstance(v, str)
 
 
 # shell replies
 class Reply(Reference):
-    status = Enum((u'ok', u'error'), default_value=u'ok')
+    status = Enum(('ok', 'error'), default_value='ok')
 
 
 class ExecuteReply(Reply):
@@ -118,6 +115,8 @@ class ExecuteReply(Reply):
             ExecuteReplyOkay().check(d)
         elif d['status'] == 'error':
             ExecuteReplyError().check(d)
+        elif d['status'] == 'aborted':
+            ExecuteReplyAborted().check(d)
 
 
 class ExecuteReplyOkay(Reply):
@@ -126,9 +125,14 @@ class ExecuteReplyOkay(Reply):
 
 
 class ExecuteReplyError(Reply):
+    status = Enum(('error',))
     ename = Unicode()
     evalue = Unicode()
     traceback = List(Unicode())
+
+
+class ExecuteReplyAborted(Reply):
+    status = Enum(('aborted',))
 
 
 class InspectReply(Reply, MimeBundle):
@@ -143,7 +147,7 @@ class ArgSpec(Reference):
 
 
 class Status(Reference):
-    execution_state = Enum((u'busy', u'idle', u'starting'), default_value=u'busy')
+    execution_state = Enum(('busy', 'idle', 'starting'), default_value='busy')
 
 
 class CompleteReply(Reply):
@@ -183,7 +187,7 @@ class CommInfoReply(Reply):
 
 
 class IsCompleteReply(Reference):
-    status = Enum((u'complete', u'incomplete', u'invalid', u'unknown'), default_value=u'complete')
+    status = Enum(('complete', 'incomplete', 'invalid', 'unknown'), default_value='complete')
 
     def check(self, d):
         Reference.check(self, d)
@@ -208,7 +212,7 @@ class Error(ExecuteReplyError):
 
 
 class Stream(Reference):
-    name = Enum((u'stdout', u'stderr'), default_value=u'stdout')
+    name = Enum(('stdout', 'stderr'), default_value='stdout')
     text = Unicode()
 
 
@@ -275,7 +279,7 @@ def test_execute():
     flush_channels()
 
     msg_id = KC.execute(code='x=1')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'execute_reply', msg_id)
 
 
@@ -284,21 +288,21 @@ def test_execute_silent():
     msg_id, reply = execute(code='x=1', silent=True)
 
     # flush status=idle
-    status = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    status = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(status, 'status', msg_id)
     assert status['content']['execution_state'] == 'idle'
 
-    nt.assert_raises(Empty, KC.iopub_channel.get_msg, timeout=0.1)
+    nt.assert_raises(Empty, KC.get_iopub_msg, timeout=0.1)
     count = reply['execution_count']
 
     msg_id, reply = execute(code='x=2', silent=True)
 
     # flush status=idle
-    status = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    status = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(status, 'status', msg_id)
     assert status['content']['execution_state'] == 'idle'
 
-    nt.assert_raises(Empty, KC.iopub_channel.get_msg, timeout=0.1)
+    nt.assert_raises(Empty, KC.get_iopub_msg, timeout=0.1)
     count_2 = reply['execution_count']
     assert count_2 == count
 
@@ -310,7 +314,7 @@ def test_execute_error():
     assert reply['status'] == 'error'
     assert reply['ename'] == 'ZeroDivisionError'
 
-    error = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    error = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(error, 'error', msg_id)
 
 
@@ -352,15 +356,39 @@ def test_execute_stop_on_error():
     assert reply['content']['status'] == 'ok'
 
 
+def test_non_execute_stop_on_error():
+    """test that non-execute_request's are not aborted after an error"""
+    flush_channels()
+
+    fail = '\n'.join([
+        # sleep to ensure subsequent message is waiting in the queue to be aborted
+        'import time',
+        'time.sleep(0.5)',
+        'raise ValueError',
+    ])
+    KC.execute(code=fail)
+    KC.kernel_info()
+    KC.comm_info()
+    KC.inspect(code="print")
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # execute
+    assert reply['content']['status'] == 'error'
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # kernel_info
+    assert reply['content']['status'] == 'ok'
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # comm_info
+    assert reply['content']['status'] == 'ok'
+    reply = KC.get_shell_msg(timeout=TIMEOUT) # inspect
+    assert reply['content']['status'] == 'ok'
+
+
 def test_user_expressions():
     flush_channels()
 
     msg_id, reply = execute(code='x=1', user_expressions=dict(foo='x+1'))
     user_expressions = reply['user_expressions']
-    nt.assert_equal(user_expressions, {u'foo': {
-        u'status': u'ok',
-        u'data': {u'text/plain': u'2'},
-        u'metadata': {},
+    nt.assert_equal(user_expressions, {'foo': {
+        'status': 'ok',
+        'data': {'text/plain': '2'},
+        'metadata': {},
     }})
 
 
@@ -378,7 +406,7 @@ def test_oinfo():
     flush_channels()
 
     msg_id = KC.inspect('a')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
 
 
@@ -388,7 +416,7 @@ def test_oinfo_found():
     msg_id, reply = execute(code='a=5')
 
     msg_id = KC.inspect('a')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
     content = reply['content']
     assert content['found']
@@ -403,7 +431,7 @@ def test_oinfo_detail():
     msg_id, reply = execute(code='ip=get_ipython()')
 
     msg_id = KC.inspect('ip.object_inspect', cursor_pos=10, detail_level=1)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
     content = reply['content']
     assert content['found']
@@ -416,7 +444,7 @@ def test_oinfo_not_found():
     flush_channels()
 
     msg_id = KC.inspect('dne')
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'inspect_reply', msg_id)
     content = reply['content']
     assert not content['found']
@@ -428,7 +456,7 @@ def test_complete():
     msg_id, reply = execute(code="alpha = albert = 5")
 
     msg_id = KC.complete('al', 2)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'complete_reply', msg_id)
     matches = reply['content']['matches']
     for name in ('alpha', 'albert'):
@@ -439,7 +467,7 @@ def test_kernel_info_request():
     flush_channels()
 
     msg_id = KC.kernel_info()
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'kernel_info_reply', msg_id)
 
 
@@ -450,7 +478,7 @@ def test_connect_request():
     return msg['header']['msg_id']
 
     msg_id = KC.kernel_info()
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'connect_reply', msg_id)
 
 
@@ -459,7 +487,7 @@ def test_comm_info_request():
     if not hasattr(KC, 'comm_info'):
         raise SkipTest()
     msg_id = KC.comm_info()
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'comm_info_reply', msg_id)
 
 
@@ -485,7 +513,7 @@ def test_is_complete():
     flush_channels()
 
     msg_id = KC.is_complete("a = 1")
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'is_complete_reply', msg_id)
 
 def test_history_range():
@@ -495,7 +523,7 @@ def test_history_range():
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'range', raw = True, output = True, start = 1, stop = 2, session = 0)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
     assert len(content['history']) == 1
@@ -507,7 +535,7 @@ def test_history_tail():
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'tail', raw = True, output = True, n = 1, session = 0)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
     assert len(content['history']) == 1
@@ -519,7 +547,7 @@ def test_history_search():
     reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'search', raw = True, output = True, n = 1, pattern = '*', session = 0)
-    reply = KC.get_shell_msg(timeout=TIMEOUT)
+    reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'history_reply', msg_id)
     content = reply['content']
     assert len(content['history']) == 1
@@ -532,18 +560,18 @@ def test_stream():
 
     msg_id, reply = execute("print('hi')")
 
-    stdout = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    stdout = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(stdout, 'stream', msg_id)
     content = stdout['content']
-    assert content['text'] == u'hi\n'
+    assert content['text'] == 'hi\n'
 
 
 def test_display_data():
     flush_channels()
 
-    msg_id, reply = execute("from IPython.core.display import display; display(1)")
+    msg_id, reply = execute("from IPython.display import display; display(1)")
 
-    display = KC.iopub_channel.get_msg(timeout=TIMEOUT)
+    display = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(display, 'display_data', parent=msg_id)
     data = display['content']['data']
-    assert data['text/plain'] == u'1'
+    assert data['text/plain'] == '1'

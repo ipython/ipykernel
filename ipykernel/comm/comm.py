@@ -66,14 +66,14 @@ class Comm(LoggingConfigurable):
         self.kernel.session.send(self.kernel.iopub_socket, msg_type,
             content,
             metadata=json_clean(metadata),
-            parent=self.kernel._parent_header,
+            parent=self.kernel.get_parent("shell"),
             ident=self.topic,
             buffers=buffers,
         )
 
     def __del__(self):
         """trigger close on gc"""
-        self.close()
+        self.close(deleting=True)
 
     # publishing messages
 
@@ -98,7 +98,7 @@ class Comm(LoggingConfigurable):
             comm_manager.unregister_comm(self)
             raise
 
-    def close(self, data=None, metadata=None, buffers=None):
+    def close(self, data=None, metadata=None, buffers=None, deleting=False):
         """Close the frontend-side version of this comm"""
         if self._closed:
             # only close once
@@ -113,7 +113,9 @@ class Comm(LoggingConfigurable):
         self._publish_msg('comm_close',
             data=data, metadata=metadata, buffers=buffers,
         )
-        self.kernel.comm_manager.unregister_comm(self)
+        if not deleting:
+            # If deleting, the comm can't be registered
+            self.kernel.comm_manager.unregister_comm(self)
 
     def send(self, data=None, metadata=None, buffers=None):
         """Send a message to the frontend-side version of this comm"""

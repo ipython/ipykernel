@@ -1,32 +1,35 @@
-# coding: utf-8
 """test the IPython Kernel"""
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import ast
 import io
 import os.path
 import sys
 import time
 
 import nose.tools as nt
+from flaky import flaky
+import pytest
+from packaging import version
 
 from IPython.testing import decorators as dec, tools as tt
-from ipython_genutils import py3compat
+import IPython
 from IPython.paths import locate_profile
 from ipython_genutils.tempdir import TemporaryDirectory
 
 from .utils import (
     new_kernel, kernel, TIMEOUT, assemble_output, execute,
-    flush_channels, wait_for_idle,
+    flush_channels, wait_for_idle, get_reply,
 )
 
 
 def _check_master(kc, expected=True, stream="stdout"):
     execute(kc=kc, code="import sys")
     flush_channels(kc)
-    msg_id, content = execute(kc=kc, code="print (sys.%s._is_master_process())" % stream)
-    stdout, stderr = assemble_output(kc.iopub_channel)
+    msg_id, content = execute(kc=kc, code="print(sys.%s._is_master_process())" % stream)
+    stdout, stderr = assemble_output(kc.get_iopub_msg)
     assert stdout.strip() == repr(expected)
 
 
@@ -41,40 +44,82 @@ def _check_status(content):
 def test_simple_print():
     """simple print statement in kernel"""
     with kernel() as kc:
-        iopub = kc.iopub_channel
-        msg_id, content = execute(kc=kc, code="print ('hi')")
-        stdout, stderr = assemble_output(iopub)
+        msg_id, content = execute(kc=kc, code="print('hi')")
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == 'hi\n'
         assert stderr == ''
+        _check_master(kc, expected=True)
+
+
+@pytest.mark.skip(
+    reason="Currently don't capture during test as pytest does its own capturing"
+)
+def test_capture_fd():
+    """simple print statement in kernel"""
+    with kernel() as kc:
+        iopub = kc.iopub_channel
+        msg_id, content = execute(kc=kc, code="import os; os.system('echo capsys')")
+        stdout, stderr = assemble_output(iopub)
+        assert stdout == "capsys\n"
+        assert stderr == ""
+        _check_master(kc, expected=True)
+
+
+@pytest.mark.skip(
+    reason="Currently don't capture during test as pytest does its own capturing"
+)
+def test_subprocess_peek_at_stream_fileno():
+    """"""
+    with kernel() as kc:
+        iopub = kc.iopub_channel
+        msg_id, content = execute(
+            kc=kc,
+            code="import subprocess, sys; subprocess.run(['python', '-c', 'import os; os.system(\"echo CAP1\"); print(\"CAP2\")'], stderr=sys.stderr)",
+        )
+        stdout, stderr = assemble_output(iopub)
+        assert stdout == "CAP1\nCAP2\n"
+        assert stderr == ""
         _check_master(kc, expected=True)
 
 
 def test_sys_path():
     """test that sys.path doesn't get messed up by default"""
     with kernel() as kc:
-        msg_id, content = execute(kc=kc, code="import sys; print (repr(sys.path[0]))")
-        stdout, stderr = assemble_output(kc.iopub_channel)
-        assert stdout == "''\n"
+        msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
+    # for error-output on failure
+    sys.stderr.write(stderr)
+
+    sys_path = ast.literal_eval(stdout.strip())
+    assert '' in sys_path
+
 
 def test_sys_path_profile_dir():
     """test that sys.path doesn't get messed up when `--profile-dir` is specified"""
 
     with new_kernel(['--profile-dir', locate_profile('default')]) as kc:
-        msg_id, content = execute(kc=kc, code="import sys; print (repr(sys.path[0]))")
-        stdout, stderr = assemble_output(kc.iopub_channel)
-        assert stdout == "''\n"
+        msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
+    # for error-output on failure
+    sys.stderr.write(stderr)
 
-@dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
+    sys_path = ast.literal_eval(stdout.strip())
+    assert '' in sys_path
+
+
+@flaky(max_runs=3)
+@dec.skipif(
+    sys.platform == 'win32' or (sys.platform == "darwin" and sys.version_info >=(3, 8)),
+    "subprocess prints fail on Windows and MacOS Python 3.8+"
+)
 def test_subprocess_print():
     """printing from forked mp.Process"""
     with new_kernel() as kc:
-        iopub = kc.iopub_channel
 
         _check_master(kc, expected=True)
         flush_channels(kc)
         np = 5
         code = '\n'.join([
-            "from __future__ import print_function",
             "import time",
             "import multiprocessing as mp",
             "pool = [mp.Process(target=print, args=('hello', i,)) for i in range(%i)]" % np,
@@ -84,7 +129,7 @@ def test_subprocess_print():
         ])
 
         msg_id, content = execute(kc=kc, code=code)
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         nt.assert_equal(stdout.count("hello"), np, stdout)
         for n in range(np):
             nt.assert_equal(stdout.count(str(n)), 1, stdout)
@@ -93,10 +138,10 @@ def test_subprocess_print():
         _check_master(kc, expected=True, stream="stderr")
 
 
+@flaky(max_runs=3)
 def test_subprocess_noprint():
     """mp.Process without print doesn't trigger iostream mp_mode"""
     with kernel() as kc:
-        iopub = kc.iopub_channel
 
         np = 5
         code = '\n'.join([
@@ -107,7 +152,7 @@ def test_subprocess_noprint():
         ])
 
         msg_id, content = execute(kc=kc, code=code)
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == ''
         assert stderr == ''
 
@@ -115,11 +160,14 @@ def test_subprocess_noprint():
         _check_master(kc, expected=True, stream="stderr")
 
 
-@dec.skipif(sys.platform == 'win32', "subprocess prints fail on Windows")
+@flaky(max_runs=3)
+@dec.skipif(
+    sys.platform == 'win32' or (sys.platform == "darwin" and sys.version_info >=(3, 8)),
+    "subprocess prints fail on Windows and MacOS Python 3.8+"
+)
 def test_subprocess_error():
     """error in mp.Process doesn't crash"""
     with new_kernel() as kc:
-        iopub = kc.iopub_channel
 
         code = '\n'.join([
             "import multiprocessing as mp",
@@ -129,7 +177,7 @@ def test_subprocess_error():
         ])
 
         msg_id, content = execute(kc=kc, code=code)
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == ''
         assert "ValueError" in stderr
 
@@ -139,45 +187,24 @@ def test_subprocess_error():
 # raw_input tests
 
 def test_raw_input():
-    """test [raw_]input"""
+    """test input"""
     with kernel() as kc:
         iopub = kc.iopub_channel
 
-        input_f = "input" if py3compat.PY3 else "raw_input"
+        input_f = "input"
         theprompt = "prompt> "
         code = 'print({input_f}("{theprompt}"))'.format(**locals())
         msg_id = kc.execute(code, allow_stdin=True)
         msg = kc.get_stdin_msg(block=True, timeout=TIMEOUT)
-        assert msg['header']['msg_type'] == u'input_request'
+        assert msg['header']['msg_type'] == 'input_request'
         content = msg['content']
         assert content['prompt'] == theprompt
         text = "some text"
         kc.input(text)
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
-        stdout, stderr = assemble_output(iopub)
+        stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == text + "\n"
-
-
-@dec.skipif(py3compat.PY3)
-def test_eval_input():
-    """test input() on Python 2"""
-    with kernel() as kc:
-        iopub = kc.iopub_channel
-
-        input_f = "input" if py3compat.PY3 else "raw_input"
-        theprompt = "prompt> "
-        code = 'print(input("{theprompt}"))'.format(**locals())
-        msg_id = kc.execute(code, allow_stdin=True)
-        msg = kc.get_stdin_msg(block=True, timeout=TIMEOUT)
-        assert msg['header']['msg_type'] == u'input_request'
-        content = msg['content']
-        assert content['prompt'] == theprompt
-        kc.input("1+1")
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
-        assert reply['content']['status'] == 'ok'
-        stdout, stderr = assemble_output(iopub)
-        assert stdout == "2\n"
 
 
 def test_save_history():
@@ -185,23 +212,23 @@ def test_save_history():
     # unicode problems on Python 2.
     with kernel() as kc, TemporaryDirectory() as td:
         file = os.path.join(td, 'hist.out')
-        execute(u'a=1', kc=kc)
+        execute('a=1', kc=kc)
         wait_for_idle(kc)
-        execute(u'b=u"abcþ"', kc=kc)
+        execute('b="abcþ"', kc=kc)
         wait_for_idle(kc)
         _, reply = execute("%hist -f " + file, kc=kc)
         assert reply['status'] == 'ok'
         with io.open(file, encoding='utf-8') as f:
             content = f.read()
-        assert u'a=1' in content
-        assert u'b=u"abcþ"' in content
+        assert 'a=1' in content
+        assert 'b="abcþ"' in content
 
 
 @dec.skip_without('faulthandler')
 def test_smoke_faulthandler():
     with kernel() as kc:
         # Note: faulthandler.register is not available on windows.
-        code = u'\n'.join([
+        code = '\n'.join([
             'import sys',
             'import faulthandler',
             'import signal',
@@ -241,21 +268,31 @@ def test_is_complete():
         assert reply['content']['status'] == 'complete'
 
 
+@dec.skipif(sys.platform != 'win32', "only run on Windows")
 def test_complete():
     with kernel() as kc:
-        execute(u'a = 1', kc=kc)
+        execute('a = 1', kc=kc)
         wait_for_idle(kc)
         cell = 'import IPython\nb = a.'
         kc.complete(cell)
         reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
-        c = reply['content']
-        assert c['status'] == 'ok'
-        assert c['cursor_start'] == cell.find('a.')
-        assert c['cursor_end'] == cell.find('a.') + 2
-        matches = c['matches']
-        nt.assert_greater(len(matches), 0)
-        for match in matches:
-            assert match[:2] == 'a.'
+
+    c = reply['content']
+    assert c['status'] == 'ok'
+    start = cell.find('a.')
+    end = start + 2
+    assert c['cursor_end'] == cell.find('a.') + 2
+    assert c['cursor_start'] <= end
+
+    # there are many right answers for cursor_start,
+    # so verify application of the completion
+    # rather than the value of cursor_start
+
+    matches = c['matches']
+    assert matches
+    for m in matches:
+        completed = cell[:c['cursor_start']] + m
+        assert completed.startswith(cell)
 
 
 @dec.skip_without('matplotlib')
@@ -293,16 +330,135 @@ def test_message_order():
             assert reply['parent_header']['msg_id'] == msg_id
 
 
+@dec.skipif(sys.platform.startswith('linux') or sys.platform.startswith('darwin'))
+def test_unc_paths():
+    with kernel() as kc, TemporaryDirectory() as td:
+        drive_file_path = os.path.join(td, 'unc.txt')
+        with open(drive_file_path, 'w+') as f:
+            f.write('# UNC test')
+        unc_root = '\\\\localhost\\C$'
+        file_path = os.path.splitdrive(os.path.dirname(drive_file_path))[1]
+        unc_file_path = os.path.join(unc_root, file_path[1:])
+
+        kc.execute("cd {0:s}".format(unc_file_path))
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+        out, err = assemble_output(kc.get_iopub_msg)
+        assert unc_file_path in out
+
+        flush_channels(kc)
+        kc.execute(code="ls")
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+        out, err = assemble_output(kc.get_iopub_msg)
+        assert 'unc.txt' in out
+
+        kc.execute(code="cd")
+        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        assert reply['content']['status'] == 'ok'
+
+
 def test_shutdown():
     """Kernel exits after polite shutdown_request"""
     with new_kernel() as kc:
         km = kc.parent
-        execute(u'a = 1', kc=kc)
+        execute('a = 1', kc=kc)
         wait_for_idle(kc)
         kc.shutdown()
-        for i in range(100): # 10s timeout
+        for i in range(300): # 30s timeout
             if km.is_alive():
                 time.sleep(.1)
             else:
                 break
         assert not km.is_alive()
+
+
+def test_interrupt_during_input():
+    """
+    The kernel exits after being interrupted while waiting in input().
+
+    input() appears to have issues other functions don't, and it needs to be
+    interruptible in order for pdb to be interruptible.
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id = kc.execute("input()")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+        from .test_message_spec import validate_message
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = get_reply(kc, msg_id, TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id)
+
+
+@pytest.mark.skipif(
+    version.parse(IPython.__version__) < version.parse("7.14.0"),
+    reason="Need new IPython"
+)
+def test_interrupt_during_pdb_set_trace():
+    """
+    The kernel exits after being interrupted while waiting in pdb.set_trace().
+
+    Merely testing input() isn't enough, pdb has its own issues that need
+    to be handled in addition.
+
+    This test will fail with versions of IPython < 7.14.0.
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id = kc.execute("import pdb; pdb.set_trace()")
+        msg_id2 = kc.execute("3 + 4")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+        from .test_message_spec import validate_message
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = get_reply(kc, msg_id, TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id)
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = get_reply(kc, msg_id2, TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id2)
+
+
+def test_control_thread_priority():
+
+    N = 5
+    with new_kernel() as kc:
+        msg_id = kc.execute("pass")
+        get_reply(kc, msg_id)
+
+        sleep_msg_id = kc.execute("import asyncio; await asyncio.sleep(2)")
+
+        # submit N shell messages
+        shell_msg_ids = []
+        for i in range(N):
+            shell_msg_ids.append(kc.execute(f"i = {i}"))
+
+        # ensure all shell messages have arrived at the kernel before any control messages
+        time.sleep(0.5)
+        # at this point, shell messages should be waiting in msg_queue,
+        # rather than zmq while the kernel is still in the middle of processing
+        # the first execution
+
+        # now send N control messages
+        control_msg_ids = []
+        for i in range(N):
+            msg = kc.session.msg("kernel_info_request", {})
+            kc.control_channel.send(msg)
+            control_msg_ids.append(msg["header"]["msg_id"])
+
+        # finally, collect the replies on both channels for comparison
+        sleep_reply = get_reply(kc, sleep_msg_id)
+        shell_replies = []
+        for msg_id in shell_msg_ids:
+            shell_replies.append(get_reply(kc, msg_id))
+
+        control_replies = []
+        for msg_id in control_msg_ids:
+            control_replies.append(get_reply(kc, msg_id, channel="control"))
+
+    # verify that all control messages were handled before all shell messages
+    shell_dates = [msg["header"]["date"] for msg in shell_replies]
+    control_dates = [msg["header"]["date"] for msg in control_replies]
+    # comparing first to last ought to be enough, since queues preserve order
+    # use <= in case of very-fast handling and/or low resolution timers
+    assert control_dates[-1] <= shell_dates[0]

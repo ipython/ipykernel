@@ -1,6 +1,7 @@
 """The IPython kernel implementation"""
 
 import asyncio
+import builtins
 from contextlib import contextmanager
 from functools import partial
 import getpass
@@ -8,14 +9,16 @@ import signal
 import sys
 
 from IPython.core import release
-from ipython_genutils.py3compat import builtin_mod, PY3, unicode_type, safe_unicode
 from IPython.utils.tokenutil import token_at_cursor, line_at_cursor
-from tornado import gen
-from traitlets import Instance, Type, Any, List, Bool
+from traitlets import Instance, Type, Any, List, Bool, observe, observe_compat
+from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
+from .eventloops import _use_appnope
+from .debugger import Debugger
+from .compiler import XCachingCompiler
 
 try:
     from IPython.core.interactiveshell import _asyncio_runner
@@ -40,15 +43,21 @@ class IPythonKernel(KernelBase):
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
     ).tag(config=True)
 
+    debugpy_stream = Instance(ZMQStream, allow_none=True)
+
     user_module = Any()
-    def _user_module_changed(self, name, old, new):
+    @observe('user_module')
+    @observe_compat
+    def _user_module_changed(self, change):
         if self.shell is not None:
-            self.shell.user_module = new
+            self.shell.user_module = change['new']
 
     user_ns = Instance(dict, args=None, allow_none=True)
-    def _user_ns_changed(self, name, old, new):
+    @observe('user_ns')
+    @observe_compat
+    def _user_ns_changed(self, change):
         if self.shell is not None:
-            self.shell.user_ns = new
+            self.shell.user_ns = change['new']
             self.shell.init_user_ns()
 
     # A reference to the Python builtin 'raw_input' function.
@@ -59,12 +68,20 @@ class IPythonKernel(KernelBase):
     def __init__(self, **kwargs):
         super(IPythonKernel, self).__init__(**kwargs)
 
+        # Initialize the Debugger
+        self.debugger = Debugger(self.log,
+                                 self.debugpy_stream,
+                                 self._publish_debug_event,
+                                 self.debug_shell_socket,
+                                 self.session)
+
         # Initialize the InteractiveShell subclass
         self.shell = self.shell_class.instance(parent=self,
             profile_dir = self.profile_dir,
             user_module = self.user_module,
             user_ns     = self.user_ns,
             kernel      = self,
+            compiler_class = XCachingCompiler,
         )
         self.shell.displayhook.session = self.session
         self.shell.displayhook.pub_socket = self.iopub_socket
@@ -78,6 +95,11 @@ class IPythonKernel(KernelBase):
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
+
+        if _use_appnope() and self._darwin_app_nap:
+            # Disable app-nap as the kernel is not a gui but can have guis
+            import appnope
+            appnope.nope()
 
     help_links = List([
         {
@@ -121,10 +143,16 @@ class IPythonKernel(KernelBase):
             'name': 'ipython',
             'version': sys.version_info[0]
         },
-        'pygments_lexer': 'ipython%d' % (3 if PY3 else 2),
+        'pygments_lexer': 'ipython%d' % 3,
         'nbconvert_exporter': 'python',
         'file_extension': '.py'
     }
+
+    def dispatch_debugpy(self, msg):
+        # The first frame is the socket id, we can drop it
+        frame = msg[1].bytes.decode('utf-8')
+        self.log.debug("Debugpy received: %s", frame)
+        self.debugger.tcp_client.receive_dap_frame(frame)
 
     @property
     def banner(self):
@@ -132,14 +160,19 @@ class IPythonKernel(KernelBase):
 
     def start(self):
         self.shell.exit_now = False
+        if self.debugpy_stream is None:
+            self.log.warning("debugpy_stream undefined, debugging will not be enabled")
+        else:
+            self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
         super(IPythonKernel, self).start()
 
-    def set_parent(self, ident, parent):
+    def set_parent(self, ident, parent, channel='shell'):
         """Overridden from parent to tell the display hook and output streams
         about the parent message.
         """
-        super(IPythonKernel, self).set_parent(ident, parent)
-        self.shell.set_parent(parent)
+        super(IPythonKernel, self).set_parent(ident, parent, channel)
+        if channel == 'shell':
+            self.shell.set_parent(parent)
 
     def init_metadata(self, parent):
         """Initialize metadata.
@@ -175,24 +208,15 @@ class IPythonKernel(KernelBase):
         """
         self._allow_stdin = allow_stdin
 
-        if PY3:
-            self._sys_raw_input = builtin_mod.input
-            builtin_mod.input = self.raw_input
-        else:
-            self._sys_raw_input = builtin_mod.raw_input
-            self._sys_eval_input = builtin_mod.input
-            builtin_mod.raw_input = self.raw_input
-            builtin_mod.input = lambda prompt='': eval(self.raw_input(prompt))
+        self._sys_raw_input = builtins.input
+        builtins.input = self.raw_input
+
         self._save_getpass = getpass.getpass
         getpass.getpass = self.getpass
 
     def _restore_input(self):
         """Restore raw_input, getpass"""
-        if PY3:
-            builtin_mod.input = self._sys_raw_input
-        else:
-            builtin_mod.raw_input = self._sys_raw_input
-            builtin_mod.input = self._sys_eval_input
+        builtins.input = self._sys_raw_input
 
         getpass.getpass = self._save_getpass
 
@@ -253,9 +277,8 @@ class IPythonKernel(KernelBase):
             # restore the previous sigint handler
             signal.signal(signal.SIGINT, save_sigint)
 
-    @gen.coroutine
-    def do_execute(self, code, silent, store_history=True,
-                   user_expressions=None, allow_stdin=False):
+    async def do_execute(self, code, silent, store_history=True,
+                         user_expressions=None, allow_stdin=False):
         shell = self.shell # we'll need this a lot here
 
         self._forward_input(allow_stdin)
@@ -268,25 +291,43 @@ class IPythonKernel(KernelBase):
             should_run_async = lambda cell: False
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
-            @gen.coroutine
-            def run_cell(*args, **kwargs):
+            async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
         try:
 
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
             # not just asyncio
+            preprocessing_exc_tuple = None
+            try:
+                transformed_cell = self.shell.transform_cell(code)
+            except Exception:
+                transformed_cell = code
+                preprocessing_exc_tuple = sys.exc_info()
+
             if (
                 _asyncio_runner
-                and should_run_async(code)
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
+                and should_run_async(code, transformed_cell=transformed_cell, preprocessing_exc_tuple=preprocessing_exc_tuple)
             ):
-                coro = run_cell(code, store_history=store_history, silent=silent)
+                coro = run_cell(
+                    code,
+                    store_history=store_history,
+                    silent=silent,
+                    transformed_cell=transformed_cell,
+                    preprocessing_exc_tuple=preprocessing_exc_tuple
+                )
                 coro_future = asyncio.ensure_future(coro)
 
                 with self._cancel_on_sigint(coro_future):
-                    res = yield coro_future
+                    res = None
+                    try:
+                        res = await coro_future
+                    finally:
+                        shell.events.trigger('post_execute')
+                        if not silent:
+                            shell.events.trigger('post_run_cell', res)
             else:
                 # runner isn't already running,
                 # make synchronous call,
@@ -301,14 +342,14 @@ class IPythonKernel(KernelBase):
             err = res.error_in_exec
 
         if res.success:
-            reply_content[u'status'] = u'ok'
+            reply_content['status'] = 'ok'
         else:
-            reply_content[u'status'] = u'error'
+            reply_content['status'] = 'error'
 
             reply_content.update({
-                u'traceback': shell._last_traceback or [],
-                u'ename': unicode_type(type(err).__name__),
-                u'evalue': safe_unicode(err),
+                'traceback': shell._last_traceback or [],
+                'ename': str(type(err).__name__),
+                'evalue': str(err),
             })
 
             # FIXME: deprecated piece for ipyparallel (remove in 5.0):
@@ -327,16 +368,16 @@ class IPythonKernel(KernelBase):
         # At this point, we can tell whether the main code execution succeeded
         # or not.  If it did, we proceed to evaluate user_expressions
         if reply_content['status'] == 'ok':
-            reply_content[u'user_expressions'] = \
+            reply_content['user_expressions'] = \
                          shell.user_expressions(user_expressions or {})
         else:
             # If there was an error, don't even try to compute expressions
-            reply_content[u'user_expressions'] = {}
+            reply_content['user_expressions'] = {}
 
         # Payloads should be retrieved regardless of outcome, so we can both
         # recover partial output (that could have been generated early in a
         # block, before an error) and always clear the payload system.
-        reply_content[u'payload'] = shell.payload_manager.read_payload()
+        reply_content['payload'] = shell.payload_manager.read_payload()
         # Be aggressive about clearing the payload because we don't want
         # it to sit in memory until the next execute_request comes in.
         shell.payload_manager.clear_payload()
@@ -362,16 +403,19 @@ class IPythonKernel(KernelBase):
                 'metadata' : {},
                 'status' : 'ok'}
 
+    async def do_debug_request(self, msg):
+        return await self.debugger.process_request(msg)
+
     def _experimental_do_complete(self, code, cursor_pos):
         """
-        Experimental completions from IPython, using Jedi. 
+        Experimental completions from IPython, using Jedi.
         """
         if cursor_pos is None:
             cursor_pos = len(code)
         with _provisionalcompleter():
             raw_completions = self.shell.Completer.completions(code, cursor_pos)
             completions = list(_rectify_completions(code, raw_completions))
-            
+
             comps = []
             for comp in completions:
                 comps.append(dict(
@@ -395,8 +439,6 @@ class IPythonKernel(KernelBase):
                 'cursor_start': s,
                 'metadata': {_EXPERIMENTAL_KEY_NAME: comps},
                 'status': 'ok'}
-
-
 
     def do_inspect(self, code, cursor_pos, detail_level=0):
         name = token_at_cursor(code, cursor_pos)
@@ -445,7 +487,11 @@ class IPythonKernel(KernelBase):
         return dict(status='ok', restart=restart)
 
     def do_is_complete(self, code):
-        status, indent_spaces = self.shell.input_splitter.check_complete(code)
+        transformer_manager = getattr(self.shell, 'input_transformer_manager', None)
+        if transformer_manager is None:
+            # input_splitter attribute is deprecated
+            transformer_manager = self.shell.input_splitter
+        status, indent_spaces = transformer_manager.check_complete(code)
         r = {'status': status}
         if status == 'incomplete':
             r['indent'] = ' ' * indent_spaces
@@ -488,16 +534,16 @@ class IPythonKernel(KernelBase):
             # invoke IPython traceback formatting
             shell.showtraceback()
             reply_content = {
-                u'traceback': shell._last_traceback or [],
-                u'ename': unicode_type(type(e).__name__),
-                u'evalue': safe_unicode(e),
+                'traceback': shell._last_traceback or [],
+                'ename': str(type(e).__name__),
+                'evalue': safe_unicode(e),
             }
             # FIXME: deprecated piece for ipyparallel (remove in 5.0):
             e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')
             reply_content['engine_info'] = e_info
 
-            self.send_response(self.iopub_socket, u'error', reply_content,
-                                ident=self._topic('error'))
+            self.send_response(self.iopub_socket, 'error', reply_content,
+                               ident=self._topic('error'), channel='shell')
             self.log.info("Exception in apply request:\n%s", '\n'.join(reply_content['traceback']))
             result_buf = []
             reply_content['status'] = 'error'

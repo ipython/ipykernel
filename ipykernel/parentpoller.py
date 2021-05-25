@@ -9,10 +9,7 @@ import os
 import platform
 import signal
 import time
-try:
-    from _thread import interrupt_main  # Py 3
-except ImportError:
-    from thread import interrupt_main  # Py 2
+from _thread import interrupt_main  # Py 3
 from threading import Thread
 
 from traitlets.log import get_logger
@@ -58,7 +55,6 @@ class ParentPollerWindows(Thread):
         interrupt_handle : HANDLE (int), optional
             If provided, the program will generate a Ctrl+C event when this
             handle is signaled.
-
         parent_handle : HANDLE (int), optional
             If provided, the program will terminate immediately when this
             handle is signaled.

@@ -1,4 +1,3 @@
-# coding: utf-8
 """Test suite for our JSON utilities."""
 
 # Copyright (c) IPython Development Team.
@@ -14,7 +13,6 @@ import nose.tools as nt
 
 from .. import jsonutil
 from ..jsonutil import json_clean, encode_images
-from ipython_genutils.py3compat import unicode_to_str
 
 class MyInt(object):
     def __int__(self):
@@ -81,14 +79,8 @@ def test_encode_images():
     encoded2 = json_clean(encode_images(encoded))
     assert encoded == encoded2
     
-    # test that we don't double-encode base64 str
-    b64_str = {}
-    for key, encoded in encoded.items():
-        b64_str[key] = unicode_to_str(encoded)
-    encoded3 = json_clean(encode_images(b64_str))
-    assert encoded3 == b64_str
     for key, value in fmt.items():
-        decoded = a2b_base64(encoded3[key])
+        decoded = a2b_base64(encoded[key])
         assert decoded == value
 
 def test_lambda():
@@ -105,6 +97,6 @@ def test_exception():
 
 
 def test_unicode_dict():
-    data = {u'üniço∂e': u'üniço∂e'}
+    data = {'üniço∂e': 'üniço∂e'}
     clean = jsonutil.json_clean(data)
     assert data == clean

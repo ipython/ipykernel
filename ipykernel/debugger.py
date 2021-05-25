@@ -13,6 +13,9 @@ from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 from IPython.core.getipython import get_ipython
 import debugpy
 
+# Required for backwards compatiblity
+ROUTING_ID = getattr(zmq, 'ROUTING_ID', None) or zmq.IDENTITY
+
 class DebugpyMessageQueue:
 
     HEADER = 'Content-Length: '
@@ -119,7 +122,7 @@ class DebugpyClient:
 
     def _send_request(self, msg):
         if self.routing_id is None:
-            self.routing_id = self.debugpy_stream.socket.getsockopt(zmq.ROUTING_ID)
+            self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
         content = jsonapi.dumps(msg)
         content_length = str(len(content))
         buf = (DebugpyMessageQueue.HEADER + content_length + DebugpyMessageQueue.SEPARATOR).encode('ascii')
@@ -166,7 +169,7 @@ class DebugpyClient:
 
     def connect_tcp_socket(self):
         self.debugpy_stream.socket.connect(self._get_endpoint())
-        self.routing_id = self.debugpy_stream.socket.getsockopt(zmq.ROUTING_ID)
+        self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
 
     def disconnect_tcp_socket(self):
         self.debugpy_stream.socket.disconnect(self._get_endpoint())
@@ -260,7 +263,7 @@ class Debugger:
                 'silent': True
             }
             self.session.send(self.shell_socket, 'execute_request', content,
-                              None, (self.shell_socket.getsockopt(zmq.ROUTING_ID)))
+                              None, (self.shell_socket.getsockopt(ROUTING_ID)))
                           
             ident, msg = self.session.recv(self.shell_socket, mode=0)
             self.debugpy_initialized = msg['content']['status'] == 'ok'

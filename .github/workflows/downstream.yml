@@ -1,0 +1,35 @@
+name: Test downstream projects
+
+on:
+  push:
+    branches: "*"
+  pull_request:
+    branches: "*"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .
+          pip install pytest "nbclient[test] @ git+git://github.com/jupyter/nbclient.git@master" \
+                             "ipyparallel[test] @ git+git://github.com/ipython/ipyparallel.git@main" \
+                             jupyter_client[test] pytest-asyncio
+          pip freeze
+
+      - name: Run tests
+        run: |
+          IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
+          pytest --pyargs ipyparallel
+          pytest --pyargs jupyter_client

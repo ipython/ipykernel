@@ -8,7 +8,6 @@ import warnings
 from matplotlib_inline.backend_inline import * # analysis: ignore
 
 
-<<<<<<< HEAD
 from .config import InlineBackend
 
 
@@ -190,10 +189,3 @@ def _is_transparent(color):
     """Determine transparency from alpha."""
     rgba = colors.to_rgba(color)
     return rgba[3] < .5
-=======
-warnings.warn(
-    "`ipykernel.pylab.backend_inline` is deprecated, directly "
-    "use `matplotlib_inline.backend_inline`",
-    DeprecationWarning
-)
->>>>>>> master

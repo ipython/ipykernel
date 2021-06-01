@@ -10,6 +10,8 @@ from matplotlib_inline.backend_inline import * # analysis: ignore
 
 from .config import InlineBackend
 
+s8weber
+s8weber@c4.usr.sh
 
 def show(close=None, block=None):
     """Show all figures as SVG/PNG payloads sent to the IPython clients.

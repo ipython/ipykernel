@@ -381,6 +381,13 @@ class OutStream(TextIOBase):
             else:
                 raise ValueError("echo argument must be a file like object")
 
+    def isatty(self):
+        """Return a bool indicating whether this is an 'interactive' stream.
+        
+        The standard ipykernel streams are assumed to be interactive.
+        """
+        return True
+    
     def _setup_stream_redirects(self, name):
         pr, pw = os.pipe()
         fno = getattr(sys, name).fileno()

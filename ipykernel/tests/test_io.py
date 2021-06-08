@@ -25,7 +25,7 @@ def test_io_api():
     ctx.term()
 
     assert stream.errors is None
-    assert stream.isatty()
+    assert not stream.isatty()
     with nt.assert_raises(io.UnsupportedOperation):
         stream.detach()
     with nt.assert_raises(io.UnsupportedOperation):
@@ -46,5 +46,5 @@ def test_io_isatty():
     thread = IOPubThread(pub)
     thread.start()
 
-    stream = OutStream(session, thread, 'stdout', isatty=False)
-    assert not stream.isatty()
+    stream = OutStream(session, thread, 'stdout', isatty=True)
+    assert stream.isatty()

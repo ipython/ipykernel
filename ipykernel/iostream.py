@@ -320,7 +320,7 @@ class OutStream(TextIOBase):
             self._exc = sys.exc_info()
 
     def __init__(
-        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True, isatty=True,
+        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True, isatty=False,
     ):
         """
         Parameters
@@ -333,7 +333,7 @@ class OutStream(TextIOBase):
             the file descriptor by its number. It will spawn a watching thread,
             that will swap the give file descriptor for a pipe, read from the
             pipe, and insert this into the current Stream.
-        isatty: bool (default, True)
+        isatty: bool (default, False)
             Indication of whether this stream has termimal capabilities (e.g. can handle colors)
 
         """

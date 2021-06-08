@@ -17,7 +17,7 @@ def test_io_api():
     thread = IOPubThread(pub)
     thread.start()
 
-    stream = OutStream(session, thread, 'stdout', isatty=True)
+    stream = OutStream(session, thread, 'stdout')
 
     # cleanup unused zmq objects before we start testing
     thread.stop()

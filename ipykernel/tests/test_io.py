@@ -17,7 +17,7 @@ def test_io_api():
     thread = IOPubThread(pub)
     thread.start()
 
-    stream = OutStream(session, thread, 'stdout')
+    stream = OutStream(session, thread, 'stdout', isatty=True)
 
     # cleanup unused zmq objects before we start testing
     thread.stop()
@@ -38,3 +38,13 @@ def test_io_api():
         stream.seek(0)
     with nt.assert_raises(io.UnsupportedOperation):
         stream.tell()
+
+def test_io_isatty():
+    session = Session()
+    ctx = zmq.Context()
+    pub = ctx.socket(zmq.PUB)
+    thread = IOPubThread(pub)
+    thread.start()
+
+    stream = OutStream(session, thread, 'stdout', isatty=False)
+    assert not stream.isatty()

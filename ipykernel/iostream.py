@@ -320,7 +320,7 @@ class OutStream(TextIOBase):
             self._exc = sys.exc_info()
 
     def __init__(
-        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True
+        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True, isatty=True,
     ):
         """
         Parameters
@@ -333,6 +333,8 @@ class OutStream(TextIOBase):
             the file descriptor by its number. It will spawn a watching thread,
             that will swap the give file descriptor for a pipe, read from the
             pipe, and insert this into the current Stream.
+        isatty: bool (default, True)
+            Indication of whether this stream has termimal capabilities (e.g. can handle colors)
 
         """
         if pipe is not None:
@@ -364,6 +366,7 @@ class OutStream(TextIOBase):
         self._io_loop = pub_thread.io_loop
         self._new_buffer()
         self.echo = None
+        self._isatty = bool(isatty)
 
         if (
             watchfd
@@ -384,9 +387,10 @@ class OutStream(TextIOBase):
     def isatty(self):
         """Return a bool indicating whether this is an 'interactive' stream.
 
-        The standard ipykernel streams are assumed to be interactive.
+        Returns:
+            Boolean
         """
-        return True
+        return self._isatty
 
     def _setup_stream_redirects(self, name):
         pr, pw = os.pipe()

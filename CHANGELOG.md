@@ -1,5 +1,7 @@
 # Changes in IPython kernel
 
+* remove `find_connection_file` and profile arg of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2.
+
 * Set `stop_on_error_timeout` default to 0.0 matching pre 5.5.0 default behavior with correctly working flag from 5.5.0.
 
 ## 5.5

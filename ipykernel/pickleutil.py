@@ -18,12 +18,7 @@ from traitlets.utils.importstring import import_item
 from ipython_genutils.py3compat import buffer_to_bytes
 
 # This registers a hook when it's imported
-try:
-    # available since ipyparallel 5.1.1
-    from ipyparallel.serialize import codeutil
-except ImportError:
-    # Deprecated since ipykernel 4.3.1
-    from ipykernel import codeutil
+from ipyparallel.serialize import codeutil
 
 from traitlets.log import get_logger
 

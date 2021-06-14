@@ -84,12 +84,13 @@ setup_args = dict(
         'appnope;platform_system=="Darwin"',
     ],
     extras_require={
-        'test': [
-            'pytest !=5.3.4',
-            'pytest-cov',
-            'flaky',
-            'nose',  # nose because there are still a few nose.tools imports hanging around
-            'jedi<=0.17.2'
+        "test": [
+            "pytest !=5.3.4",
+            "pytest-cov",
+            "flaky",
+            "nose",  # nose because there are still a few nose.tools imports hanging around
+            "jedi<=0.17.2",
+            "ipyparallel",
         ],
     },
     classifiers=[

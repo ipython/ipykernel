@@ -487,7 +487,21 @@ class OutStream(TextIOBase):
             self.session.send(self.pub_thread, 'stream', content=content,
                 parent=self.parent_header, ident=self.topic)
 
-    def write(self, string):
+    def write(self, string: str) -> int:
+        """Write to current stream after encoding if necessary
+
+        Returns
+        -------
+        len : int
+            number of items from input parameter written to stream.
+
+        """
+
+        if not isinstance(string, str):
+            raise ValueError(
+                "TypeError: write() argument must be str, not {type(string)}"
+            )
+
         if self.echo is not None:
             try:
                 self.echo.write(string)
@@ -499,13 +513,10 @@ class OutStream(TextIOBase):
         if self.pub_thread is None:
             raise ValueError('I/O operation on closed file')
         else:
-            # Make sure that we're handling unicode
-            if not isinstance(string, str):
-                string = string.decode(self.encoding, 'replace')
 
             is_child = (not self._is_master_process())
             # only touch the buffer in the IO thread to avoid races
-            self.pub_thread.schedule(lambda : self._buffer.write(string))
+            self.pub_thread.schedule(lambda: self._buffer.write(string))
             if is_child:
                 # mp.Pool cannot be trusted to flush promptly (or ever),
                 # and this helps.
@@ -516,6 +527,8 @@ class OutStream(TextIOBase):
                 self.pub_thread.schedule(self._flush)
             else:
                 self._schedule_flush()
+
+        return len(string)
 
     def writelines(self, sequence):
         if self.pub_thread is None:

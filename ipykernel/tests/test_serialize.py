@@ -6,9 +6,9 @@
 import pickle
 from collections import namedtuple
 
-from ipykernel.serialize import serialize_object, deserialize_object
+from ipyparallel.serialize import serialize_object, deserialize_object
 from IPython.testing import decorators as dec
-from ipykernel.pickleutil import CannedArray, CannedClass, interactive
+from ipyparallel.serialize.canning import CannedArray, CannedClass, interactive
 
 
 def roundtrip(obj):

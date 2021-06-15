@@ -1,6 +1,59 @@
 # Changes in IPython kernel
 
-* remove `find_connection_file` and profile arg of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2.
+
+## 6.0.0
+
+IPykernel 6.0 is the first major release in about two years, that brings a number of improvements, code cleanup, and new
+features to IPython.
+
+You should be able to view all closed issues and merged Pull Request for this
+milestone [on
+GitHub](https://github.com/ipython/ipykernel/issues?q=milestone%3A6.0+is%3Aclosed+),
+as for any major releases, we advise greater care when updating that for minor
+release and welcome any feedback (~50 Pull-requests).
+
+IPykernel 6 should contain all changes of the 5.x series, in addition to the
+following non-exhaustive changes.
+
+
+ - Support for the debugger protocol, when using `JupyterLab`, `RetroLab` or any
+   frontend supporting the debugger protocol you should have access to the
+   debugger functionalities.
+
+ - The control channel on IPykernel 6.0 is run in a separate thread, this may
+   change the order in which messages are processed, though this change was necessary
+   to accommodate the debugger.
+
+ - We now have a new dependency: `matplotlib-inline`, this helps to separate the
+   circular dependency between IPython/IPykernel and  matplotlib.
+
+ - All outputs to stdout/stderr should now be captured, including subprocesses
+   and output of compiled libraries (blas, lapack....). In notebook
+   server, some outputs that would previously go to the notebooks logs will now
+   both head to notebook logs and in notebooks outputs. In terminal frontend
+   like Jupyter Console, Emacs or other, this may ends up as duplicated outputs.
+
+ - coroutines are now native (async-def) , instead of using tornado's
+   `@gen.coroutine`
+
+ - OutStreams can now be configured to report `istty() == True`, while this
+   should make some output nicer (for example colored), it is likely to break
+   others. Use with care.
+
+## Deprecations in 6.0
+
+ - `Kernel`s now support only a single shell stream, multiple streams will now be ignored. The attribute
+   `Kernel.shell_streams` (plural) is deprecated in ipykernel 6.0. Use `Kernel.shell_stream` (singular)
+
+ - `Kernel._parent_header` is deprecated, even though it was private. Use `.get_parent()` now.
+
+## Removal in 6.0
+
+ - `ipykernel.codeutils` was deprecated since 4.x series (2016) and has been removed, please import similar
+   functionalities from `ipyparallel`
+
+ - remove `find_connection_file` and `profile` argument of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2 (2016).
+
 
 * Set `stop_on_error_timeout` default to 0.0 matching pre 5.5.0 default behavior with correctly working flag from 5.5.0.
 

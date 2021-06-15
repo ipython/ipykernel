@@ -12,27 +12,6 @@ import zmq
 from traitlets import HasTraits, Instance, Int
 
 #-----------------------------------------------------------------------------
-# Generic socket interface
-#-----------------------------------------------------------------------------
-
-class SocketABC(object, metaclass=abc.ABCMeta):
-
-    @abc.abstractmethod
-    def recv_multipart(self, flags=0, copy=True, track=False):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def send_multipart(self, msg_parts, flags=0, copy=True, track=False):
-        raise NotImplementedError
-
-    @classmethod
-    def register(cls, other_cls):
-        if other_cls is not DummySocket:
-            warnings.warn("SocketABC is deprecated since ipykernel version 4.5.0.",
-                    DeprecationWarning, stacklevel=2)
-        abc.ABCMeta.register(cls, other_cls)
-
-#-----------------------------------------------------------------------------
 # Dummy socket class
 #-----------------------------------------------------------------------------
 
@@ -60,5 +39,3 @@ class DummySocket(HasTraits):
     def flush(self, timeout=1.0):
         """no-op to comply with stream API"""
         pass
-
-SocketABC.register(DummySocket)

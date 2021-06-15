@@ -17,13 +17,13 @@ IPykernel 6 should contain all changes of the 5.x series, in addition to the
 followings non-exhaustive changes.
 
 
- - The control channel on IPykernel 6.0 is ran in a separate thread, this may
-   change the order in which messages are process, though this change was necessary
-   to accommodate the debugger.
-
  - Support for the debugger protocol, when using `JupyterLab`, `RetroLab` or any
    frontend supporting the debugger protocol you should have access to the
    debugger functionalities.
+
+ - The control channel on IPykernel 6.0 is ran in a separate thread, this may
+   change the order in which messages are process, though this change was necessary
+   to accommodate the debugger.
 
  - We now have a new dependency: `matplotlib-inline`, this helps to separate the
    circular dependency between IPython/IPykernel and  matplotlib.
@@ -40,6 +40,13 @@ followings non-exhaustive changes.
  - OutStreams can now be configured to report `istty() == True`, while this
    should make some output nicer (for example colored), it is likely to break
    others. Use with care.
+
+## Deprecations in 6.0
+
+## Removal in 6.0
+
+ - ipykernel.codeutils was deprecated since 4.x series (2016) and has been removed, please import similar
+   functionalities from `ipyparallel`
 
 
 * Set `stop_on_error_timeout` default to 0.0 matching pre 5.5.0 default behavior with correctly working flag from 5.5.0.

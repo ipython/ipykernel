@@ -3,7 +3,7 @@
 
 ## 6.0.0
 
-IPykernel 6.0 is the first major release in about two years, that brings a number of improvements code cleanup and new
+IPykernel 6.0 is the first major release in about two years, that brings a number of improvements, code cleanup, and new
 features to IPython.
 
 You should be able to view all closed issues and merged Pull Request for this
@@ -13,15 +13,15 @@ as for any major releases, we advise greater care when updating that for minor
 release and welcome any feedback (~50 Pull-requests).
 
 IPykernel 6 should contain all changes of the 5.x series, in addition to the
-followings non-exhaustive changes.
+following non-exhaustive changes.
 
 
  - Support for the debugger protocol, when using `JupyterLab`, `RetroLab` or any
    frontend supporting the debugger protocol you should have access to the
    debugger functionalities.
 
- - The control channel on IPykernel 6.0 is ran in a separate thread, this may
-   change the order in which messages are process, though this change was necessary
+ - The control channel on IPykernel 6.0 is run in a separate thread, this may
+   change the order in which messages are processed, though this change was necessary
    to accommodate the debugger.
 
  - We now have a new dependency: `matplotlib-inline`, this helps to separate the
@@ -49,7 +49,7 @@ followings non-exhaustive changes.
 
 ## Removal in 6.0
 
- - ipykernel.codeutils was deprecated since 4.x series (2016) and has been removed, please import similar
+ - `ipykernel.codeutils` was deprecated since 4.x series (2016) and has been removed, please import similar
    functionalities from `ipyparallel`
 
  - remove `find_connection_file` and `profile` argument of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2 (2016).

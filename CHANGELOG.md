@@ -21,7 +21,7 @@ followings non-exhaustive changes.
    change the order in which messages are process, though this change was necessary
    to accommodate the debugger.
 
- - Support for the debugger protocol, when using jupyter lab, retrolab or any
+ - Support for the debugger protocol, when using `JupyterLab`, `RetroLab` or any
    frontend supporting the debugger protocol you should have access to the
    debugger functionalities.
 

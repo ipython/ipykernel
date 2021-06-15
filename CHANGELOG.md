@@ -1,6 +1,5 @@
 # Changes in IPython kernel
 
-* remove `find_connection_file` and profile arg of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2.
 
 ## 6.0.0
 
@@ -43,10 +42,17 @@ followings non-exhaustive changes.
 
 ## Deprecations in 6.0
 
+ - `Kernel`s now support only a single shell stream, multiple streams will now be ignored. The attribute
+   `Kernel.shell_streams` (plural) is deprecated in ipykernel 6.0. Use `Kernel.shell_stream` (singular)
+
+ - `Kernel._parent_header` is deprecated, even though it was private. Use `.get_parent()` now.
+
 ## Removal in 6.0
 
  - ipykernel.codeutils was deprecated since 4.x series (2016) and has been removed, please import similar
    functionalities from `ipyparallel`
+
+ - remove `find_connection_file` and `profile` argument of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2 (2016).
 
 
 * Set `stop_on_error_timeout` default to 0.0 matching pre 5.5.0 default behavior with correctly working flag from 5.5.0.

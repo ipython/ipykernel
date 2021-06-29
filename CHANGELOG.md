@@ -3,6 +3,8 @@
 
 ## 6.0.0
 
+([Full Changelog](https://github.com/ipython/ipykernel/compare/aba2179420a3fa81ee6b8a13f928bf9e5ce50716...6d04ad2bdccd0dc0daf20f8d53555174b5fefc7b))
+
 IPykernel 6.0 is the first major release in about two years, that brings a number of improvements, code cleanup, and new
 features to IPython.
 
@@ -40,22 +42,100 @@ following non-exhaustive changes.
    should make some output nicer (for example colored), it is likely to break
    others. Use with care.
 
-## Deprecations in 6.0
+### New features added
 
- - `Kernel`s now support only a single shell stream, multiple streams will now be ignored. The attribute
+- Implementation of the debugger [#597](https://github.com/ipython/ipykernel/pull/597) ([@JohanMabille](https://github.com/JohanMabille))
+
+### Enhancements made
+
+- Make the `isatty` method of `OutStream` return `true` [#683](https://github.com/ipython/ipykernel/pull/683) ([@peendebak](https://github.com/peendebak))
+- Allow setting cell name [#652](https://github.com/ipython/ipykernel/pull/652) ([@davidbrochart](https://github.com/davidbrochart))
+- Try to capture all file descriptor output and err [#630](https://github.com/ipython/ipykernel/pull/630) ([@Carreau](https://github.com/Carreau))
+- Implemented `inspectVariables` request [#624](https://github.com/ipython/ipykernel/pull/624) ([@JohanMabille](https://github.com/JohanMabille))
+- Specify `ipykernel` in kernelspec [#616](https://github.com/ipython/ipykernel/pull/616) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Use `matplotlib-inline` [#591](https://github.com/ipython/ipykernel/pull/591) ([@martinRenou](https://github.com/martinRenou))
+- Run control channel in separate thread [#585](https://github.com/ipython/ipykernel/pull/585) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+
+### Bugs fixed
+
+- Remove references to deprecated `ipyparallel` [#695](https://github.com/ipython/ipykernel/pull/695) ([@minrk](https://github.com/minrk))
+- Return len of item written to `OutStream` [#685](https://github.com/ipython/ipykernel/pull/685) ([@Carreau](https://github.com/Carreau))
+- Call metadata methods on abort replies [#684](https://github.com/ipython/ipykernel/pull/684) ([@minrk](https://github.com/minrk))
+- Fix keyboard interrupt issue in `dispatch_shell` [#673](https://github.com/ipython/ipykernel/pull/673) ([@marcoamonteiro](https://github.com/marcoamonteiro))
+- Update `Trio` mode for compatibility with `Trio >= 0.18.0` [#627](https://github.com/ipython/ipykernel/pull/627) ([@mehaase](https://github.com/mehaase))
+- Follow up `DeprecationWarnin`g Fix [#617](https://github.com/ipython/ipykernel/pull/617) ([@afshin](https://github.com/afshin))
+- Flush control stream upon shutdown [#611](https://github.com/ipython/ipykernel/pull/611) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Fix Handling of `shell.should_run_async` [#605](https://github.com/ipython/ipykernel/pull/605) ([@afshin](https://github.com/afshin))
+- Deacrease lag time for eventloop [#573](https://github.com/ipython/ipykernel/pull/573) ([@impact27](https://github.com/impact27))
+- Fix "Socket operation on nonsocket" in downstream `nbclient` test. [#641](https://github.com/ipython/ipykernel/pull/641) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Stop control thread before closing sockets on it [#659](https://github.com/ipython/ipykernel/pull/659) ([@minrk](https://github.com/minrk))
+- Fix debugging with native coroutines [#651](https://github.com/ipython/ipykernel/pull/651) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Fixup master build [#649](https://github.com/ipython/ipykernel/pull/649) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Fix parent header retrieval [#639](https://github.com/ipython/ipykernel/pull/639) ([@davidbrochart](https://github.com/davidbrochart))
+- Add missing self [#636](https://github.com/ipython/ipykernel/pull/636) ([@Carreau](https://github.com/Carreau))
+- Backwards compat with older versions of zmq [#665](https://github.com/ipython/ipykernel/pull/665) ([@mlucool](https://github.com/mlucool))
+
+### Maintenance and upkeep improvements
+
+- Remove pin on Jedi because that was already fixed in IPython [#692](https://github.com/ipython/ipykernel/pull/692) ([@ccordoba12](https://github.com/ccordoba12))
+- Remove deprecated source parameter since 4.0.1 (2015) [#690](https://github.com/ipython/ipykernel/pull/690) ([@Carreau](https://github.com/Carreau))
+- Remove deprecated `SocketABC` since 4.5.0 [#689](https://github.com/ipython/ipykernel/pull/689) ([@Carreau](https://github.com/Carreau))
+- Remove deprecated profile options of `connect.py` [#688](https://github.com/ipython/ipykernel/pull/688) ([@Carreau](https://github.com/Carreau))
+- Remove `ipykernel.codeutil` deprecated since IPykernel 4.3.1 (Feb 2016) [#687](https://github.com/ipython/ipykernel/pull/687) ([@Carreau](https://github.com/Carreau))
+- Keep preferring `SelectorEventLoop` on Windows [#669](https://github.com/ipython/ipykernel/pull/669) ([@minrk](https://github.com/minrk))
+- Add `Kernel.get_parent` to match `set_parent` [#661](https://github.com/ipython/ipykernel/pull/661) ([@minrk](https://github.com/minrk))
+- Flush control queue prior to handling shell messages [#658](https://github.com/ipython/ipykernel/pull/658) ([@minrk](https://github.com/minrk))
+- Add `Kernel.get_parent_header` [#657](https://github.com/ipython/ipykernel/pull/657) ([@minrk](https://github.com/minrk))
+- Build docs only on Ubuntu: add jobs to check docstring formatting. [#644](https://github.com/ipython/ipykernel/pull/644) ([@Carreau](https://github.com/Carreau))
+- Make deprecated `shell_streams` writable [#638](https://github.com/ipython/ipykernel/pull/638) ([@minrk](https://github.com/minrk))
+- Use channel `get_msg` helper method [#634](https://github.com/ipython/ipykernel/pull/634) ([@davidbrochart](https://github.com/davidbrochart))
+- Use native coroutines instead of tornado coroutines [#632](https://github.com/ipython/ipykernel/pull/632) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Make less use of `ipython_genutils` [#631](https://github.com/ipython/ipykernel/pull/631) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Run GitHub Actions on all branches [#625](https://github.com/ipython/ipykernel/pull/625) ([@afshin](https://github.com/afshin))
+- Move Python-specific bits to ipkernel [#610](https://github.com/ipython/ipykernel/pull/610) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Update Python Requirement to 3.7 [#608](https://github.com/ipython/ipykernel/pull/608) ([@afshin](https://github.com/afshin))
+- Replace import item from `ipython_genutils` to traitlets. [#601](https://github.com/ipython/ipykernel/pull/601) ([@Carreau](https://github.com/Carreau))
+- Some removal of `ipython_genutils.py3compat`. [#600](https://github.com/ipython/ipykernel/pull/600) ([@Carreau](https://github.com/Carreau))
+- Fixup `get_parent_header` call [#662](https://github.com/ipython/ipykernel/pull/662) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Update of `ZMQInteractiveshell`. [#643](https://github.com/ipython/ipykernel/pull/643) ([@Carreau](https://github.com/Carreau))
+- Removed filtering of stack frames for testing [#633](https://github.com/ipython/ipykernel/pull/633) ([@JohanMabille](https://github.com/JohanMabille))
+- Added 'type' field to variables returned by `inspectVariables` request [#628](https://github.com/ipython/ipykernel/pull/628) ([@JohanMabille](https://github.com/JohanMabille))
+- Changed default timeout to 0.0 seconds for `stop_on_error_timeout` [#618](https://github.com/ipython/ipykernel/pull/618) ([@MSeal](https://github.com/MSeal))
+- Attempt longer timeout [#615](https://github.com/ipython/ipykernel/pull/615) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Clean up release process and add tests [#596](https://github.com/ipython/ipykernel/pull/596) ([@afshin](https://github.com/afshin))
+- Kernelspec: ensure path is writable before writing `kernel.json`. [#593](https://github.com/ipython/ipykernel/pull/593) ([@jellelicht](https://github.com/jellelicht))
+- Add `configure_inline_support` and call it in the shell [#590](https://github.com/ipython/ipykernel/pull/590) ([@martinRenou](https://github.com/martinRenou))
+
+### Documentation improvements
+
+- Misc Updates to changelog for 6.0 [#686](https://github.com/ipython/ipykernel/pull/686) ([@Carreau](https://github.com/Carreau))
+- Add 5.5.x Changelog entries [#672](https://github.com/ipython/ipykernel/pull/672) ([@blink1073](https://github.com/blink1073))
+- Build docs only on ubuntu: add jobs to check docstring formatting. [#644](https://github.com/ipython/ipykernel/pull/644) ([@Carreau](https://github.com/Carreau))
+- DOC: Autoreformat all docstrings. [#642](https://github.com/ipython/ipykernel/pull/642) ([@Carreau](https://github.com/Carreau))
+- Bump Python to 3.8 in `readthedocs.yml` [#612](https://github.com/ipython/ipykernel/pull/612) ([@minrk](https://github.com/minrk))
+- Fix typo [#663](https://github.com/ipython/ipykernel/pull/663) ([@SylvainCorlay](https://github.com/SylvainCorlay))
+- Add release note to 5.5.0 about `stop_on_error_timeout` [#613](https://github.com/ipython/ipykernel/pull/613) ([@glentakahashi](https://github.com/glentakahashi))
+- Move changelog to standard location [#604](https://github.com/ipython/ipykernel/pull/604) ([@afshin](https://github.com/afshin))
+- Add changelog for 5.5 [#594](https://github.com/ipython/ipykernel/pull/594) ([@blink1073](https://github.com/blink1073))
+- Change to markdown for changelog [#595](https://github.com/ipython/ipykernel/pull/595) ([@afshin](https://github.com/afshin))
+
+### Deprecations in 6.0
+
+- `Kernel`s now support only a single shell stream, multiple streams will now be ignored. The attribute
    `Kernel.shell_streams` (plural) is deprecated in ipykernel 6.0. Use `Kernel.shell_stream` (singular)
+- `Kernel._parent_header` is deprecated, even though it was private. Use `.get_parent()` now.
 
- - `Kernel._parent_header` is deprecated, even though it was private. Use `.get_parent()` now.
+### Removal in 6.0
 
-## Removal in 6.0
-
- - `ipykernel.codeutils` was deprecated since 4.x series (2016) and has been removed, please import similar
+- `ipykernel.codeutils` was deprecated since 4.x series (2016) and has been removed, please import similar
    functionalities from `ipyparallel`
+- remove `find_connection_file` and `profile` argument of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2 (2016).
 
- - remove `find_connection_file` and `profile` argument of `connect_qtconsole` and `get_connection_info`, deprecated since IPykernel 4.2.2 (2016).
+### Contributors to this release
 
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-01-11&to=2021-06-29&type=c))
 
-* Set `stop_on_error_timeout` default to 0.0 matching pre 5.5.0 default behavior with correctly working flag from 5.5.0.
+[@afshin](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aafshin+updated%3A2021-01-11..2021-06-29&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2021-01-11..2021-06-29&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-01-11..2021-06-29&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2021-01-11..2021-06-29&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2021-01-11..2021-06-29&type=Issues) | [@dsblank](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adsblank+updated%3A2021-01-11..2021-06-29&type=Issues) | [@glentakahashi](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aglentakahashi+updated%3A2021-01-11..2021-06-29&type=Issues) | [@impact27](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aimpact27+updated%3A2021-01-11..2021-06-29&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2021-01-11..2021-06-29&type=Issues) | [@jellelicht](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajellelicht+updated%3A2021-01-11..2021-06-29&type=Issues) | [@jkablan](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajkablan+updated%3A2021-01-11..2021-06-29&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2021-01-11..2021-06-29&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akevin-bates+updated%3A2021-01-11..2021-06-29&type=Issues) | [@marcoamonteiro](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amarcoamonteiro+updated%3A2021-01-11..2021-06-29&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2021-01-11..2021-06-29&type=Issues) | [@mehaase](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amehaase+updated%3A2021-01-11..2021-06-29&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-01-11..2021-06-29&type=Issues) | [@mlucool](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amlucool+updated%3A2021-01-11..2021-06-29&type=Issues) | [@MSeal](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AMSeal+updated%3A2021-01-11..2021-06-29&type=Issues) | [@peendebak](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apeendebak+updated%3A2021-01-11..2021-06-29&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2021-01-11..2021-06-29&type=Issues) | [@tacaswell](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Atacaswell+updated%3A2021-01-11..2021-06-29&type=Issues)
 
 ## 5.5
 

@@ -63,7 +63,7 @@ following non-exhaustive changes.
 - Call metadata methods on abort replies [#684](https://github.com/ipython/ipykernel/pull/684) ([@minrk](https://github.com/minrk))
 - Fix keyboard interrupt issue in `dispatch_shell` [#673](https://github.com/ipython/ipykernel/pull/673) ([@marcoamonteiro](https://github.com/marcoamonteiro))
 - Update `Trio` mode for compatibility with `Trio >= 0.18.0` [#627](https://github.com/ipython/ipykernel/pull/627) ([@mehaase](https://github.com/mehaase))
-- Follow up `DeprecationWarnin`g Fix [#617](https://github.com/ipython/ipykernel/pull/617) ([@afshin](https://github.com/afshin))
+- Follow up `DeprecationWarning` Fix [#617](https://github.com/ipython/ipykernel/pull/617) ([@afshin](https://github.com/afshin))
 - Flush control stream upon shutdown [#611](https://github.com/ipython/ipykernel/pull/611) ([@SylvainCorlay](https://github.com/SylvainCorlay))
 - Fix Handling of `shell.should_run_async` [#605](https://github.com/ipython/ipykernel/pull/605) ([@afshin](https://github.com/afshin))
 - Deacrease lag time for eventloop [#573](https://github.com/ipython/ipykernel/pull/573) ([@impact27](https://github.com/impact27))

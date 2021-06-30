@@ -1,6 +1,12 @@
 # Changes in IPython kernel
 
 
+## 6.0
+
+## 6.0.1
+
+- Stringify variables that are not json serializable in inspectVariable [#702](https://github.com/ipython/ipykernel/pull/702) ([@JohanMabille](https://github.com/JohanMabille))
+
 ## 6.0.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/aba2179420a3fa81ee6b8a13f928bf9e5ce50716...6d04ad2bdccd0dc0daf20f8d53555174b5fefc7b))

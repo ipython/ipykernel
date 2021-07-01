@@ -5,6 +5,7 @@
 
 ## 6.0.1
 
+- Fix Tk and asyncio event loops [#704](https://github.com/ipython/ipykernel/pull/704) ([@ccordoba12](https://github.com/ccordoba12))
 - Stringify variables that are not json serializable in inspectVariable [#702](https://github.com/ipython/ipykernel/pull/702) ([@JohanMabille](https://github.com/JohanMabille))
 
 ## 6.0.0

@@ -324,7 +324,7 @@ def loop_cocoa(kernel):
                 # don't let interrupts during mainloop invoke crash_handler:
                 sys.excepthook = handle_int
                 mainloop(kernel._poll_interval)
-                if kernel_shell_stream.flush(limit=1):
+                if kernel.shell_stream.flush(limit=1):
                     # events to process, return control to kernel
                     return
             except:

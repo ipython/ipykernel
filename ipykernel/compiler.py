@@ -2,6 +2,7 @@ from IPython.core.compilerop import CachingCompiler
 import tempfile
 import os
 
+
 def murmur2_x86(data, seed):
     m = 0x5bd1e995
     length = len(data)
@@ -34,14 +35,17 @@ def murmur2_x86(data, seed):
 
     return h
 
+
 def get_tmp_directory():
     tmp_dir = tempfile.gettempdir()
     pid = os.getpid()
     return tmp_dir + '/ipykernel_' + str(pid)
 
+
 def get_tmp_hash_seed():
     hash_seed = 0xc70f6907
     return hash_seed
+
 
 def get_file_name(code):
     cell_name = os.environ.get("IPYKERNEL_CELL_NAME")
@@ -50,18 +54,12 @@ def get_file_name(code):
         cell_name = get_tmp_directory() + '/' + str(name) + '.py'
     return cell_name
 
+
 class XCachingCompiler(CachingCompiler):
 
     def __init__(self, *args, **kwargs):
         super(XCachingCompiler, self).__init__(*args, **kwargs)
-        self.filename_mapper = None
         self.log = None
 
     def get_code_name(self, raw_code, code, number):
-        filename = get_file_name(raw_code)
-
-        if self.filename_mapper is not None:
-            self.filename_mapper(filename, number)
-
-        return filename
-
+        return get_file_name(raw_code)

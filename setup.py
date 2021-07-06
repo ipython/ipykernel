@@ -80,16 +80,16 @@ setup_args = dict(
         'traitlets>=4.1.0',
         'jupyter_client',
         'tornado>=4.2',
-        'matplotlib-inline>=0.1.0,<0.2.0'
+        'matplotlib-inline>=0.1.0,<0.2.0',
         'appnope;platform_system=="Darwin"',
     ],
     extras_require={
-        'test': [
-            'pytest !=5.3.4',
-            'pytest-cov',
-            'flaky',
-            'nose',  # nose because there are still a few nose.tools imports hanging around
-            'jedi<=0.17.2'
+        "test": [
+            "pytest !=5.3.4",
+            "pytest-cov",
+            "flaky",
+            "nose",  # nose because there are still a few nose.tools imports hanging around
+            "ipyparallel",
         ],
     },
     classifiers=[

@@ -13,6 +13,8 @@ from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 from IPython.core.getipython import get_ipython
 import debugpy
 
+from .jsonutil import json_clean
+
 # Required for backwards compatiblity
 ROUTING_ID = getattr(zmq, 'ROUTING_ID', None) or zmq.IDENTITY
 
@@ -417,9 +419,14 @@ class Debugger:
         var_list = []
         for k, v in get_ipython().user_ns.items():
             if self.accept_variable(k):
+                try:
+                    val = json_clean(v)
+
+                except ValueError:
+                    val = str(v)
                 var_list.append({
                     'name': k,
-                    'value': v,
+                    'value': val,
                     'type': str(type(v))[8:-2],
                     'variablesReference': 0
                 })

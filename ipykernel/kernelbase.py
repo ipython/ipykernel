@@ -354,7 +354,7 @@ class Kernel(SingletonConfigurable):
                 self.log.error("Exception in message handler:", exc_info=True)
             except KeyboardInterrupt:
                 # Ctrl-c shouldn't crash the kernel here.
-                self.log.error("KeyboardInterrupt caught in kernel.")	
+                self.log.error("KeyboardInterrupt caught in kernel.")
             finally:
                 try:
                     self.post_handler_hook()
@@ -412,7 +412,7 @@ class Kernel(SingletonConfigurable):
             # flush the eventloop every so often,
             # giving us a chance to handle messages in the meantime
             self.log.debug("Scheduling eventloop advance")
-            self.io_loop.call_later(1, advance_eventloop)
+            self.io_loop.call_later(0.001, advance_eventloop)
 
         # begin polling the eventloop
         schedule_next()
@@ -921,12 +921,15 @@ class Kernel(SingletonConfigurable):
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""
-        self.log.info("Aborting:")
-        self.log.info("%s", msg)
+        self.log.info(
+            f"Aborting {msg['header']['msg_id']}: {msg['header']['msg_type']}"
+        )
         reply_type = msg["header"]["msg_type"].rsplit("_", 1)[0] + "_reply"
         status = {"status": "aborted"}
-        md = {"engine": self.ident}
+        md = self.init_metadata(msg)
+        md = self.finish_metadata(msg, md, status)
         md.update(status)
+
         self.session.send(
             stream, reply_type, metadata=md,
             content=status, parent=msg, ident=idents,

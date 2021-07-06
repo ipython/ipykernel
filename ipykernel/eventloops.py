@@ -241,10 +241,10 @@ def loop_tk(kernel):
         # For Tkinter, we create a Tk object and call its withdraw method.
         kernel.app_wrapper = BasicAppWrapper(app)
 
-        notifier = partial(process_stream_events, shell_stream)
+        notifier = partial(process_stream_events, kernel.shell_stream)
         # seems to be needed for tk
         notifier.__name__ = "notifier"
-        app.tk.createfilehandler(shell_stream.getsockopt(zmq.FD), READABLE, notifier)
+        app.tk.createfilehandler(kernel.shell_stream.getsockopt(zmq.FD), READABLE, notifier)
         # schedule initial call after start
         app.after(0, notifier)
 
@@ -333,7 +333,7 @@ def loop_cocoa(kernel):
                 # don't let interrupts during mainloop invoke crash_handler:
                 sys.excepthook = handle_int
                 mainloop(kernel._poll_interval)
-                if kernel_shell_stream.flush(limit=1):
+                if kernel.shell_stream.flush(limit=1):
                     # events to process, return control to kernel
                     return
             except:
@@ -373,8 +373,8 @@ def loop_asyncio(kernel):
         if stream.flush(limit=1):
             loop.stop()
 
-    notifier = partial(process_stream_events, shell_stream)
-    loop.add_reader(shell_stream.getsockopt(zmq.FD), notifier)
+    notifier = partial(process_stream_events, kernel.shell_stream)
+    loop.add_reader(kernel.shell_stream.getsockopt(zmq.FD), notifier)
     loop.call_soon(notifier)
 
     while True:

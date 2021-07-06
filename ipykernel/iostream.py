@@ -320,7 +320,7 @@ class OutStream(TextIOBase):
             self._exc = sys.exc_info()
 
     def __init__(
-        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True
+        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True, isatty=False,
     ):
         """
         Parameters
@@ -333,6 +333,8 @@ class OutStream(TextIOBase):
             the file descriptor by its number. It will spawn a watching thread,
             that will swap the give file descriptor for a pipe, read from the
             pipe, and insert this into the current Stream.
+        isatty : bool (default, False)
+            Indication of whether this stream has termimal capabilities (e.g. can handle colors)
 
         """
         if pipe is not None:
@@ -364,6 +366,7 @@ class OutStream(TextIOBase):
         self._io_loop = pub_thread.io_loop
         self._new_buffer()
         self.echo = None
+        self._isatty = bool(isatty)
 
         if (
             watchfd
@@ -380,6 +383,14 @@ class OutStream(TextIOBase):
                 self.echo = echo
             else:
                 raise ValueError("echo argument must be a file like object")
+
+    def isatty(self):
+        """Return a bool indicating whether this is an 'interactive' stream.
+
+        Returns:
+            Boolean
+        """
+        return self._isatty
 
     def _setup_stream_redirects(self, name):
         pr, pw = os.pipe()
@@ -476,7 +487,21 @@ class OutStream(TextIOBase):
             self.session.send(self.pub_thread, 'stream', content=content,
                 parent=self.parent_header, ident=self.topic)
 
-    def write(self, string):
+    def write(self, string: str) -> int:
+        """Write to current stream after encoding if necessary
+
+        Returns
+        -------
+        len : int
+            number of items from input parameter written to stream.
+
+        """
+
+        if not isinstance(string, str):
+            raise ValueError(
+                "TypeError: write() argument must be str, not {type(string)}"
+            )
+
         if self.echo is not None:
             try:
                 self.echo.write(string)
@@ -488,13 +513,10 @@ class OutStream(TextIOBase):
         if self.pub_thread is None:
             raise ValueError('I/O operation on closed file')
         else:
-            # Make sure that we're handling unicode
-            if not isinstance(string, str):
-                string = string.decode(self.encoding, 'replace')
 
             is_child = (not self._is_master_process())
             # only touch the buffer in the IO thread to avoid races
-            self.pub_thread.schedule(lambda : self._buffer.write(string))
+            self.pub_thread.schedule(lambda: self._buffer.write(string))
             if is_child:
                 # mp.Pool cannot be trusted to flush promptly (or ever),
                 # and this helps.
@@ -505,6 +527,8 @@ class OutStream(TextIOBase):
                 self.pub_thread.schedule(self._flush)
             else:
                 self._schedule_flush()
+
+        return len(string)
 
     def writelines(self, sequence):
         if self.pub_thread is None:

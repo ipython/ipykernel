@@ -45,18 +45,9 @@ from ipykernel.displayhook import ZMQShellDisplayHook
 from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_client.session import extract_header, Session
 
-try:
-    # available since ipyparallel 5.0.0
-    from ipyparallel.engine.datapub import ZMQDataPublisher
-except ImportError:
-    # Deprecated since ipykernel 4.3.0
-    from ipykernel.datapub import ZMQDataPublisher
-
 #-----------------------------------------------------------------------------
 # Functions and classes
 #-----------------------------------------------------------------------------
-
-_sentinel = object()
 
 
 class ZMQDisplayPublisher(DisplayPublisher):
@@ -97,7 +88,6 @@ class ZMQDisplayPublisher(DisplayPublisher):
         self,
         data,
         metadata=None,
-        source=_sentinel,
         transient=None,
         update=False,
     ):
@@ -115,23 +105,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
             Transient data should not be persisted to documents.
         update : bool, optional, keyword-only
             If True, send an update_display_data message instead of display_data.
-        source : unused
-            Value will have no effect on function behavior. Parameter is still
-            present for backward compatibility but will be removed in the
-            future.
-
-            .. deprecated:: 4.0.1
-
-                `source` has been deprecated and no-op since ipykernel 4.0.1
-                (2015)
         """
-        if source is not _sentinel:
-            warnings.warn(
-                "`source` has been deprecated since ipykernel 4.0.1 "
-                "and will have no effect",
-                DeprecationWarning,
-                stacklevel=2,
-            )
         self._flush_streams()
         if metadata is None:
             metadata = {}
@@ -464,7 +438,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
-    data_pub_class = Type(ZMQDataPublisher)
+    data_pub_class = Any()
     kernel = Any()
     parent_header = Any()
 

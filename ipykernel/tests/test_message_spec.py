@@ -322,14 +322,15 @@ def test_execute_inc():
     """execute request should increment execution_count"""
     flush_channels()
 
-    msg_id, reply = execute(code='x=1')
-    count = reply['execution_count']
+    _, reply = execute(code="x=1")
+    count = reply["execution_count"]
 
     flush_channels()
 
-    msg_id, reply = execute(code='x=2')
-    count_2 = reply['execution_count']
-    assert count_2 == count+1
+    _, reply = execute(code="x=2")
+    count_2 = reply["execution_count"]
+    assert count_2 == count + 1
+
 
 def test_execute_stop_on_error():
     """execute request should not abort execution queue with stop_on_error False"""
@@ -342,7 +343,7 @@ def test_execute_stop_on_error():
         'raise ValueError',
     ])
     KC.execute(code=fail)
-    msg_id = KC.execute(code='print("Hello")')
+    KC.execute(code='print("Hello")')
     KC.get_shell_msg(timeout=TIMEOUT)
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     assert reply['content']['status'] == 'aborted'
@@ -350,7 +351,7 @@ def test_execute_stop_on_error():
     flush_channels()
 
     KC.execute(code=fail, stop_on_error=False)
-    msg_id = KC.execute(code='print("Hello")')
+    KC.execute(code='print("Hello")')
     KC.get_shell_msg(timeout=TIMEOUT)
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     assert reply['content']['status'] == 'ok'
@@ -519,8 +520,8 @@ def test_is_complete():
 def test_history_range():
     flush_channels()
 
-    msg_id_exec = KC.execute(code='x=1', store_history = True)
-    reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
+    KC.execute(code="x=1", store_history=True)
+    KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'range', raw = True, output = True, start = 1, stop = 2, session = 0)
     reply = get_reply(KC, msg_id, TIMEOUT)
@@ -531,8 +532,8 @@ def test_history_range():
 def test_history_tail():
     flush_channels()
 
-    msg_id_exec = KC.execute(code='x=1', store_history = True)
-    reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
+    KC.execute(code="x=1", store_history=True)
+    KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'tail', raw = True, output = True, n = 1, session = 0)
     reply = get_reply(KC, msg_id, TIMEOUT)
@@ -543,8 +544,8 @@ def test_history_tail():
 def test_history_search():
     flush_channels()
 
-    msg_id_exec = KC.execute(code='x=1', store_history = True)
-    reply_exec = KC.get_shell_msg(timeout=TIMEOUT)
+    KC.execute(code="x=1", store_history=True)
+    KC.get_shell_msg(timeout=TIMEOUT)
 
     msg_id = KC.history(hist_access_type = 'search', raw = True, output = True, n = 1, pattern = '*', session = 0)
     reply = get_reply(KC, msg_id, TIMEOUT)

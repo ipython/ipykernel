@@ -447,7 +447,7 @@ def test_control_thread_priority():
             control_msg_ids.append(msg["header"]["msg_id"])
 
         # finally, collect the replies on both channels for comparison
-        sleep_reply = get_reply(kc, sleep_msg_id)
+        get_reply(kc, sleep_msg_id)
         shell_replies = []
         for msg_id in shell_msg_ids:
             shell_replies.append(get_reply(kc, msg_id))

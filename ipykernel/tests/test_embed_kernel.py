@@ -94,18 +94,18 @@ def test_embed_kernel_basic():
 
     with setup_kernel(cmd) as client:
         # oinfo a (int)
-        msg_id = client.inspect('a')
+        client.inspect("a")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
 
-        msg_id = client.execute("c=a*2")
+        client.execute("c=a*2")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['status'] == 'ok'
 
         # oinfo c (should be 10)
-        msg_id = client.inspect('c')
+        client.inspect("c")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
@@ -128,7 +128,7 @@ def test_embed_kernel_namespace():
 
     with setup_kernel(cmd) as client:
         # oinfo a (int)
-        msg_id = client.inspect('a')
+        client.inspect("a")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
@@ -136,7 +136,7 @@ def test_embed_kernel_namespace():
         assert '5' in text
 
         # oinfo b (str)
-        msg_id = client.inspect('b')
+        client.inspect("b")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
@@ -144,7 +144,7 @@ def test_embed_kernel_namespace():
         assert 'hi there' in text
 
         # oinfo c (undefined)
-        msg_id = client.inspect('c')
+        client.inspect("c")
         msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
         content = msg['content']
         assert not content['found']
@@ -167,7 +167,7 @@ def test_embed_kernel_reentrant():
 
     with setup_kernel(cmd) as client:
         for i in range(5):
-            msg_id = client.inspect('count')
+            client.inspect("count")
             msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
             content = msg['content']
             assert content['found']

@@ -65,7 +65,7 @@ class SimpleWindow(Qt.QWidget, InternalIPKernel):
 #-----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = Qt.QApplication([]) 
+    app = Qt.QApplication([])
     # Create our window
     win = SimpleWindow(app)
     win.show()

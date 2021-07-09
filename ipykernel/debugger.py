@@ -330,9 +330,15 @@ class Debugger:
         # or only the frames from the notebook.
         # We want to remove all the frames from ipykernel when they are present.
         try:
-            sf_list = reply['body']['stackFrames']
-            module_idx = len(sf_list) - next(i for i, v in enumerate(reversed(sf_list), 1) if v['name'] == '<module>' and i != 1)
-            reply['body']['stackFrames'] = reply['body']['stackFrames'][:module_idx+1]
+            sf_list = reply["body"]["stackFrames"]
+            module_idx = len(sf_list) - next(
+                i
+                for i, v in enumerate(reversed(sf_list), 1)
+                if v["name"] == "<module>" and i != 1
+            )
+            reply["body"]["stackFrames"] = reply["body"]["stackFrames"][
+                : module_idx + 1
+            ]
         except StopIteration:
             pass
         return reply
@@ -478,4 +484,3 @@ class Debugger:
             self.log.info('The debugger has stopped')
 
         return reply
-

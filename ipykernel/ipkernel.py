@@ -26,7 +26,10 @@ except ImportError:
     _asyncio_runner = None
 
 try:
-    from IPython.core.completer import rectify_completions as _rectify_completions, provisionalcompleter as _provisionalcompleter
+    from IPython.core.completer import (
+        rectify_completions as _rectify_completions,
+        provisionalcompleter as _provisionalcompleter,
+    )
     _use_experimental_60_completion = True
 except ImportError:
     _use_experimental_60_completion = False
@@ -195,9 +198,12 @@ class IPythonKernel(KernelBase):
         """
         # FIXME: remove deprecated ipyparallel-specific code
         # This is required by ipyparallel < 5.0
-        metadata['status'] = reply_content['status']
-        if reply_content['status'] == 'error' and reply_content['ename'] == 'UnmetDependency':
-                metadata['dependencies_met'] = False
+        metadata["status"] = reply_content["status"]
+        if (
+            reply_content["status"] == "error"
+            and reply_content["ename"] == "UnmetDependency"
+        ):
+            metadata["dependencies_met"] = False
 
         return metadata
 
@@ -309,7 +315,11 @@ class IPythonKernel(KernelBase):
                 _asyncio_runner
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
-                and should_run_async(code, transformed_cell=transformed_cell, preprocessing_exc_tuple=preprocessing_exc_tuple)
+                and should_run_async(
+                    code,
+                    transformed_cell=transformed_cell,
+                    preprocessing_exc_tuple=preprocessing_exc_tuple,
+                )
             ):
                 coro = run_cell(
                     code,

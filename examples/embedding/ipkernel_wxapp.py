@@ -42,7 +42,7 @@ class MyFrame(wx.Frame, InternalIPKernel):
         # Create the menubar
         menuBar = wx.MenuBar()
 
-        # and a menu 
+        # and a menu
         menu = wx.Menu()
 
         # add an item to the menu, using \tKeyName automatically

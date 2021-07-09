@@ -294,9 +294,9 @@ class Debugger:
         return reply
 
     async def setBreakpoints(self, message):
-        source = message['arguments']['source']['path'];
-        self.breakpoint_list[source] = message['arguments']['breakpoints']
-        return await self._forward_message(message);
+        source = message["arguments"]["source"]["path"]
+        self.breakpoint_list[source] = message["arguments"]["breakpoints"]
+        return await self._forward_message(message)
 
     async def source(self, message):
         reply = {
@@ -304,7 +304,7 @@ class Debugger:
             'request_seq': message['seq'],
             'command': message['command']
         }
-        source_path = message['arguments']['source']['path'];
+        source_path = message["arguments"]["source"]["path"]
         if os.path.isfile(source_path):
             with open(source_path) as f:
                 reply['success'] = True
@@ -389,7 +389,7 @@ class Debugger:
             'success': True,
             'command': message['command']
         }
-        return reply;
+        return reply
 
     async def debugInfo(self, message):
         breakpoint_list = []

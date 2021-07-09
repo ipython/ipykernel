@@ -327,7 +327,7 @@ def loop_cocoa(kernel):
                 if kernel.shell_stream.flush(limit=1):
                     # events to process, return control to kernel
                     return
-            except:
+            except BaseException:
                 raise
         except KeyboardInterrupt:
             # Ctrl-C shouldn't crash the kernel

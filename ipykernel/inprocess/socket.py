@@ -3,9 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import abc
 from queue import Queue
-import warnings
 
 import zmq
 

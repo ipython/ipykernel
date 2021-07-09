@@ -1,7 +1,7 @@
 
 import pickle
 
-from ipykernel.pickleutil import can, uncan, codeutil
+from ipykernel.pickleutil import can, uncan
 
 def interactive(f):
     f.__module__ = '__main__'

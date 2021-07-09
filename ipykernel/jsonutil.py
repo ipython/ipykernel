@@ -10,7 +10,6 @@ import types
 from datetime import datetime
 import numbers
 
-from ipython_genutils.encoding import DEFAULT_ENCODING
 next_attr_name = '__next__'
 
 #-----------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 
 import warnings
 
-from matplotlib_inline.backend_inline import * # analysis: ignore
+from matplotlib_inline.backend_inline import *  # analysis: ignore # noqa F401
 
 
 warnings.warn(

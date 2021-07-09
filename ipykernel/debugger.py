@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 
@@ -11,7 +10,6 @@ from tornado.locks import Event
 from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 
 from IPython.core.getipython import get_ipython
-import debugpy
 
 from .jsonutil import json_clean
 

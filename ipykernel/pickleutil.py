@@ -18,7 +18,7 @@ from traitlets.utils.importstring import import_item
 from ipython_genutils.py3compat import buffer_to_bytes
 
 # This registers a hook when it's imported
-from ipyparallel.serialize import codeutil
+from ipyparallel.serialize import codeutil  # noqa F401
 
 from traitlets.log import get_logger
 

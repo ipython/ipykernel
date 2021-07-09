@@ -24,7 +24,7 @@ except ImportError:
     now = datetime.now
 
 from tornado import ioloop
-from tornado.queues import Queue, QueueEmpty
+from tornado.queues import Queue
 import zmq
 from zmq.eventloop.zmqstream import ZMQStream
 

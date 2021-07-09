@@ -1,5 +1,3 @@
-from logging import INFO, DEBUG, WARN, ERROR, FATAL
-
 from zmq.log.handlers import PUBHandler
 
 import warnings

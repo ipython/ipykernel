@@ -5,8 +5,6 @@
 
 from jupyter_client.channelsabc import HBChannelABC
 
-from .socket import DummySocket
-
 #-----------------------------------------------------------------------------
 # Channel classes
 #-----------------------------------------------------------------------------

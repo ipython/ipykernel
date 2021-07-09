@@ -6,10 +6,7 @@
 import json
 import sys
 from subprocess import Popen, PIPE
-import warnings
 
-from IPython.core.profiledir import ProfileDir
-from IPython.paths import get_ipython_dir
 from ipython_genutils.path import filefind
 
 import jupyter_client

@@ -164,4 +164,3 @@ def test_install_env(tmp_path, env):
             assert spec['env'][k] == v
     else:
         assert 'env' not in spec
-

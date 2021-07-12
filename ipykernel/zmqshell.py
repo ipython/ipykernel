@@ -524,7 +524,7 @@ class ZMQInteractiveShell(InteractiveShell):
         payload = dict(
             source='ask_exit',
             keepkernel=self.keepkernel_on_exit,
-            )
+        )
         self.payload_manager.write_payload(payload)
 
     def run_cell(self, *args, **kwargs):

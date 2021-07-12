@@ -150,4 +150,3 @@ def mainloop(duration=1):
         # Run the loop manually in this case,
         # since there may be events still to process (ipython/ipython#9734)
         CoreFoundation.CFRunLoopRun()
-

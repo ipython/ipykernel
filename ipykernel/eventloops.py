@@ -151,7 +151,7 @@ def loop_wx(kernel):
 
     import wx
 
-     # Wx uses milliseconds
+    # Wx uses milliseconds
     poll_interval = int(1000 * kernel._poll_interval)
 
     def wake():

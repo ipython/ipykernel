@@ -5,7 +5,7 @@ This module does not import anything from matplotlib.
 
 import warnings
 
-from matplotlib_inline.config import * # analysis: ignore
+from matplotlib_inline.config import *  # analysis: ignore # noqa F401
 
 
 warnings.warn(

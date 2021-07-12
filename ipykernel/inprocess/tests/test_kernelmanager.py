@@ -3,7 +3,6 @@
 
 import unittest
 
-from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
 from ipykernel.inprocess.manager import InProcessKernelManager
 
 #-----------------------------------------------------------------------------

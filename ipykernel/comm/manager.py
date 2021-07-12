@@ -3,13 +3,12 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import sys
 import logging
 
 from traitlets.config import LoggingConfigurable
 
 from traitlets.utils.importstring import import_item
-from traitlets import Instance, Unicode, Dict, Any, default
+from traitlets import Instance, Dict
 
 from .comm import Comm
 

@@ -4,13 +4,12 @@
 # Distributed under the terms of the Modified BSD License.
 
 import atexit
-import os
 import sys
 from time import time
 
 from contextlib import contextmanager
 from queue import Empty
-from subprocess import PIPE, STDOUT
+from subprocess import STDOUT
 
 import nose
 

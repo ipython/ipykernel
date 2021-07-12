@@ -13,7 +13,6 @@ import logging
 from io import TextIOWrapper, FileIO
 from logging import StreamHandler
 
-import tornado
 from tornado import ioloop
 
 import zmq

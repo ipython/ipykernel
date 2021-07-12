@@ -3,7 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import os
 from queue import Queue
 from threading import Thread
 import unittest

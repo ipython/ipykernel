@@ -1024,7 +1024,7 @@ class Kernel(SingletonConfigurable):
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
                 raise KeyboardInterrupt("Interrupted by user") from None
-            except Exception as e:
+            except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)
 
         try:

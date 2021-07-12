@@ -89,10 +89,9 @@ def test_write_kernel_spec_path():
 def test_install_kernelspec():
 
     path = tempfile.mkdtemp()
-    try: 
-        test = InstallIPythonKernelSpecApp.launch_instance(argv=['--prefix', path])
-        assert_is_spec(os.path.join(
-            path, 'share', 'jupyter', 'kernels', KERNEL_NAME))
+    try:
+        InstallIPythonKernelSpecApp.launch_instance(argv=["--prefix", path])
+        assert_is_spec(os.path.join(path, "share", "jupyter", "kernels", KERNEL_NAME))
     finally:
         shutil.rmtree(path)
 

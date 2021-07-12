@@ -498,7 +498,7 @@ class OutStream(TextIOBase):
         """
 
         if not isinstance(string, str):
-            raise ValueError(
+            raise TypeError(
                 "TypeError: write() argument must be str, not {type(string)}"
             )
 

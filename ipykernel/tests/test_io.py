@@ -38,6 +38,8 @@ def test_io_api():
         stream.seek(0)
     with nt.assert_raises(io.UnsupportedOperation):
         stream.tell()
+    with nt.assert_raises(TypeError):
+        stream.write(b'')
 
 def test_io_isatty():
     session = Session()

@@ -499,7 +499,7 @@ class OutStream(TextIOBase):
 
         if not isinstance(string, str):
             raise TypeError(
-                "TypeError: write() argument must be str, not {type(string)}"
+                f"write() argument must be str, not {type(string)}"
             )
 
         if self.echo is not None:

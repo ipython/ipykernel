@@ -534,9 +534,9 @@ class IPythonKernel(KernelBase):
             # invoke IPython traceback formatting
             shell.showtraceback()
             reply_content = {
-                'traceback': shell._last_traceback or [],
-                'ename': str(type(e).__name__),
-                'evalue': safe_unicode(e),
+                "traceback": shell._last_traceback or [],
+                "ename": str(type(e).__name__),
+                "evalue": str(e),
             }
             # FIXME: deprecated piece for ipyparallel (remove in 5.0):
             e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method='apply')

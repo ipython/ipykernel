@@ -94,7 +94,7 @@ class CommManager(LoggingConfigurable):
         # Failure.
         try:
             comm.close()
-        except:
+        except Exception:
             self.log.error("""Could not close comm during `comm_open` failure
                 clean-up.  The comm may not have been opened yet.""", exc_info=True)
 

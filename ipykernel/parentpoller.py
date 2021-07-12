@@ -3,7 +3,7 @@
 
 try:
     import ctypes
-except:
+except ImportError:
     ctypes = None
 import os
 import platform

@@ -241,7 +241,7 @@ class Debugger:
         elif msg['event'] == 'continued':
             try:
                 self.stopped_threads.remove(msg['body']['threadId'])
-            except:
+            except Exception:
                 pass
         self.event_callback(msg)
 

@@ -257,7 +257,7 @@ class Kernel(SingletonConfigurable):
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
-        except:
+        except Exception:
             self.log.error("Invalid Control Message", exc_info=True)
             return
 
@@ -309,7 +309,7 @@ class Kernel(SingletonConfigurable):
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
-        except:
+        except Exception:
             self.log.error("Invalid Message", exc_info=True)
             return
 
@@ -624,7 +624,7 @@ class Kernel(SingletonConfigurable):
             store_history = content.get('store_history', not silent)
             user_expressions = content.get('user_expressions', {})
             allow_stdin = content.get('allow_stdin', False)
-        except:
+        except Exception:
             self.log.error("Got bad msg: ")
             self.log.error("%s", parent)
             return
@@ -847,7 +847,7 @@ class Kernel(SingletonConfigurable):
             content = parent['content']
             bufs = parent['buffers']
             msg_id = parent['header']['msg_id']
-        except:
+        except Exception:
             self.log.error("Got bad msg: %s", parent, exc_info=True)
             return
 

@@ -630,7 +630,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.init_io()
         try:
             self.init_signal()
-        except:
+        except Exception:
             # Catch exception when initializing signal fails, eg when running the
             # kernel on a separate thread
             if self.log_level < logging.CRITICAL:

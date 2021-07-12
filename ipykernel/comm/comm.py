@@ -94,7 +94,7 @@ class Comm(LoggingConfigurable):
                               target_module=self.target_module,
                               )
             self._closed = False
-        except:
+        except Exception:
             comm_manager.unregister_comm(self)
             raise
 

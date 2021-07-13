@@ -152,11 +152,13 @@ class InProcessKernel(IPythonKernel):
 
     @default('stdout')
     def _default_stdout(self):
-        return OutStream(self.session, self.iopub_thread, 'stdout')
+        return OutStream(self.session, self.iopub_thread, 'stdout', 
+                         watchfd=False)
 
     @default('stderr')
     def _default_stderr(self):
-        return OutStream(self.session, self.iopub_thread, 'stderr')
+        return OutStream(self.session, self.iopub_thread, 'stderr', 
+                         watchfd=False)
 
 #-----------------------------------------------------------------------------
 # Interactive shell subclass

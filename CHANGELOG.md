@@ -3,6 +3,26 @@
 
 ## 6.0
 
+## 6.0.2
+
+### Bugs fixed
+
+- Add watchfd keyword to InProcessKernel OutStream initialization [#727](https://github.com/ipython/ipykernel/pull/727) ([@rayosborn](https://github.com/rayosborn))
+- Fix typo in eventloops.py [#711](https://github.com/ipython/ipykernel/pull/711) ([@selasley](https://github.com/selasley))
+- [bugfix] fix in setup.py (comma before appnope) [#709](https://github.com/ipython/ipykernel/pull/709) ([@jstriebel](https://github.com/jstriebel))
+
+### Maintenance and upkeep improvements
+
+- Add upper bound to dependency versions. [#714](https://github.com/ipython/ipykernel/pull/714) ([@martinRenou](https://github.com/martinRenou))
+- Replace non-existing function. [#723](https://github.com/ipython/ipykernel/pull/723) ([@Carreau](https://github.com/Carreau))
+- Remove unused variables [#722](https://github.com/ipython/ipykernel/pull/722) ([@Carreau](https://github.com/Carreau))
+- Do not use bare except [#721](https://github.com/ipython/ipykernel/pull/721) ([@Carreau](https://github.com/Carreau))
+- misc whitespace and line too long [#720](https://github.com/ipython/ipykernel/pull/720) ([@Carreau](https://github.com/Carreau))
+- Formatting: remove semicolon [#719](https://github.com/ipython/ipykernel/pull/719) ([@Carreau](https://github.com/Carreau))
+- Clean most flake8 unused import warnings. [#718](https://github.com/ipython/ipykernel/pull/718) ([@Carreau](https://github.com/Carreau))
+- Minimal flake8 config [#717](https://github.com/ipython/ipykernel/pull/717) ([@Carreau](https://github.com/Carreau))
+- Remove CachingCompiler's filename_mapper [#710](https://github.com/ipython/ipykernel/pull/710) ([@martinRenou](https://github.com/martinRenou))
+
 ## 6.0.1
 
 - Fix Tk and asyncio event loops [#704](https://github.com/ipython/ipykernel/pull/704) ([@ccordoba12](https://github.com/ccordoba12))

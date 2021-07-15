@@ -13,6 +13,7 @@
 
 ### Maintenance and upkeep improvements
 
+- Add upper bound to dependency versions. [#714](https://github.com/ipython/ipykernel/pull/714) ([@martinRenou](https://github.com/martinRenou))
 - Replace non-existing function. [#723](https://github.com/ipython/ipykernel/pull/723) ([@Carreau](https://github.com/Carreau))
 - Remove unused variables [#722](https://github.com/ipython/ipykernel/pull/722) ([@Carreau](https://github.com/Carreau))
 - Do not use bare except [#721](https://github.com/ipython/ipykernel/pull/721) ([@Carreau](https://github.com/Carreau))

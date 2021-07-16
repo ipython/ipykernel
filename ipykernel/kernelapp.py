@@ -129,7 +129,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     iopub_thread = Any()
     control_thread = Any()
 
-    ports = Dict()
+    _ports = Dict()
 
     subcommands = {
         'install': (
@@ -390,7 +390,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             for line in lines:
                 print(line, file=sys.__stdout__)
 
-        self.ports = dict(shell=self.shell_port, iopub=self.iopub_port,
+        self._ports = dict(shell=self.shell_port, iopub=self.iopub_port,
                                 stdin=self.stdin_port, hb=self.hb_port,
                                 control=self.control_port)
 
@@ -500,7 +500,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
                                 user_ns=self.user_ns,
         )
         kernel.record_ports({
-            name + '_port': port for name, port in self.ports.items()
+            name + '_port': port for name, port in self._ports.items()
         })
         self.kernel = kernel
 

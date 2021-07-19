@@ -3,6 +3,10 @@
 
 ## 6.0
 
+## 6.0.3
+
+- `KernelApp`: rename ports variable to avoid override [#731](https://github.com/ipython/ipykernel/pull/731) ([@amorenoz](https://github.com/amorenoz))
+
 ## 6.0.2
 
 ### Bugs fixed

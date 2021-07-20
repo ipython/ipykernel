@@ -16,6 +16,7 @@ import sys
 import time
 import uuid
 import warnings
+from contextvars import ContextVar
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -134,7 +135,7 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parents = Dict({"shell": {}, "control": {}})
+    _parents = Dict({"shell": ContextVar("shell_parent", default={}), "control": ContextVar("control_parent", default={})})
     _parent_ident = Dict({'shell': b'', 'control': b''})
 
     @property
@@ -556,7 +557,7 @@ class Kernel(SingletonConfigurable):
         on the stdin channel.
         """
         self._parent_ident[channel] = ident
-        self._parents[channel] = parent
+        self._parents[channel].set(parent)
 
     def get_parent(self, channel="shell"):
         """Get the parent request associated with a channel.
@@ -573,7 +574,7 @@ class Kernel(SingletonConfigurable):
         message : dict
             the parent message for the most recent request on the channel.
         """
-        return self._parents.get(channel, {})
+        return self._parents.get(channel, {}).get({})
 
     def send_response(self, stream, msg_or_type, content=None, ident=None,
              buffers=None, track=False, header=None, metadata=None, channel='shell'):

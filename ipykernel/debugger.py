@@ -205,7 +205,7 @@ class Debugger:
     
     # Requests that can be handled even if the debugger is not running
     static_debug_msg_types = [
-        'debugInfo', 'inspectVariables'
+        'debugInfo', 'inspectVariables', 'richInspectVariables'
     ]
 
     def __init__(self, log, debugpy_stream, event_callback, shell_socket, session):
@@ -443,6 +443,60 @@ class Debugger:
                 'variables': var_list
             }
         }
+        return reply
+
+    async def richInspectVariables(self, message):
+        var_name = message['arguments']['variableName']
+        var_repr_data = var_name + '_repr_data'
+        var_repr_metadata = var_name + '_repr_metadata'
+
+        if not self.breakpoint_list:
+            # The code did not hit a breakpoint, we use the intepreter
+            # to get the rich representation of the variable
+            var_repr_data, var_repr_metadata = get_ipython().display_formatter.format(var_name)
+        else:
+            # The code has stopped on a breakpoint, we use the setExpression
+            # request to get the rich representation of the variable
+            lvalue = var_repr_data + ',' + var_repr_metadata
+            code = 'get_ipython().display_formatter.format(' + var_name+')'
+            frame_id = message['arguments']['frameId']
+            seq = message['seq']
+            request = {
+                'type': 'request',
+                'command': 'setExpression',
+                'seq': seq+1,
+                'arguments': {
+                    'expression': lvalue,
+                    'value': code,
+                    'frameId': frameId
+                }
+            }
+            await self._forward_message(request)
+
+        reply = {
+            'type': 'response',
+            'sequence_seq': message['seq'],
+            'success': False,
+            'command': message['command']
+        }
+
+        repr_data = globals()[var_repr_data]
+        repr_metadata = globals()[var_repr_metadata]
+        body = {
+            'data': {},
+            'metadata': {}
+        }
+        
+        for key, value in repr_data.items():
+            body['data']['key'] = value
+            if repr_metadata.has_key(key):
+                body['metadata'][key] = repr_metadata[key]
+
+        globals().pop(var_repr_data)
+        globals().pop(var_repr_metadata)
+
+        reply['body'] = body
+        reply['success'] = True
         return reply
 
     async def process_request(self, message):

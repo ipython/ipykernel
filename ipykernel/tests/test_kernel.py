@@ -195,13 +195,13 @@ def test_raw_input():
         theprompt = "prompt> "
         code = 'print({input_f}("{theprompt}"))'.format(**locals())
         msg_id = kc.execute(code, allow_stdin=True)
-        msg = kc.get_stdin_msg(block=True, timeout=TIMEOUT)
+        msg = kc.get_stdin_msg(timeout=TIMEOUT)
         assert msg['header']['msg_type'] == 'input_request'
         content = msg['content']
         assert content['prompt'] == theprompt
         text = "some text"
         kc.input(text)
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == text + "\n"
@@ -249,22 +249,22 @@ def test_is_complete():
         # There are more test cases for this in core - here we just check
         # that the kernel exposes the interface correctly.
         kc.is_complete('2+2')
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'complete'
 
         # SyntaxError
         kc.is_complete('raise = 2')
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'invalid'
 
         kc.is_complete('a = [1,\n2,')
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'incomplete'
         assert reply['content']['indent'] == ''
 
         # Cell magic ends on two blank lines for console UIs
         kc.is_complete('%%timeit\na\n\n')
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'complete'
 
 
@@ -275,7 +275,7 @@ def test_complete():
         wait_for_idle(kc)
         cell = 'import IPython\nb = a.'
         kc.complete(cell)
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
 
     c = reply['content']
     assert c['status'] == 'ok'
@@ -341,20 +341,20 @@ def test_unc_paths():
         unc_file_path = os.path.join(unc_root, file_path[1:])
 
         kc.execute("cd {0:s}".format(unc_file_path))
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
         out, err = assemble_output(kc.get_iopub_msg)
         assert unc_file_path in out
 
         flush_channels(kc)
         kc.execute(code="ls")
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
         out, err = assemble_output(kc.get_iopub_msg)
         assert 'unc.txt' in out
 
         kc.execute(code="cd")
-        reply = kc.get_shell_msg(block=True, timeout=TIMEOUT)
+        reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
 
 

@@ -95,18 +95,18 @@ def test_embed_kernel_basic():
     with setup_kernel(cmd) as client:
         # oinfo a (int)
         client.inspect("a")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
 
         client.execute("c=a*2")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['status'] == 'ok'
 
         # oinfo c (should be 10)
         client.inspect("c")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
@@ -129,7 +129,7 @@ def test_embed_kernel_namespace():
     with setup_kernel(cmd) as client:
         # oinfo a (int)
         client.inspect("a")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
@@ -137,7 +137,7 @@ def test_embed_kernel_namespace():
 
         # oinfo b (str)
         client.inspect("b")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
@@ -145,7 +145,7 @@ def test_embed_kernel_namespace():
 
         # oinfo c (undefined)
         client.inspect("c")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert not content['found']
 
@@ -168,7 +168,7 @@ def test_embed_kernel_reentrant():
     with setup_kernel(cmd) as client:
         for i in range(5):
             client.inspect("count")
-            msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+            msg = client.get_shell_msg(timeout=TIMEOUT)
             content = msg['content']
             assert content['found']
             text = content['data']['text/plain']
@@ -176,5 +176,5 @@ def test_embed_kernel_reentrant():
 
             # exit from embed_kernel
             client.execute("get_ipython().exit_now = True")
-            msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+            msg = client.get_shell_msg(timeout=TIMEOUT)
             time.sleep(0.2)

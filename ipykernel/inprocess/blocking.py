@@ -29,13 +29,12 @@ class BlockingInProcessChannel(InProcessChannel):
     def call_handlers(self, msg):
         self._in_queue.put(msg)
 
-    def get_msg(self, timeout=None):
+    def get_msg(self, block=True, timeout=None):
         """ Gets a message if there is one that is ready. """
         if timeout is None:
             # Queue.get(timeout=None) has stupid uninteruptible
             # behavior, so wait for a week instead
             timeout = 604800
-        block = timeout > 0
         return self._in_queue.get(block, timeout)
 
     def get_msgs(self):
@@ -43,7 +42,7 @@ class BlockingInProcessChannel(InProcessChannel):
         msgs = []
         while True:
             try:
-                msgs.append(self.get_msg(timeout=0))
+                msgs.append(self.get_msg(block=False))
             except Empty:
                 break
         return msgs
@@ -79,14 +78,14 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
         while True:
             self.kernel_info()
             try:
-                msg = self.shell_channel.get_msg(timeout=1)
+                msg = self.shell_channel.get_msg(block=True, timeout=1)
             except Empty:
                 pass
             else:
                 if msg['msg_type'] == 'kernel_info_reply':
                     # Checking that IOPub is connected. If it is not connected, start over.
                     try:
-                        self.iopub_channel.get_msg(timeout=0.2)
+                        self.iopub_channel.get_msg(block=True, timeout=0.2)
                     except Empty:
                         pass
                     else:
@@ -96,7 +95,7 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
         # Flush IOPub channel
         while True:
             try:
-                msg = self.iopub_channel.get_msg(timeout=0.2)
+                msg = self.iopub_channel.get_msg(block=True, timeout=0.2)
                 print(msg['msg_type'])
             except Empty:
                 break

@@ -1,6 +1,22 @@
 # Changes in IPython kernel
 
 
+## 6.1
+
+## 6.1.0
+
+### Enhancements made
+
+- Implemented `richInspectVariable` request handler [#734](https://github.com/ipython/ipykernel/pull/734) ([@JohanMabille](https://github.com/JohanMabille))
+
+### Maintenance and upkeep improvements
+
+- Bump `importlib-metadata` limit for `python<3.8` [#738](https://github.com/ipython/ipykernel/pull/738) ([@ltalirz](https://github.com/ltalirz))
+
+### Bug Fixes
+
+- Fix exception raised by `OutStream.write` [#726](https://github.com/ipython/ipykernel/pull/726) ([@SimonKrughoff](https://github.com/SimonKrughoff))
+
 ## 6.0
 
 ## 6.0.3

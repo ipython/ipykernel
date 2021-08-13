@@ -45,7 +45,7 @@ def flush_channels(kc=None):
     for get_msg in (kc.get_shell_msg, kc.get_iopub_msg):
         while True:
             try:
-                msg = get_msg(block=True, timeout=0.1)
+                msg = get_msg(timeout=0.1)
             except Empty:
                 break
             else:
@@ -155,7 +155,7 @@ def assemble_output(get_msg):
     stdout = ''
     stderr = ''
     while True:
-        msg = get_msg(block=True, timeout=1)
+        msg = get_msg(timeout=1)
         msg_type = msg['msg_type']
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':
@@ -175,7 +175,7 @@ def assemble_output(get_msg):
 
 def wait_for_idle(kc):
     while True:
-        msg = kc.get_iopub_msg(block=True, timeout=1)
+        msg = kc.get_iopub_msg(timeout=1)
         msg_type = msg['msg_type']
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':

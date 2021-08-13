@@ -12,7 +12,7 @@ def test_ipython_start_kernel_userns():
 
     with setup_kernel(cmd) as client:
         client.inspect("tre")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
@@ -20,11 +20,11 @@ def test_ipython_start_kernel_userns():
 
         # user_module should be an instance of DummyMod
         client.execute("usermod = get_ipython().user_module")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg["content"]
         assert content["status"] == "ok"
         client.inspect("usermod")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']
@@ -40,11 +40,11 @@ def test_ipython_start_kernel_no_userns():
     with setup_kernel(cmd) as client:
         # user_module should not be an instance of DummyMod
         client.execute("usermod = get_ipython().user_module")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg["content"]
         assert content["status"] == "ok"
         client.inspect("usermod")
-        msg = client.get_shell_msg(block=True, timeout=TIMEOUT)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg['content']
         assert content['found']
         text = content['data']['text/plain']

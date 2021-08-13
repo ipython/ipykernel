@@ -22,15 +22,20 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install .
-          pip install pytest "nbclient[test] @ git+git://github.com/jupyter/nbclient.git@master" \
-                             "ipyparallel[test] @ git+git://github.com/ipython/ipyparallel.git@main" \
-                             "jupyter_client[test] @ git+git://github.com/jupyter/jupyter_client.git@master" \
-                             pytest-asyncio
+          pip install pytest pytest-asyncio
+          pip install nbclient[test]        --pre
+          pip install ipyparallel[test]     --pre
+          pip install jupyter_client[test]  --pre
+          pip install . --force-reinstall
           pip freeze
+          python -c 'import ipykernel; print("ipykernel", ipykernel.__version__)'
 
-      - name: Run tests
-        run: |
-          IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
-          pytest --pyargs ipyparallel
-          pytest --pyargs jupyter_client
+      - name: Test nbclient
+        if: ${{ always() }}
+        run: IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
+      - name: Test ipyparallel
+        if: ${{ always() }}
+        run: pytest --pyargs ipyparallel
+      - name: Test jupyter_client
+        if: ${{ always() }}
+        run: pytest --pyargs jupyter_client

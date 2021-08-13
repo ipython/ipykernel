@@ -10,6 +10,7 @@ from functools import partial
 import itertools
 import logging
 import inspect
+import os
 from signal import signal, default_int_handler, SIGINT
 import sys
 import time
@@ -198,7 +199,7 @@ class Kernel(SingletonConfigurable):
         'inspect_request', 'history_request',
         'comm_info_request', 'kernel_info_request',
         'connect_request', 'shutdown_request',
-        'is_complete_request',
+        'is_complete_request', 'interrupt_request',
         # deprecated:
         'apply_request',
     ]
@@ -779,6 +780,30 @@ class Kernel(SingletonConfigurable):
         msg = self.session.send(stream, 'comm_info_reply',
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
+
+    async def interrupt_request(self, stream, ident, parent):
+        pid = os.getpid()
+        pgid = os.getpgid(pid)
+
+        if os.name == "nt":
+            self.log.error("Interrupt message not supported on Windows")
+
+        else:
+            # Prefer process-group over process
+            if pgid and hasattr(os, "killpg"):
+                try:
+                    os.killpg(pgid, SIGINT)
+                    return
+                except OSError:
+                    pass
+            try:
+                os.kill(pid, SIGINT)
+            except OSError:
+                pass
+
+        content = parent['content']
+        self.session.send(stream, 'interrupt_reply', content, parent, ident=ident)
+        return
 
     async def shutdown_request(self, stream, ident, parent):
         content = self.do_shutdown(parent['content']['restart'])

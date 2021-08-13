@@ -392,6 +392,26 @@ def test_interrupt_during_input():
 
 
 @pytest.mark.skipif(
+    os.name == "nt",
+    reason="Message based interrupt not supported on Windows"
+)
+def test_interrupt_with_message():
+    """
+
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        km.kernel_spec.interrupt_mode = "message"
+        msg_id = kc.execute("input()")
+        time.sleep(1)  # Make sure it's actually waiting for input.
+        km.interrupt_kernel()
+        from .test_message_spec import validate_message
+        # If we failed to interrupt interrupt, this will timeout:
+        reply = get_reply(kc, msg_id, TIMEOUT)
+        validate_message(reply, 'execute_reply', msg_id)
+
+
+@pytest.mark.skipif(
     version.parse(IPython.__version__) < version.parse("7.14.0"),
     reason="Need new IPython"
 )

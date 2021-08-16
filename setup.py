@@ -39,23 +39,11 @@ package_data = {
     'ipykernel': ['resources/*.*'],
 }
 
-version_ns = {}
-with open(pjoin(here, name, '_version.py')) as f:
-    exec(f.read(), {}, version_ns)
-
-current_version = version_ns['__version__']
-
-loose_pep440re = re.compile(r'^(\d+)\.(\d+)\.(\d+((a|b|rc)\d+)?)(\.post\d+)?(\.dev\d*)?$')
-if not loose_pep440re.match(current_version):
-    raise ValueError("Version number '%s' is not valid (should match [N!]N(.N)*[{a|b|rc}N][.postN][.devN])" % current_version)
-
-
 with open(pjoin(here, 'README.md')) as fid:
     LONG_DESCRIPTION = fid.read()
 
 setup_args = dict(
     name=name,
-    version=current_version,
     cmdclass={
         'bdist_egg': bdist_egg if 'bdist_egg' in sys.argv else bdist_egg_disabled,
     },

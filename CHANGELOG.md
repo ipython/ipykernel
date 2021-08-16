@@ -1,5 +1,17 @@
 # Changes in IPython kernel
 
+## 6.2
+
+## 6.2.0
+
+### Enhancements made
+
+- Add Support for Message Based Interrupt [#741](https://github.com/ipython/ipykernel/pull/741) ([@afshin](https://github.com/afshin))
+
+### Maintenance and upkeep improvements
+
+- Remove some more dependency on nose/iptest [#743](https://github.com/ipython/ipykernel/pull/743) ([@Carreau](https://github.com/Carreau))
+- Remove block param from get_msg() [#736](https://github.com/ipython/ipykernel/pull/736) ([@davidbrochart](https://github.com/davidbrochart))
 
 ## 6.1
 

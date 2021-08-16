@@ -9,7 +9,6 @@ import os.path
 import sys
 import time
 
-import nose.tools as nt
 from flaky import flaky
 import pytest
 from packaging import version
@@ -108,9 +107,10 @@ def test_sys_path_profile_dir():
 
 
 @flaky(max_runs=3)
-@dec.skipif(
-    sys.platform == 'win32' or (sys.platform == "darwin" and sys.version_info >=(3, 8)),
-    "subprocess prints fail on Windows and MacOS Python 3.8+"
+@pytest.mark.skipif(
+    sys.platform == "win32"
+    or (sys.platform == "darwin" and sys.version_info >= (3, 8)),
+    reason="subprocess prints fail on Windows and MacOS Python 3.8+",
 )
 def test_subprocess_print():
     """printing from forked mp.Process"""
@@ -130,10 +130,10 @@ def test_subprocess_print():
 
         msg_id, content = execute(kc=kc, code=code)
         stdout, stderr = assemble_output(kc.get_iopub_msg)
-        nt.assert_equal(stdout.count("hello"), np, stdout)
+        assert stdout.count("hello") == np, stdout
         for n in range(np):
-            nt.assert_equal(stdout.count(str(n)), 1, stdout)
-        assert stderr == ''
+            assert stdout.count(str(n)) == 1, stdout
+        assert stderr == ""
         _check_master(kc, expected=True)
         _check_master(kc, expected=True, stream="stderr")
 
@@ -161,9 +161,10 @@ def test_subprocess_noprint():
 
 
 @flaky(max_runs=3)
-@dec.skipif(
-    sys.platform == 'win32' or (sys.platform == "darwin" and sys.version_info >=(3, 8)),
-    "subprocess prints fail on Windows and MacOS Python 3.8+"
+@pytest.mark.skipif(
+    sys.platform == "win32"
+    or (sys.platform == "darwin" and sys.version_info >= (3, 8)),
+    reason="subprocess prints fail on Windows and MacOS Python 3.8+",
 )
 def test_subprocess_error():
     """error in mp.Process doesn't crash"""
@@ -236,7 +237,7 @@ def test_smoke_faulthandler():
             'if not sys.platform.startswith("win32"):',
             '    faulthandler.register(signal.SIGTERM)'])
         _, reply = execute(code, kc=kc)
-        nt.assert_equal(reply['status'], 'ok', reply.get('traceback', ''))
+        assert reply["status"] == "ok", reply.get("traceback", "")
 
 
 def test_help_output():
@@ -268,7 +269,7 @@ def test_is_complete():
         assert reply['content']['status'] == 'complete'
 
 
-@dec.skipif(sys.platform != 'win32', "only run on Windows")
+@pytest.mark.skipif(sys.platform != "win32", reason="only run on Windows")
 def test_complete():
     with kernel() as kc:
         execute('a = 1', kc=kc)
@@ -330,7 +331,10 @@ def test_message_order():
             assert reply['parent_header']['msg_id'] == msg_id
 
 
-@dec.skipif(sys.platform.startswith('linux') or sys.platform.startswith('darwin'))
+@pytest.mark.skipif(
+    sys.platform.startswith("linux") or sys.platform.startswith("darwin"),
+    reason="test only on windows",
+)
 def test_unc_paths():
     with kernel() as kc, TemporaryDirectory() as td:
         drive_file_path = os.path.join(td, 'unc.txt')

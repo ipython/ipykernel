@@ -9,7 +9,10 @@ from distutils.version import LooseVersion as V
 from queue import Empty
 
 import nose.tools as nt
-from nose.plugins.skip import SkipTest
+
+import pytest
+
+import jupyter_client
 
 from traitlets import (
     HasTraits, TraitError, Bool, Unicode, Dict, Integer, List, Enum
@@ -483,10 +486,12 @@ def test_connect_request():
     validate_message(reply, 'connect_reply', msg_id)
 
 
+@pytest.mark.skipif(
+    jupyter_client.version_info < (5, 0),
+    reason="earlier Jupyter Client don't have comm_info",
+)
 def test_comm_info_request():
     flush_channels()
-    if not hasattr(KC, 'comm_info'):
-        raise SkipTest()
     msg_id = KC.comm_info()
     reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, 'comm_info_reply', msg_id)

@@ -1,6 +1,4 @@
-include COPYING.md
-include CONTRIBUTING.md
-include README.md
+include *.md
 include pyproject.toml
 
 # Documentation
@@ -23,3 +21,5 @@ global-exclude .git
 global-exclude .ipynb_checkpoints
 
 prune data_kernelspec
+exclude .mailmap
+exclude readthedocs.yml

@@ -7,3 +7,23 @@ requires=[
   "jupyter_core>=4.2",
   "jupyter_client",
 ]
+
+[tool.check-manifest]
+ignore = []
+
+[tool.jupyter-releaser]
+skip = ["check-links"]
+
+[tool.tbump.version]
+current = "6.2.0"
+regex = '''
+  (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)
+  ((?P<channel>a|b|rc|.dev)(?P<release>\d+))?
+'''
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+[[tool.tbump.file]]
+src = "ipykernel/_version.py"

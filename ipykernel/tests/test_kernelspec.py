@@ -23,20 +23,18 @@ from ipykernel.kernelspec import (
 
 import pytest
 
-import nose.tools as nt
-
 pjoin = os.path.join
 
 
 def test_make_ipkernel_cmd():
     cmd = make_ipkernel_cmd()
-    nt.assert_equal(cmd, [
+    assert cmd == [
         sys.executable,
         '-m',
         'ipykernel_launcher',
         '-f',
         '{connection_file}'
-    ])
+    ]
 
 
 def assert_kernel_dict(d):
@@ -51,10 +49,9 @@ def test_get_kernel_dict():
 
 
 def assert_kernel_dict_with_profile(d):
-    nt.assert_equal(d['argv'], make_ipkernel_cmd(
-        extra_arguments=["--profile", "test"]))
-    assert d['display_name'] == 'Python %i (ipykernel)' % sys.version_info[0]
-    assert d['language'] == 'python'
+    assert d["argv"] == make_ipkernel_cmd(extra_arguments=["--profile", "test"])
+    assert d["display_name"] == "Python %i (ipykernel)" % sys.version_info[0]
+    assert d["language"] == "python"
 
 
 def test_get_kernel_dict_with_profile():
@@ -127,7 +124,7 @@ def test_install_profile():
     with open(spec) as f:
         spec = json.load(f)
     assert spec["display_name"].endswith(" [profile=Test]")
-    nt.assert_equal(spec["argv"][-2:], ["--profile", "Test"])
+    assert spec["argv"][-2:] == ["--profile", "Test"]
 
 
 def test_install_display_name_overrides_profile():

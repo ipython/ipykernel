@@ -1,0 +1,44 @@
+name: Test downstream projects
+
+on:
+  push:
+    branches: "*"
+  pull_request:
+    branches: "*"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pytest pytest-asyncio pytest-tornado
+          pip install nbclient[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed nbclient
+          pip install ipyparallel[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed ipyparallel
+          pip install jupyter_client[test]
+          pip install --pre -U --upgrade-strategy=only-if-needed jupyter_client
+          pip install . --force-reinstall
+          pip freeze
+          python -c 'import ipykernel; print("ipykernel", ipykernel.__version__)'
+
+      - name: Test nbclient
+        if: ${{ always() }}
+        run: IPYKERNEL_CELL_NAME="<IPY-INPUT>" pytest --pyargs nbclient
+      - name: Test ipyparallel
+        if: ${{ always() }}
+        run: pytest --pyargs ipyparallel
+      - name: Test jupyter_client
+        if: ${{ always() }}
+        run: pytest --pyargs jupyter_client

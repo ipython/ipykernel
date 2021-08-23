@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install pytest pytest-asyncio
+          pip install pytest pytest-asyncio pytest-tornado
           pip install nbclient[test]
           pip install --pre -U --upgrade-strategy=only-if-needed nbclient
           pip install ipyparallel[test]

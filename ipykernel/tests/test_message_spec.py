@@ -8,8 +8,6 @@ import sys
 from distutils.version import LooseVersion as V
 from queue import Empty
 
-import nose.tools as nt
-
 import pytest
 
 import jupyter_client
@@ -295,7 +293,9 @@ def test_execute_silent():
     validate_message(status, 'status', msg_id)
     assert status['content']['execution_state'] == 'idle'
 
-    nt.assert_raises(Empty, KC.get_iopub_msg, timeout=0.1)
+    with pytest.raises(Empty):
+        KC.get_iopub_msg(timeout=0.1)
+
     count = reply['execution_count']
 
     msg_id, reply = execute(code='x=2', silent=True)
@@ -305,7 +305,9 @@ def test_execute_silent():
     validate_message(status, 'status', msg_id)
     assert status['content']['execution_state'] == 'idle'
 
-    nt.assert_raises(Empty, KC.get_iopub_msg, timeout=0.1)
+    with pytest.raises(Empty):
+        KC.get_iopub_msg(timeout=0.1)
+
     count_2 = reply['execution_count']
     assert count_2 == count
 
@@ -389,11 +391,11 @@ def test_user_expressions():
 
     msg_id, reply = execute(code='x=1', user_expressions=dict(foo='x+1'))
     user_expressions = reply['user_expressions']
-    nt.assert_equal(user_expressions, {'foo': {
+    assert user_expressions == {'foo': {
         'status': 'ok',
         'data': {'text/plain': '2'},
         'metadata': {},
-    }})
+    }}
 
 
 def test_user_expressions_fail():

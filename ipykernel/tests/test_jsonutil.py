@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 import numbers
 
-import nose.tools as nt
+import pytest
 
 from .. import jsonutil
 from ..jsonutil import json_clean, encode_images
@@ -84,7 +84,7 @@ def test_encode_images():
         assert decoded == value
 
 def test_lambda():
-    with nt.assert_raises(ValueError):
+    with pytest.raises(ValueError):
         json_clean(lambda : 1)
 
 
@@ -93,7 +93,8 @@ def test_exception():
                  {True:'bool', 'True':'string'},
                  ]
     for d in bad_dicts:
-        nt.assert_raises(ValueError, json_clean, d)
+        with pytest.raises(ValueError):
+            json_clean(d)
 
 
 def test_unicode_dict():

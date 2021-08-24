@@ -4,10 +4,11 @@ import io
 
 import zmq
 
+import pytest
+
 from jupyter_client.session import Session
 from ipykernel.iostream import IOPubThread, OutStream
 
-import nose.tools as nt
 
 def test_io_api():
     """Test that wrapped stdout has the same API as a normal TextIO object"""
@@ -26,19 +27,19 @@ def test_io_api():
 
     assert stream.errors is None
     assert not stream.isatty()
-    with nt.assert_raises(io.UnsupportedOperation):
+    with pytest.raises(io.UnsupportedOperation):
         stream.detach()
-    with nt.assert_raises(io.UnsupportedOperation):
+    with pytest.raises(io.UnsupportedOperation):
         next(stream)
-    with nt.assert_raises(io.UnsupportedOperation):
+    with pytest.raises(io.UnsupportedOperation):
         stream.read()
-    with nt.assert_raises(io.UnsupportedOperation):
+    with pytest.raises(io.UnsupportedOperation):
         stream.readline()
-    with nt.assert_raises(io.UnsupportedOperation):
+    with pytest.raises(io.UnsupportedOperation):
         stream.seek(0)
-    with nt.assert_raises(io.UnsupportedOperation):
+    with pytest.raises(io.UnsupportedOperation):
         stream.tell()
-    with nt.assert_raises(TypeError):
+    with pytest.raises(TypeError):
         stream.write(b'')
 
 def test_io_isatty():

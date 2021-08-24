@@ -77,7 +77,7 @@ setup_args = dict(
             "pytest !=5.3.4",
             "pytest-cov",
             "flaky",
-            "nose",  # nose because there are still a few nose.tools imports hanging around
+            "nose",  # nose because we are still using nose streams from ipython
             "ipyparallel",
         ],
     },

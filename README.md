@@ -6,34 +6,26 @@ This package provides the IPython kernel for Jupyter.
 
 1. `git clone`
 2. `cd ipykernel`
-3. `pip install -e .`
+3. `pip install -e ".[test]"`
 
 After that, all normal `ipython` commands will use this newly-installed version of the kernel.
 
 ## Running tests
 
-Ensure you have `nosetests` and the `nose-warnings-filters` plugin installed with
-
-```bash
-pip install nose nose-warnings-filters
-```
+Follow the instructions from `Installation from source`.
 
 and then from the root directory
 
 ```bash
-nosetests ipykernel
+pytest ipykernel
 ```
 
 ## Running tests with coverage
 
-Follow the instructions from `Running tests`. Ensure you have the `coverage` module installed with
-
-```bash
-pip install coverage
-```
+Follow the instructions from `Installation from source`.
 
 and then from the root directory
 
 ```bash
-nosetests --with-coverage --cover-package ipykernel ipykernel
+pytest ipykernel -vv -s --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10
 ```

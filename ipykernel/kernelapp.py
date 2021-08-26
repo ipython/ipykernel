@@ -10,6 +10,7 @@ import errno
 import signal
 import traceback
 import logging
+from functools import partial
 from io import TextIOWrapper, FileIO
 from logging import StreamHandler
 
@@ -161,6 +162,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         help="The importstring for the OutStream factory").tag(config=True)
     displayhook_class = DottedObjectName('ipykernel.displayhook.ZMQDisplayHook',
         help="The importstring for the DisplayHook factory").tag(config=True)
+
+    capture_fd_output = Bool(
+        True,
+        help="""Attempt to capture and forward low-level output, e.g. produced by Extension libraries.
+    """,
+    ).tag(config=True)
 
     # polling
     parent_handle = Integer(int(os.environ.get('JPY_PARENT_PID') or 0),
@@ -412,6 +419,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
 
             e_stdout = None if self.quiet else sys.__stdout__
             e_stderr = None if self.quiet else sys.__stderr__
+
+            if not self.capture_fd_output:
+                outstream_factory = partial(outstream_factory, watchfd=False)
 
             sys.stdout = outstream_factory(self.session, self.iopub_thread,
                                            'stdout',

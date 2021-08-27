@@ -13,8 +13,52 @@ from IPython.core.getipython import get_ipython
 
 from .jsonutil import json_clean
 
+# This import is required to have the next ones working...
+from debugpy.server import api
+from _pydevd_bundle import pydevd_frame_utils
+from _pydevd_bundle.pydevd_suspended_frames import SuspendedFramesManager, _FramesTracker
+
 # Required for backwards compatiblity
 ROUTING_ID = getattr(zmq, 'ROUTING_ID', None) or zmq.IDENTITY
+
+class _FakeCode:
+    def __init__(self, co_filename, co_name):
+        self.co_filename = co_filename
+        self.co_name = co_name
+
+class _FakeFrame:
+    def __init__(self, f_code, f_globals, f_locals):
+        self.f_code = f_code
+        self.f_globals = f_globals
+        self.f_locals = f_locals
+        self.f_back = None
+
+class _DummyPyDB:
+    def __init__(self):
+        from _pydevd_bundle.pydevd_api import PyDevdAPI
+        self.variable_presentation = PyDevdAPI.VariablePresentation()
+
+class VariableExplorer:
+    def __init__(self):
+        self.suspended_frame_manager = SuspendedFramesManager()
+        self.py_db = _DummyPyDB()
+        self.tracker = _FramesTracker(self.suspended_frame_manager, self.py_db)
+        self.frame = None
+
+    def track(self):
+        var = get_ipython().user_ns
+        self.frame = _FakeFrame(_FakeCode('<module>', get_file_name('sys._getframe()')), var, var)
+        self.tracker.track('thread1', pydevd_frame_utils.create_frames_list_from_frame(self.frame))
+
+    def untrack_all(self):
+        self.tracker.untrack_all()
+
+    def get_children_variables(self, variable_ref = None):
+        var_ref = variable_ref
+        if not var_ref:
+            var_ref = id(self.frame)
+        variables = self.suspended_frame_manager.get_variable(var_ref)
+        return [x.get_var_data() for x in variables.get_children_variables()]
 
 class DebugpyMessageQueue:
 
@@ -233,6 +277,8 @@ class Debugger:
         self.debugpy_port = 0
         self.endpoint = None
 
+        self.variable_explorer = VariableExplorer()
+
     def _handle_event(self, msg):
         if msg['event'] == 'stopped':
             self.stopped_threads.append(msg['body']['threadId'])
@@ -245,6 +291,20 @@ class Debugger:
 
     async def _forward_message(self, msg):
         return await self.debugpy_client.send_dap_request(msg)
+
+    def _build_variables_response(self, request, variables):
+        var_list = [var for var in variables if self.accept_variable(var['name'])]
+        reply = {
+            'seq': request['seq'],
+            'type': 'response',
+            'request_seq': request['seq'],
+            'success': True,
+            'command': request['command'],
+            'body': {
+                'variables': var_list
+            }
+        }
+        return reply
 
     @property
     def tcp_client(self):
@@ -370,10 +430,15 @@ class Debugger:
         return cond
 
     async def variables(self, message):
-        reply = await self._forward_message(message)
-        # TODO : check start and count arguments work as expected in debugpy
-        reply['body']['variables'] = \
-            [var for var in reply['body']['variables'] if self.accept_variable(var['name'])]
+        reply = {}
+        if not self.stopped_threads:
+            variables = self.variable_explorer.get_children_variables(message['arguments']['variablesReference'])
+            return self._build_variables_response(message, variables)
+        else:
+            reply = await self._forward_message(message)
+            # TODO : check start and count arguments work as expected in debugpy
+            reply['body']['variables'] = \
+                [var for var in reply['body']['variables'] if self.accept_variable(var['name'])]
         return reply
 
     async def attach(self, message):
@@ -420,30 +485,14 @@ class Debugger:
         return reply
 
     async def inspectVariables(self, message):
-        var_list = []
-        for k, v in get_ipython().user_ns.items():
-            if self.accept_variable(k):
-                try:
-                    val = json_clean(v)
-
-                except ValueError:
-                    val = str(v)
-                var_list.append({
-                    'name': k,
-                    'value': val,
-                    'type': str(type(v))[8:-2],
-                    'variablesReference': 0
-                })
-        reply = {
-            'type': 'response',
-            'request_seq': message['seq'],
-            'success': True,
-            'command': message['command'],
-            'body': {
-                'variables': var_list
-            }
-        }
-        return reply
+        self.variable_explorer.untrack_all()
+        # looks like the implementation of untrack_all in ptvsd
+        # destroys objects we nee din track. We have no choice but
+        # reinstantiate the object
+        self.variable_explorer = VariableExplorer()
+        self.variable_explorer.track()
+        variables = self.variable_explorer.get_children_variables()
+        return self._build_variables_response(message, variables)
 
     async def richInspectVariables(self, message):
         var_name = message['arguments']['variableName']

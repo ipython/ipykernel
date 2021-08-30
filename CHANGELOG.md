@@ -2,6 +2,8 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.3
+
 ## 6.3.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/6.2.0...07af2633ca88eda583e13649279a5b98473618a2))

@@ -1,5 +1,34 @@
 # Changes in IPython kernel
 
+<!-- <START NEW CHANGELOG ENTRY> -->
+
+## 6.3
+
+## 6.3.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/6.2.0...07af2633ca88eda583e13649279a5b98473618a2))
+
+### Enhancements made
+
+- Add deep variable inspection [#753](https://github.com/ipython/ipykernel/pull/753) ([@JohanMabille](https://github.com/JohanMabille))
+- Add `IPKernelApp.capture_fd_output` config to disable FD-level capture [#752](https://github.com/ipython/ipykernel/pull/752) ([@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+- Remove more `nose` test references [#750](https://github.com/ipython/ipykernel/pull/750) ([@blink1073](https://github.com/blink1073))
+- Remove `nose` `skipIf` in favor of `pytest` [#748](https://github.com/ipython/ipykernel/pull/748) ([@Carreau](https://github.com/Carreau))
+- Remove more `nose` [#747](https://github.com/ipython/ipykernel/pull/747) ([@Carreau](https://github.com/Carreau))
+- Set up release helper plumbing [#745](https://github.com/ipython/ipykernel/pull/745) ([@afshin](https://github.com/afshin))
+- Test downstream projects [#635](https://github.com/ipython/ipykernel/pull/635) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-08-16&to=2021-08-30&type=c))
+
+[@afshin](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aafshin+updated%3A2021-08-16..2021-08-30&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2021-08-16..2021-08-30&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-16..2021-08-30&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2021-08-16..2021-08-30&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2021-08-16..2021-08-30&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2021-08-16..2021-08-30&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akevin-bates+updated%3A2021-08-16..2021-08-30&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-08-16..2021-08-30&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2021-08-16..2021-08-30&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.2
 
 ## 6.2.0
@@ -17,8 +46,6 @@
 
 ## 6.1.0
 
-<!-- <START NEW CHANGELOG ENTRY> -->
-
 ### Enhancements made
 
 - Implemented `richInspectVariable` request handler [#734](https://github.com/ipython/ipykernel/pull/734) ([@JohanMabille](https://github.com/JohanMabille))
@@ -30,8 +57,6 @@
 ### Bug Fixes
 
 - Fix exception raised by `OutStream.write` [#726](https://github.com/ipython/ipykernel/pull/726) ([@SimonKrughoff](https://github.com/SimonKrughoff))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.0
 
@@ -79,7 +104,6 @@ release and welcome any feedback (~50 Pull-requests).
 
 IPykernel 6 should contain all changes of the 5.x series, in addition to the
 following non-exhaustive changes.
-
 
  - Support for the debugger protocol, when using `JupyterLab`, `RetroLab` or any
    frontend supporting the debugger protocol you should have access to the

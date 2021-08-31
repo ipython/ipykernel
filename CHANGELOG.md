@@ -1,5 +1,7 @@
 # Changes in IPython kernel
 
+## 6.3
+
 <!-- <START NEW CHANGELOG ENTRY> -->
 
 ## 6.3.1
@@ -17,8 +19,6 @@
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-30..2021-08-31&type=Issues)
 
 <!-- <END NEW CHANGELOG ENTRY> -->
-
-## 6.3
 
 ## 6.3.0
 

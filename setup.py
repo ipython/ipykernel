@@ -62,6 +62,7 @@ setup_args = dict(
     keywords=['Interactive', 'Interpreter', 'Shell', 'Web'],
     python_requires='>=3.7',
     install_requires=[
+        "ipython_genutils",
         'importlib-metadata<5;python_version<"3.8.0"',
         'argcomplete>=1.12.3;python_version<"3.8.0"',
         'debugpy>=1.0.0,<2.0',

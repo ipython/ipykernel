@@ -1,8 +1,24 @@
 # Changes in IPython kernel
 
+## 6.3
+
 <!-- <START NEW CHANGELOG ENTRY> -->
 
-## 6.3
+## 6.3.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.3.0...0b4a8eaa080fc11e240ada9c44c95841463da58c))
+
+### Merged PRs
+
+- Add dependency on IPython genutils. [#756](https://github.com/ipython/ipykernel/pull/756) ([@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-08-30&to=2021-08-31&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-30..2021-08-31&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.3.0
 
@@ -26,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-08-16&to=2021-08-30&type=c))
 
 [@afshin](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aafshin+updated%3A2021-08-16..2021-08-30&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2021-08-16..2021-08-30&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-16..2021-08-30&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2021-08-16..2021-08-30&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2021-08-16..2021-08-30&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2021-08-16..2021-08-30&type=Issues) | [@kevin-bates](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akevin-bates+updated%3A2021-08-16..2021-08-30&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-08-16..2021-08-30&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2021-08-16..2021-08-30&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.2
 

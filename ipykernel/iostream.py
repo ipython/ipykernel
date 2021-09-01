@@ -252,8 +252,13 @@ class BackgroundSocket(object):
             # don't wrap magic methods
             super(BackgroundSocket, self).__getattr__(attr)
         if hasattr(self.io_thread.socket, attr):
-            warnings.warn("Accessing zmq Socket attribute %s on BackgroundSocket" % attr,
-                DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                "Accessing zmq Socket attribute {attr} on BackgroundSocket"
+                " is deprecated since ipykernel 4.3.0"
+                " use .io_thread.socket.{attr}".format(attr=attr),
+                DeprecationWarning,
+                stacklevel=2,
+            )
             return getattr(self.io_thread.socket, attr)
         super(BackgroundSocket, self).__getattr__(attr)
 
@@ -261,8 +266,13 @@ class BackgroundSocket(object):
         if attr == 'io_thread' or (attr.startswith('__' and attr.endswith('__'))):
             super(BackgroundSocket, self).__setattr__(attr, value)
         else:
-            warnings.warn("Setting zmq Socket attribute %s on BackgroundSocket" % attr,
-                DeprecationWarning, stacklevel=2)
+            warnings.warn(
+                "Setting zmq Socket attribute {attr} on BackgroundSocket"
+                " is deprecated since ipykernel 4.3.0"
+                " use .io_thread.socket.{attr}".format(attr=attr),
+                DeprecationWarning,
+                stacklevel=2,
+            )
             setattr(self.io_thread.socket, attr, value)
 
     def send(self, msg, *args, **kwargs):

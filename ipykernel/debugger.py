@@ -11,20 +11,20 @@ from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 
 from IPython.core.getipython import get_ipython
 
-from .jsonutil import json_clean
-
 # This import is required to have the next ones working...
-from debugpy.server import api
+from debugpy.server import api  # noqa
 from _pydevd_bundle import pydevd_frame_utils
 from _pydevd_bundle.pydevd_suspended_frames import SuspendedFramesManager, _FramesTracker
 
 # Required for backwards compatiblity
 ROUTING_ID = getattr(zmq, 'ROUTING_ID', None) or zmq.IDENTITY
 
+
 class _FakeCode:
     def __init__(self, co_filename, co_name):
         self.co_filename = co_filename
         self.co_name = co_name
+
 
 class _FakeFrame:
     def __init__(self, f_code, f_globals, f_locals):
@@ -33,10 +33,12 @@ class _FakeFrame:
         self.f_locals = f_locals
         self.f_back = None
 
+
 class _DummyPyDB:
     def __init__(self):
         from _pydevd_bundle.pydevd_api import PyDevdAPI
         self.variable_presentation = PyDevdAPI.VariablePresentation()
+
 
 class VariableExplorer:
     def __init__(self):
@@ -59,6 +61,7 @@ class VariableExplorer:
             var_ref = id(self.frame)
         variables = self.suspended_frame_manager.get_variable(var_ref)
         return [x.get_var_data() for x in variables.get_children_variables()]
+
 
 class DebugpyMessageQueue:
 
@@ -102,7 +105,7 @@ class DebugpyMessageQueue:
                 self.header_pos = self.tcp_buffer.find(DebugpyMessageQueue.HEADER)
             if self.header_pos == -1:
                 return
-        
+
             self.log.debug('QUEUE - found header at pos %i', self.header_pos)
 
             #Finds separator
@@ -138,7 +141,7 @@ class DebugpyMessageQueue:
 
     async def get_message(self):
         return await self.message_queue.get()
-            
+
 
 class DebugpyClient:
 
@@ -175,7 +178,7 @@ class DebugpyClient:
         self.log.debug(self.routing_id)
         self.log.debug(buf)
         self.debugpy_stream.send_multipart((self.routing_id, buf))
-    
+
     async def _wait_for_response(self):
         # Since events are never pushed to the message_queue
         # we can safely assume the next message in queue
@@ -185,7 +188,7 @@ class DebugpyClient:
     async def _handle_init_sequence(self):
         # 1] Waits for initialized event
         await self.init_event.wait()
-        
+
         # 2] Sends configurationDone request
         configurationDone = {
             'type': 'request',
@@ -246,7 +249,7 @@ class Debugger:
         'variables', 'attach',
         'configurationDone'
     ]
-    
+
     # Requests that can be handled even if the debugger is not running
     static_debug_msg_types = [
         'debugInfo', 'inspectVariables', 'richInspectVariables'
@@ -259,7 +262,7 @@ class Debugger:
         self.session = session
         self.is_started = False
         self.event_callback = event_callback
-        
+
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:
             self.started_debug_handlers[msg_type] = getattr(self, msg_type)
@@ -324,7 +327,7 @@ class Debugger:
             }
             self.session.send(self.shell_socket, 'execute_request', content,
                               None, (self.shell_socket.getsockopt(ROUTING_ID)))
-                          
+
             ident, msg = self.session.recv(self.shell_socket, mode=0)
             self.debugpy_initialized = msg['content']['status'] == 'ok'
         self.debugpy_client.connect_tcp_socket()
@@ -517,7 +520,7 @@ class Debugger:
                 'arguments': {
                     'expression': lvalue,
                     'value': code,
-                    'frameId': frameId
+                    'frameId': frame_id
                 }
             }
             await self._forward_message(request)
@@ -535,10 +538,10 @@ class Debugger:
             'data': {},
             'metadata': {}
         }
-        
+
         for key, value in repr_data.items():
             body['data']['key'] = value
-            if repr_metadata.has_key(key):
+            if key in repr_metadata:
                 body['metadata'][key] = repr_metadata[key]
 
         globals().pop(var_repr_data)

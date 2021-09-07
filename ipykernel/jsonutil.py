@@ -9,6 +9,7 @@ import re
 import types
 from datetime import datetime
 import numbers
+from jupyter_client._version import version_info as jupyter_client_version
 
 next_attr_name = '__next__'
 
@@ -42,6 +43,9 @@ GIF89_64 = b'R0lGODlh'
 # front of PDF base64-encoded
 PDF64 = b'JVBER'
 
+JUPYTER_CLIENT_MAJOR_VERSION = jupyter_client_version[0]
+
+
 def encode_images(format_dict):
     """b64-encodes images in a displaypub format dict
 
@@ -68,7 +72,9 @@ def encode_images(format_dict):
 
 
 def json_clean(obj):
-    """Clean an object to ensure it's safe to encode in JSON.
+    """Deprecated, this is a no-op for jupyter-client>=7.
+
+    Clean an object to ensure it's safe to encode in JSON.
 
     Atomic, immutable objects are returned unmodified.  Sets and tuples are
     converted to lists, lists are copied and dicts are also copied.
@@ -89,6 +95,9 @@ def json_clean(obj):
         it simply sanitizes it so that there will be no encoding errors later.
 
     """
+    if JUPYTER_CLIENT_MAJOR_VERSION >= 7:
+        return obj
+
     # types that are 'atomic' and ok in json as-is.
     atomic_ok = (str, type(None))
 
@@ -110,10 +119,10 @@ def json_clean(obj):
         if math.isnan(obj) or math.isinf(obj):
             return repr(obj)
         return float(obj)
-    
+
     if isinstance(obj, atomic_ok):
         return obj
-    
+
     if isinstance(obj, bytes):
         # unanmbiguous binary data is base64-encoded
         # (this probably should have happened upstream)
@@ -142,6 +151,6 @@ def json_clean(obj):
         return out
     if isinstance(obj, datetime):
         return obj.strftime(ISO8601)
-    
+
     # we don't understand it, it's probably an unserializable object
     raise ValueError("Can't clean for JSON: %r" % obj)

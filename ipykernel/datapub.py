@@ -66,6 +66,6 @@ def publish_data(data):
         DeprecationWarning,
         stacklevel=2
     )
-    
+
     from ipykernel.zmqshell import ZMQInteractiveShell
     ZMQInteractiveShell.instance().data_pub.publish_data(data)

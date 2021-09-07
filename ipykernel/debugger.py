@@ -7,9 +7,14 @@ from zmq.utils import jsonapi
 from tornado.queues import Queue
 from tornado.locks import Event
 
-from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
-
 from IPython.core.getipython import get_ipython
+
+try:
+    from jupyter_client.jsonutil import json_default
+except ImportError:
+    from jupyter_client.jsonutil import date_default as json_default
+
+from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 
 # This import is required to have the next ones working...
 from debugpy.server import api  # noqa
@@ -170,7 +175,12 @@ class DebugpyClient:
     def _send_request(self, msg):
         if self.routing_id is None:
             self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
-        content = jsonapi.dumps(msg)
+        content = jsonapi.dumps(
+            msg,
+            default=json_default,
+            ensure_ascii=False,
+            allow_nan=False,
+        )
         content_length = str(len(content))
         buf = (DebugpyMessageQueue.HEADER + content_length + DebugpyMessageQueue.SEPARATOR).encode('ascii')
         buf += content
@@ -239,6 +249,7 @@ class DebugpyClient:
             self.log.debug('DEBUGPYCLIENT - returning:')
             self.log.debug(rep)
             return rep
+
 
 class Debugger:
 

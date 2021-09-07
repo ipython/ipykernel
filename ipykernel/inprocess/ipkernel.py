@@ -131,7 +131,7 @@ class InProcessKernel(IPythonKernel):
     def _io_dispatch(self, change):
         """ Called when a message is sent to the IO socket.
         """
-        ident, msg = self.session.recv(self.iopub_socket, copy=False)
+        ident, msg = self.session.recv(self.iopub_socket.io_thread.socket, copy=False)
         for frontend in self.frontends:
             frontend.iopub_channel.call_handlers(msg)
 

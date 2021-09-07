@@ -17,7 +17,6 @@ from .comm import CommManager
 from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
 from .eventloops import _use_appnope
-from .debugger import Debugger
 from .compiler import XCachingCompiler
 
 try:
@@ -34,6 +33,13 @@ try:
 except ImportError:
     _use_experimental_60_completion = False
 
+try:
+    import debugpy
+    from .debugger import Debugger
+    _is_debugpy_available = True
+except ImportError:
+    _is_debugpy_available = False
+
 _EXPERIMENTAL_KEY_NAME = '_jupyter_types_experimental'
 
 
@@ -46,7 +52,7 @@ class IPythonKernel(KernelBase):
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
     ).tag(config=True)
 
-    debugpy_stream = Instance(ZMQStream, allow_none=True)
+    debugpy_stream = Instance(ZMQStream, allow_none=True) if _is_debugpy_available else None
 
     user_module = Any()
     @observe('user_module')
@@ -72,11 +78,12 @@ class IPythonKernel(KernelBase):
         super(IPythonKernel, self).__init__(**kwargs)
 
         # Initialize the Debugger
-        self.debugger = Debugger(self.log,
-                                 self.debugpy_stream,
-                                 self._publish_debug_event,
-                                 self.debug_shell_socket,
-                                 self.session)
+        if _is_debugpy_available:
+            self.debugger = Debugger(self.log,
+                                    self.debugpy_stream,
+                                    self._publish_debug_event,
+                                    self.debug_shell_socket,
+                                    self.session)
 
         # Initialize the InteractiveShell subclass
         self.shell = self.shell_class.instance(parent=self,
@@ -152,10 +159,11 @@ class IPythonKernel(KernelBase):
     }
 
     def dispatch_debugpy(self, msg):
-        # The first frame is the socket id, we can drop it
-        frame = msg[1].bytes.decode('utf-8')
-        self.log.debug("Debugpy received: %s", frame)
-        self.debugger.tcp_client.receive_dap_frame(frame)
+        if _is_debugpy_available:
+            # The first frame is the socket id, we can drop it
+            frame = msg[1].bytes.decode('utf-8')
+            self.log.debug("Debugpy received: %s", frame)
+            self.debugger.tcp_client.receive_dap_frame(frame)
 
     @property
     def banner(self):
@@ -414,7 +422,8 @@ class IPythonKernel(KernelBase):
                 'status' : 'ok'}
 
     async def do_debug_request(self, msg):
-        return await self.debugger.process_request(msg)
+        if _is_debugpy_available:
+            return await self.debugger.process_request(msg)
 
     def _experimental_do_complete(self, code, cursor_pos):
         """

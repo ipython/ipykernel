@@ -13,6 +13,8 @@ import tempfile
 
 from jupyter_client.kernelspec import KernelSpecManager
 
+from .ipkernel import _is_debugpy_available
+
 pjoin = os.path.join
 
 KERNEL_NAME = 'python%i' % sys.version_info[0]
@@ -52,7 +54,7 @@ def get_kernel_dict(extra_arguments=None):
         'argv': make_ipkernel_cmd(extra_arguments=extra_arguments),
         'display_name': 'Python %i (ipykernel)' % sys.version_info[0],
         'language': 'python',
-        'metadata': { 'debugger': True}
+        'metadata': { 'debugger': _is_debugpy_available}
     }
 
 

@@ -4,6 +4,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.4.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.3.1...1ba6b48a97877ff7a564af32c531618efb7d2a57))
+
+### Enhancements made
+
+- Make json_clean a no-op for jupyter-client >= 7 [#708](https://github.com/ipython/ipykernel/pull/708) ([@martinRenou](https://github.com/martinRenou))
+
+### Bugs fixed
+
+- Don't assume kernels have loops. [#766](https://github.com/ipython/ipykernel/pull/766) ([@Carreau](https://github.com/Carreau))
+- Fix undefined variable [#765](https://github.com/ipython/ipykernel/pull/765) ([@martinRenou](https://github.com/martinRenou))
+
+### Maintenance and upkeep improvements
+
+- Make ipykernel work without debugpy [#767](https://github.com/ipython/ipykernel/pull/767) ([@frenzymadness](https://github.com/frenzymadness))
+- Stop using deprecated recv_multipart when using in-process socket. [#762](https://github.com/ipython/ipykernel/pull/762) ([@Carreau](https://github.com/Carreau))
+- Update some warnings with instructions and version number. [#761](https://github.com/ipython/ipykernel/pull/761) ([@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-08-31&to=2021-09-09&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-31..2021-09-09&type=Issues) | [@frenzymadness](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afrenzymadness+updated%3A2021-08-31..2021-09-09&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2021-08-31..2021-09-09&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-08-31..2021-09-09&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.3.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.3.0...0b4a8eaa080fc11e240ada9c44c95841463da58c))
@@ -17,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-08-30&to=2021-08-31&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-30..2021-08-31&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.3.0
 

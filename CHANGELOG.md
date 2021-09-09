@@ -10,17 +10,17 @@
 
 ### Enhancements made
 
-- Make json_clean a no-op for jupyter-client >= 7 [#708](https://github.com/ipython/ipykernel/pull/708) ([@martinRenou](https://github.com/martinRenou))
+- Make `json_clean` a no-op for `jupyter-client` >= 7 [#708](https://github.com/ipython/ipykernel/pull/708) ([@martinRenou](https://github.com/martinRenou))
 
 ### Bugs fixed
 
-- Don't assume kernels have loops. [#766](https://github.com/ipython/ipykernel/pull/766) ([@Carreau](https://github.com/Carreau))
+- Do not assume kernels have loops [#766](https://github.com/ipython/ipykernel/pull/766) ([@Carreau](https://github.com/Carreau))
 - Fix undefined variable [#765](https://github.com/ipython/ipykernel/pull/765) ([@martinRenou](https://github.com/martinRenou))
 
 ### Maintenance and upkeep improvements
 
-- Make ipykernel work without debugpy [#767](https://github.com/ipython/ipykernel/pull/767) ([@frenzymadness](https://github.com/frenzymadness))
-- Stop using deprecated recv_multipart when using in-process socket. [#762](https://github.com/ipython/ipykernel/pull/762) ([@Carreau](https://github.com/Carreau))
+- Make `ipykernel` work without `debugpy` [#767](https://github.com/ipython/ipykernel/pull/767) ([@frenzymadness](https://github.com/frenzymadness))
+- Stop using deprecated `recv_multipart` when using in-process socket. [#762](https://github.com/ipython/ipykernel/pull/762) ([@Carreau](https://github.com/Carreau))
 - Update some warnings with instructions and version number. [#761](https://github.com/ipython/ipykernel/pull/761) ([@Carreau](https://github.com/Carreau))
 
 ### Contributors to this release

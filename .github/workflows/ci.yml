@@ -110,3 +110,44 @@ jobs:
     - name: Check Docstrings
       run: |
         velin . --check --compact
+  test_without_debugpy:
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu]
+        python-version: [ '3.9' ]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: 'x64'
+    - name: Upgrade packaging dependencies
+      run: |
+        pip install --upgrade pip setuptools wheel --user
+    - name: Get pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+    - name: Cache pip
+      uses: actions/cache@v1
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+    - name: Install the Python dependencies without debugpy
+      run: |
+        pip install --pre --upgrade --upgrade-strategy=eager .[test]
+        pip uninstall --yes debugpy
+    - name: List installed packages
+      run: |
+        pip freeze
+    - name: Run the tests
+      timeout-minutes: 10
+      run: |
+        pytest ipykernel -vv -s --durations 10

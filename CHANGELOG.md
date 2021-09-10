@@ -4,6 +4,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.4.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.4.0...4da7623c1ae733f32c0792d70e7af283a7b19d22))
+
+### Merged PRs
+
+- debugpy is now a build requirement [#773](https://github.com/ipython/ipykernel/pull/773) ([@minrk](https://github.com/minrk))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-09-09&to=2021-09-10&type=c))
+
+[@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-09-09..2021-09-10&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.4.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.3.1...1ba6b48a97877ff7a564af32c531618efb7d2a57))
@@ -28,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-08-31&to=2021-09-09&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-31..2021-09-09&type=Issues) | [@frenzymadness](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afrenzymadness+updated%3A2021-08-31..2021-09-09&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2021-08-31..2021-09-09&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-08-31..2021-09-09&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.3.1
 

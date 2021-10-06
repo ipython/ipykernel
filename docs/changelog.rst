@@ -4,6 +4,10 @@ Changes in IPython kernel
 5.5
 ---
 
+5.5.6
+-----
+- Add `ipython_genutils` dependency (:ghpull:`778`)
+
 5.5.5
 -----
 - Keep preferring SelectorEventLoop on Windows. (:ghpull:`669`)

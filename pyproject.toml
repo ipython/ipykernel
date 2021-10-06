@@ -1,5 +1,6 @@
 [build-system]
 requires=[
+  "ipython_genutils",
   "setuptools",
   "wheel",
   "ipython>=5",

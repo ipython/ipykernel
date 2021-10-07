@@ -22,9 +22,20 @@ def _use_appnope():
     return sys.platform == 'darwin' and V(platform.mac_ver()[0]) >= V('10.9')
 
 
-def _notify_stream_qt(kernel, stream):
-
+def _notify_stream_qt(event_loop, stream):
+    import operator
+    from functools import lru_cache
     from IPython.external.qt_for_kernel import QtCore
+
+    try:
+        from IPython.external.qt_for_kernel import enum_helper
+    except ImportError:
+        @lru_cache(None)
+        def enum_helper(name):
+            return operator.attrgetter(
+                name.rpartition(".")[0]
+            )(sys.modules[QtCore.__package__])
+
 
     def process_stream_events():
         """fall back to main loop when there's a socket event"""
@@ -34,10 +45,10 @@ def _notify_stream_qt(kernel, stream):
         # if there were any, wake it up
         if stream.flush(limit=1):
             notifier.setEnabled(False)
-            kernel.app.quit()
+            event_loop.quit()
 
     fd = stream.getsockopt(zmq.FD)
-    notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
+    notifier = QtCore.QSocketNotifier(fd, enum_helper('QtCore.QSocketNotifier.Type').Read, event_loop)
     notifier.activated.connect(process_stream_events)
     # there may already be unprocessed events waiting.
     # these events will not wake zmq's edge-triggered FD
@@ -46,7 +57,7 @@ def _notify_stream_qt(kernel, stream):
     # so we start in a clean state ensuring that any new i/o events will notify.
     # schedule first call on the eventloop as soon as it's running,
     # so we don't block here processing events
-    timer = QtCore.QTimer(kernel.app)
+    timer = QtCore.QTimer(event_loop)
     timer.setSingleShot(True)
     timer.timeout.connect(process_stream_events)
     timer.start(0)
@@ -94,6 +105,11 @@ def register_integration(*toolkitnames):
     return decorator
 
 
+def _exec(obj):
+    # exec on PyQt6, exec_ elsewhere.
+    obj.exec() if hasattr(obj, "exec") else obj.exec_()
+
+
 def _loop_qt(app):
     """Inner-loop for running the Qt eventloop
 
@@ -102,7 +118,7 @@ def _loop_qt(app):
     rather than if the eventloop is actually running.
     """
     app._in_event_loop = True
-    app.exec_()
+    _exec(app)
     app._in_event_loop = False
 
 
@@ -111,12 +127,14 @@ def loop_qt4(kernel):
     """Start a kernel with PyQt4 event loop integration."""
 
     from IPython.lib.guisupport import get_app_qt4
-
+    from IPython.external.qt_for_kernel import QtCore
     kernel.app = get_app_qt4([" "])
     kernel.app.setQuitOnLastWindowClosed(False)
-    _notify_stream_qt(kernel, kernel.shell_stream)
+    event_loop = QtCore.QEventLoop(kernel.app)
 
-    _loop_qt(kernel.app)
+    _notify_stream_qt(event_loop, kernel.shell_stream)
+
+    _loop_qt(event_loop)
 
 
 @register_integration('qt', 'qt5')
@@ -126,9 +144,17 @@ def loop_qt5(kernel):
     return loop_qt4(kernel)
 
 
-# exit and watch are the same for qt 4 and 5
+@register_integration('qt6')
+def loop_qt6(kernel):
+    """Start a kernel with PyQt6 event loop integration."""
+    os.environ['QT_API'] = 'pyqt6'
+    return loop_qt4(kernel)
+
+
+# exit and watch are the same for qt 4, 5, and 6
 @loop_qt4.exit
 @loop_qt5.exit
+@loop_qt6.exit
 def loop_qt_exit(kernel):
     kernel.app.exit()
 

@@ -16,6 +16,7 @@ import sys
 import time
 import uuid
 import warnings
+import psutil
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -204,7 +205,7 @@ class Kernel(SingletonConfigurable):
         'apply_request',
     ]
     # add deprecated ipyparallel control messages
-    control_msg_types = msg_types + ['clear_request', 'abort_request', 'debug_request']
+    control_msg_types = msg_types + ['clear_request', 'abort_request', 'debug_request', 'usage_request']
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -856,7 +857,23 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
+        reply_content['hello'] = 'hello'
         reply_msg = self.session.send(stream, 'debug_reply', reply_content,
+                                      parent, ident)
+        self.log.debug("%s", reply_msg)
+
+    async def usage_request(self, stream, ident, parent):
+        content = parent['content']
+        reply_content = self.do_debug_request(content)
+        if inspect.isawaitable(reply_content):
+            reply_content = await reply_content
+        reply_content = json_clean(reply_content)
+        reply_content['cpu_percent'] = psutil.cpu_percent()
+        reply_content['virtual_memory'] = psutil.virtual_memory()
+        reply_content['virtual_memory_dict'] = dict(psutil.virtual_memory()._asdict())
+        reply_content['virtual_memory_percent'] = psutil.virtual_memory().percent
+        reply_content['available_memory_percentage'] = psutil.virtual_memory().available * 100 / psutil.virtual_memory().total
+        reply_msg = self.session.send(stream, 'usage_reply', reply_content,
                                       parent, ident)
         self.log.debug("%s", reply_msg)
 

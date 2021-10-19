@@ -493,7 +493,8 @@ class Debugger:
                 'tmpFilePrefix': get_tmp_directory() + '/',
                 'tmpFileSuffix': '.py',
                 'breakpoints': breakpoint_list,
-                'stoppedThreads': self.stopped_threads
+                'stoppedThreads': self.stopped_threads,
+                'richRendering': True
             }
         }
         return reply
@@ -509,7 +510,24 @@ class Debugger:
         return self._build_variables_response(message, variables)
 
     async def richInspectVariables(self, message):
+        reply = {
+            'type': 'response',
+            'sequence_seq': message['seq'],
+            'success': False,
+            'command': message['command']
+        }
+        
         var_name = message['arguments']['variableName']
+        valid_name = str.isidentifier(var_name)
+        if not valid_name:
+            reply['body'] = {
+                'data': {},
+                'metadata': {}
+            }
+            if var_name == 'special variables' or var_name == 'function variables':
+                reply['success'] = True
+            return reply
+
         var_repr_data = var_name + '_repr_data'
         var_repr_metadata = var_name + '_repr_metadata'
 
@@ -535,13 +553,6 @@ class Debugger:
                 }
             }
             await self._forward_message(request)
-
-        reply = {
-            'type': 'response',
-            'sequence_seq': message['seq'],
-            'success': False,
-            'command': message['command']
-        }
 
         repr_data = globals()[var_repr_data]
         repr_metadata = globals()[var_repr_metadata]

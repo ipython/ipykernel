@@ -4,6 +4,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.4.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.4.1...231fd3c65f8a15e9e015546c0a6846e22df9ba2a))
+
+### Enhancements made
+
+- Enabled rich rendering of variables in the debugger [#787](https://github.com/ipython/ipykernel/pull/787) ([@JohanMabille](https://github.com/JohanMabille))
+
+### Bugs fixed
+
+- Remove setting of the eventloop function in the InProcessKernel [#781](https://github.com/ipython/ipykernel/pull/781) ([@rayosborn](https://github.com/rayosborn))
+
+### Maintenance and upkeep improvements
+
+- Add python version classifiers [#783](https://github.com/ipython/ipykernel/pull/783) ([@emuccino](https://github.com/emuccino))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-09-10&to=2021-10-19&type=c))
+
+[@emuccino](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aemuccino+updated%3A2021-09-10..2021-10-19&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2021-09-10..2021-10-19&type=Issues) | [@rayosborn](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Arayosborn+updated%3A2021-09-10..2021-10-19&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.4.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.4.0...4da7623c1ae733f32c0792d70e7af283a7b19d22))
@@ -17,8 +41,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-09-09&to=2021-09-10&type=c))
 
 [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-09-09..2021-09-10&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.4.0
 

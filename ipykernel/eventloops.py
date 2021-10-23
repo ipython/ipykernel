@@ -111,9 +111,11 @@ def loop_qt4(kernel):
     """Start a kernel with PyQt4 event loop integration."""
 
     from IPython.lib.guisupport import get_app_qt4
+    from IPython.external.qt_for_kernel import QtGui
 
     kernel.app = get_app_qt4([" "])
-    kernel.app.setQuitOnLastWindowClosed(False)
+    if isinstance(kernel.app, QtGui.QApplication):
+        kernel.app.setQuitOnLastWindowClosed(False)
     _notify_stream_qt(kernel, kernel.shell_stream)
 
     _loop_qt(kernel.app)

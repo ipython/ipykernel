@@ -26,11 +26,11 @@ from IPython.core.profiledir import ProfileDir
 from IPython.core.shellapp import (
     InteractiveShellApp, shell_flags, shell_aliases
 )
-from ipython_genutils.path import filefind, ensure_dir_exists
 from traitlets import (
     Any, Instance, Dict, Unicode, Integer, Bool, DottedObjectName, Type, default
 )
 from traitlets.utils.importstring import import_item
+from traitlets.utils import filefind
 from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_client import write_connection_file
 from jupyter_client.connect import ConnectionFileMixin
@@ -260,7 +260,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         except IOError:
             self.log.debug("Connection file not found: %s", self.connection_file)
             # This means I own it, and I'll create it in this directory:
-            ensure_dir_exists(os.path.dirname(self.abs_connection_file), 0o700)
+            os.makedirs(os.path.dirname(self.abs_connection_file), mode=0o700, exist_ok=True)
             # Also, I will clean it up:
             atexit.register(self.cleanup_connection_file)
             return

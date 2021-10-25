@@ -2,8 +2,9 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-
+import typing
 import warnings
+
 warnings.warn("ipykernel.pickleutil is deprecated. It has moved to ipyparallel.",
     DeprecationWarning,
     stacklevel=2
@@ -15,7 +16,6 @@ import pickle
 from types import FunctionType
 
 from traitlets.utils.importstring import import_item
-from ipython_genutils.py3compat import buffer_to_bytes
 
 # This registers a hook when it's imported
 from ipyparallel.serialize import codeutil  # noqa F401
@@ -279,11 +279,18 @@ class CannedArray(CannedObject):
 
 
 class CannedBytes(CannedObject):
-    wrap = staticmethod(buffer_to_bytes)
+    @staticmethod
+    def wrap(buf: typing.Union[memoryview, bytes, typing.SupportsBytes]) -> bytes:
+        """Cast a buffer or memoryview object to bytes"""
+        if isinstance(buf, memoryview):
+            return buf.tobytes()
+        if not isinstance(buf, bytes):
+            return bytes(buf)
+        return buf
 
     def __init__(self, obj):
         self.buffers = [obj]
-    
+
     def get_object(self, g=None):
         data = self.buffers[0]
         return self.wrap(data)

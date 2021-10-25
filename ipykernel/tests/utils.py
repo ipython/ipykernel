@@ -4,7 +4,9 @@
 # Distributed under the terms of the Modified BSD License.
 
 import atexit
+import os
 import sys
+from tempfile import TemporaryDirectory
 from time import time
 
 from contextlib import contextmanager
@@ -180,3 +182,22 @@ def wait_for_idle(kc):
         content = msg['content']
         if msg_type == 'status' and content['execution_state'] == 'idle':
             break
+
+
+class TemporaryWorkingDirectory(TemporaryDirectory):
+    """
+    Creates a temporary directory and sets the cwd to that directory.
+    Automatically reverts to previous cwd upon cleanup.
+    Usage example:
+
+        with TemporaryWorkingDirectory() as tmpdir:
+            ...
+    """
+    def __enter__(self):
+        self.old_wd = os.getcwd()
+        os.chdir(self.name)
+        return super().__enter__()
+
+    def __exit__(self, exc, value, tb):
+        os.chdir(self.old_wd)
+        return super().__exit__(exc, value, tb)

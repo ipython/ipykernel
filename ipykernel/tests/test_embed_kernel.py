@@ -14,7 +14,6 @@ from flaky import flaky
 
 from jupyter_client import BlockingKernelClient
 from jupyter_core import paths
-from ipython_genutils import py3compat
 
 
 SETUP_TIMEOUT = 60
@@ -41,7 +40,7 @@ def setup_kernel(cmd):
         except ValueError:
             return False
 
-    kernel = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE)
+    kernel = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE, encoding="utf-8")
     try:
         connection_file = os.path.join(
             paths.jupyter_runtime_dir(),
@@ -58,8 +57,7 @@ def setup_kernel(cmd):
         time.sleep(0.1)
 
         if kernel.poll() is not None:
-            o,e = kernel.communicate()
-            e = py3compat.cast_unicode(e)
+            o, e = kernel.communicate()
             raise IOError("Kernel failed to start:\n%s" % e)
 
         if not os.path.exists(connection_file):

@@ -4,7 +4,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 import sys
-import re
 from glob import glob
 import os
 import shutil
@@ -66,7 +65,7 @@ setup_args = dict(
         'argcomplete>=1.12.3;python_version<"3.8.0"',
         'debugpy>=1.0.0,<2.0',
         'ipython>=7.23.1,<8.0',
-        'traitlets>=4.1.0,<6.0',
+        'traitlets>=5.1.0,<6.0',
         'jupyter_client<8.0',
         'tornado>=4.2,<7.0',
         'matplotlib-inline>=0.1.0,<0.2.0',

@@ -8,6 +8,7 @@ import io
 import os.path
 import sys
 import time
+from tempfile import TemporaryDirectory
 
 from flaky import flaky
 import pytest
@@ -16,7 +17,6 @@ from packaging import version
 from IPython.testing import decorators as dec, tools as tt
 import IPython
 from IPython.paths import locate_profile
-from ipython_genutils.tempdir import TemporaryDirectory
 
 from .utils import (
     new_kernel, kernel, TIMEOUT, assemble_output, execute,

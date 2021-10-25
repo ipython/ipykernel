@@ -7,7 +7,6 @@ import json
 import sys
 from subprocess import Popen, PIPE
 
-
 import jupyter_client
 from jupyter_client import write_connection_file
 
@@ -21,7 +20,7 @@ def get_connection_file(app=None):
     app : IPKernelApp instance [optional]
         If unspecified, the currently running app will be used
     """
-    from ipython_genutils.path import filefind
+    from traitlets.utils import filefind
     if app is None:
         from ipykernel.kernelapp import IPKernelApp
         if not IPKernelApp.initialized():

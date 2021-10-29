@@ -511,66 +511,53 @@ class Debugger:
 
     async def richInspectVariables(self, message):
         reply = {
-            'type': 'response',
-            'sequence_seq': message['seq'],
-            'success': False,
-            'command': message['command']
+            "type": "response",
+            "sequence_seq": message["seq"],
+            "success": False,
+            "command": message["command"],
         }
-        
-        var_name = message['arguments']['variableName']
+
+        var_name = message["arguments"]["variableName"]
         valid_name = str.isidentifier(var_name)
         if not valid_name:
-            reply['body'] = {
-                'data': {},
-                'metadata': {}
-            }
-            if var_name == 'special variables' or var_name == 'function variables':
-                reply['success'] = True
+            reply["body"] = {"data": {}, "metadata": {}}
+            if var_name == "special variables" or var_name == "function variables":
+                reply["success"] = True
             return reply
 
-        var_repr_data = var_name + '_repr_data'
-        var_repr_metadata = var_name + '_repr_metadata'
-
-        if not self.breakpoint_list:
+        repr_data = {}
+        repr_metadata = {}
+        if not self.stopped_threads:
             # The code did not hit a breakpoint, we use the intepreter
             # to get the rich representation of the variable
-            var_repr_data, var_repr_metadata = get_ipython().display_formatter.format(var_name)
+            result = get_ipython().user_expressions({var_name: var_name})[var_name]
+            if result.get("status", "error") == "ok":
+                repr_data = result.get("data", {})
+                repr_metadata = result.get("metadata", {})
         else:
             # The code has stopped on a breakpoint, we use the setExpression
             # request to get the rich representation of the variable
-            lvalue = var_repr_data + ',' + var_repr_metadata
-            code = 'get_ipython().display_formatter.format(' + var_name+')'
-            frame_id = message['arguments']['frameId']
-            seq = message['seq']
-            request = {
-                'type': 'request',
-                'command': 'setExpression',
-                'seq': seq+1,
-                'arguments': {
-                    'expression': lvalue,
-                    'value': code,
-                    'frameId': frame_id
+            code = "get_ipython().display_formatter.format(" + var_name + ")"
+            frame_id = message["arguments"]["frameId"]
+            seq = message["seq"]
+            reply = await self._forward_message(
+                {
+                    "type": "request",
+                    "command": "evaluate",
+                    "seq": seq + 1,
+                    "arguments": {"expression": code, "frameId": frame_id},
                 }
-            }
-            await self._forward_message(request)
+            )
+            if reply["success"]:
+                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})
 
-        repr_data = globals()[var_repr_data]
-        repr_metadata = globals()[var_repr_metadata]
         body = {
-            'data': {},
-            'metadata': {}
+            "data": repr_data,
+            "metadata": {k: v for k, v in repr_metadata.items() if k in repr_data},
         }
 
-        for key, value in repr_data.items():
-            body['data']['key'] = value
-            if key in repr_metadata:
-                body['metadata'][key] = repr_metadata[key]
-
-        globals().pop(var_repr_data)
-        globals().pop(var_repr_metadata)
-
-        reply['body'] = body
-        reply['success'] = True
+        reply["body"] = body
+        reply["success"] = True
         return reply
 
     async def process_request(self, message):

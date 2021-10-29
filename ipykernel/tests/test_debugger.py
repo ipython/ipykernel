@@ -1,8 +1,11 @@
 import pytest
 
-from .utils import execute, new_kernel, get_reply
+from .utils import new_kernel, get_reply
 
 seq = 0
+
+# Skip if debugpy is not available
+pytest.importorskip("debugpy")
 
 
 def wait_for_debug_request(kernel, command, arguments=None):

@@ -4,6 +4,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.5.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.4.2...e8d4f66e0f65e284aab444c53e9812dbbc814cb2))
+
+### Bugs fixed
+
+- Fix rich variables inspection [#793](https://github.com/ipython/ipykernel/pull/793) ([@fcollonval](https://github.com/fcollonval))
+- Do not call `setQuitOnLastWindowClosed()` on a `QCoreApplication` [#791](https://github.com/ipython/ipykernel/pull/791) ([@stukowski](https://github.com/stukowski))
+
+### Maintenance and upkeep improvements
+
+- Drop `ipython_genutils` requirement [#792](https://github.com/ipython/ipykernel/pull/792) ([@penguinolog](https://github.com/penguinolog))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-10-20&to=2021-11-01&type=c))
+
+[@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2021-10-20..2021-11-01&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afcollonval+updated%3A2021-10-20..2021-11-01&type=Issues) | [@penguinolog](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apenguinolog+updated%3A2021-10-20..2021-11-01&type=Issues) | [@stukowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Astukowski+updated%3A2021-10-20..2021-11-01&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.4.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.4.1...231fd3c65f8a15e9e015546c0a6846e22df9ba2a))
@@ -25,8 +46,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-09-10&to=2021-10-19&type=c))
 
 [@emuccino](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aemuccino+updated%3A2021-09-10..2021-10-19&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2021-09-10..2021-10-19&type=Issues) | [@rayosborn](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Arayosborn+updated%3A2021-09-10..2021-10-19&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.4.1
 

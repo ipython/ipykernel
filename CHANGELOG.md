@@ -11,11 +11,11 @@
 ### Bugs fixed
 
 - Fix rich variables inspection [#793](https://github.com/ipython/ipykernel/pull/793) ([@fcollonval](https://github.com/fcollonval))
-- Do not call setQuitOnLastWindowClosed() on a QCoreApplication [#791](https://github.com/ipython/ipykernel/pull/791) ([@stukowski](https://github.com/stukowski))
+- Do not call `setQuitOnLastWindowClosed()` on a `QCoreApplication` [#791](https://github.com/ipython/ipykernel/pull/791) ([@stukowski](https://github.com/stukowski))
 
 ### Maintenance and upkeep improvements
 
-- Drop ipython_genutils requirement [#792](https://github.com/ipython/ipykernel/pull/792) ([@penguinolog](https://github.com/penguinolog))
+- Drop `ipython_genutils` requirement [#792](https://github.com/ipython/ipykernel/pull/792) ([@penguinolog](https://github.com/penguinolog))
 
 ### Contributors to this release
 

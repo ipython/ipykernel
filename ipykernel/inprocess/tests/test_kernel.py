@@ -13,8 +13,8 @@ from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
 from ipykernel.inprocess.manager import InProcessKernelManager
 from ipykernel.inprocess.ipkernel import InProcessKernel
 from ipykernel.tests.utils import assemble_output
-from IPython.testing.decorators import skipif_not_matplotlib
 from IPython.utils.io import capture_output
+
 
 
 def _init_asyncio_patch():
@@ -60,9 +60,9 @@ class InProcessKernelTestCase(unittest.TestCase):
         self.kc.start_channels()
         self.kc.wait_for_ready()
 
-    @skipif_not_matplotlib
     def test_pylab(self):
         """Does %pylab work in the in-process kernel?"""
+        matplotlib = pytest.importorskip('matplotlib', reason='This test requires matplotlib')
         kc = self.kc
         kc.execute('%pylab')
         out, err = assemble_output(kc.get_iopub_msg)

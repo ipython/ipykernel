@@ -14,7 +14,7 @@ from flaky import flaky
 import pytest
 from packaging import version
 
-from IPython.testing import decorators as dec, tools as tt
+from IPython.testing import tools as tt
 import IPython
 from IPython.paths import locate_profile
 
@@ -225,8 +225,8 @@ def test_save_history():
         assert 'b="abcþ"' in content
 
 
-@dec.skip_without('faulthandler')
 def test_smoke_faulthandler():
+    faulthadler = pytest.importorskip('faulthandler', reason='this test needs faulthandler')
     with kernel() as kc:
         # Note: faulthandler.register is not available on windows.
         code = '\n'.join([
@@ -296,8 +296,8 @@ def test_complete():
         assert completed.startswith(cell)
 
 
-@dec.skip_without('matplotlib')
 def test_matplotlib_inline_on_import():
+    pytest.importorskip('matplotlib', reason='this test requires matplotlib')
     with kernel() as kc:
         cell = '\n'.join([
             'import matplotlib, matplotlib.pyplot as plt',

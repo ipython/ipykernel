@@ -5,6 +5,7 @@ import os
 
 def murmur2_x86(data, seed):
     m = 0x5bd1e995
+    data = [chr(d) for d in str.encode(data, "utf8")]
     length = len(data)
     h = seed ^ length
     rounded_end = (length & 0xfffffffc)

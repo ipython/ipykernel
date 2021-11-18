@@ -4,6 +4,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.5.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.5.0...1ef2017781435d54348fbb170b8c5d096e3e1351))
+
+### Bugs fixed
+
+- Fix the temp file name created by the debugger [#801](https://github.com/ipython/ipykernel/pull/801) ([@eastonsuo](https://github.com/eastonsuo))
+
+### Maintenance and upkeep improvements
+
+- Enforce labels on PRs [#803](https://github.com/ipython/ipykernel/pull/803) ([@blink1073](https://github.com/blink1073))
+- Unpin `IPython`, and remove some dependencies on it. [#796](https://github.com/ipython/ipykernel/pull/796) ([@Carreau](https://github.com/Carreau))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-11-01&to=2021-11-18&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2021-11-01..2021-11-18&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-11-01..2021-11-18&type=Issues) | [@eastonsuo](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aeastonsuo+updated%3A2021-11-01..2021-11-18&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.5.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.4.2...e8d4f66e0f65e284aab444c53e9812dbbc814cb2))
@@ -22,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-10-20&to=2021-11-01&type=c))
 
 [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2021-10-20..2021-11-01&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afcollonval+updated%3A2021-10-20..2021-11-01&type=Issues) | [@penguinolog](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apenguinolog+updated%3A2021-10-20..2021-11-01&type=Issues) | [@stukowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Astukowski+updated%3A2021-10-20..2021-11-01&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.4.2
 

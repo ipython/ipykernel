@@ -459,7 +459,7 @@ class IPythonKernel(KernelBase):
                 'metadata': {_EXPERIMENTAL_KEY_NAME: comps},
                 'status': 'ok'}
 
-    def do_inspect(self, code, cursor_pos, detail_level=0):
+    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
         name = token_at_cursor(code, cursor_pos)
 
         reply_content = {'status' : 'ok'}
@@ -469,7 +469,8 @@ class IPythonKernel(KernelBase):
             reply_content['data'].update(
                 self.shell.object_inspect_mime(
                     name,
-                    detail_level=detail_level
+                    detail_level=detail_level,
+                    omit_sections=omit_sections,
                 )
             )
             if not self.shell.enable_html_pager:

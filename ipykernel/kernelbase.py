@@ -867,7 +867,11 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
-        reply_content['cpu_percent'] = psutil.cpu_percent()
+        cpu_percent = psutil.cpu_percent()
+        # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
+        # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
+        if cpu_percent != None and cpu_percent != 0.0:
+            reply_content['cpu_percent'] = cpu_percent
         reply_content['virtual_memory'] = psutil.virtual_memory()
         reply_content['virtual_memory_dict'] = dict(psutil.virtual_memory()._asdict())
         reply_content['virtual_memory_percent'] = psutil.virtual_memory().percent

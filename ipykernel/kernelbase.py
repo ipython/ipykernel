@@ -857,7 +857,6 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
-        reply_content['hello'] = 'hello'
         reply_msg = self.session.send(stream, 'debug_reply', reply_content,
                                       parent, ident)
         self.log.debug("%s", reply_msg)

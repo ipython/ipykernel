@@ -872,10 +872,7 @@ class Kernel(SingletonConfigurable):
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
         if cpu_percent != None and cpu_percent != 0.0:
             reply_content['cpu_percent'] = cpu_percent
-        reply_content['virtual_memory'] = psutil.virtual_memory()
-        reply_content['virtual_memory_dict'] = dict(psutil.virtual_memory()._asdict())
-        reply_content['virtual_memory_percent'] = psutil.virtual_memory().percent
-        reply_content['available_memory_percentage'] = psutil.virtual_memory().available * 100 / psutil.virtual_memory().total
+        reply_content['virtual_memory'] = dict(psutil.virtual_memory()._asdict())
         reply_msg = self.session.send(stream, 'usage_reply', reply_content,
                                       parent, ident)
         self.log.debug("%s", reply_msg)

@@ -14,7 +14,6 @@ from flaky import flaky
 import pytest
 from packaging import version
 
-from IPython.testing import tools as tt
 import IPython
 from IPython.paths import locate_profile
 
@@ -242,7 +241,13 @@ def test_smoke_faulthandler():
 
 def test_help_output():
     """ipython kernel --help-all works"""
-    tt.help_all_output_test('kernel')
+    from IPython.utils.process import get_output_error_code
+    cmd = [sys.executable, "-m", "IPython", "kernel", "--help-all"]
+    out, err, rc = get_output_error_code(cmd)
+    assert rc == 0, err
+    assert "Traceback" not in err
+    assert "Options" in out
+    assert "Class" in out
 
 
 def test_is_complete():

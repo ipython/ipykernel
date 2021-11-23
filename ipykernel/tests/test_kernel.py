@@ -6,6 +6,7 @@
 import ast
 import io
 import os.path
+import subprocess
 import sys
 import time
 from tempfile import TemporaryDirectory
@@ -241,13 +242,12 @@ def test_smoke_faulthandler():
 
 def test_help_output():
     """ipython kernel --help-all works"""
-    from IPython.utils.process import get_output_error_code
     cmd = [sys.executable, "-m", "IPython", "kernel", "--help-all"]
-    out, err, rc = get_output_error_code(cmd)
-    assert rc == 0, err
-    assert "Traceback" not in err
-    assert "Options" in out
-    assert "Class" in out
+    proc = subprocess.run(cmd, timeout=30, capture_output=True)
+    assert proc.returncode == 0, proc.stderr
+    assert b"Traceback" not in proc.stderr
+    assert b"Options" in proc.stdout
+    assert b"Class" in proc.stdout
 
 
 def test_is_complete():

@@ -351,7 +351,7 @@ class Debugger:
         code = message['arguments']['code']
         file_name = get_file_name(code)
 
-        with open(file_name, 'w') as f:
+        with open(file_name, 'w', encoding='utf-8') as f:
             f.write(code)
 
         reply = {
@@ -378,7 +378,7 @@ class Debugger:
         }
         source_path = message["arguments"]["source"]["path"]
         if os.path.isfile(source_path):
-            with open(source_path) as f:
+            with open(source_path, encoding='utf-8') as f:
                 reply['success'] = True
                 reply['body'] = {
                     'content': f.read()

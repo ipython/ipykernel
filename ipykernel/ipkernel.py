@@ -459,19 +459,27 @@ class IPythonKernel(KernelBase):
                 'metadata': {_EXPERIMENTAL_KEY_NAME: comps},
                 'status': 'ok'}
 
-    def do_inspect(self, code, cursor_pos, detail_level=0):
+    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
         name = token_at_cursor(code, cursor_pos)
 
         reply_content = {'status' : 'ok'}
         reply_content['data'] = {}
         reply_content['metadata'] = {}
         try:
-            reply_content['data'].update(
-                self.shell.object_inspect_mime(
+            if release.version_info >= (8,):
+                # `omit_sections` keyword will be available in IPython 8, see
+                # https://github.com/ipython/ipython/pull/13343
+                bundle = self.shell.object_inspect_mime(
+                    name,
+                    detail_level=detail_level,
+                    omit_sections=omit_sections,
+                )
+            else:
+                bundle = self.shell.object_inspect_mime(
                     name,
                     detail_level=detail_level
                 )
-            )
+            reply_content['data'].update(bundle)
             if not self.shell.enable_html_pager:
                 reply_content['data'].pop('text/html')
             reply_content['found'] = True

@@ -702,6 +702,7 @@ class Kernel(SingletonConfigurable):
         reply_content = self.do_inspect(
             content['code'], content['cursor_pos'],
             content.get('detail_level', 0),
+            set(content.get('omit_sections', [])),
         )
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
@@ -712,7 +713,7 @@ class Kernel(SingletonConfigurable):
                                 reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    def do_inspect(self, code, cursor_pos, detail_level=0):
+    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
         """Override in subclasses to allow introspection.
         """
         return {'status': 'ok', 'data': {}, 'metadata': {}, 'found': False}

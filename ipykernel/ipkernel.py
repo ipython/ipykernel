@@ -5,7 +5,6 @@ import builtins
 from contextlib import contextmanager
 from functools import partial
 import getpass
-import re
 import signal
 import sys
 

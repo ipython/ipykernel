@@ -462,6 +462,8 @@ class Debugger:
             'port': port
         }
         message['arguments']['logToFile'] = True
+        # Set debugOptions for breakpoints in python standard library source.
+        message['arguments']['debugOptions'] = [ 'DebugStdLib' ]
         return await self._forward_message(message)
 
     async def configurationDone(self, message):

@@ -10,17 +10,17 @@
 
 ### Enhancements made
 
-- Set debugOptions for breakpoints in python standard library source [#812](https://github.com/ipython/ipykernel/pull/812) ([@echarles](https://github.com/echarles))
-- Send omit_sections to IPython to choose which sections of documentation you don't want [#809](https://github.com/ipython/ipykernel/pull/809) ([@fasiha](https://github.com/fasiha))
+- Set `debugOptions` for breakpoints in python standard library source [#812](https://github.com/ipython/ipykernel/pull/812) ([@echarles](https://github.com/echarles))
+- Send `omit_sections` to IPython to choose which sections of documentation you do not want [#809](https://github.com/ipython/ipykernel/pull/809) ([@fasiha](https://github.com/fasiha))
 
 ### Bugs fixed
 
-- Added missing excpeionPaths field to debugInfo reply [#814](https://github.com/ipython/ipykernel/pull/814) ([@JohanMabille](https://github.com/JohanMabille))
+- Added missing `exceptionPaths` field to `debugInfo` reply [#814](https://github.com/ipython/ipykernel/pull/814) ([@JohanMabille](https://github.com/JohanMabille))
 
 ### Maintenance and upkeep improvements
 
-- Test jupyter_kernel_test as downstream [#813](https://github.com/ipython/ipykernel/pull/813) ([@blink1073](https://github.com/blink1073))
-- Remove Nose dependency [#808](https://github.com/ipython/ipykernel/pull/808) ([@Kojoley](https://github.com/Kojoley))
+- Test `jupyter_kernel_test` as downstream [#813](https://github.com/ipython/ipykernel/pull/813) ([@blink1073](https://github.com/blink1073))
+- Remove `nose` dependency [#808](https://github.com/ipython/ipykernel/pull/808) ([@Kojoley](https://github.com/Kojoley))
 - Add explicit encoding to open calls in debugger [#807](https://github.com/ipython/ipykernel/pull/807) ([@dlukes](https://github.com/dlukes))
 
 ### Contributors to this release

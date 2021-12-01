@@ -496,7 +496,8 @@ class Debugger:
                 'tmpFileSuffix': '.py',
                 'breakpoints': breakpoint_list,
                 'stoppedThreads': self.stopped_threads,
-                'richRendering': True
+                'richRendering': True,
+                'exceptionPaths': ['Python Exceptions']
             }
         }
         return reply

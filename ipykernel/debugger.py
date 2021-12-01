@@ -1,3 +1,4 @@
+import sys
 import os
 import re
 import threading
@@ -265,7 +266,8 @@ class Debugger:
 
     # Requests that can be handled even if the debugger is not running
     static_debug_msg_types = [
-        'debugInfo', 'inspectVariables', 'richInspectVariables'
+        'debugInfo', 'inspectVariables', 
+        'richInspectVariables', 'modules'
     ]
 
     def __init__(self, log, debugpy_stream, event_callback, shell_socket, session):
@@ -589,6 +591,24 @@ class Debugger:
 
         reply["body"] = body
         reply["success"] = True
+        return reply
+
+    async def modules(self, message):        
+        modules = [sys.modules[name] for name in sys.modules]
+        mods = []
+        for module in modules:
+            m = str(module)
+            if ".py'" in m:
+                a = {}
+                x = re.findall(r"'(.*?)'", m)
+                a[x[0]] = x[1]
+                mods.append(a)
+        reply = {
+            'body': {
+                'modules': mods,
+                'totalModules': len(modules)
+            }
+        }
         return reply
 
     async def process_request(self, message):

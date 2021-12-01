@@ -44,7 +44,7 @@ jobs:
         run: pytest --pyargs jupyter_client
       - name: Test jupyter_kernel_test
         run: |
-          git clone git@github.com:jupyter/jupyter_kernel_test.git
+          git clone https://github.com/jupyter/jupyter_kernel_test.git
           cd jupyter_kernel_test
           pip install -e ".[test]"
           python test_ipykernel.py

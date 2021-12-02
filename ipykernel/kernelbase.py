@@ -25,7 +25,7 @@ except ImportError:
     now = datetime.now
 
 from tornado import ioloop
-from tornado.queues import Queue
+from tornado.queues import Queue, QueueEmpty
 import zmq
 from zmq.eventloop.zmqstream import ZMQStream
 
@@ -441,7 +441,7 @@ class Kernel(SingletonConfigurable):
         else:
             try:
                 t, dispatch, args = self.msg_queue.get_nowait()
-            except asyncio.QueueEmpty:
+            except (asyncio.QueueEmpty, QueueEmpty):
                 return None
         await dispatch(*args)
 

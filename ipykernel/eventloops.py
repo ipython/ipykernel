@@ -134,7 +134,7 @@ def loop_qt5(kernel):
                 import PySide2
                 os.environ['QT_API'] = 'pyside2'
             except ImportError:
-                pass
+                os.environ['QT_API'] = 'pyqt5'
     return loop_qt4(kernel)
 
 

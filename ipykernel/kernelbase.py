@@ -266,7 +266,6 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg, channel='control')
-        self._publish_status('busy', 'control')
 
         header = msg['header']
         msg_type = header['msg_type']
@@ -284,7 +283,6 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status('idle', 'control')
         # flush to ensure reply is sent
         self.control_stream.flush(zmq.POLLOUT)
 

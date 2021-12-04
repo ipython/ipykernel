@@ -862,11 +862,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", reply_msg)
 
     async def usage_request(self, stream, ident, parent):
-        content = parent['content']
-        reply_content = self.do_debug_request(content)
-        if inspect.isawaitable(reply_content):
-            reply_content = await reply_content
-        reply_content = json_clean(reply_content)
+        reply_content = {}
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.

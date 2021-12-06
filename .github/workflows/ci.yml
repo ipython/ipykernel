@@ -50,8 +50,6 @@ jobs:
       run: |
         pytest ipykernel -vv -s --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10
 
-              - name: Run the tests
-
     - name: Run the tests on pypy
       timeout-minutes: 15
       if: ${{ startsWith( matrix.python-version, 'pypy' ) }}

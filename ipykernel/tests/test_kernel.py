@@ -6,6 +6,7 @@
 import ast
 import io
 import os.path
+import platform
 import subprocess
 import sys
 import time
@@ -367,6 +368,10 @@ def test_unc_paths():
         assert reply['content']['status'] == 'ok'
 
 
+@pytest.mark.skipif(
+    platform.python_implementation() == "PyPy",
+    reason="does not work on PyPy",
+)
 def test_shutdown():
     """Kernel exits after polite shutdown_request"""
     with new_kernel() as kc:

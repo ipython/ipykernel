@@ -1,6 +1,10 @@
 name: ipykernel tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches: "master"
+  pull_request:
+    branches: "*"
 
 jobs:
   build:
@@ -9,67 +13,60 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        python-version: [ '3.7', '3.8', '3.9' ]
+        python-version: [ '3.7', '3.8', '3.9', '3.10',  'pypy-3.7' ]
         exclude:
         - os: windows
-          python-version: pypy3
+          python-version: pypy-3.7
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
-    - name: Install Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: 'x64'
-    - name: Upgrade packaging dependencies
-      run: |
-        pip install --upgrade pip setuptools wheel --user
-    - name: Get pip cache dir
-      id: pip-cache
-      run: |
-        echo "::set-output name=dir::$(pip cache dir)"
-    - name: Cache pip
-      uses: actions/cache@v1
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
-          ${{ runner.os }}-pip-
+      uses: actions/checkout@v2
+
+    - name: Base Setup
+      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
     - name: Install the Python dependencies
       run: |
         pip install --pre --upgrade --upgrade-strategy=eager .[test] codecov
+
     - name: Install matplotlib
       if: ${{ matrix.os != 'macos' && matrix.python-version != 'pypy3' }}
       run: |
-        pip install matplotlib || echo 'failed to install matplolib'
+        pip install matplotlib || echo 'failed to install matplotlib'
+
     - name: Install alternate event loops
       if: ${{ matrix.os != 'windows' }}
       run: |
         pip install curio || echo 'ignoring curio install failure'
         pip install trio || echo 'ignoring trio install failure'
+
     - name: List installed packages
       run: |
         pip freeze
         pip check
+
     - name: Run the tests
       timeout-minutes: 10
+      if: ${{ !startsWith( matrix.python-version, 'pypy' ) }}
       run: |
         pytest ipykernel -vv -s --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10
+
+    - name: Run the tests on pypy
+      timeout-minutes: 15
+      if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
+      run: |
+        pytest -vv ipykernel
+
     - name: Build the docs
       if: ${{ matrix.os == 'ubuntu' &&  matrix.python-version == '3.9'}}
       run: |
         cd docs
         pip install -r requirements.txt
         make html
-    - name: Build and check the dist files
-      run: |
-        pip install build twine
-        python -m build .
-        twine check dist/*
+
     - name: Coverage
       run: |
         codecov
+
   check_docstrings:
     runs-on: ${{ matrix.os }}-latest
     strategy:
@@ -82,34 +79,20 @@ jobs:
           python-version: pypy3
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
-    - name: Install Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: 'x64'
-    - name: Upgrade packaging dependencies
-      run: |
-        pip install --upgrade pip setuptools wheel --user
-    - name: Get pip cache dir
-      id: pip-cache
-      run: |
-        echo "::set-output name=dir::$(pip cache dir)"
-    - name: Cache pip
-      uses: actions/cache@v1
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
-          ${{ runner.os }}-pip-
+      uses: actions/checkout@v2
+
+    - name: Base Setup
+      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
     - name: Install the Python dependencies
       run: |
         pip install --pre --upgrade --upgrade-strategy=eager .
         pip install velin
+
     - name: Check Docstrings
       run: |
         velin . --check --compact
+
   test_without_debugpy:
     runs-on: ${{ matrix.os }}-latest
     strategy:
@@ -119,34 +102,20 @@ jobs:
         python-version: [ '3.9' ]
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
-    - name: Install Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: 'x64'
-    - name: Upgrade packaging dependencies
-      run: |
-        pip install --upgrade pip setuptools wheel --user
-    - name: Get pip cache dir
-      id: pip-cache
-      run: |
-        echo "::set-output name=dir::$(pip cache dir)"
-    - name: Cache pip
-      uses: actions/cache@v1
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
-          ${{ runner.os }}-pip-
+      uses: actions/checkout@v2
+
+    - name: Base Setup
+      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
     - name: Install the Python dependencies without debugpy
       run: |
         pip install --pre --upgrade --upgrade-strategy=eager .[test]
         pip uninstall --yes debugpy
+
     - name: List installed packages
       run: |
         pip freeze
+
     - name: Run the tests
       timeout-minutes: 10
       run: |

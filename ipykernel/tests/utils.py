@@ -5,6 +5,7 @@
 
 import atexit
 import os
+import platform
 import sys
 from tempfile import TemporaryDirectory
 from time import time
@@ -17,7 +18,7 @@ from jupyter_client import manager
 
 
 STARTUP_TIMEOUT = 60
-TIMEOUT = 60
+TIMEOUT = 100
 
 KM = None
 KC = None

@@ -7,7 +7,7 @@ on:
     branches: "*"
 
 jobs:
-  tests:
+  downstream1:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,15 +23,25 @@ jobs:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
-      - name: Test ipyparallel
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
-        with:
-          package_name: ipyparallel
-
       - name: Test jupyter_client
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: jupyter_client
+
+  downstream2:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Test ipyparallel
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        with:
+          package_name: ipyparallel
 
       - name: Test jupyter_kernel_test
         run: |

@@ -46,8 +46,17 @@ jobs:
 
     - name: Run the tests
       timeout-minutes: 10
+      if: ${{ !startsWith( matrix.python-version, 'pypy' ) }}
       run: |
         pytest ipykernel -vv -s --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10
+
+              - name: Run the tests
+
+    - name: Run the tests on pypy
+      timeout-minutes: 15
+      if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
+      run: |
+        pytest -vv ipykernel
 
     - name: Build the docs
       if: ${{ matrix.os == 'ubuntu' &&  matrix.python-version == '3.9'}}
@@ -55,12 +64,6 @@ jobs:
         cd docs
         pip install -r requirements.txt
         make html
-
-    - name: Build and check the dist files
-      run: |
-        pip install build twine
-        python -m build .
-        twine check dist/*
 
     - name: Coverage
       run: |

@@ -1,14 +1,19 @@
 from .test_embed_kernel import setup_kernel
 from flaky import flaky
+from textwrap import dedent
 
 TIMEOUT = 15
 
 
 @flaky(max_runs=3)
 def test_ipython_start_kernel_userns():
-    cmd = ('from IPython import start_kernel\n'
-           'ns = {"tre": 123}\n'
-           'start_kernel(user_ns=ns)')
+    cmd = dedent(
+        """
+        from ipykernel.kernelapp import launch_new_instance
+        ns = {"tre": 123}
+        launch_new_instance(user_ns=ns)
+        """
+    )
 
     with setup_kernel(cmd) as client:
         client.inspect("tre")
@@ -34,8 +39,12 @@ def test_ipython_start_kernel_userns():
 @flaky(max_runs=3)
 def test_ipython_start_kernel_no_userns():
     # Issue #4188 - user_ns should be passed to shell as None, not {}
-    cmd = ('from IPython import start_kernel\n'
-           'start_kernel()')
+    cmd = dedent(
+        """
+        from ipykernel.kernelapp import launch_new_instance
+        launch_new_instance()
+        """
+    )
 
     with setup_kernel(cmd) as client:
         # user_module should not be an instance of DummyMod

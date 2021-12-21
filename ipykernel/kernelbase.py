@@ -16,7 +16,10 @@ import sys
 import time
 import uuid
 import warnings
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -861,14 +864,37 @@ class Kernel(SingletonConfigurable):
                                       parent, ident)
         self.log.debug("%s", reply_msg)
 
+    # Taken from https://github.com/jupyter-server/jupyter-resource-usage/blob/e6ec53fa69fdb6de8e878974bcff006310658408/jupyter_resource_usage/metrics.py#L16
+    def get_process_metric_value(self, process, name, attribute=None):
+        try:
+            # psutil.Process methods will either return...
+            metric_value = getattr(process, name)()
+            if attribute is not None:  # ... a named tuple
+                return getattr(metric_value, attribute)
+            else:  # ... or a number
+                return metric_value
+        # Avoid littering logs with stack traces
+        # complaining about dead processes
+        except BaseException:
+            return 0
+
     async def usage_request(self, stream, ident, parent):
         reply_content = {}
+        if psutil is None:
+            return reply_content
+        current_process = psutil.Process()
+        all_processes = [current_process] + current_process.children(recursive=True)
+        process_metric_value = lambda process, name, attribute: self.get_process_metric_value(
+                process, name, attribute
+        )
+        reply_content['kernel_cpu'] = sum([process_metric_value(process, 'cpu_percent', None) for process in all_processes])
+        reply_content['kernel_memory'] = sum([process_metric_value(process, 'memory_info', 'rss') for process in all_processes])
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
         if cpu_percent != None and cpu_percent != 0.0:
-            reply_content['cpu_percent'] = cpu_percent
-        reply_content['virtual_memory'] = dict(psutil.virtual_memory()._asdict())
+            reply_content['host_cpu_percent'] = cpu_percent
+        reply_content['host_virtual_memory'] = dict(psutil.virtual_memory()._asdict())
         reply_msg = self.session.send(stream, 'usage_reply', reply_content,
                                       parent, ident)
         self.log.debug("%s", reply_msg)

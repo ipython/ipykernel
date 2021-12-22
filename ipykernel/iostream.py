@@ -253,9 +253,9 @@ class BackgroundSocket:
             super().__getattr__(attr)
         if hasattr(self.io_thread.socket, attr):
             warnings.warn(
-                "Accessing zmq Socket attribute {attr} on BackgroundSocket"
-                " is deprecated since ipykernel 4.3.0"
-                " use .io_thread.socket.{attr}".format(attr=attr),
+                f"Accessing zmq Socket attribute {attr} on BackgroundSocket"
+                f" is deprecated since ipykernel 4.3.0"
+                f" use .io_thread.socket.{attr}",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -267,9 +267,9 @@ class BackgroundSocket:
             super().__setattr__(attr, value)
         else:
             warnings.warn(
-                "Setting zmq Socket attribute {attr} on BackgroundSocket"
-                " is deprecated since ipykernel 4.3.0"
-                " use .io_thread.socket.{attr}".format(attr=attr),
+                f"Setting zmq Socket attribute {attr} on BackgroundSocket"
+                f" is deprecated since ipykernel 4.3.0"
+                f" use .io_thread.socket.{attr}",
                 DeprecationWarning,
                 stacklevel=2,
             )

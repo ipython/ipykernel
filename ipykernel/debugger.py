@@ -540,7 +540,7 @@ class Debugger:
         else:
             # The code has stopped on a breakpoint, we use the setExpression
             # request to get the rich representation of the variable
-            code = "get_ipython().display_formatter.format(" + var_name + ")"
+            code = f"get_ipython().display_formatter.format({var_name})"
             frame_id = message["arguments"]["frameId"]
             seq = message["seq"]
             reply = await self._forward_message(

@@ -54,7 +54,7 @@ def test_async_interrupt(asynclib, request):
 
     flush_channels(KC)
     msg_id = KC.execute(
-        "print('begin'); import {0}; await {0}.sleep(5)".format(asynclib)
+        f"print('begin'); import {asynclib}; await {asynclib}.sleep(5)"
     )
     busy = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(busy, "status", msg_id)

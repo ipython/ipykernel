@@ -229,7 +229,7 @@ def loop_tk(kernel):
     # file handlers are not available on Windows
     if hasattr(app, 'createfilehandler'):
         # A basic wrapper for structural similarity with the Windows version
-        class BasicAppWrapper(object):
+        class BasicAppWrapper:
             def __init__(self, app):
                 self.app = app
                 self.app.withdraw()
@@ -257,7 +257,7 @@ def loop_tk(kernel):
         # Tk uses milliseconds
         poll_interval = int(1000 * kernel._poll_interval)
 
-        class TimedAppWrapper(object):
+        class TimedAppWrapper:
             def __init__(self, app, func):
                 self.app = app
                 self.app.withdraw()

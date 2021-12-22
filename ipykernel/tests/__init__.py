@@ -40,6 +40,6 @@ def teardown():
 
     try:
         shutil.rmtree(tmp)
-    except (OSError, IOError):
+    except OSError:
         # no such file
         pass

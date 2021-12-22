@@ -130,9 +130,9 @@ f(2, 3)"""
 def test_rich_inspect_not_at_breakpoint(kernel_with_debug):
     var_name = "text"
     value = "Hello the world"
-    code = """{0}='{1}'
-print({0})
-""".format(var_name, value)
+    code = f"""{var_name}='{value}'
+print({var_name})
+"""
 
     msg_id = kernel_with_debug.execute(code)
     get_reply(kernel_with_debug, msg_id)
@@ -146,7 +146,7 @@ print({0})
         {"variableName": var_name},
     )
 
-    assert reply["body"]["data"] == {"text/plain": "'{}'".format(value)}
+    assert reply["body"]["data"] == {"text/plain": f"'{value}'"}
 
 
 def test_rich_inspect_at_breakpoint(kernel_with_debug):

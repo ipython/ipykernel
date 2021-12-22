@@ -110,7 +110,7 @@ def use_cloudpickle():
 #-------------------------------------------------------------------------------
 
 
-class CannedObject(object):
+class CannedObject:
     def __init__(self, obj, keys=[], hook=None):
         """can an object for safe pickling
 

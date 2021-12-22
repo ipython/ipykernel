@@ -9,12 +9,12 @@ from jupyter_client.channelsabc import HBChannelABC
 # Channel classes
 #-----------------------------------------------------------------------------
 
-class InProcessChannel(object):
+class InProcessChannel:
     """Base class for in-process channels."""
     proxy_methods = []
 
     def __init__(self, client=None):
-        super(InProcessChannel, self).__init__()
+        super().__init__()
         self.client = client
         self._is_alive = False
 
@@ -57,7 +57,7 @@ class InProcessChannel(object):
 
 
 
-class InProcessHBChannel(object):
+class InProcessHBChannel:
     """A dummy heartbeat channel interface for in-process kernels.
 
     Normally we use the heartbeat to check that the kernel process is alive.
@@ -68,7 +68,7 @@ class InProcessHBChannel(object):
     time_to_dead = 3.0
 
     def __init__(self, client=None):
-        super(InProcessHBChannel, self).__init__()
+        super().__init__()
         self.client = client
         self._is_alive = False
         self._pause = True

@@ -75,7 +75,7 @@ class IPythonKernel(KernelBase):
     _sys_eval_input = Any()
 
     def __init__(self, **kwargs):
-        super(IPythonKernel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Initialize the Debugger
         if _is_debugpy_available:
@@ -175,13 +175,13 @@ class IPythonKernel(KernelBase):
             self.log.warning("debugpy_stream undefined, debugging will not be enabled")
         else:
             self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
-        super(IPythonKernel, self).start()
+        super().start()
 
     def set_parent(self, ident, parent, channel='shell'):
         """Overridden from parent to tell the display hook and output streams
         about the parent message.
         """
-        super(IPythonKernel, self).set_parent(ident, parent, channel)
+        super().set_parent(ident, parent, channel)
         if channel == 'shell':
             self.shell.set_parent(parent)
 
@@ -190,7 +190,7 @@ class IPythonKernel(KernelBase):
 
         Run at the beginning of each execution request.
         """
-        md = super(IPythonKernel, self).init_metadata(parent)
+        md = super().init_metadata(parent)
         # FIXME: remove deprecated ipyparallel-specific code
         # This is required for ipyparallel < 5.0
         md.update({
@@ -591,4 +591,4 @@ class Kernel(IPythonKernel):
         import warnings
         warnings.warn('Kernel is a deprecated alias of ipykernel.ipkernel.IPythonKernel',
                       DeprecationWarning)
-        super(Kernel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

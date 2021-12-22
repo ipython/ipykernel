@@ -14,7 +14,7 @@ from ipykernel.zmqshell import ZMQDisplayPublisher
 from jupyter_client.session import Session
 
 
-class NoReturnDisplayHook(object):
+class NoReturnDisplayHook:
     """
     A dummy DisplayHook which allows us to monitor
     the number of times an object is called, but which
@@ -33,7 +33,7 @@ class ReturnDisplayHook(NoReturnDisplayHook):
     message when it is called.
     """
     def __call__(self, obj):
-        super(ReturnDisplayHook, self).__call__(obj)
+        super().__call__(obj)
         return obj
 
 
@@ -51,7 +51,7 @@ class CounterSession(Session):
         with an increment to the send counter.
         """
         self.send_count += 1
-        super(CounterSession, self).send(*args, **kwargs)
+        super().send(*args, **kwargs)
 
 
 class ZMQDisplayPublisherTests(unittest.TestCase):

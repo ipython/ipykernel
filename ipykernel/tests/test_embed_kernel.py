@@ -58,12 +58,12 @@ def setup_kernel(cmd):
 
         if kernel.poll() is not None:
             o, e = kernel.communicate()
-            raise IOError("Kernel failed to start:\n%s" % e)
+            raise OSError("Kernel failed to start:\n%s" % e)
 
         if not os.path.exists(connection_file):
             if kernel.poll() is None:
                 kernel.terminate()
-            raise IOError("Connection file %r never arrived" % connection_file)
+            raise OSError("Connection file %r never arrived" % connection_file)
 
         client = BlockingKernelClient(connection_file=connection_file)
         client.load_connection_file()

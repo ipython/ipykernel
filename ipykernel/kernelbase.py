@@ -207,7 +207,7 @@ class Kernel(SingletonConfigurable):
     control_msg_types = msg_types + ['clear_request', 'abort_request', 'debug_request']
 
     def __init__(self, **kwargs):
-        super(Kernel, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Build dict of handlers for message types
         self.shell_handlers = {}
         for msg_type in self.msg_types:

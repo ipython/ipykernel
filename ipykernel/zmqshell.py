@@ -378,7 +378,7 @@ class KernelMagics(Magics):
         print ("Paste the above JSON into a file, and connect with:\n"
             "    $> jupyter <app> --existing <file>\n"
             "or, if you are local, you can connect with just:\n"
-            "    $> jupyter <app> --existing {}\n"
+            f"    $> jupyter <app> --existing {connection_file}\n"
             "or even just:\n"
             "    $> jupyter <app> --existing\n"
             "if this is the most recent Jupyter kernel you have started.".format(

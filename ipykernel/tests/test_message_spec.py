@@ -62,7 +62,7 @@ class Version(Unicode):
         self.min = kwargs.pop('min', None)
         self.max = kwargs.pop('max', None)
         kwargs['default_value'] = self.min
-        super(Version, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def validate(self, obj, value):
         if self.min and V(value) < V(self.min):
@@ -79,7 +79,7 @@ class RMessage(Reference):
     content = Dict()
 
     def check(self, d):
-        super(RMessage, self).check(d)
+        super().check(d)
         RHeader().check(self.header)
         if self.parent_header:
             RHeader().check(self.parent_header)

@@ -378,7 +378,7 @@ class KernelMagics(Magics):
         print ("Paste the above JSON into a file, and connect with:\n"
             "    $> jupyter <app> --existing <file>\n"
             "or, if you are local, you can connect with just:\n"
-            "    $> jupyter <app> --existing {0}\n"
+            "    $> jupyter <app> --existing {}\n"
             "or even just:\n"
             "    $> jupyter <app> --existing\n"
             "if this is the most recent Jupyter kernel you have started.".format(
@@ -497,7 +497,7 @@ class ZMQInteractiveShell(InteractiveShell):
         env['GIT_PAGER'] = 'cat'
 
     def init_hooks(self):
-        super(ZMQInteractiveShell, self).init_hooks()
+        super().init_hooks()
         self.set_hook('show_in_pager', page.as_hook(payloadpage.page), 99)
 
     def init_data_pub(self):
@@ -530,7 +530,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     def run_cell(self, *args, **kwargs):
         self._last_traceback = None
-        return super(ZMQInteractiveShell, self).run_cell(*args, **kwargs)
+        return super().run_cell(*args, **kwargs)
 
     def _showtraceback(self, etype, evalue, stb):
         # try to preserve ordering of tracebacks and print statements
@@ -592,7 +592,7 @@ class ZMQInteractiveShell(InteractiveShell):
         return self.parent_header
 
     def init_magics(self):
-        super(ZMQInteractiveShell, self).init_magics()
+        super().init_magics()
         self.register_magics(KernelMagics)
         self.magics_manager.register_alias('ed', 'edit')
 

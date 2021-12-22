@@ -23,7 +23,7 @@ from gi.repository import GObject, Gtk
 # Classes and functions
 #-----------------------------------------------------------------------------
 
-class GTKEmbed(object):
+class GTKEmbed:
     """A class to embed a kernel into the GTK main event loop.
     """
     def __init__(self, kernel):

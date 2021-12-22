@@ -71,7 +71,7 @@ class InProcessKernelManager(KernelManager):
 
     def client(self, **kwargs):
         kwargs['kernel'] = self.kernel
-        return super(InProcessKernelManager, self).client(**kwargs)
+        return super().client(**kwargs)
 
 
 #-----------------------------------------------------------------------------

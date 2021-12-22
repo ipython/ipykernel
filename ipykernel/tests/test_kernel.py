@@ -4,7 +4,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 import ast
-import io
 import os.path
 import platform
 import subprocess
@@ -186,6 +185,7 @@ def test_subprocess_error():
         _check_master(kc, expected=True)
         _check_master(kc, expected=True, stream="stderr")
 
+
 # raw_input tests
 
 def test_raw_input():
@@ -220,7 +220,7 @@ def test_save_history():
         wait_for_idle(kc)
         _, reply = execute("%hist -f " + file, kc=kc)
         assert reply['status'] == 'ok'
-        with io.open(file, encoding='utf-8') as f:
+        with open(file, encoding='utf-8') as f:
             content = f.read()
         assert 'a=1' in content
         assert 'b="abcþ"' in content
@@ -350,7 +350,7 @@ def test_unc_paths():
         file_path = os.path.splitdrive(os.path.dirname(drive_file_path))[1]
         unc_file_path = os.path.join(unc_root, file_path[1:])
 
-        kc.execute("cd {0:s}".format(unc_file_path))
+        kc.execute(f"cd {unc_file_path:s}")
         reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply['content']['status'] == 'ok'
         out, err = assemble_output(kc.get_iopub_msg)

@@ -59,7 +59,7 @@ def get_file_name(code):
 class XCachingCompiler(CachingCompiler):
 
     def __init__(self, *args, **kwargs):
-        super(XCachingCompiler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.log = None
 
     def get_code_name(self, raw_code, code, number):

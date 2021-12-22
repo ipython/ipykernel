@@ -247,7 +247,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
         self.log.debug("Cleaning up connection file: %s", cf)
         try:
             os.remove(cf)
-        except (IOError, OSError):
+        except OSError:
             pass
 
         self.cleanup_ipc_files()
@@ -257,7 +257,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
             self.connection_file = "kernel-%s.json"%os.getpid()
         try:
             self.connection_file = filefind(self.connection_file, ['.', self.connection_dir])
-        except IOError:
+        except OSError:
             self.log.debug("Connection file not found: %s", self.connection_file)
             # This means I own it, and I'll create it in this directory:
             os.makedirs(os.path.dirname(self.abs_connection_file), mode=0o700, exist_ok=True)
@@ -621,7 +621,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp,
     @catch_config_error
     def initialize(self, argv=None):
         self._init_asyncio_patch()
-        super(IPKernelApp, self).initialize(argv)
+        super().initialize(argv)
         if self.subapp is not None:
             return
 

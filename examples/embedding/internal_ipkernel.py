@@ -20,7 +20,7 @@ def mpl_kernel(gui):
     return kernel
 
 
-class InternalIPKernel(object):
+class InternalIPKernel:
 
     def init_ipkernel(self, backend):
         # Start IPython kernel with GUI event loop and mpl support

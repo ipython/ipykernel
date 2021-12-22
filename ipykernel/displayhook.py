@@ -12,7 +12,7 @@ from traitlets import Instance, Dict, Any
 from jupyter_client.session import extract_header, Session
 
 
-class ZMQDisplayHook(object):
+class ZMQDisplayHook:
     """A simple displayhook that publishes the object's repr over a ZeroMQ
     socket."""
     topic = b'execute_result'

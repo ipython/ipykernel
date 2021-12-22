@@ -69,7 +69,7 @@ class InProcessKernel(IPythonKernel):
     stdin_socket = Instance(DummySocket, ())
 
     def __init__(self, **traits):
-        super(InProcessKernel, self).__init__(**traits)
+        super().__init__(**traits)
 
         self._underlying_iopub_socket.observe(self._io_dispatch, names=['message_sent'])
         self.shell.kernel = self
@@ -77,7 +77,7 @@ class InProcessKernel(IPythonKernel):
     async def execute_request(self, stream, ident, parent):
         """ Override for temporary IO redirection. """
         with self._redirected_io():
-            await super(InProcessKernel, self).execute_request(stream, ident, parent)
+            await super().execute_request(stream, ident, parent)
 
     def start(self):
         """ Override registration of dispatchers for streams. """
@@ -106,7 +106,7 @@ class InProcessKernel(IPythonKernel):
                 break
         else:
             logging.error('No frontend found for raw_input request')
-            return str()
+            return ''
 
         # Await a response.
         while self.raw_input_str is None:
@@ -183,13 +183,13 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
         """Enable matplotlib integration for the kernel."""
         if not gui:
             gui = self.kernel.gui
-        return super(InProcessInteractiveShell, self).enable_matplotlib(gui)
+        return super().enable_matplotlib(gui)
 
     def enable_pylab(self, gui=None, import_all=True, welcome_message=False):
         """Activate pylab support at runtime."""
         if not gui:
             gui = self.kernel.gui
-        return super(InProcessInteractiveShell, self).enable_pylab(gui, import_all,
+        return super().enable_pylab(gui, import_all,
                                                             welcome_message)
 
 InteractiveShellABC.register(InProcessInteractiveShell)

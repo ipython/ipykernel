@@ -58,12 +58,12 @@ class InProcessKernelClient(KernelClient):
         return BlockingInProcessKernelClient
 
     def get_connection_info(self):
-        d = super(InProcessKernelClient, self).get_connection_info()
+        d = super().get_connection_info()
         d['kernel'] = self.kernel
         return d
 
     def start_channels(self, *args, **kwargs):
-        super(InProcessKernelClient, self).start_channels()
+        super().start_channels()
         self.kernel.frontends.append(self)
 
     @property

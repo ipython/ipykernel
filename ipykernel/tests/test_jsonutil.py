@@ -20,13 +20,13 @@ from ..jsonutil import json_clean, encode_images
 JUPYTER_CLIENT_MAJOR_VERSION = jupyter_client_version[0]
 
 
-class MyInt(object):
+class MyInt:
     def __int__(self):
         return 389
 numbers.Integral.register(MyInt)
 
 
-class MyFloat(object):
+class MyFloat:
     def __float__(self):
         return 3.14
 numbers.Real.register(MyFloat)
@@ -45,7 +45,7 @@ def test():
              # Containers
              ([1, 2], None),
              ((1, 2), [1, 2]),
-             (set([1, 2]), [1, 2]),
+             ({1, 2}, [1, 2]),
              (dict(x=1), None),
              ({'x': 1, 'y':[1,2,3], '1':'int'}, None),
              # More exotic objects

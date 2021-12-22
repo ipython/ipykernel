@@ -22,7 +22,7 @@ class ParentPollerUnix(Thread):
     """
 
     def __init__(self):
-        super(ParentPollerUnix, self).__init__()
+        super().__init__()
         self.daemon = True
 
     def run(self):
@@ -60,7 +60,7 @@ class ParentPollerWindows(Thread):
             handle is signaled.
         """
         assert(interrupt_handle or parent_handle)
-        super(ParentPollerWindows, self).__init__()
+        super().__init__()
         if ctypes is None:
             raise ImportError("ParentPollerWindows requires ctypes")
         self.daemon = True

@@ -2,7 +2,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
-import io
 import os
 import shutil
 import sys
@@ -65,7 +64,7 @@ def assert_is_spec(path):
         assert os.path.exists(dst)
     kernel_json = pjoin(path, 'kernel.json')
     assert os.path.exists(kernel_json)
-    with io.open(kernel_json, encoding='utf8') as f:
+    with open(kernel_json, encoding='utf8') as f:
         json.load(f)
 
 

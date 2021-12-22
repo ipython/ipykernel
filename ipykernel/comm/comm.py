@@ -50,7 +50,7 @@ class Comm(LoggingConfigurable):
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
         if target_name:
             kwargs['target_name'] = target_name
-        super(Comm, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         if self.kernel:
             if self.primary:
                 # I am primary, open my peer.

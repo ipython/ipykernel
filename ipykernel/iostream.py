@@ -39,7 +39,7 @@ CHILD = 1
 #-----------------------------------------------------------------------------
 
 
-class IOPubThread(object):
+class IOPubThread:
     """An object for sending IOPub messages in a background thread
 
     Prevents a blocking main thread from delaying output from threads.
@@ -239,7 +239,7 @@ class IOPubThread(object):
             ctx.term()
 
 
-class BackgroundSocket(object):
+class BackgroundSocket:
     """Wrapper around IOPub thread that provides zmq send[_multipart]"""
     io_thread = None
 
@@ -250,7 +250,7 @@ class BackgroundSocket(object):
         """Wrap socket attr access for backward-compatibility"""
         if attr.startswith('__') and attr.endswith('__'):
             # don't wrap magic methods
-            super(BackgroundSocket, self).__getattr__(attr)
+            super().__getattr__(attr)
         if hasattr(self.io_thread.socket, attr):
             warnings.warn(
                 "Accessing zmq Socket attribute {attr} on BackgroundSocket"
@@ -260,11 +260,11 @@ class BackgroundSocket(object):
                 stacklevel=2,
             )
             return getattr(self.io_thread.socket, attr)
-        super(BackgroundSocket, self).__getattr__(attr)
+        super().__getattr__(attr)
 
     def __setattr__(self, attr, value):
         if attr == 'io_thread' or (attr.startswith('__' and attr.endswith('__'))):
-            super(BackgroundSocket, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
         else:
             warnings.warn(
                 "Setting zmq Socket attribute {attr} on BackgroundSocket"
@@ -484,7 +484,7 @@ class OutStream(TextIOBase):
                 self.echo.flush()
             except OSError as e:
                 if self.echo is not sys.__stderr__:
-                    print("Flush failed: {}".format(e),
+                    print(f"Flush failed: {e}",
                           file=sys.__stderr__)
 
         data = self._flush_buffer()
@@ -517,7 +517,7 @@ class OutStream(TextIOBase):
                 self.echo.write(string)
             except OSError as e:
                 if self.echo is not sys.__stderr__:
-                    print("Write failed: {}".format(e),
+                    print(f"Write failed: {e}",
                           file=sys.__stderr__)
 
         if self.pub_thread is None:

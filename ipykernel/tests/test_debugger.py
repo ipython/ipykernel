@@ -146,7 +146,7 @@ print({0})
         {"variableName": var_name},
     )
 
-    assert reply["body"]["data"] == {"text/plain": "'{}'".format(value)}
+    assert reply["body"]["data"] == {"text/plain": f"'{value}'"}
 
 
 def test_rich_inspect_at_breakpoint(kernel_with_debug):

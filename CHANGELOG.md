@@ -1,7 +1,5 @@
 # Changes in IPython kernel
 
-## 6.3
-
 <!-- <START NEW CHANGELOG ENTRY> -->
 
 ## 6.6.0
@@ -129,6 +127,8 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-08-31&to=2021-09-09&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2021-08-31..2021-09-09&type=Issues) | [@frenzymadness](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afrenzymadness+updated%3A2021-08-31..2021-09-09&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2021-08-31..2021-09-09&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2021-08-31..2021-09-09&type=Issues)
+
+## 6.3
 
 ## 6.3.1
 

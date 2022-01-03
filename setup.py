@@ -70,6 +70,7 @@ setup_args = dict(
         'tornado>=4.2,<7.0',
         'matplotlib-inline>=0.1.0,<0.2.0',
         'appnope;platform_system=="Darwin"',
+        'nest_asyncio',
     ],
     extras_require={
         "test": [

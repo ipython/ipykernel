@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.6.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.6.0...bdce14b32ca8cc8f4b1635ea47200f0828ec1e05))
+
+### Bugs fixed
+
+- PR: do_one_iteration is a coroutine [#830](https://github.com/ipython/ipykernel/pull/830) ([@impact27](https://github.com/impact27))
+
+### Maintenance and upkeep improvements
+
+- Clean python 2 artifacts. Fix #826 [#827](https://github.com/ipython/ipykernel/pull/827) ([@penguinolog](https://github.com/penguinolog))
+
+### Documentation improvements
+
+- Fix title position in  changelog [#828](https://github.com/ipython/ipykernel/pull/828) ([@fcollonval](https://github.com/fcollonval))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-12-01&to=2022-01-03&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2021-12-01..2022-01-03&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2021-12-01..2022-01-03&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afcollonval+updated%3A2021-12-01..2022-01-03&type=Issues) | [@impact27](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aimpact27+updated%3A2021-12-01..2022-01-03&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2021-12-01..2022-01-03&type=Issues) | [@penguinolog](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apenguinolog+updated%3A2021-12-01..2022-01-03&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.6.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.5.1...9566304175d844c23a1f2b1d70c10df475ed2868))
@@ -26,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2021-11-18&to=2021-12-01&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2021-11-18..2021-12-01&type=Issues) | [@dlukes](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adlukes+updated%3A2021-11-18..2021-12-01&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2021-11-18..2021-12-01&type=Issues) | [@fasiha](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afasiha+updated%3A2021-11-18..2021-12-01&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2021-11-18..2021-12-01&type=Issues) | [@Kojoley](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AKojoley+updated%3A2021-11-18..2021-12-01&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.5.1
 

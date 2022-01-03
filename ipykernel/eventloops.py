@@ -253,6 +253,10 @@ def loop_tk(kernel):
         app.mainloop()
 
     else:
+        import asyncio
+        import nest_asyncio
+        nest_asyncio.apply()
+
         doi = kernel.do_one_iteration
         # Tk uses milliseconds
         poll_interval = int(1000 * kernel._poll_interval)
@@ -264,7 +268,11 @@ def loop_tk(kernel):
                 self.func = func
 
             def on_timer(self):
-                self.func()
+                loop = asyncio.get_event_loop()
+                try:
+                    loop.run_until_complete(self.func())
+                except Exception:
+                    kernel.log.exception("Error in message handler")
                 self.app.after(poll_interval, self.on_timer)
 
             def start(self):

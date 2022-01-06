@@ -16,6 +16,7 @@ import sys
 import time
 import uuid
 import warnings
+from contextvars import ContextVar
 
 try:
     # jupyter_client >= 5, use tz-aware now
@@ -134,7 +135,7 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parents = Dict({"shell": {}, "control": {}})
+    _parents = Dict({"shell": ContextVar("shell_parent", default={}), "control": ContextVar("control_parent", default={})})
     _parent_ident = Dict({'shell': b'', 'control': b''})
 
     @property
@@ -301,18 +302,14 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
-    async def dispatch_shell(self, msg):
+    async def dispatch_shell(self, msg, idents=None):
         """dispatch shell requests"""
 
         # flush control queue before handling shell requests
         await self._flush_control_queue()
 
-        idents, msg = self.session.feed_identities(msg, copy=False)
-        try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
-        except Exception:
-            self.log.error("Invalid Message", exc_info=True)
-            return
+        if idents is None:
+            idents = []
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg, channel='shell')
@@ -466,15 +463,38 @@ class Kernel(SingletonConfigurable):
     def _message_counter_default(self):
         return itertools.count()
 
-    def schedule_dispatch(self, dispatch, *args):
+    def should_dispatch_immediately(self, msg):
+        """
+        This provides a hook for dispatching incoming messages
+        from the frontend immediately, and out of order.
+
+        It could be used to allow asynchronous messages from
+        GUIs to be processed.
+        """
+        return False
+
+    def schedule_dispatch(self, msg, dispatch):
         """schedule a message for dispatch"""
+
+        idents, msg = self.session.feed_identities(msg, copy=False)
+        try:
+            msg = self.session.deserialize(msg, content=True, copy=False)
+        except:
+            self.log.error("Invalid shell message", exc_info=True)
+            return
+
+        new_args = (msg, idents)
+
+        if self.should_dispatch_immediately(msg):
+            return self.io_loop.add_callback(dispatch, *new_args)
+
         idx = next(self._message_counter)
 
         self.msg_queue.put_nowait(
             (
                 idx,
                 dispatch,
-                args,
+                new_args,
             )
         )
         # ensure the eventloop wakes up
@@ -498,7 +518,7 @@ class Kernel(SingletonConfigurable):
         self.shell_stream.on_recv(
             partial(
                 self.schedule_dispatch,
-                self.dispatch_shell,
+                dispatch=self.dispatch_shell,
             ),
             copy=False,
         )
@@ -556,7 +576,7 @@ class Kernel(SingletonConfigurable):
         on the stdin channel.
         """
         self._parent_ident[channel] = ident
-        self._parents[channel] = parent
+        self._parents[channel].set(parent)
 
     def get_parent(self, channel="shell"):
         """Get the parent request associated with a channel.
@@ -573,7 +593,7 @@ class Kernel(SingletonConfigurable):
         message : dict
             the parent message for the most recent request on the channel.
         """
-        return self._parents.get(channel, {})
+        return self._parents.get(channel, {}).get({})
 
     def send_response(self, stream, msg_or_type, content=None, ident=None,
              buffers=None, track=False, header=None, metadata=None, channel='shell'):

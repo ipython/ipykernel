@@ -884,9 +884,7 @@ class Kernel(SingletonConfigurable):
             return reply_content
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
-        process_metric_value = lambda process, name, attribute: self.get_process_metric_value(
-                process, name, attribute
-        )
+        process_metric_value = self.get_process_metric_value
         reply_content['kernel_cpu'] = sum([process_metric_value(process, 'cpu_percent', None) for process in all_processes])
         reply_content['kernel_memory'] = sum([process_metric_value(process, 'memory_info', 'rss') for process in all_processes])
         cpu_percent = psutil.cpu_percent()

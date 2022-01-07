@@ -876,7 +876,7 @@ class Kernel(SingletonConfigurable):
         # Avoid littering logs with stack traces
         # complaining about dead processes
         except BaseException:
-            return 0
+            return None
 
     async def usage_request(self, stream, ident, parent):
         reply_content = {}

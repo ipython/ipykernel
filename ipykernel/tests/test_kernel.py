@@ -426,6 +426,10 @@ def test_interrupt_with_message():
 
 
 @pytest.mark.skipif(
+    "__pypy__" in sys.builtin_module_names,
+    reason="fails on pypy",
+)
+@pytest.mark.skipif(
     version.parse(IPython.__version__) < version.parse("7.14.0"),
     reason="Need new IPython"
 )

@@ -8,6 +8,7 @@ from tornado.queues import Queue
 from tornado.locks import Event
 
 from IPython.core.getipython import get_ipython
+from IPython.core.inputtransformer2 import leading_empty_lines
 
 try:
     from jupyter_client.jsonutil import json_default
@@ -286,6 +287,7 @@ class Debugger:
         self.stopped_threads = []
 
         self.debugpy_initialized = False
+        self._removed_cleanup = {}
 
         self.debugpy_host = '127.0.0.1'
         self.debugpy_port = 0
@@ -341,11 +343,24 @@ class Debugger:
 
             ident, msg = self.session.recv(self.shell_socket, mode=0)
             self.debugpy_initialized = msg['content']['status'] == 'ok'
+
+        # Don't remove leading empty lines when debugging so the breakpoints are correctly positioned
+        cleanup_transforms = get_ipython().input_transformer_manager.cleanup_transforms
+        if leading_empty_lines in cleanup_transforms:
+            index = cleanup_transforms.index(leading_empty_lines)
+            self._removed_cleanup[index] = cleanup_transforms.pop(index)
+
         self.debugpy_client.connect_tcp_socket()
         return self.debugpy_initialized
 
     def stop(self):
         self.debugpy_client.disconnect_tcp_socket()
+
+        # Restore remove cleanup transformers
+        cleanup_transforms = get_ipython().input_transformer_manager.cleanup_transforms
+        for index in sorted(self._removed_cleanup):
+            func = self._removed_cleanup.pop(index)
+            cleanup_transforms.insert(index, func)
 
     async def dumpCell(self, message):
         code = message['arguments']['code']

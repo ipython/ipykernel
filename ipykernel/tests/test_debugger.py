@@ -1,6 +1,7 @@
+import sys
 import pytest
 
-from .utils import new_kernel, get_reply
+from .utils import TIMEOUT, new_kernel, get_reply
 
 seq = 0
 
@@ -8,7 +9,7 @@ seq = 0
 pytest.importorskip("debugpy")
 
 
-def wait_for_debug_request(kernel, command, arguments=None):
+def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
     """Carry out a debug request and return the reply content.
 
     It does not check if the request was successful.
@@ -27,7 +28,7 @@ def wait_for_debug_request(kernel, command, arguments=None):
     )
     kernel.control_channel.send(msg)
     reply = get_reply(kernel, msg["header"]["msg_id"], channel="control")
-    return reply["content"]
+    return reply if full_reply else reply["content"]
 
 
 @pytest.fixture
@@ -125,6 +126,76 @@ f(2, 3)"""
 
     r = wait_for_debug_request(kernel_with_debug, "configurationDone")
     assert r["success"]
+
+
+def test_stop_on_breakpoint(kernel_with_debug):
+    code = """def f(a, b):
+    c = a + b
+    return c
+
+f(2, 3)"""
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    source = r["body"]["sourcePath"]
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 2}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
+
+    kernel_with_debug.execute(code)
+    
+    # Wait for stop on breakpoint
+    msg = {"msg_type": "", "content": {}}
+    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+
+    assert msg["content"]["body"]["reason"] == "breakpoint"
+
+
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="TODO Does not work on Python 3.10")
+def test_breakpoint_in_cell_with_leading_empty_lines(kernel_with_debug):
+    code = """
+def f(a, b):
+    c = a + b
+    return c
+
+f(2, 3)"""
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    source = r["body"]["sourcePath"]
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 6}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
+
+    kernel_with_debug.execute(code)
+    
+    # Wait for stop on breakpoint
+    msg = {"msg_type": "", "content": {}}
+    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+
+    assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
 def test_rich_inspect_not_at_breakpoint(kernel_with_debug):

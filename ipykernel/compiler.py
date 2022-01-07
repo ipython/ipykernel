@@ -39,8 +39,14 @@ def murmur2_x86(data, seed):
 
 def get_tmp_directory():
     tmp_dir = tempfile.gettempdir()
+    if os.name == 'nt':
+        try:
+            import win32file
+            tmp_dir = win32file.GetLongPathName(tmp_dir)
+        except:
+            pass
     pid = os.getpid()
-    return tmp_dir + '/ipykernel_' + str(pid)
+    return tmp_dir + os.sep + 'ipykernel_' + str(pid)
 
 
 def get_tmp_hash_seed():
@@ -52,7 +58,7 @@ def get_file_name(code):
     cell_name = os.environ.get("IPYKERNEL_CELL_NAME")
     if cell_name is None:
         name = murmur2_x86(code, get_tmp_hash_seed())
-        cell_name = get_tmp_directory() + '/' + str(name) + '.py'
+        cell_name = get_tmp_directory() + os.sep + str(name) + '.py'
     return cell_name
 
 

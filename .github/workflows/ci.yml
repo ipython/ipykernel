@@ -41,6 +41,10 @@ jobs:
 
     - name: List installed packages
       run: |
+        pip uninstall pipx -y
+        pip install pipdeptree
+        pipdeptree 
+        pipdeptree --reverse 
         pip freeze
         pip check
 

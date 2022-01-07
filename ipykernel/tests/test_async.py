@@ -26,13 +26,7 @@ def teardown_function():
     KM.shutdown_kernel(now=True)
 
 
-skip_without_async = pytest.mark.skipif(
-    sys.version_info < (3, 5) or V(IPython.__version__) < V("7.0"),
-    reason="IPython >=7 with async/await required",
-)
 
-
-@skip_without_async
 def test_async_await():
     flush_channels(KC)
     msg_id, content = execute("import asyncio; await asyncio.sleep(0.1)", KC)
@@ -40,7 +34,6 @@ def test_async_await():
 
 
 @pytest.mark.parametrize("asynclib", ["asyncio", "trio", "curio"])
-@skip_without_async
 def test_async_interrupt(asynclib, request):
     try:
         __import__(asynclib)

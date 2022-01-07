@@ -28,7 +28,6 @@ async_func()
 """
 
 
-@pytest.mark.skipif(sys.version_info < (3, 5), reason="async/await syntax required")
 @pytest.mark.skipif(tornado.version_info < (5,), reason="only relevant on tornado 5")
 def test_asyncio_interrupt():
     flush_channels(KC)

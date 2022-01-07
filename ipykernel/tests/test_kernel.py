@@ -425,6 +425,10 @@ def test_interrupt_with_message():
         validate_message(reply, 'execute_reply', msg_id)
 
 
+@pytest.mark.skipif(
+    "__pypy__" in sys.builtin_module_names,
+    reason="fails on pypy",
+)
 def test_interrupt_during_pdb_set_trace():
     """
     The kernel exits after being interrupted while waiting in pdb.set_trace().

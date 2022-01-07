@@ -415,10 +415,6 @@ def test_interrupt_with_message():
         validate_message(reply, 'execute_reply', msg_id)
 
 
-@pytest.mark.skipif(
-    version.parse(IPython.__version__) < version.parse("7.14.0"),
-    reason="Need new IPython"
-)
 def test_interrupt_during_pdb_set_trace():
     """
     The kernel exits after being interrupted while waiting in pdb.set_trace().

@@ -1,6 +1,7 @@
 from IPython.core.compilerop import CachingCompiler
 import tempfile
 import os
+import sys
 
 
 def murmur2_x86(data, seed):
@@ -36,15 +37,33 @@ def murmur2_x86(data, seed):
 
     return h
 
+convert_to_long_pathname = lambda filename:filename
+
+if sys.platform == 'win32':
+    try:
+        import ctypes
+        from ctypes.wintypes import MAX_PATH, LPCWSTR, LPWSTR, DWORD
+
+        _GetLongPathName = ctypes.windll.kernel32.GetLongPathNameW
+        _GetLongPathName.argtypes = [LPCWSTR, LPWSTR, DWORD]
+        _GetLongPathName.restype = DWORD
+
+        def _convert_to_long_pathname(filename):
+            buf = ctypes.create_unicode_buffer(MAX_PATH)
+            rv = _GetLongPathName(filename, buf, MAX_PATH)
+            if rv != 0 and rv <= MAX_PATH:
+                filename = buf.value
+            return filename
+
+        # test that it works
+        _convert_to_long_pathname(__file__)
+    except:
+        pass
+    else:
+        convert_to_long_pathname = _convert_to_long_pathname
 
 def get_tmp_directory():
-    tmp_dir = tempfile.gettempdir()
-    if os.name == 'nt':
-        try:
-            import win32file
-            tmp_dir = win32file.GetLongPathName(tmp_dir)
-        except:
-            pass
+    tmp_dir = convert_to_long_pathname(tempfile.gettempdir())
     pid = os.getpid()
     return tmp_dir + os.sep + 'ipykernel_' + str(pid)
 

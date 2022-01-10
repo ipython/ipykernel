@@ -69,7 +69,6 @@ setup_args = dict(
         'matplotlib-inline>=0.1.0,<0.2.0',
         'appnope;platform_system=="Darwin"',
         'nest_asyncio',
-        'pywin32;platform_system=="Windows"'
     ],
     extras_require={
         "test": [

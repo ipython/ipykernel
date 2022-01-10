@@ -507,7 +507,7 @@ class Debugger:
                 'isStarted': self.is_started,
                 'hashMethod': 'Murmur2',
                 'hashSeed': get_tmp_hash_seed(),
-                'tmpFilePrefix': get_tmp_directory() + '/',
+                'tmpFilePrefix': get_tmp_directory() + os.sep,
                 'tmpFileSuffix': '.py',
                 'breakpoints': breakpoint_list,
                 'stoppedThreads': self.stopped_threads,

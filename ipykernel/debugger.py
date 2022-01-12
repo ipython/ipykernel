@@ -477,8 +477,11 @@ class Debugger:
             'port': port
         }
         message['arguments']['logToFile'] = True
+        # Reverts that option for now since it leads to spurious break of the code
+        # in ipykernel source and resuming the execution leads to several errors
+        # in the kernel.
         # Set debugOptions for breakpoints in python standard library source.
-        message['arguments']['debugOptions'] = [ 'DebugStdLib' ]
+        # message['arguments']['debugOptions'] = [ 'DebugStdLib' ]
         return await self._forward_message(message)
 
     async def configurationDone(self, message):

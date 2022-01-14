@@ -1,5 +1,6 @@
 import os
 import re
+import threading
 
 import zmq
 from zmq.utils import jsonapi
@@ -284,7 +285,7 @@ class Debugger:
             self.static_debug_handlers[msg_type] = getattr(self, msg_type)
 
         self.breakpoint_list = {}
-        self.stopped_threads = []
+        self.stopped_threads = set()
 
         self.debugpy_initialized = False
         self._removed_cleanup = {}
@@ -297,12 +298,21 @@ class Debugger:
 
     def _handle_event(self, msg):
         if msg['event'] == 'stopped':
-            self.stopped_threads.append(msg['body']['threadId'])
+            self.stopped_threads.add(msg['body']['threadId'])
         elif msg['event'] == 'continued':
             try:
-                self.stopped_threads.remove(msg['body']['threadId'])
+                if msg['allThreadsContinued']:
+                    self.stopped_threads = set()
+                else:
+                    self.stopped_threads.remove(msg['body']['threadId'])
             except Exception:
-                pass
+                # Workaround for debugpy/pydev not setting the correct threadId
+                # after a next request. Does not work if a the code executed on
+                # the shell spawns additional threads
+                if len(self.stopped_threads) == 1:
+                    self.stopped_threads = set()
+                else:
+                    raise Exception('threadId from continued event not in stopped threads set')
         self.event_callback(msg)
 
     async def _forward_message(self, msg):
@@ -513,7 +523,7 @@ class Debugger:
                 'tmpFilePrefix': get_tmp_directory() + os.sep,
                 'tmpFileSuffix': '.py',
                 'breakpoints': breakpoint_list,
-                'stoppedThreads': self.stopped_threads,
+                'stoppedThreads': list(self.stopped_threads),
                 'richRendering': True,
                 'exceptionPaths': ['Python Exceptions']
             }
@@ -613,7 +623,7 @@ class Debugger:
         if message['command'] == 'disconnect':
             self.stop()
             self.breakpoint_list = {}
-            self.stopped_threads = []
+            self.stopped_threads = set()
             self.is_started = False
             self.log.info('The debugger has stopped')
 

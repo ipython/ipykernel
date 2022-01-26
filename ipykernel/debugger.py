@@ -593,22 +593,17 @@ class Debugger:
         reply["success"] = True
         return reply
 
-    async def modules(self, message):        
-        modules = [sys.modules[name] for name in sys.modules]
+    async def modules(self, message):
+        modules = sys.modules.values()
         mods = []
         for module in modules:
-            m = str(module)
-            if ".py'" in m:
-                a = {}
-                x = re.findall(r"'(.*?)'", m)
-                a[x[0]] = x[1]
-                mods.append(a)
-        reply = {
-            'body': {
-                'modules': mods,
-                'totalModules': len(modules)
-            }
-        }
+            filename = getattr(getattr(module, "__spec__", None), "origin", None)
+            if filename and filename.endswith(".py"):
+                mods.append({module.__name__: filename})
+
+        reply = {"body": {"modules": mods, "totalModules": len(modules)}}
+        return reply
+        reply = {"body": {"modules": mods, "totalModules": len(modules)}}
         return reply
 
     async def process_request(self, message):

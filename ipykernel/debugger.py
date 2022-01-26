@@ -594,15 +594,16 @@ class Debugger:
         return reply
 
     async def modules(self, message):
-        modules = sys.modules.values()
+        modules = list(sys.modules.values())
+        startModule = message.get('startModule', 0)
+        moduleCount = message.get('moduleCount', len(modules))
         mods = []
-        for module in modules:
+        for i in range(startModule, moduleCount):
+            module = modules[i]
             filename = getattr(getattr(module, "__spec__", None), "origin", None)
             if filename and filename.endswith(".py"):
                 mods.append({module.__name__: filename})
 
-        reply = {"body": {"modules": mods, "totalModules": len(modules)}}
-        return reply
         reply = {"body": {"modules": mods, "totalModules": len(modules)}}
         return reply
 

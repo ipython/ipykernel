@@ -603,8 +603,9 @@ class Debugger:
             filename = getattr(getattr(module, '__spec__', None), 'origin', None)
             if filename and filename.endswith('.py'):
                 mods.append({
-                    'id': module.__name__,
-                    'name': filename
+                    'id': i,
+                    'name': module.__name__,
+                    'path': filename
                 })
 
         reply = {'body': {'modules': mods, 'totalModules': len(modules)}}

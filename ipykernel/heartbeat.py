@@ -90,7 +90,7 @@ class Heartbeat(Thread):
                 return
 
     def run(self):
-        self.name="Heartbeat"
+        self.name = "Heartbeat"
         self.socket = self.context.socket(zmq.ROUTER)
         self.socket.linger = 1000
         try:

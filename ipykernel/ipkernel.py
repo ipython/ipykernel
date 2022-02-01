@@ -169,6 +169,10 @@ class IPythonKernel(KernelBase):
     def banner(self):
         return self.shell.banner
 
+    async def poll_stopped_queue(self):
+        while True:
+            await self.debugger.handle_stopped_event()
+
     def start(self):
         self.shell.exit_now = False
         if self.debugpy_stream is None:
@@ -176,6 +180,8 @@ class IPythonKernel(KernelBase):
         else:
             self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
         super().start()
+        if self.debugpy_stream:
+            asyncio.run_coroutine_threadsafe(self.poll_stopped_queue(), self.control_thread.io_loop.asyncio_loop)
 
     def set_parent(self, ident, parent, channel='shell'):
         """Overridden from parent to tell the display hook and output streams

@@ -42,7 +42,7 @@ class Heartbeat(Thread):
         self.daemon = True
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
-        self.name="Heartbeat"
+        self.name = "Heartbeat"
 
     def pick_port(self):
         if self.transport == 'tcp':

@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: "*"
 
+concurrency:
+  group: downstream-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   downstream1:
     runs-on: ubuntu-latest

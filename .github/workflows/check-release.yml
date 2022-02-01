@@ -5,12 +5,17 @@ on:
   pull_request:
     branches: ["*"]
 
+concurrency:
+  group: check-release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check_release:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         group: [check_release, link_check]
+      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v2

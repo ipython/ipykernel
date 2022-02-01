@@ -227,6 +227,7 @@ def test_rich_inspect_at_breakpoint(kernel_with_debug):
 
 f(2, 3)"""
 
+
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
     source = r["body"]["sourcePath"]
 
@@ -245,6 +246,11 @@ f(2, 3)"""
     r = wait_for_debug_request(kernel_with_debug, "configurationDone")
 
     kernel_with_debug.execute(code)
+
+    # Wait for stop on breakpoint
+    msg = {"msg_type": "", "content": {}}
+    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
     stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})[
         "body"

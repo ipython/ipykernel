@@ -277,6 +277,7 @@ class Debugger:
         self.session = session
         self.is_started = False
         self.event_callback = event_callback
+        self.stopped_queue = Queue()
 
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:
@@ -300,22 +301,19 @@ class Debugger:
 
     def _handle_event(self, msg):
         if msg['event'] == 'stopped':
-            self.stopped_threads.add(msg['body']['threadId'])
+            if msg['body']['allThreadsStopped']:
+                self.stopped_queue.put_nowait(msg)
+                # Do not forward the event now, will be done in the handle_stopped_event
+                return
+            else:
+                self.stopped_threads.add(msg['body']['threadId'])
+                self.event_callback(msg)
         elif msg['event'] == 'continued':
-            try:
-                if msg['allThreadsContinued']:
-                    self.stopped_threads = set()
-                else:
-                    self.stopped_threads.remove(msg['body']['threadId'])
-            except Exception:
-                # Workaround for debugpy/pydev not setting the correct threadId
-                # after a next request. Does not work if a the code executed on
-                # the shell spawns additional threads
-                if len(self.stopped_threads) == 1:
-                    self.stopped_threads = set()
-                else:
-                    raise Exception('threadId from continued event not in stopped threads set')
-        self.event_callback(msg)
+            if msg['body']['allThreadsContinued']:
+                self.stopped_threads = set()
+            else:
+                self.stopped_threads.remove(msg['body']['threadId'])
+            self.event_callback(msg)
 
     async def _forward_message(self, msg):
         return await self.debugpy_client.send_dap_request(msg)
@@ -333,6 +331,32 @@ class Debugger:
             }
         }
         return reply
+
+    def _accept_stopped_thread(self, thread_name):
+        # TODO: identify Thread-2, Thread-3 and Thread-4. These are NOT
+        # Control, IOPub or Heartbeat threads
+        forbid_list = [
+            'IPythonHistorySavingThread',
+            'Thread-2',
+            'Thread-3',
+            'Thread-4'
+        ]
+        return thread_name not in forbid_list
+        
+    async def handle_stopped_event(self):
+        # Wait for a stopped event message in the stopped queue
+        # This message is used for triggering the 'threads' request
+        event = await self.stopped_queue.get()
+        req = {
+            'seq': event['seq'] + 1,
+            'type': 'request',
+            'command': 'threads'
+        }
+        rep = await self._forward_message(req)
+        for t in rep['body']['threads']:
+            if self._accept_stopped_thread(t['name']):
+                self.stopped_threads.add(t['id'])
+        self.event_callback(event)
 
     @property
     def tcp_client(self):

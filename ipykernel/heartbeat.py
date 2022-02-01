@@ -32,7 +32,7 @@ class Heartbeat(Thread):
     def __init__(self, context, addr=None):
         if addr is None:
             addr = ('tcp', localhost(), 0)
-        Thread.__init__(self)
+        Thread.__init__(self, name="Heartbeat")
         self.context = context
         self.transport, self.ip, self.port = addr
         self.original_port = self.port
@@ -42,6 +42,7 @@ class Heartbeat(Thread):
         self.daemon = True
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
+        self.name = "Heartbeat"
 
     def pick_port(self):
         if self.transport == 'tcp':
@@ -89,6 +90,7 @@ class Heartbeat(Thread):
                 return
 
     def run(self):
+        self.name = "Heartbeat"
         self.socket = self.context.socket(zmq.ROUTER)
         self.socket.linger = 1000
         try:

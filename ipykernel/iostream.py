@@ -70,10 +70,11 @@ class IOPubThread:
         self._events = deque()
         self._event_pipes = WeakSet()
         self._setup_event_pipe()
-        self.thread = threading.Thread(target=self._thread_main)
+        self.thread = threading.Thread(target=self._thread_main, name="IOPub")
         self.thread.daemon = True
         self.thread.pydev_do_not_trace = True
         self.thread.is_pydev_daemon_thread = True
+        self.thread.name = "IOPub"
 
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""
@@ -176,6 +177,7 @@ class IOPubThread:
 
     def start(self):
         """Start the IOPub thread"""
+        self.thread.name = "IOPub"
         self.thread.start()
         # make sure we don't prevent process exit
         # I'm not sure why setting daemon=True above isn't enough, but it doesn't appear to be.

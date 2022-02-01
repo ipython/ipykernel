@@ -5,6 +5,10 @@ on:
   pull_request:
     branches: ["*"]
 
+concurrency:
+  group: check-release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check_release:
     runs-on: ubuntu-latest

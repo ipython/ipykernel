@@ -177,7 +177,7 @@ class IOPubThread:
 
     def start(self):
         """Start the IOPub thread"""
-        self.thread.name="IOPub"
+        self.thread.name = "IOPub"
         self.thread.start()
         # make sure we don't prevent process exit
         # I'm not sure why setting daemon=True above isn't enough, but it doesn't appear to be.

@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.8.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.7.0...4e775b70e7e1be7e96fe7c3c747f21f3d93f0181))
+
+### Enhancements made
+
+- Add support for the debug modules request [#816](https://github.com/ipython/ipykernel/pull/816) ([@echarles](https://github.com/echarles))
+
+### Bugs fixed
+
+- Handle all threads stopped correctly [#849](https://github.com/ipython/ipykernel/pull/849) ([@JohanMabille](https://github.com/JohanMabille))
+- Fix the debug modules model [#848](https://github.com/ipython/ipykernel/pull/848) ([@echarles](https://github.com/echarles))
+- Handled AllThreadsContinued and workaround for wrong threadId in cont… [#844](https://github.com/ipython/ipykernel/pull/844) ([@JohanMabille](https://github.com/JohanMabille))
+
+### Maintenance and upkeep improvements
+
+- Cancel duplicate runs [#850](https://github.com/ipython/ipykernel/pull/850) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-01-13&to=2022-02-01&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-01-13..2022-02-01&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-01-13..2022-02-01&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2022-01-13..2022-02-01&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.7.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.6.1...0be80cbc81927f4fb20343840bf5834b48884717))
@@ -27,8 +53,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-01-03&to=2022-01-13&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2022-01-03..2022-01-13&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-01-03..2022-01-13&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afcollonval+updated%3A2022-01-03..2022-01-13&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2022-01-03..2022-01-13&type=Issues) | [@kycutler](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akycutler+updated%3A2022-01-03..2022-01-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.6.1
 

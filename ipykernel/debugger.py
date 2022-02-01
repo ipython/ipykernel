@@ -600,11 +600,15 @@ class Debugger:
         mods = []
         for i in range(startModule, moduleCount):
             module = modules[i]
-            filename = getattr(getattr(module, "__spec__", None), "origin", None)
-            if filename and filename.endswith(".py"):
-                mods.append({module.__name__: filename})
+            filename = getattr(getattr(module, '__spec__', None), 'origin', None)
+            if filename and filename.endswith('.py'):
+                mods.append({
+                    'id': i,
+                    'name': module.__name__,
+                    'path': filename
+                })
 
-        reply = {"body": {"modules": mods, "totalModules": len(modules)}}
+        reply = {'body': {'modules': mods, 'totalModules': len(modules)}}
         return reply
 
     async def process_request(self, message):

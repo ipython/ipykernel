@@ -16,7 +16,7 @@ class ControlThread(Thread):
         self.is_pydev_daemon_thread = True
 
     def run(self):
-        self.name="Control"
+        self.name = "Control"
         self.io_loop.make_current()
         try:
             self.io_loop.start()

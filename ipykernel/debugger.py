@@ -314,6 +314,8 @@ class Debugger:
             else:
                 self.stopped_threads.remove(msg['body']['threadId'])
             self.event_callback(msg)
+        else:
+            self.event_callback(msg)
 
     async def _forward_message(self, msg):
         return await self.debugpy_client.send_dap_request(msg)

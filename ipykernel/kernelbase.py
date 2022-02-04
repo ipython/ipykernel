@@ -671,7 +671,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", reply_msg)
 
         if not silent and reply_msg['content']['status'] == 'error' and stop_on_error:
-            await self._abort_queues()
+            self._abort_queues()
 
     def do_execute(self, code, silent, store_history=True,
                    user_expressions=None, allow_stdin=False):
@@ -974,13 +974,31 @@ class Kernel(SingletonConfigurable):
 
     _aborting = Bool(False)
 
-    async def _abort_queues(self):
-        self.shell_stream.flush()
+    def _abort_queues(self):
+        # while this flag is true,
+        # execute requests will be aborted
         self._aborting = True
+        self.log.info("Aborting queue")
+
+        # flush streams, so all currently waiting messages
+        # are added to the queue
+        self.shell_stream.flush()
+
+        # Callback to signal that we are done aborting
         def stop_aborting():
             self.log.info("Finishing abort")
             self._aborting = False
-        asyncio.get_event_loop().call_later(self.stop_on_error_timeout, stop_aborting)
+
+        # put the stop-aborting event on the message queue
+        # so that all messages already waiting in the queue are aborted
+        # before we reset the flag
+        schedule_stop_aborting = partial(self.schedule_dispatch, stop_aborting)
+
+        # if we have a delay, give messages this long to arrive on the queue
+        # before we stop aborting requests
+        asyncio.get_event_loop().call_later(
+            self.stop_on_error_timeout, schedule_stop_aborting
+        )
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""

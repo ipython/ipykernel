@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.9.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.8.0...7a229c6c83d44d315f637ef63159a43c64ec73d6))
+
+### Bugs fixed
+
+- Fixed event forwarding [#855](https://github.com/ipython/ipykernel/pull/855) ([@JohanMabille](https://github.com/JohanMabille))
+- use message queue for abort_queues [#853](https://github.com/ipython/ipykernel/pull/853) ([@minrk](https://github.com/minrk))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-02-01&to=2022-02-07&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-02-01..2022-02-07&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2022-02-01..2022-02-07&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2022-02-01..2022-02-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.8.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.7.0...4e775b70e7e1be7e96fe7c3c747f21f3d93f0181))
@@ -25,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-01-13&to=2022-02-01&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-01-13..2022-02-01&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-01-13..2022-02-01&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2022-01-13..2022-02-01&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.7.0
 

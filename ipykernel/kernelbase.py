@@ -985,7 +985,8 @@ class Kernel(SingletonConfigurable):
         self.shell_stream.flush()
 
         # Callback to signal that we are done aborting
-        def stop_aborting():
+        # dispatch functions _must_ be async
+        async def stop_aborting():
             self.log.info("Finishing abort")
             self._aborting = False
 

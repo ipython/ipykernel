@@ -270,13 +270,14 @@ class Debugger:
         'richInspectVariables', 'modules'
     ]
 
-    def __init__(self, log, debugpy_stream, event_callback, shell_socket, session):
+    def __init__(self, log, debugpy_stream, event_callback, shell_socket, session, just_my_code):
         self.log = log
         self.debugpy_client = DebugpyClient(log, debugpy_stream, self._handle_event)
         self.shell_socket = shell_socket
         self.session = session
         self.is_started = False
         self.event_callback = event_callback
+        self.just_my_code = just_my_code
         self.stopped_queue = Queue()
 
         self.started_debug_handlers = {}
@@ -515,11 +516,12 @@ class Debugger:
             'port': port
         }
         message['arguments']['logToFile'] = True
-        # Reverts that option for now since it leads to spurious break of the code
-        # in ipykernel source and resuming the execution leads to several errors
-        # in the kernel.
+        # Experimental option to break in non-user code.
+        # The ipykernel source is in the call stack, so the user
+        # has to manipulate the step-over and step-into in a wize way.
         # Set debugOptions for breakpoints in python standard library source.
-        # message['arguments']['debugOptions'] = [ 'DebugStdLib' ]
+        if not self.just_my_code:
+            message['arguments']['debugOptions'] = [ 'DebugStdLib' ]
         return await self._forward_message(message)
 
     async def configurationDone(self, message):

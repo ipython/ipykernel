@@ -13,6 +13,7 @@ import inspect
 import os
 from signal import signal, default_int_handler, SIGINT
 import sys
+import socket
 import time
 import uuid
 import warnings
@@ -879,7 +880,9 @@ class Kernel(SingletonConfigurable):
             return None
 
     async def usage_request(self, stream, ident, parent):
-        reply_content = {}
+        reply_content = {
+            'hostname': socket.gethostname()
+        }
         if psutil is None:
             return reply_content
         current_process = psutil.Process()

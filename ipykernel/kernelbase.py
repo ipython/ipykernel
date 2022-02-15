@@ -128,6 +128,15 @@ class Kernel(SingletonConfigurable):
     # any links that should go in the help menu
     help_links = List()
 
+    # Experimental option to break in non-user code.
+    # The ipykernel source is in the call stack, so the user
+    # has to manipulate the step-over and step-into in a wize way.
+    debug_just_my_code = Bool(True,
+        help="""Set to False if you want to debug python standard and dependent libraries.
+        """
+    ).tag(config=True)
+
+    # track associations with current request
     # Private interface
 
     _darwin_app_nap = Bool(True,

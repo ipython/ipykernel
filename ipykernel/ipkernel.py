@@ -83,7 +83,8 @@ class IPythonKernel(KernelBase):
                                     self.debugpy_stream,
                                     self._publish_debug_event,
                                     self.debug_shell_socket,
-                                    self.session)
+                                    self.session,
+                                    self.debug_just_my_code)
 
         # Initialize the InteractiveShell subclass
         self.shell = self.shell_class.instance(parent=self,

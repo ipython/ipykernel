@@ -270,7 +270,7 @@ class Debugger:
         'richInspectVariables', 'modules'
     ]
 
-    def __init__(self, log, debugpy_stream, event_callback, shell_socket, session, just_my_code):
+    def __init__(self, log, debugpy_stream, event_callback, shell_socket, session, just_my_code = True):
         self.log = log
         self.debugpy_client = DebugpyClient(log, debugpy_stream, self._handle_event)
         self.shell_socket = shell_socket

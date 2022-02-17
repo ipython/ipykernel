@@ -802,13 +802,11 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", msg)
 
     def _send_interupt_children(self):
-
-        pid = os.getpid()
-        pgid = os.getpgid(pid)
-
         if os.name == "nt":
             self.log.error("Interrupt message not supported on Windows")
         else:
+            pid = os.getpid()
+            pgid = os.getpgid(pid)
             # Prefer process-group over process
             if pgid and hasattr(os, "killpg"):
                 try:
@@ -1139,6 +1137,9 @@ class Kernel(SingletonConfigurable):
         return value
 
     async def _progressively_terminate_all_children(self):
+        if sys.platform != "win32":
+            self.log.info(f"Terminating subprocesses not yet supported on windows.")
+            return
 
         pgid = os.getpgid(os.getpid())
         if not pgid:
@@ -1152,10 +1153,9 @@ class Kernel(SingletonConfigurable):
                 await asyncio.sleep(0.05)
                 self.log.debug("Sending SIGTERM to {pgid}")
                 os.killpg(pgid, SIGTERM)
-                if sys.platform != "win32":
-                    await asyncio.sleep(0.05)
-                    self.log.debug("Sending SIGKILL to {pgid}")
-                    os.killpg(pgid, SIGKILL)
+                await asyncio.sleep(0.05)
+                self.log.debug("Sending SIGKILL to {pgid}")
+                os.killpg(pgid, SIGKILL)
             except Exception:
                 self.log.exception("Exception during subprocesses termination")
             return
@@ -1167,12 +1167,8 @@ class Kernel(SingletonConfigurable):
             return
         self.log.debug(f"Trying to interrupt then kill subprocesses : {children}")
         self._send_interupt_children()
-        if sys.platform != "win32":
-            sigs = (SIGTERM, SIGKILL)
-        else:
-            sigs = SIGTERM
 
-        for signum in sigs:
+        for signum in (SIGTERM, SIGKILL):
             self.log.debug(
                 f"Will try to send {signum} ({Signals(signum)}) to subprocesses :{children}"
             )

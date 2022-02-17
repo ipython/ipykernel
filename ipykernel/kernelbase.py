@@ -1137,7 +1137,7 @@ class Kernel(SingletonConfigurable):
         return value
 
     async def _progressively_terminate_all_children(self):
-        if sys.platform != "win32":
+        if sys.platform == "win32":
             self.log.info(f"Terminating subprocesses not yet supported on windows.")
             return
 

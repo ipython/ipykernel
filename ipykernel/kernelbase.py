@@ -1142,21 +1142,19 @@ class Kernel(SingletonConfigurable):
 
         pgid = os.getpgid(os.getpid())
         if not pgid:
-            self.log.warning(f"No Pgid ({pgid=}), not trying to stop subprocesses.")
+            self.log.warning(f"No Pgid ({pgid}), not trying to stop subprocesses.")
             return
         if psutil is None:
             # blindly send quickly sigterm/sigkill to processes if psutil not there.
-            self.log.warning(
-                f"Please install psutil for a cleaner subprocess shutdown."
-            )
+            self.log.debug("Please install psutil for a cleaner subprocess shutdown.")
             self._send_interupt_children()
             try:
                 await asyncio.sleep(0.05)
-                self.log.debug("Sending SIGTERM to {pgid=}")
+                self.log.debug("Sending SIGTERM to {pgid}")
                 os.killpg(pgid, SIGTERM)
                 if sys.platform != "win32":
                     await asyncio.sleep(0.05)
-                    self.log.debug("Sending SIGKILL to {pgid=}")
+                    self.log.debug("Sending SIGKILL to {pgid}")
                     os.killpg(pgid, SIGKILL)
             except Exception:
                 self.log.exception("Exception during subprocesses termination")
@@ -1167,7 +1165,7 @@ class Kernel(SingletonConfigurable):
         if not children:
             self.log.debug("Kernel has no children.")
             return
-        self.log.debug(f"Trying to interrupt then kill subprocesses : {children=}")
+        self.log.debug(f"Trying to interrupt then kill subprocesses : {children}")
         self._send_interupt_children()
         if sys.platform != "win32":
             sigs = (SIGTERM, SIGKILL)

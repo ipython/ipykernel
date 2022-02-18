@@ -2,9 +2,8 @@ name: ipykernel tests
 
 on:
   push:
-    branches: "master"
+    branches: ["main"]
   pull_request:
-    branches: "*"
 
 concurrency:
   group: ci-${{ github.ref }}

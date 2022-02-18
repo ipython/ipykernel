@@ -12,7 +12,6 @@ concurrency:
 jobs:
   nbclient:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -27,6 +26,8 @@ jobs:
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
   jupyter_client:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -40,7 +41,6 @@ jobs:
 
   ipyparallel:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -54,6 +54,8 @@ jobs:
           package_name: ipyparallel
 
   jupyter_kernel_test:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
         uses: actions/checkout@v2
 

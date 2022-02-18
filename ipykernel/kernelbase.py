@@ -1136,8 +1136,7 @@ class Kernel(SingletonConfigurable):
             raise EOFError
         return value
 
-
-    async def _killpg(self, *, signal):
+    def _killpg(self, signal):
         """
         similar to killpg but use psutil if it can on windows
         or if pgid is none
@@ -1147,8 +1146,8 @@ class Kernel(SingletonConfigurable):
         if pgid and hasattr(os, "killpg"):
             try:
                 os.killpg(pgid, signal)
-            except OSError:
-                self.log.warning("OSError running killpg, not killing children")
+            except (OSError) as e:
+                self.log.exception(f"OSError running killpg, not killing children.")
             return
         elif psutil is not None:
             children = parent.children(recursive=True)
@@ -1162,30 +1161,20 @@ class Kernel(SingletonConfigurable):
                     pass
 
     async def _progressively_terminate_all_children(self):
-        if sys.platform == "win32":
-            self.log.info(f"Terminating subprocesses not yet supported on windows.")
-            return
 
         pgid = os.getpgid(os.getpid())
-        if not pgid:
-            self.log.warning(f"No Pgid ({pgid}), not trying to stop subprocesses.")
-            return
         if psutil is None:
             # blindly send quickly sigterm/sigkill to processes if psutil not there.
-            self.log.debug("Please install psutil for a cleaner subprocess shutdown.")
+            self.log.info("Please install psutil for a cleaner subprocess shutdown.")
             self._send_interupt_children()
-            try:
-                await asyncio.sleep(0.05)
-                self.log.debug("Sending SIGTERM to {pgid}")
-                self._killpg(SIGTERM)
-                await asyncio.sleep(0.05)
-                self.log.debug("Sending SIGKILL to {pgid}")
-                self._killpg(pgid, SIGKILL)
-            except Exception:
-                self.log.exception("Exception during subprocesses termination")
-            return
+            await asyncio.sleep(0.05)
+            self.log.debug("Sending SIGTERM to {pgid}")
+            self._killpg(SIGTERM)
+            await asyncio.sleep(0.05)
+            self.log.debug("Sending SIGKILL to {pgid}")
+            self._killpg(pgid, SIGKILL)
 
-        sleeps = (0.01, 0.03, 0.1, 0.3, 1)
+        sleeps = (0.01, 0.03, 0.1, 0.3, 1, 3, 10)
         children = psutil.Process().children(recursive=True)
         if not children:
             self.log.debug("Kernel has no children.")
@@ -1195,24 +1184,38 @@ class Kernel(SingletonConfigurable):
 
         for signum in (SIGTERM, SIGKILL):
             self.log.debug(
-                f"Will try to send {signum} ({Signals(signum)}) to subprocesses :{children}"
+                f"Will try to send {signum} ({Signals(signum)!r}) to subprocesses :{children}"
             )
             for delay in sleeps:
                 children = psutil.Process().children(recursive=True)
-                if not children:
-                    self.log.debug("No more children, continuing shutdown routine.")
-                    return
-                self._killpg(signum)
+                try:
+                    if not children:
+                        self.log.warning(
+                            "No more children, continuing shutdown routine."
+                        )
+                        return
+                except psutil.NoSuchProcess:
+                    pass
+                self._killpg(15)
                 self.log.debug(
-                    f"Will sleep {delay}s before checking for children and retrying."
+                    f"Will sleep {delay}s before checking for children and retrying. {children}"
                 )
-                await ascynio.sleep(delay)
+                await asyncio.sleep(delay)
 
     async def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit.
         """
-        await self._progressively_terminate_all_children()
-        if self._shutdown_message is not None:
-            self.session.send(self.iopub_socket, self._shutdown_message, ident=self._topic('shutdown'))
-            self.log.debug("%s", self._shutdown_message)
-        self.control_stream.flush(zmq.POLLOUT)
+        try:
+            await self._progressively_terminate_all_children()
+        except Exception as e:
+            self.log.exception("Exception during subprocesses termination %s", e)
+
+        finally:
+            if self._shutdown_message is not None:
+                self.session.send(
+                    self.iopub_socket,
+                    self._shutdown_message,
+                    ident=self._topic("shutdown"),
+                )
+                self.log.debug("%s", self._shutdown_message)
+            self.control_stream.flush(zmq.POLLOUT)

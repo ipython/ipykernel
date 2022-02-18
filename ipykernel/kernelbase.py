@@ -21,7 +21,7 @@ from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
 if sys.platform != "win32":
     from signal import SIGKILL
 else:
-    SIGKILL = None
+    SIGKILL = "windown-SIGKILL-sentinel"
 
 
 try:
@@ -1136,6 +1136,31 @@ class Kernel(SingletonConfigurable):
             raise EOFError
         return value
 
+
+    async def _killpg(self, *, signal):
+        """
+        similar to killpg but use psutil if it can on windows
+        or if pgid is none
+
+        """
+        pgid = os.getpgid(os.getpid())
+        if pgid and hasattr(os, "killpg"):
+            try:
+                os.killpg(pgid, signal)
+            except OSError:
+                self.log.warning("OSError running killpg, not killing children")
+            return
+        elif psutil is not None:
+            children = parent.children(recursive=True)
+            for p in children:
+                try:
+                    if signal == SIGTERM:
+                        p.terminate()
+                    elif signal == SIGKILL:
+                        p.kill()
+                except psutil.NoSuchProcess:
+                    pass
+
     async def _progressively_terminate_all_children(self):
         if sys.platform == "win32":
             self.log.info(f"Terminating subprocesses not yet supported on windows.")
@@ -1152,10 +1177,10 @@ class Kernel(SingletonConfigurable):
             try:
                 await asyncio.sleep(0.05)
                 self.log.debug("Sending SIGTERM to {pgid}")
-                os.killpg(pgid, SIGTERM)
+                self._killpg(SIGTERM)
                 await asyncio.sleep(0.05)
                 self.log.debug("Sending SIGKILL to {pgid}")
-                os.killpg(pgid, SIGKILL)
+                self._killpg(pgid, SIGKILL)
             except Exception:
                 self.log.exception("Exception during subprocesses termination")
             return
@@ -1177,12 +1202,7 @@ class Kernel(SingletonConfigurable):
                 if not children:
                     self.log.debug("No more children, continuing shutdown routine.")
                     return
-                if pgid and hasattr(os, "killpg"):
-                    try:
-                        os.killpg(pgid, signum)
-                    except OSError:
-                        self.log.warning("OSError running killpg, not killing children")
-                        return
+                self._killpg(signum)
                 self.log.debug(
                     f"Will sleep {delay}s before checking for children and retrying."
                 )

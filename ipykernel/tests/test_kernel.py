@@ -6,14 +6,20 @@
 import ast
 import os.path
 import platform
+import signal
 import subprocess
 import sys
 import time
+from subprocess import Popen
 from tempfile import TemporaryDirectory
 
 from flaky import flaky
 import pytest
-from packaging import version
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 import IPython
 from IPython.paths import locate_profile
@@ -496,3 +502,79 @@ def test_control_thread_priority():
     # comparing first to last ought to be enough, since queues preserve order
     # use <= in case of very-fast handling and/or low resolution timers
     assert control_dates[-1] <= shell_dates[0]
+
+
+def _child():
+    print("in child", os.getpid())
+
+    def _print_and_exit(sig, frame):
+        print(f"Received signal {sig}")
+        # take some time so retries are triggered
+        time.sleep(0.5)
+        sys.exit(-sig)
+
+    signal.signal(signal.SIGTERM, _print_and_exit)
+    time.sleep(30)
+
+
+def _start_children():
+    ip = IPython.get_ipython()
+    ns = ip.user_ns
+
+    cmd = [sys.executable, "-c", f"from {__name__} import _child; _child()"]
+    child_pg = Popen(cmd, start_new_session=False)
+    child_newpg = Popen(cmd, start_new_session=True)
+    ns["pid"] = os.getpid()
+    ns["child_pg"] = child_pg.pid
+    ns["child_newpg"] = child_newpg.pid
+    # give them time to start up and register signal handlers
+    time.sleep(1)
+
+
+@pytest.mark.skipif(
+    platform.python_implementation() == "PyPy",
+    reason="does not work on PyPy",
+)
+@pytest.mark.skipif(
+    psutil is None,
+    reason="requires psutil",
+)
+def test_shutdown_subprocesses():
+    """Kernel exits after polite shutdown_request"""
+    with new_kernel() as kc:
+        km = kc.parent
+        msg_id, reply = execute(
+            f"from {__name__} import _start_children\n_start_children()",
+            kc=kc,
+            user_expressions={
+                "pid": "pid",
+                "child_pg": "child_pg",
+                "child_newpg": "child_newpg",
+            },
+        )
+        print(reply)
+        expressions = reply["user_expressions"]
+        kernel_process = psutil.Process(int(expressions["pid"]["data"]["text/plain"]))
+        child_pg = psutil.Process(int(expressions["child_pg"]["data"]["text/plain"]))
+        child_newpg = psutil.Process(
+            int(expressions["child_newpg"]["data"]["text/plain"])
+        )
+        wait_for_idle(kc)
+
+        kc.shutdown()
+        for i in range(300):  # 30s timeout
+            if km.is_alive():
+                time.sleep(0.1)
+            else:
+                break
+        assert not km.is_alive()
+        assert not kernel_process.is_running()
+        # child in the process group shut down
+        assert not child_pg.is_running()
+        # child outside the process group was not shut down (unix only)
+        if os.name != 'nt':
+            assert child_newpg.is_running()
+        try:
+            child_newpg.terminate()
+        except psutil.NoSuchProcess:
+            pass

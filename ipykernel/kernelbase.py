@@ -808,7 +808,8 @@ class Kernel(SingletonConfigurable):
             pid = os.getpid()
             pgid = os.getpgid(pid)
             # Prefer process-group over process
-            if pgid and hasattr(os, "killpg"):
+            # but only if the kernel is the leader of the process group
+            if pgid and pgid == pid and hasattr(os, "killpg"):
                 try:
                     os.killpg(pgid, SIGINT)
                     return
@@ -1136,67 +1137,73 @@ class Kernel(SingletonConfigurable):
             raise EOFError
         return value
 
-    def _killpg(self, signal):
+    def _signal_children(self, signum):
         """
-        similar to killpg but use psutil if it can on windows
-        or if pgid is none
+        Send a signal to all our children
 
+        Like `killpg`, but does not include the current process
+        (or possible parents).
         """
-        pgid = os.getpgid(os.getpid())
-        if pgid and hasattr(os, "killpg"):
-            try:
-                os.killpg(pgid, signal)
-            except (OSError) as e:
-                self.log.exception(f"OSError running killpg, not killing children.")
+        if psutil is None:
+            self.log.info("Need psutil to signal children")
             return
-        elif psutil is not None:
-            children = parent.children(recursive=True)
-            for p in children:
-                try:
-                    if signal == SIGTERM:
-                        p.terminate()
-                    elif signal == SIGKILL:
-                        p.kill()
-                except psutil.NoSuchProcess:
-                    pass
+
+        for p in self._process_children():
+            self.log.debug(f"Sending {Signals(signum)!r} to subprocess {p}")
+            try:
+                if signum == SIGTERM:
+                    p.terminate()
+                elif signum == SIGKILL:
+                    p.kill()
+                else:
+                    p.send_signal(signum)
+            except psutil.NoSuchProcess:
+                pass
+
+    def _process_children(self):
+        """Retrieve child processes in the kernel's process group
+
+        Avoids:
+        - including parents and self with killpg
+        - including all children that may have forked-off a new group
+        """
+        if psutil is None:
+            return []
+        kernel_process = psutil.Process()
+        all_children = kernel_process.children(recursive=True)
+        if os.name == "nt":
+            return all_children
+        kernel_pgid = os.getpgrp()
+        process_group_children = []
+        for child in all_children:
+            try:
+                child_pgid = os.getpgid(child.pid)
+            except OSError:
+                pass
+            else:
+                if child_pgid == kernel_pgid:
+                    process_group_children.append(child)
+        return process_group_children
 
     async def _progressively_terminate_all_children(self):
-
-        pgid = os.getpgid(os.getpid())
         if psutil is None:
-            # blindly send quickly sigterm/sigkill to processes if psutil not there.
+            # we need psutil to safely clean up children
             self.log.info("Please install psutil for a cleaner subprocess shutdown.")
-            self._send_interupt_children()
-            await asyncio.sleep(0.05)
-            self.log.debug("Sending SIGTERM to {pgid}")
-            self._killpg(SIGTERM)
-            await asyncio.sleep(0.05)
-            self.log.debug("Sending SIGKILL to {pgid}")
-            self._killpg(pgid, SIGKILL)
+            return
 
         sleeps = (0.01, 0.03, 0.1, 0.3, 1, 3, 10)
-        children = psutil.Process().children(recursive=True)
-        if not children:
+        if not self._process_children():
             self.log.debug("Kernel has no children.")
             return
-        self.log.debug(f"Trying to interrupt then kill subprocesses : {children}")
-        self._send_interupt_children()
 
         for signum in (SIGTERM, SIGKILL):
-            self.log.debug(
-                f"Will try to send {signum} ({Signals(signum)!r}) to subprocesses :{children}"
-            )
             for delay in sleeps:
-                children = psutil.Process().children(recursive=True)
-                try:
-                    if not children:
-                        self.log.warning(
-                            "No more children, continuing shutdown routine."
-                        )
-                        return
-                except psutil.NoSuchProcess:
-                    pass
-                self._killpg(15)
+                children = self._process_children()
+                if not children:
+                    self.log.debug("No more children, continuing shutdown routine.")
+                    return
+                # signals only children, not current process
+                self._signal_children(signum)
                 self.log.debug(
                     f"Will sleep {delay}s before checking for children and retrying. {children}"
                 )

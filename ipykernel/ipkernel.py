@@ -18,6 +18,7 @@ from .kernelbase import Kernel as KernelBase
 from .zmqshell import ZMQInteractiveShell
 from .eventloops import _use_appnope
 from .compiler import XCachingCompiler
+from .debugger import Debugger, _is_debugpy_available
 
 try:
     from IPython.core.interactiveshell import _asyncio_runner
@@ -33,12 +34,6 @@ try:
 except ImportError:
     _use_experimental_60_completion = False
 
-try:
-    import debugpy
-    from .debugger import Debugger
-    _is_debugpy_available = True
-except ImportError:
-    _is_debugpy_available = False
 
 _EXPERIMENTAL_KEY_NAME = '_jupyter_types_experimental'
 

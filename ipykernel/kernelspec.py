@@ -13,7 +13,7 @@ import tempfile
 
 from jupyter_client.kernelspec import KernelSpecManager
 
-from .ipkernel import _is_debugpy_available
+from .debugger import _is_debugpy_available
 
 pjoin = os.path.join
 

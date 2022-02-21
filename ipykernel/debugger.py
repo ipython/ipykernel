@@ -19,10 +19,14 @@ except ImportError:
 
 from .compiler import (get_file_name, get_tmp_directory, get_tmp_hash_seed)
 
-# This import is required to have the next ones working...
-from debugpy.server import api  # noqa
-from _pydevd_bundle import pydevd_frame_utils
-from _pydevd_bundle.pydevd_suspended_frames import SuspendedFramesManager, _FramesTracker
+try:
+    # This import is required to have the next ones working...
+    from debugpy.server import api  # noqa
+    from _pydevd_bundle import pydevd_frame_utils
+    from _pydevd_bundle.pydevd_suspended_frames import SuspendedFramesManager, _FramesTracker
+    _is_debugpy_available = True
+except ImportError:
+    _is_debugpy_available = False
 
 # Required for backwards compatiblity
 ROUTING_ID = getattr(zmq, 'ROUTING_ID', None) or zmq.IDENTITY

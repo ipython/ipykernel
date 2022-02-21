@@ -24,10 +24,6 @@ else:
     SIGKILL = "windown-SIGKILL-sentinel"
 
 
-try:
-    import psutil
-except ImportError:
-    psutil = None
 
 
 try:
@@ -37,6 +33,7 @@ except ImportError:
     # jupyter_client < 5, use local now()
     now = datetime.now
 
+import psutil
 import zmq
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -898,8 +895,6 @@ class Kernel(SingletonConfigurable):
         reply_content = {
             'hostname': socket.gethostname()
         }
-        if psutil is None:
-            return reply_content
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
         process_metric_value = self.get_process_metric_value
@@ -1144,10 +1139,6 @@ class Kernel(SingletonConfigurable):
         Like `killpg`, but does not include the current process
         (or possible parents).
         """
-        if psutil is None:
-            self.log.info("Need psutil to signal children")
-            return
-
         for p in self._process_children():
             self.log.debug(f"Sending {Signals(signum)!r} to subprocess {p}")
             try:
@@ -1167,8 +1158,6 @@ class Kernel(SingletonConfigurable):
         - including parents and self with killpg
         - including all children that may have forked-off a new group
         """
-        if psutil is None:
-            return []
         kernel_process = psutil.Process()
         all_children = kernel_process.children(recursive=True)
         if os.name == "nt":
@@ -1186,11 +1175,6 @@ class Kernel(SingletonConfigurable):
         return process_group_children
 
     async def _progressively_terminate_all_children(self):
-        if psutil is None:
-            # we need psutil to safely clean up children
-            self.log.info("Please install psutil for a cleaner subprocess shutdown.")
-            return
-
         sleeps = (0.01, 0.03, 0.1, 0.3, 1, 3, 10)
         if not self._process_children():
             self.log.debug("Kernel has no children.")

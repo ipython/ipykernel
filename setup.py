@@ -68,7 +68,7 @@ setup_args = dict(
         'tornado>=4.2,<7.0',
         'matplotlib-inline>=0.1.0,<0.2.0',
         'appnope;platform_system=="Darwin"',
-        'psutil;platform_system=="Windows"',
+        'psutil',
         'nest_asyncio',
     ],
     extras_require={

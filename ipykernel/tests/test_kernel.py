@@ -14,12 +14,8 @@ from subprocess import Popen
 from tempfile import TemporaryDirectory
 
 from flaky import flaky
+import psutil
 import pytest
-
-try:
-    import psutil
-except ImportError:
-    psutil = None
 
 import IPython
 from IPython.paths import locate_profile
@@ -534,10 +530,6 @@ def _start_children():
 @pytest.mark.skipif(
     platform.python_implementation() == "PyPy",
     reason="does not work on PyPy",
-)
-@pytest.mark.skipif(
-    psutil is None,
-    reason="requires psutil",
 )
 def test_shutdown_subprocesses():
     """Kernel exits after polite shutdown_request"""

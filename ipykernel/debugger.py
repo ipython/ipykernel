@@ -442,9 +442,7 @@ class Debugger:
                     'content': f.read()
                 }
         else:
-            reply['success'] = False
-            reply['message'] = 'source unavailable'
-            reply['body'] = {}
+            reply = await self._forward_message(message)
 
         return reply
 

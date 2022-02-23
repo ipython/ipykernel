@@ -1,19 +1,19 @@
+import asyncio
 from threading import Thread
-
-from tornado.ioloop import IOLoop
 
 
 class ControlThread(Thread):
     def __init__(self, **kwargs):
         Thread.__init__(self, name="Control", **kwargs)
-        self.io_loop = IOLoop(make_current=False)
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
+        self.io_loop = asyncio.new_event_loop()
 
     def run(self):
         self.name = "Control"
+        asyncio.set_event_loop(self.io_loop)
         try:
-            self.io_loop.start()
+            self.io_loop.run_forever()
         finally:
             self.io_loop.close()
 
@@ -22,4 +22,4 @@ class ControlThread(Thread):
 
         This method is threadsafe.
         """
-        self.io_loop.add_callback(self.io_loop.stop)
+        self.io_loop.call_soon_threadsafe(self.io_loop.stop)

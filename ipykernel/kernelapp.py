@@ -3,6 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 import atexit
 import errno
 import logging
@@ -15,6 +16,7 @@ from io import FileIO, TextIOWrapper
 from logging import StreamHandler
 
 import zmq
+import zmq.asyncio
 from IPython.core.application import (
     BaseIPythonApplication,
     base_aliases,
@@ -27,7 +29,6 @@ from jupyter_client import write_connection_file
 from jupyter_client.connect import ConnectionFileMixin
 from jupyter_client.session import Session, session_aliases, session_flags
 from jupyter_core.paths import jupyter_runtime_dir
-from tornado import ioloop
 from traitlets.traitlets import (
     Any,
     Bool,
@@ -41,7 +42,6 @@ from traitlets.traitlets import (
 )
 from traitlets.utils import filefind
 from traitlets.utils.importstring import import_item
-from zmq.eventloop.zmqstream import ZMQStream
 
 from .control import ControlThread
 from .heartbeat import Heartbeat
@@ -51,6 +51,7 @@ from .iostream import IOPubThread
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
 from .zmqshell import ZMQInteractiveShell
+from .zmqstream import ZMQStream
 
 # -----------------------------------------------------------------------------
 # Flags and Aliases
@@ -130,6 +131,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     heartbeat = Instance(Heartbeat, allow_none=True)
 
     context = Any()
+    sync_context = Any()
     shell_socket = Any()
     control_socket = Any()
     debugpy_socket = Any()
@@ -299,7 +301,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         # Create a context, a session, and the kernel sockets.
         self.log.info("Starting the kernel at pid: %i", os.getpid())
         assert self.context is None, "init_sockets cannot be called twice!"
-        self.context = context = zmq.Context()
+        self.context = context = zmq.asyncio.Context()
+        self.sync_context = sync_context = zmq.Context()
         atexit.register(self.close)
 
         self.shell_socket = context.socket(zmq.ROUTER)
@@ -307,7 +310,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
         self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
 
-        self.stdin_socket = context.socket(zmq.ROUTER)
+        self.stdin_socket = sync_context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
         self.log.debug("stdin ROUTER Channel on port: %i" % self.stdin_port)
@@ -348,7 +351,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
         self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
-        self.configure_tornado_logger()
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True)
         self.iopub_thread.start()
         # backward-compat: wrap iopub socket API in background thread
@@ -392,7 +394,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             if socket and not socket.closed:
                 socket.close()
         self.log.debug("Terminating zmq context")
-        self.context.term()
+        # FIXME: this line breaks shutdown
+        # self.context.term()
+        self.sync_context.term()
         self.log.debug("Terminated zmq context")
 
     def log_connection_info(self):
@@ -582,60 +586,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.shell:
             self.shell.configurables.append(self)
 
-    def configure_tornado_logger(self):
-        """Configure the tornado logging.Logger.
-
-        Must set up the tornado logger or else tornado will call
-        basicConfig for the root logger which makes the root logger
-        go to the real sys.stderr instead of the capture streams.
-        This function mimics the setup of logging.basicConfig.
-        """
-        logger = logging.getLogger("tornado")
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(logging.BASIC_FORMAT)
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-
-    def _init_asyncio_patch(self):
-        """set default asyncio policy to be compatible with tornado
-
-        Tornado 6 (at least) is not compatible with the default
-        asyncio implementation on Windows
-
-        Pick the older SelectorEventLoopPolicy on Windows
-        if the known-incompatible default policy is in use.
-
-        Support for Proactor via a background thread is available in tornado 6.1,
-        but it is still preferable to run the Selector in the main thread
-        instead of the background.
-
-        do this as early as possible to make it a low priority and overrideable
-
-        ref: https://github.com/tornadoweb/tornado/issues/2608
-
-        FIXME: if/when tornado supports the defaults in asyncio without threads,
-               remove and bump tornado requirement for py38.
-               Most likely, this will mean a new Python version
-               where asyncio.ProactorEventLoop supports add_reader and friends.
-
-        """
-        if sys.platform.startswith("win") and sys.version_info >= (3, 8):
-            import asyncio
-
-            try:
-                from asyncio import (
-                    WindowsProactorEventLoopPolicy,
-                    WindowsSelectorEventLoopPolicy,
-                )
-            except ImportError:
-                pass
-                # not affected
-            else:
-                if type(asyncio.get_event_loop_policy()) is WindowsProactorEventLoopPolicy:
-                    # WindowsProactorEventLoopPolicy is not compatible with tornado 6
-                    # fallback to the pre-3.8 default of Selector
-                    asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-
     def init_pdb(self):
         """Replace pdb with IPython's version that is interruptible.
 
@@ -654,7 +604,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     @catch_config_error
     def initialize(self, argv=None):
-        self._init_asyncio_patch()
         super().initialize(argv)
         if self.subapp is not None:
             return
@@ -697,7 +646,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.poller is not None:
             self.poller.start()
         self.kernel.start()
-        self.io_loop = ioloop.IOLoop.current()
+        self.io_loop = asyncio.get_event_loop()
         if self.trio_loop:
             from ipykernel.trio_runner import TrioRunner
 
@@ -709,9 +658,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                 pass
         else:
             try:
-                self.io_loop.start()
+                self.io_loop.run_forever()
             except KeyboardInterrupt:
                 pass
+            finally:
+                self.io_loop.close()
 
 
 launch_new_instance = IPKernelApp.launch_instance

@@ -38,6 +38,7 @@ jobs:
       - name: Install the Python dependencies
         run: |
           pip install .[test] codecov
+          pip install https://github.com/davidbrochart/jupyter_client/archive/async_stream.zip
 
       - name: Install matplotlib
         if: ${{ !startsWith(matrix.os, 'macos') && !startsWith(matrix.python-version, 'pypy') }}

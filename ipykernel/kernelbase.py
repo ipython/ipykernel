@@ -36,8 +36,6 @@ import psutil
 import zmq
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
-from tornado import ioloop
-from tornado.queues import Queue, QueueEmpty
 from traitlets.config.configurable import SingletonConfigurable
 from traitlets.traitlets import (
     Any,
@@ -52,11 +50,11 @@ from traitlets.traitlets import (
     default,
     observe,
 )
-from zmq.eventloop.zmqstream import ZMQStream
 
 from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
+from .zmqstream import ZMQStream
 
 
 def _accepts_cell_id(meth):
@@ -68,6 +66,11 @@ def _accepts_cell_id(meth):
 
 
 class Kernel(SingletonConfigurable):
+
+    control_queue: asyncio.Queue[
+        t.Union[concurrent.futures.Future[t.Any], asyncio.Future[t.Any], bytes]
+    ]
+    msg_queue: asyncio.Queue[t.Tuple[int, t.Callable[..., t.Awaitable[t.Any]], t.Tuple[t.Any, ...]]]
 
     # ---------------------------------------------------------------------------
     # Kernel interface
@@ -81,9 +84,9 @@ class Kernel(SingletonConfigurable):
     @observe("eventloop")
     def _update_eventloop(self, change):
         """schedule call to eventloop from IOLoop"""
-        loop = ioloop.IOLoop.current()
+        loop = asyncio.get_event_loop()
         if change.new is not None:
-            loop.add_callback(self.enter_eventloop)
+            loop.call_soon(self.enter_eventloop)
 
     session = Instance(Session, allow_none=True)
     profile_dir = Instance("IPython.core.profiledir.ProfileDir", allow_none=True)
@@ -269,7 +272,7 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.control_queue: Queue[t.Any] = Queue()
+        self.control_queue = asyncio.Queue()
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -296,14 +299,14 @@ class Kernel(SingletonConfigurable):
             control_loop = self.io_loop
             tracer_future = awaitable_future = asyncio.Future()
 
-        def _flush():
+        async def _flush():
             # control_stream.flush puts messages on the queue
             self.control_stream.flush()
             # put Future on the queue after all of those,
             # so we can wait for all queued messages to be processed
-            self.control_queue.put(tracer_future)
+            await self.control_queue.put(tracer_future)
 
-        control_loop.add_callback(_flush)
+        asyncio.run_coroutine_threadsafe(_flush(), control_loop)
         return awaitable_future
 
     async def process_control(self, msg):
@@ -494,7 +497,7 @@ class Kernel(SingletonConfigurable):
         else:
             try:
                 t, dispatch, args = self.msg_queue.get_nowait()
-            except (asyncio.QueueEmpty, QueueEmpty):
+            except asyncio.QueueEmpty:
                 return None
         await dispatch(*args)
 
@@ -520,9 +523,11 @@ class Kernel(SingletonConfigurable):
     def _message_counter_default(self):
         return itertools.count()
 
-    def schedule_dispatch(self, dispatch, *args):
+    def schedule_dispatch(
+        self, dispatch: t.Callable[..., t.Awaitable[t.Any]], *args: t.Any
+    ) -> None:
         """schedule a message for dispatch"""
-        idx = next(self._message_counter)
+        idx: int = next(self._message_counter)
 
         self.msg_queue.put_nowait(
             (
@@ -532,13 +537,13 @@ class Kernel(SingletonConfigurable):
             )
         )
         # ensure the eventloop wakes up
-        self.io_loop.add_callback(lambda: None)
+        self.io_loop.call_soon_threadsafe(lambda: None)
 
     def start(self):
         """register dispatchers for streams"""
-        self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue: Queue[t.Any] = Queue()
-        self.io_loop.add_callback(self.dispatch_queue)
+        self.io_loop = asyncio.get_event_loop()
+        self.msg_queue = asyncio.Queue()
+        asyncio.ensure_future(self.dispatch_queue())
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
 
@@ -547,7 +552,7 @@ class Kernel(SingletonConfigurable):
         else:
             control_loop = self.io_loop
 
-        asyncio.run_coroutine_threadsafe(self.poll_control_queue(), control_loop.asyncio_loop)
+        asyncio.run_coroutine_threadsafe(self.poll_control_queue(), control_loop)
 
         self.shell_stream.on_recv(
             partial(
@@ -918,11 +923,12 @@ class Kernel(SingletonConfigurable):
 
         self.log.debug("Stopping control ioloop")
         control_io_loop = self.control_stream.io_loop
-        control_io_loop.add_callback(control_io_loop.stop)
+        control_io_loop.call_soon_threadsafe(control_io_loop.stop)
 
         self.log.debug("Stopping shell ioloop")
         shell_io_loop = self.shell_stream.io_loop
-        shell_io_loop.add_callback(shell_io_loop.stop)
+        # FIXME: shouldn't need to be threadsafe
+        shell_io_loop.call_soon_threadsafe(shell_io_loop.stop)
 
     def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the

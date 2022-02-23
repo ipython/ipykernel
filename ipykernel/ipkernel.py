@@ -12,7 +12,6 @@ from functools import partial
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, Instance, List, Type, observe, observe_compat
-from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm import CommManager
 from .compiler import XCachingCompiler
@@ -21,6 +20,7 @@ from .eventloops import _use_appnope
 from .kernelbase import Kernel as KernelBase
 from .kernelbase import _accepts_cell_id
 from .zmqshell import ZMQInteractiveShell
+from .zmqstream import ZMQStream
 
 try:
     from IPython.core.interactiveshell import _asyncio_runner
@@ -183,9 +183,7 @@ class IPythonKernel(KernelBase):
             self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
         super().start()
         if self.debugpy_stream:
-            asyncio.run_coroutine_threadsafe(
-                self.poll_stopped_queue(), self.control_thread.io_loop.asyncio_loop
-            )
+            asyncio.run_coroutine_threadsafe(self.poll_stopped_queue(), self.control_thread.io_loop)
 
     def set_parent(self, ident, parent, channel="shell"):
         """Overridden from parent to tell the display hook and output streams
@@ -286,8 +284,8 @@ class IPythonKernel(KernelBase):
                     return
                 sigint_future.set_result(1)
 
-            # use add_callback for thread safety
-            self.io_loop.add_callback(set_sigint_result)
+            # use call_soon_threadsafe for thread safety
+            self.io_loop.call_soon_threadsafe(set_sigint_result)
 
         # set the custom sigint hander during this context
         save_sigint = signal.signal(signal.SIGINT, handle_sigint)

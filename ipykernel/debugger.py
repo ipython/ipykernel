@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import sys
@@ -6,8 +7,6 @@ import typing as t
 import zmq
 from IPython.core.getipython import get_ipython
 from IPython.core.inputtransformer2 import leading_empty_lines
-from tornado.locks import Event
-from tornado.queues import Queue
 from zmq.utils import jsonapi
 
 try:
@@ -86,11 +85,13 @@ class DebugpyMessageQueue:
     SEPARATOR = "\r\n\r\n"
     SEPARATOR_LENGTH = 4
 
+    message_queue: asyncio.Queue[t.Dict[str, t.Any]]
+
     def __init__(self, event_callback, log):
         self.tcp_buffer = ""
         self._reset_tcp_pos()
         self.event_callback = event_callback
-        self.message_queue: Queue[t.Any] = Queue()
+        self.message_queue = asyncio.Queue()
         self.log = log
 
     def _reset_tcp_pos(self):
@@ -171,7 +172,7 @@ class DebugpyClient:
         self.debugpy_port = -1
         self.routing_id = None
         self.wait_for_attach = True
-        self.init_event = Event()
+        self.init_event = asyncio.Event()
         self.init_event_seq = -1
 
     def _get_endpoint(self):
@@ -245,7 +246,7 @@ class DebugpyClient:
     def disconnect_tcp_socket(self):
         self.debugpy_stream.socket.disconnect(self._get_endpoint())
         self.routing_id = None
-        self.init_event = Event()
+        self.init_event = asyncio.Event()
         self.init_event_seq = -1
         self.wait_for_attach = True
 
@@ -278,6 +279,8 @@ class Debugger:
         "configurationDone",
     ]
 
+    stopped_queue: asyncio.Queue[t.Dict[str, t.Any]]
+
     # Requests that can be handled even if the debugger is not running
     static_debug_msg_types = ["debugInfo", "inspectVariables", "richInspectVariables", "modules"]
 
@@ -291,7 +294,7 @@ class Debugger:
         self.is_started = False
         self.event_callback = event_callback
         self.just_my_code = just_my_code
-        self.stopped_queue: Queue[t.Any] = Queue()
+        self.stopped_queue = asyncio.Queue()
 
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:
@@ -367,7 +370,7 @@ class Debugger:
     def tcp_client(self):
         return self.debugpy_client
 
-    def start(self):
+    async def start(self):
         if not self.debugpy_initialized:
             tmp_dir = get_tmp_directory()
             if not os.path.exists(tmp_dir):
@@ -384,7 +387,7 @@ class Debugger:
                 (self.shell_socket.getsockopt(ROUTING_ID)),
             )
 
-            ident, msg = self.session.recv(self.shell_socket, mode=0)
+            ident, msg = await self.session.async_recv(self.shell_socket, mode=0)
             self.debugpy_initialized = msg["content"]["status"] == "ok"
 
         # Don't remove leading empty lines when debugging so the breakpoints are correctly positioned
@@ -631,7 +634,7 @@ class Debugger:
             if self.is_started:
                 self.log.info("The debugger has already started")
             else:
-                self.is_started = self.start()
+                self.is_started = await self.start()
                 if self.is_started:
                     self.log.info("The debugger has started")
                 else:

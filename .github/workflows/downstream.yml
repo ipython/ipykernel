@@ -68,4 +68,5 @@ jobs:
           git clone https://github.com/jupyter/jupyter_kernel_test.git
           cd jupyter_kernel_test
           pip install -e ".[test]"
+          pip install https://github.com/davidbrochart/jupyter_client/archive/async_stream.zip
           python test_ipykernel.py

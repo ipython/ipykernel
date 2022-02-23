@@ -1,8 +1,5 @@
 """Test eventloop integration"""
 
-import pytest
-import tornado
-
 from .utils import execute, flush_channels, start_new_kernel
 
 KC = KM = None
@@ -26,7 +23,6 @@ async_func()
 """
 
 
-@pytest.mark.skipif(tornado.version_info < (5,), reason="only relevant on tornado 5")
 def test_asyncio_interrupt():
     flush_channels(KC)
     msg_id, content = execute("%gui asyncio", KC)

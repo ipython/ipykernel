@@ -4,6 +4,7 @@ import io
 
 import pytest
 import zmq
+import zmq.asyncio
 from jupyter_client.session import Session
 
 from ipykernel.iostream import IOPubThread, OutStream
@@ -12,7 +13,7 @@ from ipykernel.iostream import IOPubThread, OutStream
 def test_io_api():
     """Test that wrapped stdout has the same API as a normal TextIO object"""
     session = Session()
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     pub = ctx.socket(zmq.PUB)
     thread = IOPubThread(pub)
     thread.start()

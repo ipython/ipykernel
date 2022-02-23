@@ -190,7 +190,7 @@ def loop_wx(kernel):
             self.func()
 
     # We need a custom wx.App to create our Frame subclass that has the
-    # wx.Timer to defer back to the tornado event loop.
+    # wx.Timer to defer back to the event loop.
     class IPWxApp(wx.App):
         def OnInit(self):
             self.frame = TimerFrame(wake)
@@ -378,7 +378,7 @@ def loop_asyncio(kernel):
     import asyncio
 
     loop = asyncio.get_event_loop()
-    # loop is already running (e.g. tornado 5), nothing left to do
+    # loop is already running, nothing left to do
     if loop.is_running():
         return
 

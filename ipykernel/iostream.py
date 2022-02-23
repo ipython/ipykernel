@@ -3,6 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 import atexit
 import io
 import os
@@ -18,8 +19,8 @@ from weakref import WeakSet
 
 import zmq
 from jupyter_client.session import extract_header
-from tornado.ioloop import IOLoop
-from zmq.eventloop.zmqstream import ZMQStream
+
+from .zmqstream import ZMQStream
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -57,7 +58,7 @@ class IOPubThread:
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
         self._pipe_flag = pipe
-        self.io_loop = IOLoop(make_current=False)
+        self.io_loop = asyncio.new_event_loop()
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
@@ -72,8 +73,11 @@ class IOPubThread:
 
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""
-        self.io_loop.start()
-        self.io_loop.close(all_fds=True)
+        asyncio.set_event_loop(self.io_loop)
+        try:
+            self.io_loop.run_forever()
+        finally:
+            self.io_loop.close()
 
     def _setup_event_pipe(self):
         """Create the PULL socket listening for events that should fire in this thread."""
@@ -181,13 +185,14 @@ class IOPubThread:
         """Stop the IOPub thread"""
         if not self.thread.is_alive():
             return
-        self.io_loop.add_callback(self.io_loop.stop)
-        self.thread.join()
+        self.io_loop.call_soon_threadsafe(self.io_loop.stop)
+        # self.thread.join()
         # close *all* event pipes, created in any thread
         # event pipes can only be used from other threads while self.thread.is_alive()
         # so after thread.join, this should be safe
         for event_pipe in self._event_pipes:
             event_pipe.close()
+        self._event_puller.socket.close()
 
     def close(self):
         if self.closed:
@@ -456,7 +461,11 @@ class OutStream(TextIOBase):
 
         # add_timeout has to be handed to the io thread via event pipe
         def _schedule_in_thread():
-            self._io_loop.call_later(self.flush_interval, self._flush)
+            # FIXME: original code was:
+            # self._io_loop.call_later(self.flush_interval, self._flush)
+            self._io_loop.call_soon_threadsafe(
+                self._io_loop.call_later, self.flush_interval, self._flush
+            )
 
         self.pub_thread.schedule(_schedule_in_thread)
 

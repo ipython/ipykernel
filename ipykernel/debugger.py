@@ -434,15 +434,23 @@ class Debugger:
             'request_seq': message['seq'],
             'command': message['command']
         }
-        source_path = message["arguments"]["source"]["path"]
-        if os.path.isfile(source_path):
-            with open(source_path, encoding='utf-8') as f:
-                reply['success'] = True
-                reply['body'] = {
-                    'content': f.read()
-                }
-        else:
+        source_ref = message["arguments"].get("sourceReference", 0)
+        if source_ref == 0:
+            message["arguments"].get("source", {}).get("sourceReference", 0)
+        if source_ref > 0:
             reply = await self._forward_message(message)
+        else:
+            source_path = message["arguments"].get("source", {}).get("path")
+            if source_path and os.path.isfile(source_path):
+                with open(source_path, encoding='utf-8') as f:
+                    reply['success'] = True
+                    reply['body'] = {
+                        'content': f.read()
+                    }
+            else:
+                reply['success'] = False
+                reply['message'] = 'Source unavailable'
+                reply['body'] = {}
 
         return reply
 

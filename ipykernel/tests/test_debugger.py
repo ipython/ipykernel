@@ -31,6 +31,13 @@ def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
     return reply if full_reply else reply["content"]
 
 
+def wait_for_debug_event(kernel, event):
+    msg = {"msg_type": "", "content": {}}
+    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != event:
+        msg = kernel.get_iopub_msg(timeout=TIMEOUT)
+    return msg
+
+
 @pytest.fixture
 def kernel(request):
     if sys.platform == "win32":
@@ -156,12 +163,9 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
-    
-    # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
-        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
+    # Wait for stop on breakpoint
+    msg = wait_for_debug_event(kernel_with_debug, "stopped")
     assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
@@ -192,12 +196,9 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
-    
-    # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
-        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
+    # Wait for stop on breakpoint
+    msg = wait_for_debug_event(kernel_with_debug, "stopped")
     assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
@@ -251,9 +252,7 @@ f(2, 3)"""
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
-        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+    wait_for_debug_event(kernel_with_debug, "stopped")
 
     stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})[
         "body"

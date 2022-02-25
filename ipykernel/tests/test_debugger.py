@@ -224,6 +224,46 @@ print({var_name})
     assert reply["body"]["data"] == {"text/plain": f"'{value}'"}
 
 
+def test_step_into_lib(kernel_with_debug):
+    code = """import traitlets
+traitlets.validate('foo', 'bar')
+"""
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    source = r["body"]["sourcePath"]
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 1}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    r = wait_for_debug_request(kernel_with_debug, "configurationDone")
+    kernel_with_debug.execute(code)
+
+    # Wait for stop on breakpoint
+    wait_for_debug_event(kernel_with_debug, "stopped")
+
+    # Setp over the import statement
+    wait_for_debug_request(kernel_with_debug, "next", {"threadId": 1})
+    wait_for_debug_event(kernel_with_debug, "stopped")
+    # Attempt to step into the function call
+    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": 1})
+    wait_for_debug_event(kernel_with_debug, "stopped")
+
+    reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})
+
+    names = [f.get("name") for f in reply["body"]["stackFrames"]]
+    # "<module>" will be the name of the cell
+    assert names == ["validate", "<module>"]
+
+
 def test_rich_inspect_at_breakpoint(kernel_with_debug):
     code = """def f(a, b):
     c = a + b

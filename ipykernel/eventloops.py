@@ -285,7 +285,10 @@ def loop_tk(kernel):
 
 @loop_tk.exit
 def loop_tk_exit(kernel):
-    kernel.app_wrapper.app.destroy()
+    try:
+        kernel.app_wrapper.app.destroy()
+    except RuntimeError:
+        pass
 
 
 @register_integration('gtk')

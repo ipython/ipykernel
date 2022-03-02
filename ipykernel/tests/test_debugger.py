@@ -1,3 +1,4 @@
+from queue import Empty
 import sys
 import pytest
 
@@ -31,10 +32,14 @@ def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
     return reply if full_reply else reply["content"]
 
 
-def wait_for_debug_event(kernel, event):
+def wait_for_debug_event(kernel, event, timeout=TIMEOUT, verbose=False):
     msg = {"msg_type": "", "content": {}}
     while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != event:
-        msg = kernel.get_iopub_msg(timeout=TIMEOUT)
+        msg = kernel.get_iopub_msg(timeout=timeout)
+        if verbose:
+            print(msg.get("msg_type"))
+            if (msg.get("msg_type") == "debug_event"):
+                print(f'  {msg["content"].get("event")}')
     return msg
 
 
@@ -263,6 +268,44 @@ traitlets.validate('foo', 'bar')
     names = [f.get("name") for f in reply["body"]["stackFrames"]]
     # "<module>" will be the name of the cell
     assert names == ["validate", "<module>"]
+
+
+def test_step_into_end(kernel_with_debug):
+    code = 'print("foo")\n'
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    source = r["body"]["sourcePath"]
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 1}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    r = wait_for_debug_request(kernel_with_debug, "configurationDone")
+    kernel_with_debug.execute(code)
+
+    # Wait for stop on breakpoint
+    wait_for_debug_event(kernel_with_debug, "stopped")
+
+    # Attempt to step into the print statement (will continue execution, but
+    # should stop on first line of next execute request)
+    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": 1})
+    # assert no stop statement is given
+    with pytest.raises(Empty):
+        wait_for_debug_event(kernel_with_debug, "stopped", timeout=3)
+
+    # execute some new code without breakpoints, assert it stops
+    code = 'print("bar")\nprint("alice")\n'
+    wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    kernel_with_debug.execute(code)
+    wait_for_debug_event(kernel_with_debug, "stopped")
 
 
 def test_rich_inspect_at_breakpoint(kernel_with_debug):

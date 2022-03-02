@@ -32,7 +32,10 @@ def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
 
 
 @pytest.fixture
-def kernel():
+def kernel(request):
+    if sys.platform == "win32":
+        import asyncio
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     with new_kernel() as kc:
         yield kc
 

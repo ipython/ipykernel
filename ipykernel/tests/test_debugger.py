@@ -43,7 +43,7 @@ def kernel(request):
     if sys.platform == "win32":
         import asyncio
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    with new_kernel() as kc:
+    with new_kernel(getattr(request, "param", None)) as kc:
         yield kc
 
 
@@ -224,6 +224,7 @@ print({var_name})
     assert reply["body"]["data"] == {"text/plain": f"'{value}'"}
 
 
+@pytest.mark.parametrize("kernel", [["--Kernel.debug_just_my_code=False"]], indirect=True)
 def test_step_into_lib(kernel_with_debug):
     code = """import traitlets
 traitlets.validate('foo', 'bar')

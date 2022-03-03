@@ -271,7 +271,7 @@ traitlets.validate('foo', 'bar')
 
 
 def test_step_into_end(kernel_with_debug):
-    code = 'print("foo")\n'
+    code = '5 + 5;\n'
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
     source = r["body"]["sourcePath"]
@@ -298,8 +298,19 @@ def test_step_into_end(kernel_with_debug):
     # should stop on first line of next execute request)
     wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": 1})
     # assert no stop statement is given
-    with pytest.raises(Empty):
+    try:
         wait_for_debug_event(kernel_with_debug, "stopped", timeout=3)
+    except Empty:
+        pass
+    else:
+        # we're stopped somewhere. Fail with trace
+        reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})
+        entries = []
+        for f in reversed(reply["body"]["stackFrames"]):
+            source = f.get("source", {}).get("path") or "<unknown>"
+            loc = f'{source} ({f.get("line")},{f.get("column")})'
+            entries.append(f'{loc}:  {f.get("name")}')
+        raise AssertionError('Unexpectedly stopped. Debugger stack:\n    {0}'.format("\n    ".join(entries)))
 
     # execute some new code without breakpoints, assert it stops
     code = 'print("bar")\nprint("alice")\n'

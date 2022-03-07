@@ -32,7 +32,7 @@ def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
     return reply if full_reply else reply["content"]
 
 
-def wait_for_debug_event(kernel, event, timeout=TIMEOUT, verbose=False):
+def wait_for_debug_event(kernel, event, timeout=TIMEOUT, verbose=False, full_reply=False):
     msg = {"msg_type": "", "content": {}}
     while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != event:
         msg = kernel.get_iopub_msg(timeout=timeout)
@@ -40,7 +40,7 @@ def wait_for_debug_event(kernel, event, timeout=TIMEOUT, verbose=False):
             print(msg.get("msg_type"))
             if (msg.get("msg_type") == "debug_event"):
                 print(f'  {msg["content"].get("event")}')
-    return msg
+    return msg if full_reply else msg["content"]
 
 
 @pytest.fixture
@@ -171,7 +171,7 @@ f(2, 3)"""
 
     # Wait for stop on breakpoint
     msg = wait_for_debug_event(kernel_with_debug, "stopped")
-    assert msg["content"]["body"]["reason"] == "breakpoint"
+    assert msg["body"]["reason"] == "breakpoint"
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 10), reason="TODO Does not work on Python 3.10")
@@ -204,7 +204,7 @@ f(2, 3)"""
 
     # Wait for stop on breakpoint
     msg = wait_for_debug_event(kernel_with_debug, "stopped")
-    assert msg["content"]["body"]["reason"] == "breakpoint"
+    assert msg["body"]["reason"] == "breakpoint"
 
 
 def test_rich_inspect_not_at_breakpoint(kernel_with_debug):
@@ -250,20 +250,23 @@ traitlets.validate('foo', 'bar')
 
     wait_for_debug_request(kernel_with_debug, "debugInfo")
 
-    r = wait_for_debug_request(kernel_with_debug, "configurationDone")
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    wait_for_debug_event(kernel_with_debug, "stopped")
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert r["body"]["reason"] == "breakpoint"
 
-    # Setp over the import statement
-    wait_for_debug_request(kernel_with_debug, "next", {"threadId": 1})
-    wait_for_debug_event(kernel_with_debug, "stopped")
+    reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": r["body"].get("threadId", 1)})
+
+    # Step over the import statement
+    wait_for_debug_request(kernel_with_debug, "next", {"threadId": r["body"].get("threadId", 1)})
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert r["body"]["reason"] == "step"
     # Attempt to step into the function call
-    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": 1})
-    wait_for_debug_event(kernel_with_debug, "stopped")
-
-    reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})
+    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": r["body"].get("threadId", 1)})
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert r["body"]["reason"] == "step"
 
     names = [f.get("name") for f in reply["body"]["stackFrames"]]
     # "<module>" will be the name of the cell
@@ -288,23 +291,23 @@ def test_step_into_end(kernel_with_debug):
 
     wait_for_debug_request(kernel_with_debug, "debugInfo")
 
-    r = wait_for_debug_request(kernel_with_debug, "configurationDone")
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    wait_for_debug_event(kernel_with_debug, "stopped")
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
 
     # Attempt to step into the print statement (will continue execution, but
     # should stop on first line of next execute request)
-    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": 1})
+    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": r["body"].get("threadId", 1)})
     # assert no stop statement is given
     try:
-        wait_for_debug_event(kernel_with_debug, "stopped", timeout=3)
+        r = wait_for_debug_event(kernel_with_debug, "stopped", timeout=3)
     except Empty:
         pass
     else:
         # we're stopped somewhere. Fail with trace
-        reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})
+        reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": r["body"].get("threadId", 1)})
         entries = []
         for f in reversed(reply["body"]["stackFrames"]):
             source = f.get("source", {}).get("path") or "<unknown>"
@@ -347,9 +350,9 @@ f(2, 3)"""
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    wait_for_debug_event(kernel_with_debug, "stopped")
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
 
-    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})[
+    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": r["body"].get("threadId", 1)})[
         "body"
     ]["stackFrames"]
 

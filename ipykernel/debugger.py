@@ -459,18 +459,21 @@ class Debugger:
         # {'id': yyy, 'name': '<module>', ... } <= this is the first frame of ipykernel code
         # or only the frames from the notebook.
         # We want to remove all the frames from ipykernel when they are present.
-        try:
-            sf_list = reply["body"]["stackFrames"]
-            module_idx = len(sf_list) - next(
-                i
-                for i, v in enumerate(reversed(sf_list), 1)
-                if v["name"] == "<module>" and i != 1
-            )
-            reply["body"]["stackFrames"] = reply["body"]["stackFrames"][
-                : module_idx + 1
-            ]
-        except StopIteration:
-            pass
+        sf_list = reply["body"]["stackFrames"]
+        kernel_root_found = False
+        for i, v in enumerate(reversed(sf_list), 1):
+            if v["name"] == "<module>":
+                if kernel_root_found:
+                    module_idx = len(sf_list) - i
+                    break
+                else:
+                    kernel_root_found = True
+        else:
+            return reply
+
+        reply["body"]["stackFrames"] = reply["body"]["stackFrames"][
+            : module_idx + 1
+        ]
         return reply
 
     def accept_variable(self, variable_name):
@@ -567,7 +570,7 @@ class Debugger:
     async def inspectVariables(self, message):
         self.variable_explorer.untrack_all()
         # looks like the implementation of untrack_all in ptvsd
-        # destroys objects we nee din track. We have no choice but
+        # destroys objects we need in track. We have no choice but
         # reinstantiate the object
         self.variable_explorer = VariableExplorer()
         self.variable_explorer.track()

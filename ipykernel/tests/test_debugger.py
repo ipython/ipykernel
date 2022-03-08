@@ -159,7 +159,7 @@ f(2, 3)"""
         kernel_with_debug,
         "setBreakpoints",
         {
-            "breakpoints": [{"line": 2}],
+            "breakpoints": [{"line": 2}, {"line": 5}],
             "source": {"path": source},
             "sourceModified": False,
         },
@@ -172,6 +172,28 @@ f(2, 3)"""
     # Wait for stop on breakpoint
     msg = wait_for_debug_event(kernel_with_debug, "stopped")
     assert msg["body"]["reason"] == "breakpoint"
+    stacks = wait_for_debug_request(
+        kernel_with_debug,
+        "stackTrace",
+        {"threadId": r["body"].get("threadId", 1)}
+    )["body"]["stackFrames"]
+    names = [f.get("name") for f in stacks]
+    assert stacks[0]["line"] == 5
+    assert names == ["<module>"]
+
+    wait_for_debug_request(kernel_with_debug, "continue", {"threadId": msg["body"].get("threadId", 1)})
+
+    # Wait for stop on breakpoint
+    msg = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert msg["body"]["reason"] == "breakpoint"
+    stacks = wait_for_debug_request(
+        kernel_with_debug,
+        "stackTrace",
+        {"threadId": r["body"].get("threadId", 1)}
+    )["body"]["stackFrames"]
+    names = [f.get("name") for f in stacks]
+    assert names == ["f", "<module>"]
+    assert stacks[0]["line"] == 2
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 10), reason="TODO Does not work on Python 3.10")

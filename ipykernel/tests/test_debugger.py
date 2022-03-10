@@ -46,7 +46,7 @@ def wait_for_debug_event(kernel, event, timeout=TIMEOUT, verbose=False, full_rep
 def assert_stack_names(kernel, expected_names, thread_id=1):
     reply = wait_for_debug_request(kernel, "stackTrace", {"threadId": thread_id})
     names = [f.get("name") for f in reply["body"]["stackFrames"]]
-    # "<module>" will be the name of the cell
+    # "<cell line: 1>" will be the name of the cell
     assert names == expected_names
 
 
@@ -181,14 +181,7 @@ f(2, 3)"""
     # Wait for stop on breakpoint
     msg = wait_for_debug_event(kernel_with_debug, "stopped")
     assert msg["body"]["reason"] == "breakpoint"
-    stacks = wait_for_debug_request(
-        kernel_with_debug,
-        "stackTrace",
-        {"threadId": r["body"].get("threadId", 1)}
-    )["body"]["stackFrames"]
-    names = [f.get("name") for f in stacks]
-    assert stacks[0]["line"] == 5
-    assert names == ["<module>"]
+    assert_stack_names(kernel_with_debug, ["<cell line: 5>"], r["body"].get("threadId", 1))
 
     wait_for_debug_request(kernel_with_debug, "continue", {"threadId": msg["body"].get("threadId", 1)})
 
@@ -201,8 +194,8 @@ f(2, 3)"""
         {"threadId": r["body"].get("threadId", 1)}
     )["body"]["stackFrames"]
     names = [f.get("name") for f in stacks]
-    assert names == ["f", "<module>"]
     assert stacks[0]["line"] == 2
+    assert names == ["f", "<cell line: 5>"]
 
 
 def test_breakpoint_in_cell_with_leading_empty_lines(kernel_with_debug):
@@ -286,25 +279,25 @@ traitlets.validate('foo', 'bar')
     # Wait for stop on breakpoint
     r = wait_for_debug_event(kernel_with_debug, "stopped")
     assert r["body"]["reason"] == "breakpoint"
-    assert_stack_names(kernel_with_debug, ["<module>"], r["body"].get("threadId", 1))
+    assert_stack_names(kernel_with_debug, ["<cell line: 1>"], r["body"].get("threadId", 1))
 
     # Step over the import statement
     wait_for_debug_request(kernel_with_debug, "next", {"threadId": r["body"].get("threadId", 1)})
     r = wait_for_debug_event(kernel_with_debug, "stopped")
     assert r["body"]["reason"] == "step"
-    assert_stack_names(kernel_with_debug, ["<module>"], r["body"].get("threadId", 1))
+    assert_stack_names(kernel_with_debug, ["<cell line: 2>"], r["body"].get("threadId", 1))
 
     # Attempt to step into the function call
     wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": r["body"].get("threadId", 1)})
     r = wait_for_debug_event(kernel_with_debug, "stopped")
     assert r["body"]["reason"] == "step"
-    assert_stack_names(kernel_with_debug, ["validate", "<module>"], r["body"].get("threadId", 1))
+    assert_stack_names(kernel_with_debug, ["validate", "<cell line: 2>"], r["body"].get("threadId", 1))
 
 
 # Test with both lib code and only "my code"
 @pytest.mark.parametrize("kernel", [[], ["--Kernel.debug_just_my_code=False"]], indirect=True)
 def test_step_into_end(kernel_with_debug):
-    code = 'a = 5 + 5\n'
+    code = 'a = 5 + 5'
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
     source = r["body"]["sourcePath"]
@@ -327,7 +320,7 @@ def test_step_into_end(kernel_with_debug):
     # Wait for stop on breakpoint
     r = wait_for_debug_event(kernel_with_debug, "stopped")
 
-    # Attempt to step into the print statement (will continue execution, but
+    # Attempt to step into the statement (will continue execution, but
     # should stop on first line of next execute request)
     wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": r["body"].get("threadId", 1)})
     # assert no stop statement is given

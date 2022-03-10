@@ -43,6 +43,13 @@ def wait_for_debug_event(kernel, event, timeout=TIMEOUT, verbose=False, full_rep
     return msg if full_reply else msg["content"]
 
 
+def assert_stack_names(kernel, expected_names, thread_id=1):
+    reply = wait_for_debug_request(kernel, "stackTrace", {"threadId": thread_id})
+    names = [f.get("name") for f in reply["body"]["stackFrames"]]
+    # "<module>" will be the name of the cell
+    assert names == expected_names
+
+
 @pytest.fixture
 def kernel(request):
     if sys.platform == "win32":
@@ -278,25 +285,25 @@ traitlets.validate('foo', 'bar')
     # Wait for stop on breakpoint
     r = wait_for_debug_event(kernel_with_debug, "stopped")
     assert r["body"]["reason"] == "breakpoint"
-
-    reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": r["body"].get("threadId", 1)})
+    assert_stack_names(kernel_with_debug, ["<module>"], r["body"].get("threadId", 1))
 
     # Step over the import statement
     wait_for_debug_request(kernel_with_debug, "next", {"threadId": r["body"].get("threadId", 1)})
     r = wait_for_debug_event(kernel_with_debug, "stopped")
     assert r["body"]["reason"] == "step"
+    assert_stack_names(kernel_with_debug, ["<module>"], r["body"].get("threadId", 1))
+
     # Attempt to step into the function call
     wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": r["body"].get("threadId", 1)})
     r = wait_for_debug_event(kernel_with_debug, "stopped")
     assert r["body"]["reason"] == "step"
-
-    names = [f.get("name") for f in reply["body"]["stackFrames"]]
-    # "<module>" will be the name of the cell
-    assert names == ["validate", "<module>"]
+    assert_stack_names(kernel_with_debug, ["validate", "<module>"], r["body"].get("threadId", 1))
 
 
+# Test with both lib code and only "my code"
+@pytest.mark.parametrize("kernel", [[], ["--Kernel.debug_just_my_code=False"]], indirect=True)
 def test_step_into_end(kernel_with_debug):
-    code = '5 + 5;\n'
+    code = 'a = 5 + 5\n'
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
     source = r["body"]["sourcePath"]

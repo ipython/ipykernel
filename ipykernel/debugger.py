@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 import os
 import re
@@ -375,8 +376,9 @@ class Debugger:
             if not os.path.exists(tmp_dir):
                 os.makedirs(tmp_dir)
             host, port = self.debugpy_client.get_host_port()
-            code = 'import debugpy;'
-            code += 'debugpy.listen(("' + host + '",' + port + '))'
+            code = "import debugpy\n"
+            code += 'debugpy.listen(("' + host + '",' + port + '))\n'
+            code += (Path(__file__).parent / "filtered_pydb.py").read_text("utf8")
             content = {
                 'code': code,
                 'silent': True
@@ -449,32 +451,7 @@ class Debugger:
         return reply
 
     async def stackTrace(self, message):
-        reply = await self._forward_message(message)
-        # The stackFrames array can have the following content:
-        # { frames from the notebook}
-        # ...
-        # { 'id': xxx, 'name': '<module>', ... } <= this is the first frame of the code from the notebook
-        # { frames from ipykernel }
-        # ...
-        # {'id': yyy, 'name': '<module>', ... } <= this is the first frame of ipykernel code
-        # or only the frames from the notebook.
-        # We want to remove all the frames from ipykernel when they are present.
-        sf_list = reply["body"]["stackFrames"]
-        kernel_root_found = False
-        for i, v in enumerate(reversed(sf_list), 1):
-            if v["name"] == "<module>":
-                if kernel_root_found:
-                    module_idx = len(sf_list) - i
-                    break
-                else:
-                    kernel_root_found = True
-        else:
-            return reply
-
-        reply["body"]["stackFrames"] = reply["body"]["stackFrames"][
-            : module_idx + 1
-        ]
-        return reply
+        return await self._forward_message(message)
 
     def accept_variable(self, variable_name):
         forbid_list = [
@@ -527,8 +504,7 @@ class Debugger:
         # The ipykernel source is in the call stack, so the user
         # has to manipulate the step-over and step-into in a wize way.
         # Set debugOptions for breakpoints in python standard library source.
-        if not self.just_my_code:
-            message['arguments']['debugOptions'] = [ 'DebugStdLib' ]
+        message['arguments']['options'] = f'DEBUG_STDLIB={not self.just_my_code}'
         return await self._forward_message(message)
 
     async def configurationDone(self, message):

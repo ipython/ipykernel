@@ -205,7 +205,6 @@ f(2, 3)"""
     assert stacks[0]["line"] == 2
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="TODO Does not work on Python 3.10")
 def test_breakpoint_in_cell_with_leading_empty_lines(kernel_with_debug):
     code = """
 def f(a, b):

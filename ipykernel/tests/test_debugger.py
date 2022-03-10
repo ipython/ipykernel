@@ -55,7 +55,9 @@ def kernel(request):
     if sys.platform == "win32":
         import asyncio
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    with new_kernel(getattr(request, "param", None)) as kc:
+    argv = getattr(request, "param", [])
+    #argv.append("--log-level=DEBUG")
+    with new_kernel(argv) as kc:
         yield kc
 
 

@@ -2,7 +2,6 @@ from pathlib import Path
 import sys
 import os
 import re
-import threading
 
 import zmq
 from zmq.utils import jsonapi
@@ -350,7 +349,7 @@ class Debugger:
             'Thread-4'
         ]
         return thread_name not in forbid_list
-        
+
     async def handle_stopped_event(self):
         # Wait for a stopped event message in the stopped queue
         # This message is used for triggering the 'threads' request
@@ -377,8 +376,13 @@ class Debugger:
                 os.makedirs(tmp_dir)
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy\n"
+            # Write debugpy logs?
+            #code += f'import debugpy; debugpy.log_to({str(Path(__file__).parent)!r});'
             code += 'debugpy.listen(("' + host + '",' + port + '))\n'
             code += (Path(__file__).parent / "filtered_pydb.py").read_text("utf8")
+            # Write pydevd logs?
+            # code += f'\npydevd.DebugInfoHolder.PYDEVD_DEBUG_FILE = {str(Path(__file__).parent / "debugpy.pydev.log")!r}\n'
+            # code += "pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 2\n"
             content = {
                 'code': code,
                 'silent': True
@@ -505,6 +509,10 @@ class Debugger:
         # has to manipulate the step-over and step-into in a wize way.
         # Set debugOptions for breakpoints in python standard library source.
         message['arguments']['options'] = f'DEBUG_STDLIB={not self.just_my_code}'
+        # Explicitly ignore IPython implicit hooks ?
+        message['arguments']['rules'] = [
+            # { "module": "IPython.core.displayhook", "include": False },
+        ]
         return await self._forward_message(message)
 
     async def configurationDone(self, message):

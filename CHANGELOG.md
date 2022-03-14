@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.9.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.9.1...d6744f9e423dacc6b317b1d31805304e89cbec5d))
+
+### Bugs fixed
+
+- Catch error when shutting down kernel from the control channel [#877](https://github.com/ipython/ipykernel/pull/877) ([@ccordoba12](https://github.com/ccordoba12))
+- Only kill children in process group at shutdown [#874](https://github.com/ipython/ipykernel/pull/874) ([@minrk](https://github.com/minrk))
+- BUG: Kill subprocesses on shutdown. [#869](https://github.com/ipython/ipykernel/pull/869) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+- Clean up CI [#871](https://github.com/ipython/ipykernel/pull/871) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-02-15&to=2022-03-14&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-02-15..2022-03-14&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2022-02-15..2022-03-14&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2022-02-15..2022-03-14&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-02-15..2022-03-14&type=Issues) | [@fabioz](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afabioz+updated%3A2022-02-15..2022-03-14&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2022-02-15..2022-03-14&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Avidartf+updated%3A2022-02-15..2022-03-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.9.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.9.0...c27e5b95c3d104d9fb6cae3375aec0e98974dcff))
@@ -17,8 +39,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-02-07&to=2022-02-15&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-02-07..2022-02-15&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-02-07..2022-02-15&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2022-02-07..2022-02-15&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.9.0
 

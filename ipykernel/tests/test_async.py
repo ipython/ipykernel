@@ -1,5 +1,7 @@
 """Test async/await integration"""
 
+import time
+
 import pytest
 
 from .test_message_spec import validate_message
@@ -43,7 +45,9 @@ def test_async_interrupt(asynclib, request):
     assert content["status"] == "ok", content
 
     flush_channels(KC)
-    msg_id = KC.execute(f"print('begin'); import {asynclib}; await {asynclib}.sleep(5)")
+    wait_time = 5
+    t0 = time.time()
+    msg_id = KC.execute(f"print('begin'); import {asynclib}; await {asynclib}.sleep({wait_time})")
     busy = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(busy, "status", msg_id)
     assert busy["content"]["execution_state"] == "busy"
@@ -56,7 +60,10 @@ def test_async_interrupt(asynclib, request):
 
     KM.interrupt_kernel()
     reply = KC.get_shell_msg()["content"]
+    t1 = time.time()
     assert reply["status"] == "error", reply
     assert reply["ename"] in {"CancelledError", "KeyboardInterrupt"}
+    # interrupting should not wait for the coroutine execution to complete
+    assert t1 - t0 < wait_time
 
     flush_channels(KC)

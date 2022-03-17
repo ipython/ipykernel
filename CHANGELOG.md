@@ -377,11 +377,12 @@ following non-exhaustive changes.
  - We now have a new dependency: `matplotlib-inline`, this helps to separate the
    circular dependency between IPython/IPykernel and  matplotlib.
 
- - All outputs to stdout/stderr should now be captured, including subprocesses
-   and output of compiled libraries (blas, lapack....). In notebook
-   server, some outputs that would previously go to the notebooks logs will now
-   both head to notebook logs and in notebooks outputs. In terminal frontend
-   like Jupyter Console, Emacs or other, this may ends up as duplicated outputs.
+ - On POSIX systems, all outputs to stdout/stderr should now be captured,
+   including subprocesses and output of compiled libraries (blas, lapack....).
+   In notebook server, some outputs that would previously go to the notebooks
+   logs will now both head to notebook logs and in notebooks outputs. In
+   terminal frontend like Jupyter Console, Emacs or other, this may ends up as
+   duplicated outputs.
 
  - coroutines are now native (async-def) , instead of using tornado's
    `@gen.coroutine`

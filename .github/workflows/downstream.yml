@@ -52,6 +52,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: ipyparallel
+          package_spec: "-e \".[test]\""
 
   jupyter_kernel_test:
     runs-on: ubuntu-latest

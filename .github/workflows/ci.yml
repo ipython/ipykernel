@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}-latest
@@ -16,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        python-version: [ '3.7', '3.8', '3.9', '3.10',  'pypy-3.7' ]
+        python-version: [ '3.7', '3.8', '3.10',  'pypy-3.7' ]
         exclude:
         - os: windows
           python-version: pypy-3.7
@@ -53,14 +57,14 @@ jobs:
 
     - name: Run the tests
       timeout-minutes: 10
-      if: ${{ !startsWith( matrix.python-version, 'pypy' ) }}
+      if: ${{ !startsWith( matrix.python-version, 'pypy' ) && matrix.os != 'windows' }}
       run: |
         args="-vv -raXxs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
         pytest $args || pytest $args --lf
 
-    - name: Run the tests on pypy
+    - name: Run the tests on pypy and windows
       timeout-minutes: 15
-      if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
+      if: ${{ startsWith( matrix.python-version, 'pypy' ) || matrix.os == 'windows' }}
       run: |
         args="-vv -raXxs --durations 10 --color=yes"
         pytest $args || pytest $args --lf

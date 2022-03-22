@@ -56,7 +56,6 @@ jobs:
       if: ${{ !startsWith( matrix.python-version, 'pypy' ) }}
       run: |
         args="-vv -raXxs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
-          pytest $args|| pytest $args --lf"
         pytest $args || pytest $args --lf
 
     - name: Run the tests on pypy

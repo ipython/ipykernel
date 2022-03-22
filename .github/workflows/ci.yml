@@ -63,7 +63,7 @@ jobs:
       timeout-minutes: 15
       if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
       run: |
-        cmd="pythom -m pytest -vv -raXs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
+        cmd="python -m pytest -vv -raXs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
         $cmd || $cmd --lf
 
     - name: Run the tests on pypy and windows

@@ -147,7 +147,7 @@ jobs:
       - name: Run the unit tests
         run: |
           args="-vv -raXxs --durations 10 --color=yes"
-          pytest $args|| pytest $args --lf
+          pytest $args || pytest $args --lf
 
  test_prereleases:
     name: Test Prereleases
@@ -168,7 +168,7 @@ jobs:
       - name: Run the tests
         run: |
           args="-vv -raXxs --durations 10 --color=yes"
-          pytest $args|| pytest $args --lf
+          pytest $args || pytest $args --lf
 
   make_sdist:
     name: Make SDist
@@ -209,4 +209,4 @@ jobs:
         run: |
           cd sdist/test
           args="-vv -raXxs --durations 10 --color=yes"
-          pytest $args|| pytest $args --lf
+          pytest $args || pytest $args --lf

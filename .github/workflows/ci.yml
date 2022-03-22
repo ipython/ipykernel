@@ -15,15 +15,19 @@ defaults:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, macos, windows]
-        python-version: [ '3.7', '3.8', '3.10',  'pypy-3.7' ]
-        exclude:
-        - os: windows
-          python-version: pypy-3.7
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.7", "3.10"]
+        include:
+          - os: windows-latest
+            python-version: "3.9"
+          - os: ubuntu-latest
+            python-version: "pypy-3.7"
+          - os: macos-latest
+            python-version: "3.8"
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -36,12 +40,12 @@ jobs:
         pip install .[test] codecov
 
     - name: Install matplotlib
-      if: ${{ matrix.os != 'macos' && matrix.python-version != 'pypy3' }}
+      if: ${{ !startsWith(matrix.os, 'macos') && !startsWith(matrix.python-version, 'pypy') }}
       run: |
         pip install matplotlib || echo 'failed to install matplotlib'
 
     - name: Install alternate event loops
-      if: ${{ matrix.os != 'windows' }}
+      if: ${{ !startsWith(matrix.os, 'windows') }}
       run: |
         pip install curio || echo 'ignoring curio install failure'
         pip install trio || echo 'ignoring trio install failure'
@@ -57,32 +61,32 @@ jobs:
 
     - name: Run the tests
       timeout-minutes: 15
-      if: ${{ !startsWith( matrix.python-version, 'pypy' ) && matrix.os != 'windows' }}
+      if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
       run: |
-        args="-vv -raXxs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
-        pytest $args || pytest $args --lf
+        cmd="python -m pytest -vv -raXs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
+        $cmd || $cmd --lf
 
     - name: Run the tests on pypy and windows
       timeout-minutes: 15
-      if: ${{ startsWith( matrix.python-version, 'pypy' ) || matrix.os == 'windows' }}
+      if: ${{ startsWith( matrix.python-version, 'pypy' ) || startsWith(matrix.os, 'windows') }}
       run: |
-        args="-vv -raXxs --durations 10 --color=yes"
-        pytest $args || pytest $args --lf
+        cmd="python -m pytest -vv -raXs --durations 10 --color=yes"
+        $cmd || $cmd --lf
 
     - name: Coverage
       run: |
         codecov
 
   test_docs:
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu]
+        os: [ubuntu-latest]
         python-version: [ '3.9' ]
         exclude:
-        - os: windows
-          python-version: pypy3
+        - os: windows-latest
+          python-version: pypy-3.7
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -91,7 +95,6 @@ jobs:
       uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
     - name: Build the docs
-      if: ${{ matrix.os == 'ubuntu' &&  matrix.python-version == '3.9'}}
       run: |
         cd docs
         pip install -r requirements.txt
@@ -132,8 +135,8 @@ jobs:
     - name: Run the tests
       timeout-minutes: 10
       run: |
-        args="-vv -raXxs --durations 10 --color=yes"
-        pytest $args || pytest $args --lf
+        cmd="python -m pytest -vv -raXxs --durations 10 --color=yes"
+        $cmd || $cmd --lf
 
   test_miniumum_versions:
     name: Test Minimum Versions
@@ -149,8 +152,8 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
       - name: Run the unit tests
         run: |
-          args="-vv -raXxs --durations 10 --color=yes"
-          pytest $args || pytest $args --lf
+          cmd="python -m pytest -vv -raXxs --durations 10 --color=yes"
+          $cmd || $cmd --lf
 
   test_prereleases:
     name: Test Prereleases
@@ -170,8 +173,8 @@ jobs:
           pip check
       - name: Run the tests
         run: |
-          args="-vv -raXxs --durations 10 --color=yes"
-          pytest $args || pytest $args --lf
+          cmd="python -m pytest -vv -raXs --durations 10 --color=yes"
+          $cmd || $cmd --lf
 
   make_sdist:
     name: Make SDist
@@ -211,5 +214,5 @@ jobs:
       - name: Run Test
         run: |
           cd sdist/test
-          args="-vv -raXxs --durations 10 --color=yes"
-          pytest $args || pytest $args --lf
+          cmd="python -m pytest -vv -raXs --durations 10 --color=yes"
+          $cmd || $cmd --lf

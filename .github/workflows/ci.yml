@@ -149,7 +149,7 @@ jobs:
           args="-vv -raXxs --durations 10 --color=yes"
           pytest $args || pytest $args --lf
 
- test_prereleases:
+  test_prereleases:
     name: Test Prereleases
     runs-on: ubuntu-latest
     timeout-minutes: 20

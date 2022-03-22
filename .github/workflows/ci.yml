@@ -56,7 +56,7 @@ jobs:
         pip check
 
     - name: Run the tests
-      timeout-minutes: 10
+      timeout-minutes: 15
       if: ${{ !startsWith( matrix.python-version, 'pypy' ) && matrix.os != 'windows' }}
       run: |
         args="-vv -raXxs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"

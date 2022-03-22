@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}-latest
@@ -16,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        python-version: [ '3.7', '3.8', '3.9', '3.10',  'pypy-3.7' ]
+        python-version: [ '3.7', '3.8', '3.10',  'pypy-3.7' ]
         exclude:
         - os: windows
           python-version: pypy-3.7
@@ -29,7 +33,7 @@ jobs:
 
     - name: Install the Python dependencies
       run: |
-        pip install --pre --upgrade --upgrade-strategy=eager .[test] codecov
+        pip install .[test] codecov
 
     - name: Install matplotlib
       if: ${{ matrix.os != 'macos' && matrix.python-version != 'pypy3' }}
@@ -52,29 +56,24 @@ jobs:
         pip check
 
     - name: Run the tests
-      timeout-minutes: 10
-      if: ${{ !startsWith( matrix.python-version, 'pypy' ) }}
-      run: |
-        pytest ipykernel -vv -s --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10
-
-    - name: Run the tests on pypy
       timeout-minutes: 15
-      if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
+      if: ${{ !startsWith( matrix.python-version, 'pypy' ) && matrix.os != 'windows' }}
       run: |
-        pytest -vv ipykernel
+        args="-vv -raXxs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
+        pytest $args || pytest $args --lf
 
-    - name: Build the docs
-      if: ${{ matrix.os == 'ubuntu' &&  matrix.python-version == '3.9'}}
+    - name: Run the tests on pypy and windows
+      timeout-minutes: 15
+      if: ${{ startsWith( matrix.python-version, 'pypy' ) || matrix.os == 'windows' }}
       run: |
-        cd docs
-        pip install -r requirements.txt
-        make html
+        args="-vv -raXxs --durations 10 --color=yes"
+        pytest $args || pytest $args --lf
 
     - name: Coverage
       run: |
         codecov
 
-  check_docstrings:
+  test_docs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
@@ -91,9 +90,16 @@ jobs:
     - name: Base Setup
       uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
+    - name: Build the docs
+      if: ${{ matrix.os == 'ubuntu' &&  matrix.python-version == '3.9'}}
+      run: |
+        cd docs
+        pip install -r requirements.txt
+        make html SPHINXOPTS="-W"
+
     - name: Install the Python dependencies
       run: |
-        pip install --pre --upgrade --upgrade-strategy=eager .
+        pip install  .
         pip install velin
 
     - name: Check Docstrings
@@ -116,7 +122,7 @@ jobs:
 
     - name: Install the Python dependencies without debugpy
       run: |
-        pip install --pre --upgrade --upgrade-strategy=eager .[test]
+        pip install .[test]
         pip uninstall --yes debugpy
 
     - name: List installed packages
@@ -126,4 +132,84 @@ jobs:
     - name: Run the tests
       timeout-minutes: 10
       run: |
-        pytest ipykernel -vv -s --durations 10
+        args="-vv -raXxs --durations 10 --color=yes"
+        pytest $args || pytest $args --lf
+
+  test_miniumum_versions:
+    name: Test Minimum Versions
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        with:
+          python_version: "3.7"
+      - name: Install miniumum versions
+        uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
+      - name: Run the unit tests
+        run: |
+          args="-vv -raXxs --durations 10 --color=yes"
+          pytest $args || pytest $args --lf
+
+  test_prereleases:
+    name: Test Prereleases
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Install the Python dependencies
+        run: |
+          pip install --pre -e ".[test]"
+      - name: List installed packages
+        run: |
+          pip freeze
+          pip check
+      - name: Run the tests
+        run: |
+          args="-vv -raXxs --durations 10 --color=yes"
+          pytest $args || pytest $args --lf
+
+  make_sdist:
+    name: Make SDist
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v2
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Build SDist
+        run: |
+          pip install build
+          python -m build --sdist
+      - uses: actions/upload-artifact@v2
+        with:
+          name: "sdist"
+          path: dist/*.tar.gz
+
+  test_sdist:
+    runs-on: ubuntu-latest
+    needs: [make_sdist]
+    name: Install from SDist and Test
+    timeout-minutes: 20
+    steps:
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Download sdist
+        uses: actions/download-artifact@v2
+      - name: Install From SDist
+        run: |
+          set -ex
+          cd sdist
+          mkdir test
+          tar --strip-components=1 -zxvf *.tar.gz -C ./test
+          cd test
+          pip install .[test]
+      - name: Run Test
+        run: |
+          cd sdist/test
+          args="-vv -raXxs --durations 10 --color=yes"
+          pytest $args || pytest $args --lf

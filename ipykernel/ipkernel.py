@@ -18,6 +18,7 @@ from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
 from .kernelbase import Kernel as KernelBase
+from .kernelbase import _accepts_cell_id
 from .zmqshell import ZMQInteractiveShell
 
 try:
@@ -296,7 +297,14 @@ class IPythonKernel(KernelBase):
             signal.signal(signal.SIGINT, save_sigint)
 
     async def do_execute(
-        self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
+        self,
+        code,
+        silent,
+        store_history=True,
+        user_expressions=None,
+        allow_stdin=False,
+        *,
+        cell_id,
     ):
         shell = self.shell  # we'll need this a lot here
 
@@ -306,6 +314,7 @@ class IPythonKernel(KernelBase):
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
+            with_cell_id = _accepts_cell_id(run_cell)
         else:
             should_run_async = lambda cell: False  # noqa
             # older IPython,
@@ -314,6 +323,7 @@ class IPythonKernel(KernelBase):
             async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
 
+            with_cell_id = _accepts_cell_id(shell.run_cell)
         try:
 
             # default case: runner is asyncio and asyncio is already running
@@ -336,13 +346,24 @@ class IPythonKernel(KernelBase):
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
             ):
-                coro = run_cell(
-                    code,
-                    store_history=store_history,
-                    silent=silent,
-                    transformed_cell=transformed_cell,
-                    preprocessing_exc_tuple=preprocessing_exc_tuple,
-                )
+                if with_cell_id:
+                    coro = run_cell(
+                        code,
+                        store_history=store_history,
+                        silent=silent,
+                        transformed_cell=transformed_cell,
+                        preprocessing_exc_tuple=preprocessing_exc_tuple,
+                        cell_id=cell_id,
+                    )
+                else:
+                    coro = run_cell(
+                        code,
+                        store_history=store_history,
+                        silent=silent,
+                        transformed_cell=transformed_cell,
+                        preprocessing_exc_tuple=preprocessing_exc_tuple,
+                    )
+
                 coro_future = asyncio.ensure_future(coro)
 
                 with self._cancel_on_sigint(coro_future):
@@ -357,7 +378,15 @@ class IPythonKernel(KernelBase):
                 # runner isn't already running,
                 # make synchronous call,
                 # letting shell dispatch to loop runners
-                res = shell.run_cell(code, store_history=store_history, silent=silent)
+                if with_cell_id:
+                    res = shell.run_cell(
+                        code,
+                        store_history=store_history,
+                        silent=silent,
+                        cell_id=cell_id,
+                    )
+                else:
+                    res = shell.run_cell(code, store_history=store_history, silent=silent)
         finally:
             self._restore_input()
 
@@ -388,7 +417,8 @@ class IPythonKernel(KernelBase):
 
         if "traceback" in reply_content:
             self.log.info(
-                "Exception in execute request:\n%s", "\n".join(reply_content["traceback"])
+                "Exception in execute request:\n%s",
+                "\n".join(reply_content["traceback"]),
             )
 
         # At this point, we can tell whether the main code execution succeeded
@@ -623,6 +653,7 @@ class Kernel(IPythonKernel):
         import warnings
 
         warnings.warn(
-            "Kernel is a deprecated alias of ipykernel.ipkernel.IPythonKernel", DeprecationWarning
+            "Kernel is a deprecated alias of ipykernel.ipkernel.IPythonKernel",
+            DeprecationWarning,
         )
         super().__init__(*args, **kwargs)

@@ -1,3 +1,4 @@
+from queue import Empty
 import sys
 import pytest
 
@@ -31,9 +32,32 @@ def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
     return reply if full_reply else reply["content"]
 
 
+def wait_for_debug_event(kernel, event, timeout=TIMEOUT, verbose=False, full_reply=False):
+    msg = {"msg_type": "", "content": {}}
+    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != event:
+        msg = kernel.get_iopub_msg(timeout=timeout)
+        if verbose:
+            print(msg.get("msg_type"))
+            if (msg.get("msg_type") == "debug_event"):
+                print(f'  {msg["content"].get("event")}')
+    return msg if full_reply else msg["content"]
+
+
+def assert_stack_names(kernel, expected_names, thread_id=1):
+    reply = wait_for_debug_request(kernel, "stackTrace", {"threadId": thread_id})
+    names = [f.get("name") for f in reply["body"]["stackFrames"]]
+    # "<cell line: 1>" will be the name of the cell
+    assert names == expected_names
+
+
 @pytest.fixture
-def kernel():
-    with new_kernel() as kc:
+def kernel(request):
+    if sys.platform == "win32":
+        import asyncio
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    argv = getattr(request, "param", [])
+    #argv.append("--log-level=DEBUG")
+    with new_kernel(argv) as kc:
         yield kc
 
 
@@ -144,7 +168,7 @@ f(2, 3)"""
         kernel_with_debug,
         "setBreakpoints",
         {
-            "breakpoints": [{"line": 2}],
+            "breakpoints": [{"line": 2}, {"line": 5}],
             "source": {"path": source},
             "sourceModified": False,
         },
@@ -153,16 +177,27 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
-    
+
     # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
-        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+    msg = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert msg["body"]["reason"] == "breakpoint"
+    assert_stack_names(kernel_with_debug, ["<cell line: 5>"], r["body"].get("threadId", 1))
 
-    assert msg["content"]["body"]["reason"] == "breakpoint"
+    wait_for_debug_request(kernel_with_debug, "continue", {"threadId": msg["body"].get("threadId", 1)})
+
+    # Wait for stop on breakpoint
+    msg = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert msg["body"]["reason"] == "breakpoint"
+    stacks = wait_for_debug_request(
+        kernel_with_debug,
+        "stackTrace",
+        {"threadId": r["body"].get("threadId", 1)}
+    )["body"]["stackFrames"]
+    names = [f.get("name") for f in stacks]
+    assert stacks[0]["line"] == 2
+    assert names == ["f", "<cell line: 5>"]
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="TODO Does not work on Python 3.10")
 def test_breakpoint_in_cell_with_leading_empty_lines(kernel_with_debug):
     code = """
 def f(a, b):
@@ -189,13 +224,10 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
-    
-    # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
-        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
-    assert msg["content"]["body"]["reason"] == "breakpoint"
+    # Wait for stop on breakpoint
+    msg = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert msg["body"]["reason"] == "breakpoint"
 
 
 def test_rich_inspect_not_at_breakpoint(kernel_with_debug):
@@ -218,6 +250,99 @@ print({var_name})
     )
 
     assert reply["body"]["data"] == {"text/plain": f"'{value}'"}
+
+
+@pytest.mark.parametrize("kernel", [["--Kernel.debug_just_my_code=False"]], indirect=True)
+def test_step_into_lib(kernel_with_debug):
+    code = """import traitlets
+traitlets.validate('foo', 'bar')
+"""
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    source = r["body"]["sourcePath"]
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 1}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
+    kernel_with_debug.execute(code)
+
+    # Wait for stop on breakpoint
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert r["body"]["reason"] == "breakpoint"
+    assert_stack_names(kernel_with_debug, ["<cell line: 1>"], r["body"].get("threadId", 1))
+
+    # Step over the import statement
+    wait_for_debug_request(kernel_with_debug, "next", {"threadId": r["body"].get("threadId", 1)})
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert r["body"]["reason"] == "step"
+    assert_stack_names(kernel_with_debug, ["<cell line: 2>"], r["body"].get("threadId", 1))
+
+    # Attempt to step into the function call
+    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": r["body"].get("threadId", 1)})
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
+    assert r["body"]["reason"] == "step"
+    assert_stack_names(kernel_with_debug, ["validate", "<cell line: 2>"], r["body"].get("threadId", 1))
+
+
+# Test with both lib code and only "my code"
+@pytest.mark.parametrize("kernel", [[], ["--Kernel.debug_just_my_code=False"]], indirect=True)
+def test_step_into_end(kernel_with_debug):
+    code = 'a = 5 + 5'
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    source = r["body"]["sourcePath"]
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 1}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
+    kernel_with_debug.execute(code)
+
+    # Wait for stop on breakpoint
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
+
+    # Attempt to step into the statement (will continue execution, but
+    # should stop on first line of next execute request)
+    wait_for_debug_request(kernel_with_debug, "stepIn", {"threadId": r["body"].get("threadId", 1)})
+    # assert no stop statement is given
+    try:
+        r = wait_for_debug_event(kernel_with_debug, "stopped", timeout=3)
+    except Empty:
+        pass
+    else:
+        # we're stopped somewhere. Fail with trace
+        reply = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": r["body"].get("threadId", 1)})
+        entries = []
+        for f in reversed(reply["body"]["stackFrames"]):
+            source = f.get("source", {}).get("path") or "<unknown>"
+            loc = f'{source} ({f.get("line")},{f.get("column")})'
+            entries.append(f'{loc}:  {f.get("name")}')
+        raise AssertionError('Unexpectedly stopped. Debugger stack:\n    {0}'.format("\n    ".join(entries)))
+
+    # execute some new code without breakpoints, assert it stops
+    code = 'print("bar")\nprint("alice")\n'
+    wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    kernel_with_debug.execute(code)
+    wait_for_debug_event(kernel_with_debug, "stopped")
 
 
 def test_rich_inspect_at_breakpoint(kernel_with_debug):
@@ -248,11 +373,9 @@ f(2, 3)"""
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
-        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+    r = wait_for_debug_event(kernel_with_debug, "stopped")
 
-    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})[
+    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": r["body"].get("threadId", 1)})[
         "body"
     ]["stackFrames"]
 

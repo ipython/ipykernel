@@ -1,7 +1,7 @@
+from pathlib import Path
 import sys
 import os
 import re
-import threading
 
 import zmq
 from zmq.utils import jsonapi
@@ -349,7 +349,7 @@ class Debugger:
             'Thread-4'
         ]
         return thread_name not in forbid_list
-        
+
     async def handle_stopped_event(self):
         # Wait for a stopped event message in the stopped queue
         # This message is used for triggering the 'threads' request
@@ -375,8 +375,14 @@ class Debugger:
             if not os.path.exists(tmp_dir):
                 os.makedirs(tmp_dir)
             host, port = self.debugpy_client.get_host_port()
-            code = 'import debugpy;'
-            code += 'debugpy.listen(("' + host + '",' + port + '))'
+            code = "import debugpy\n"
+            # Write debugpy logs?
+            #code += f'import debugpy; debugpy.log_to({str(Path(__file__).parent)!r});'
+            code += 'debugpy.listen(("' + host + '",' + port + '))\n'
+            code += (Path(__file__).parent / "filtered_pydb.py").read_text("utf8")
+            # Write pydevd logs?
+            # code += f'\npydevd.DebugInfoHolder.PYDEVD_DEBUG_FILE = {str(Path(__file__).parent / "debugpy.pydev.log")!r}\n'
+            # code += "pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 2\n"
             content = {
                 'code': code,
                 'silent': True
@@ -449,29 +455,7 @@ class Debugger:
         return reply
 
     async def stackTrace(self, message):
-        reply = await self._forward_message(message)
-        # The stackFrames array can have the following content:
-        # { frames from the notebook}
-        # ...
-        # { 'id': xxx, 'name': '<module>', ... } <= this is the first frame of the code from the notebook
-        # { frames from ipykernel }
-        # ...
-        # {'id': yyy, 'name': '<module>', ... } <= this is the first frame of ipykernel code
-        # or only the frames from the notebook.
-        # We want to remove all the frames from ipykernel when they are present.
-        try:
-            sf_list = reply["body"]["stackFrames"]
-            module_idx = len(sf_list) - next(
-                i
-                for i, v in enumerate(reversed(sf_list), 1)
-                if v["name"] == "<module>" and i != 1
-            )
-            reply["body"]["stackFrames"] = reply["body"]["stackFrames"][
-                : module_idx + 1
-            ]
-        except StopIteration:
-            pass
-        return reply
+        return await self._forward_message(message)
 
     def accept_variable(self, variable_name):
         forbid_list = [
@@ -524,8 +508,11 @@ class Debugger:
         # The ipykernel source is in the call stack, so the user
         # has to manipulate the step-over and step-into in a wize way.
         # Set debugOptions for breakpoints in python standard library source.
-        if not self.just_my_code:
-            message['arguments']['debugOptions'] = [ 'DebugStdLib' ]
+        message['arguments']['options'] = f'DEBUG_STDLIB={not self.just_my_code}'
+        # Explicitly ignore IPython implicit hooks ?
+        message['arguments']['rules'] = [
+            # { "module": "IPython.core.displayhook", "include": False },
+        ]
         return await self._forward_message(message)
 
     async def configurationDone(self, message):
@@ -567,7 +554,7 @@ class Debugger:
     async def inspectVariables(self, message):
         self.variable_explorer.untrack_all()
         # looks like the implementation of untrack_all in ptvsd
-        # destroys objects we nee din track. We have no choice but
+        # destroys objects we need in track. We have no choice but
         # reinstantiate the object
         self.variable_explorer = VariableExplorer()
         self.variable_explorer.track()

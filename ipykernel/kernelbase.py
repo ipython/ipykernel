@@ -133,7 +133,7 @@ class Kernel(SingletonConfigurable):
     # Experimental option to break in non-user code.
     # The ipykernel source is in the call stack, so the user
     # has to manipulate the step-over and step-into in a wize way.
-    debug_just_my_code = Bool(True,
+    debug_just_my_code = Bool(os.environ.get("IPYKERNEL_DEBUG_JUST_MY_CODE", "True").lower() == "true",
         help="""Set to False if you want to debug python standard and dependent libraries.
         """
     ).tag(config=True)

@@ -452,6 +452,56 @@ def test_interrupt_during_pdb_set_trace():
         reply = get_reply(kc, msg_id2, TIMEOUT)
         validate_message(reply, 'execute_reply', msg_id2)
 
+def test_autocomplete_over_control():
+
+    N = 1
+    code="pri"
+    with new_kernel() as kc:
+        msg_id = kc.execute("pass")
+        get_reply(kc, msg_id)
+
+        sleep_msg_id = kc.execute("import time; time.sleep(5)")
+
+        # submit N shell messages
+        shell_msg_ids = []
+        for i in range(N):
+            shell_msg_ids.append(kc.execute(f"i = {i}"))
+
+        # ensure all shell messages have arrived at the kernel before any control messages
+        time.sleep(0.5)
+        # at this point, shell messages should be waiting in msg_queue,
+        # rather than zmq while the kernel is still in the middle of processing
+        # the first execution
+
+        # now send N control messages
+        control_msg_ids = []
+
+        for i in range(N):
+            content = dict(code=code, cursor_pos=len(code))
+
+            msg = kc.session.msg("complete_request", content)
+            kc.control_channel.send(msg)
+            control_msg_ids.append(msg["header"]["msg_id"])
+
+        # finally, collect the replies on both channels for comparison
+        shell_replies = [get_reply(kc, sleep_msg_id)]
+        # shell_replies = []
+        for msg_id in shell_msg_ids:
+            shell_replies.append(get_reply(kc, msg_id))
+
+        control_replies = []
+        for msg_id in control_msg_ids:
+            control_replies.append(get_reply(kc, msg_id, channel="control"))
+
+    # verify that all control messages were handled before all shell messages
+    shell_dates = [msg["header"]["date"] for msg in shell_replies]
+    control_dates = [msg["header"]["date"] for msg in control_replies]
+    # comparing first to last ought to be enough, since queues preserve order
+    # use <= in case of very-fast handling and/or low resolution timers
+    print(shell_replies)
+    print(control_replies)
+    assert control_dates[-1] <= shell_dates[0]
+
 
 def test_control_thread_priority():
 

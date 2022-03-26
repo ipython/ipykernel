@@ -110,7 +110,7 @@ class InProcessKernelClient(KernelClient):
         self._dispatch_to_kernel(msg)
         return msg['header']['msg_id']
 
-    def complete(self, code, cursor_pos=None):
+    def complete(self, code, cursor_pos=None, channel=None):
         if cursor_pos is None:
             cursor_pos = len(code)
         content = dict(code=code, cursor_pos=cursor_pos)

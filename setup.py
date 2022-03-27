@@ -77,7 +77,8 @@ setup_args = dict(
             "pytest-cov",
             "flaky",
             "ipyparallel",
-            "pre-commit"
+            "pre-commit",
+            "pytest-timeout"
         ],
     },
     classifiers=[

@@ -20,6 +20,6 @@ git push --all
 git push --tags
 rm -rf dist build
 python -m build .
-twine check dist/* 
+twine check dist/*
 twine upload dist/*
 ```

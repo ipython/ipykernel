@@ -27,7 +27,7 @@ class InternalIPKernel:
         self.ipkernel = mpl_kernel(backend)
         # To create and track active qt consoles
         self.consoles = []
-        
+
         # This application will also act on the shell user namespace
         self.namespace = self.ipkernel.shell.user_ns
 

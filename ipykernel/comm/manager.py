@@ -117,7 +117,7 @@ class CommManager(LoggingConfigurable):
         comm = self.get_comm(comm_id)
         if comm is None:
             return
-        
+
         self.comms[comm_id]._closed = True
         del self.comms[comm_id]
 

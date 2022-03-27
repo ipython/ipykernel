@@ -270,7 +270,7 @@ class Debugger:
 
     # Requests that can be handled even if the debugger is not running
     static_debug_msg_types = [
-        'debugInfo', 'inspectVariables', 
+        'debugInfo', 'inspectVariables',
         'richInspectVariables', 'modules'
     ]
 
@@ -349,7 +349,7 @@ class Debugger:
             'Thread-4'
         ]
         return thread_name not in forbid_list
-        
+
     async def handle_stopped_event(self):
         # Wait for a stopped event message in the stopped queue
         # This message is used for triggering the 'threads' request

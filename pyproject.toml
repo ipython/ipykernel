@@ -32,7 +32,7 @@ src = "ipykernel/_version.py"
 [tool.pytest.ini_options]
 addopts = "-raXs --durations 10 --color=yes --doctest-modules"
 testpaths = [
-    "tests/"
+    "ipykernel/tests/"
 ]
 timeout = 300
 # Restore this setting to debug failures

@@ -23,5 +23,6 @@ global-exclude .ipynb_checkpoints
 prune data_kernelspec
 exclude .mailmap
 exclude readthedocs.yml
-
 exclude .coveragerc
+exclude .pre-commit-config.yaml
+exclude .git-blame-ignore-revs

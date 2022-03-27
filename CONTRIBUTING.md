@@ -17,6 +17,31 @@ cd ipykernel
 pip install -e .
 ```
 
+## Code Styling
+`ipykernel` has adopted automatic code formatting so you shouldn't
+need to worry too much about your code style.
+As long as your code is valid,
+the pre-commit hook should take care of how it should look.
+To install `pre-commit`, run the following::
+
+    pip install pre-commit
+    pre-commit install
+
+
+You can invoke the pre-commit hook by hand at any time with::
+
+    pre-commit run
+
+which should run any autoformatting on your code
+and tell you about any errors it couldn't fix automatically.
+You may also install [black integration](https://github.com/psf/black#editor-integration)
+into your text editor to format code automatically.
+
+If you have already committed files before setting up the pre-commit
+hook with ``pre-commit install``, you can fix everything up using
+``pre-commit run --all-files``. You need to make the fixing commit
+yourself after that.
+
 ## Releasing ipykernel
 
 Releasing ipykernel is *almost* standard for a Python package:

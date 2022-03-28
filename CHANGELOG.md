@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.10.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.9.2...3059fd97b7ccbd72e778f123bfb0ad92e7d9e9c8))
+
+### Enhancements made
+
+- Improve performance of stderr and stdout stream buffer [#888](https://github.com/ipython/ipykernel/pull/888) ([@MrBago](https://github.com/MrBago))
+
+### Bugs fixed
+
+- Check if the current thread is the io thread [#884](https://github.com/ipython/ipykernel/pull/884) ([@jamadeo](https://github.com/jamadeo))
+
+### Maintenance and upkeep improvements
+
+- More CI cleanup [#887](https://github.com/ipython/ipykernel/pull/887) ([@blink1073](https://github.com/blink1073))
+- CI cleanup [#885](https://github.com/ipython/ipykernel/pull/885) ([@blink1073](https://github.com/blink1073))
+
+### Documentation improvements
+
+- Add precision about subprocess stdout/stderr capturing [#883](https://github.com/ipython/ipykernel/pull/883) ([@lesteve](https://github.com/lesteve))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-03-14&to=2022-03-28&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-03-14..2022-03-28&type=Issues) | [@jamadeo](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajamadeo+updated%3A2022-03-14..2022-03-28&type=Issues) | [@lesteve](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Alesteve+updated%3A2022-03-14..2022-03-28&type=Issues) | [@MrBago](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AMrBago+updated%3A2022-03-14..2022-03-28&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2022-03-14..2022-03-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.9.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.9.1...d6744f9e423dacc6b317b1d31805304e89cbec5d))
@@ -21,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-02-15&to=2022-03-14&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-02-15..2022-03-14&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2022-02-15..2022-03-14&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2022-02-15..2022-03-14&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-02-15..2022-03-14&type=Issues) | [@fabioz](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afabioz+updated%3A2022-02-15..2022-03-14&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2022-02-15..2022-03-14&type=Issues) | [@vidartf](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Avidartf+updated%3A2022-02-15..2022-03-14&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.9.1
 

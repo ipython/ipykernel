@@ -1,32 +1,31 @@
 """A client for in-process kernels."""
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Copyright (C) 2012  The IPython Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING, distributed as part of this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import asyncio
 
-# IPython imports
-from traitlets import Type, Instance, default
-from jupyter_client.clientabc import KernelClientABC
 from jupyter_client.client import KernelClient
+from jupyter_client.clientabc import KernelClientABC
+
+# IPython imports
+from traitlets import Instance, Type, default
 
 # Local imports
-from .channels import (
-    InProcessChannel,
-    InProcessHBChannel,
-)
+from .channels import InProcessChannel, InProcessHBChannel
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Main kernel Client class
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class InProcessKernelClient(KernelClient):
     """A client for an in-process kernel.
@@ -45,21 +44,21 @@ class InProcessKernelClient(KernelClient):
     control_channel_class = Type(InProcessChannel)
     hb_channel_class = Type(InProcessHBChannel)
 
-    kernel = Instance('ipykernel.inprocess.ipkernel.InProcessKernel',
-                      allow_none=True)
+    kernel = Instance("ipykernel.inprocess.ipkernel.InProcessKernel", allow_none=True)
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # Channel management methods
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
-    @default('blocking_class')
+    @default("blocking_class")
     def _default_blocking_class(self):
         from .blocking import BlockingInProcessKernelClient
+
         return BlockingInProcessKernelClient
 
     def get_connection_info(self):
         d = super().get_connection_info()
-        d['kernel'] = self.kernel
+        d["kernel"] = self.kernel
         return d
 
     def start_channels(self, *args, **kwargs):
@@ -99,51 +98,57 @@ class InProcessKernelClient(KernelClient):
     # Methods for sending specific messages
     # -------------------------------------
 
-    def execute(self, code, silent=False, store_history=True,
-                user_expressions={}, allow_stdin=None):
+    def execute(
+        self, code, silent=False, store_history=True, user_expressions={}, allow_stdin=None
+    ):
         if allow_stdin is None:
             allow_stdin = self.allow_stdin
-        content = dict(code=code, silent=silent, store_history=store_history,
-                       user_expressions=user_expressions,
-                       allow_stdin=allow_stdin)
-        msg = self.session.msg('execute_request', content)
+        content = dict(
+            code=code,
+            silent=silent,
+            store_history=store_history,
+            user_expressions=user_expressions,
+            allow_stdin=allow_stdin,
+        )
+        msg = self.session.msg("execute_request", content)
         self._dispatch_to_kernel(msg)
-        return msg['header']['msg_id']
+        return msg["header"]["msg_id"]
 
     def complete(self, code, cursor_pos=None):
         if cursor_pos is None:
             cursor_pos = len(code)
         content = dict(code=code, cursor_pos=cursor_pos)
-        msg = self.session.msg('complete_request', content)
+        msg = self.session.msg("complete_request", content)
         self._dispatch_to_kernel(msg)
-        return msg['header']['msg_id']
+        return msg["header"]["msg_id"]
 
     def inspect(self, code, cursor_pos=None, detail_level=0):
         if cursor_pos is None:
             cursor_pos = len(code)
-        content = dict(code=code, cursor_pos=cursor_pos,
+        content = dict(
+            code=code,
+            cursor_pos=cursor_pos,
             detail_level=detail_level,
         )
-        msg = self.session.msg('inspect_request', content)
+        msg = self.session.msg("inspect_request", content)
         self._dispatch_to_kernel(msg)
-        return msg['header']['msg_id']
+        return msg["header"]["msg_id"]
 
-    def history(self, raw=True, output=False, hist_access_type='range', **kwds):
-        content = dict(raw=raw, output=output,
-                       hist_access_type=hist_access_type, **kwds)
-        msg = self.session.msg('history_request', content)
+    def history(self, raw=True, output=False, hist_access_type="range", **kwds):
+        content = dict(raw=raw, output=output, hist_access_type=hist_access_type, **kwds)
+        msg = self.session.msg("history_request", content)
         self._dispatch_to_kernel(msg)
-        return msg['header']['msg_id']
+        return msg["header"]["msg_id"]
 
     def shutdown(self, restart=False):
         # FIXME: What to do here?
-        raise NotImplementedError('Cannot shutdown in-process kernel')
+        raise NotImplementedError("Cannot shutdown in-process kernel")
 
     def kernel_info(self):
         """Request kernel info."""
-        msg = self.session.msg('kernel_info_request')
+        msg = self.session.msg("kernel_info_request")
         self._dispatch_to_kernel(msg)
-        return msg['header']['msg_id']
+        return msg["header"]["msg_id"]
 
     def comm_info(self, target_name=None):
         """Request a dictionary of valid comms and their targets."""
@@ -151,26 +156,25 @@ class InProcessKernelClient(KernelClient):
             content = {}
         else:
             content = dict(target_name=target_name)
-        msg = self.session.msg('comm_info_request', content)
+        msg = self.session.msg("comm_info_request", content)
         self._dispatch_to_kernel(msg)
-        return msg['header']['msg_id']
+        return msg["header"]["msg_id"]
 
     def input(self, string):
         if self.kernel is None:
-            raise RuntimeError('Cannot send input reply. No kernel exists.')
+            raise RuntimeError("Cannot send input reply. No kernel exists.")
         self.kernel.raw_input_str = string
 
     def is_complete(self, code):
-        msg = self.session.msg('is_complete_request', {'code': code})
+        msg = self.session.msg("is_complete_request", {"code": code})
         self._dispatch_to_kernel(msg)
-        return msg['header']['msg_id']
+        return msg["header"]["msg_id"]
 
     def _dispatch_to_kernel(self, msg):
-        """ Send a message to the kernel and handle a reply.
-        """
+        """Send a message to the kernel and handle a reply."""
         kernel = self.kernel
         if kernel is None:
-            raise RuntimeError('Cannot send request. No kernel exists.')
+            raise RuntimeError("Cannot send request. No kernel exists.")
 
         stream = kernel.shell_stream
         self.session.send(stream, msg)
@@ -181,20 +185,20 @@ class InProcessKernelClient(KernelClient):
         self.shell_channel.call_handlers_later(reply_msg)
 
     def get_shell_msg(self, block=True, timeout=None):
-        return  self.shell_channel.get_msg(block, timeout)
+        return self.shell_channel.get_msg(block, timeout)
 
     def get_iopub_msg(self, block=True, timeout=None):
-        return  self.iopub_channel.get_msg(block, timeout)
+        return self.iopub_channel.get_msg(block, timeout)
 
     def get_stdin_msg(self, block=True, timeout=None):
-        return  self.stdin_channel.get_msg(block, timeout)
+        return self.stdin_channel.get_msg(block, timeout)
 
     def get_control_msg(self, block=True, timeout=None):
-        return  self.control_channel.get_msg(block, timeout)
+        return self.control_channel.get_msg(block, timeout)
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # ABC Registration
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 KernelClientABC.register(InProcessKernelClient)

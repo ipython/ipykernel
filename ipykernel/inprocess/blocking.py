@@ -2,26 +2,25 @@
 
 Useful for test suites and blocking terminal interfaces.
 """
-#-----------------------------------------------------------------------------
+import sys
+
+# -----------------------------------------------------------------------------
 #  Copyright (C) 2012  The IPython Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING.txt, distributed as part of this software.
-#-----------------------------------------------------------------------------
-from queue import Queue, Empty
-import sys
+# -----------------------------------------------------------------------------
+from queue import Empty, Queue
 
 # IPython imports
 from traitlets import Type
 
 # Local imports
-from .channels import (
-    InProcessChannel,
-)
+from .channels import InProcessChannel
 from .client import InProcessKernelClient
 
-class BlockingInProcessChannel(InProcessChannel):
 
+class BlockingInProcessChannel(InProcessChannel):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
         self._in_queue = Queue()
@@ -30,7 +29,7 @@ class BlockingInProcessChannel(InProcessChannel):
         self._in_queue.put(msg)
 
     def get_msg(self, block=True, timeout=None):
-        """ Gets a message if there is one that is ready. """
+        """Gets a message if there is one that is ready."""
         if timeout is None:
             # Queue.get(timeout=None) has stupid uninteruptible
             # behavior, so wait for a week instead
@@ -38,7 +37,7 @@ class BlockingInProcessChannel(InProcessChannel):
         return self._in_queue.get(block, timeout)
 
     def get_msgs(self):
-        """ Get all messages that are currently ready. """
+        """Get all messages that are currently ready."""
         msgs = []
         while True:
             try:
@@ -48,23 +47,24 @@ class BlockingInProcessChannel(InProcessChannel):
         return msgs
 
     def msg_ready(self):
-        """ Is there a message that has been received? """
+        """Is there a message that has been received?"""
         return not self._in_queue.empty()
 
 
 class BlockingInProcessStdInChannel(BlockingInProcessChannel):
     def call_handlers(self, msg):
-        """ Overridden for the in-process channel.
+        """Overridden for the in-process channel.
 
         This methods simply calls raw_input directly.
         """
-        msg_type = msg['header']['msg_type']
-        if msg_type == 'input_request':
+        msg_type = msg["header"]["msg_type"]
+        if msg_type == "input_request":
             _raw_input = self.client.kernel._sys_raw_input
-            prompt = msg['content']['prompt']
-            print(prompt, end='', file=sys.__stdout__)
+            prompt = msg["content"]["prompt"]
+            print(prompt, end="", file=sys.__stdout__)
             sys.__stdout__.flush()
             self.client.input(_raw_input())
+
 
 class BlockingInProcessKernelClient(InProcessKernelClient):
 
@@ -82,7 +82,7 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
             except Empty:
                 pass
             else:
-                if msg['msg_type'] == 'kernel_info_reply':
+                if msg["msg_type"] == "kernel_info_reply":
                     # Checking that IOPub is connected. If it is not connected, start over.
                     try:
                         self.iopub_channel.get_msg(block=True, timeout=0.2)
@@ -96,6 +96,6 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
         while True:
             try:
                 msg = self.iopub_channel.get_msg(block=True, timeout=0.2)
-                print(msg['msg_type'])
+                print(msg["msg_type"])
             except Empty:
                 break

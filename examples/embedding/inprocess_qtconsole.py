@@ -2,14 +2,13 @@ import os
 import sys
 
 import tornado
-
-from qtconsole.rich_ipython_widget import RichIPythonWidget
-from qtconsole.inprocess import QtInProcessKernelManager
 from IPython.lib import guisupport
+from qtconsole.inprocess import QtInProcessKernelManager
+from qtconsole.rich_ipython_widget import RichIPythonWidget
 
 
 def print_process_id():
-    print('Process ID is:', os.getpid())
+    print("Process ID is:", os.getpid())
 
 
 def init_asyncio_patch():
@@ -23,8 +22,13 @@ def init_asyncio_patch():
     FIXME: if/when tornado supports the defaults in asyncio,
            remove and bump tornado requirement for py38
     """
-    if sys.platform.startswith("win") and sys.version_info >= (3, 8) and tornado.version_info < (6, 1):
+    if (
+        sys.platform.startswith("win")
+        and sys.version_info >= (3, 8)
+        and tornado.version_info < (6, 1)
+    ):
         import asyncio
+
         try:
             from asyncio import (
                 WindowsProactorEventLoopPolicy,
@@ -39,6 +43,7 @@ def init_asyncio_patch():
                 # fallback to the pre-3.8 default of Selector
                 asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
+
 def main():
     # Print the ID of the main process
     print_process_id()
@@ -52,8 +57,8 @@ def main():
     kernel_manager = QtInProcessKernelManager()
     kernel_manager.start_kernel()
     kernel = kernel_manager.kernel
-    kernel.gui = 'qt4'
-    kernel.shell.push({'foo': 43, 'print_process_id': print_process_id})
+    kernel.gui = "qt4"
+    kernel.shell.push({"foo": 43, "print_process_id": print_process_id})
 
     kernel_client = kernel_manager.client()
     kernel_client.start_channels()
@@ -72,5 +77,5 @@ def main():
     guisupport.start_event_loop_qt4(app)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

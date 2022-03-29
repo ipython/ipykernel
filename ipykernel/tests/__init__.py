@@ -7,8 +7,9 @@ import sys
 import tempfile
 from unittest.mock import patch
 
-from jupyter_core import paths as jpaths
 from IPython import paths as ipaths
+from jupyter_core import paths as jpaths
+
 from ipykernel.kernelspec import install
 
 pjoin = os.path.join
@@ -16,16 +17,20 @@ pjoin = os.path.join
 tmp = None
 patchers = []
 
+
 def setup():
     """setup temporary env for tests"""
     global tmp
     tmp = tempfile.mkdtemp()
     patchers[:] = [
-        patch.dict(os.environ, {
-            'HOME': tmp,
-            # Let tests work with --user install when HOME is changed:
-            'PYTHONPATH': os.pathsep.join(sys.path),
-        }),
+        patch.dict(
+            os.environ,
+            {
+                "HOME": tmp,
+                # Let tests work with --user install when HOME is changed:
+                "PYTHONPATH": os.pathsep.join(sys.path),
+            },
+        ),
     ]
     for p in patchers:
         p.start()

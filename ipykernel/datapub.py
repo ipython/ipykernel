@@ -2,29 +2,34 @@
 """
 
 import warnings
-warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
+
+warnings.warn(
+    "ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from traitlets import Any, CBytes, Dict, Instance
 from traitlets.config import Configurable
-from traitlets import Instance, Dict, CBytes, Any
+
 from ipykernel.jsonutil import json_clean
+
 try:
     # available since ipyparallel 5.0.0
     from ipyparallel.serialize import serialize_object
 except ImportError:
     # Deprecated since ipykernel 4.3.0
     from ipykernel.serialize import serialize_object
+
 from jupyter_client.session import Session, extract_header
 
 
 class ZMQDataPublisher(Configurable):
 
-    topic = topic = CBytes(b'datapub')
+    topic = topic = CBytes(b"datapub")
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
     parent_header = Dict({})
@@ -42,12 +47,16 @@ class ZMQDataPublisher(Configurable):
             The data to be published. Think of it as a namespace.
         """
         session = self.session
-        buffers = serialize_object(data,
+        buffers = serialize_object(
+            data,
             buffer_threshold=session.buffer_threshold,
             item_threshold=session.item_threshold,
         )
         content = json_clean(dict(keys=list(data.keys())))
-        session.send(self.pub_socket, 'data_message', content=content,
+        session.send(
+            self.pub_socket,
+            "data_message",
+            content=content,
             parent=self.parent_header,
             buffers=buffers,
             ident=self.topic,
@@ -62,10 +71,12 @@ def publish_data(data):
     data : dict
         The data to be published. Think of it as a namespace.
     """
-    warnings.warn("ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
+    warnings.warn(
+        "ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
         DeprecationWarning,
-        stacklevel=2
+        stacklevel=2,
     )
 
     from ipykernel.zmqshell import ZMQInteractiveShell
+
     ZMQInteractiveShell.instance().data_pub.publish_data(data)

@@ -4,39 +4,39 @@
 # Distributed under the terms of the Modified BSD License.
 
 import atexit
-from binascii import b2a_hex
-from collections import deque
-from imp import lock_held as import_lock_held
+import io
 import os
 import sys
 import threading
-import warnings
-from weakref import WeakSet
 import traceback
+import warnings
+from binascii import b2a_hex
+from collections import deque
+from imp import lock_held as import_lock_held
 from io import StringIO, TextIOBase
-import io
+from weakref import WeakSet
 
 import zmq
+
 if zmq.pyzmq_version_info() >= (17, 0):
     from tornado.ioloop import IOLoop
 else:
     # deprecated since pyzmq 17
     from zmq.eventloop.ioloop import IOLoop
-from zmq.eventloop.zmqstream import ZMQStream
 
 from jupyter_client.session import extract_header
+from zmq.eventloop.zmqstream import ZMQStream
 
-
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Globals
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 MASTER = 0
 CHILD = 1
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # IO classes
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 class IOPubThread:
@@ -88,8 +88,8 @@ class IOPubThread:
         pipe_in = ctx.socket(zmq.PULL)
         pipe_in.linger = 0
 
-        _uuid = b2a_hex(os.urandom(16)).decode('ascii')
-        iface = self._event_interface = 'inproc://%s' % _uuid
+        _uuid = b2a_hex(os.urandom(16)).decode("ascii")
+        iface = self._event_interface = "inproc://%s" % _uuid
         pipe_in.bind(iface)
         self._event_puller = ZMQStream(pipe_in, self.io_loop)
         self._event_puller.on_recv(self._handle_event)
@@ -139,8 +139,9 @@ class IOPubThread:
         try:
             self._pipe_port = pipe_in.bind_to_random_port("tcp://127.0.0.1")
         except zmq.ZMQError as e:
-            warnings.warn("Couldn't bind IOPub Pipe to 127.0.0.1: %s" % e +
-                "\nsubprocess output will be unavailable."
+            warnings.warn(
+                "Couldn't bind IOPub Pipe to 127.0.0.1: %s" % e
+                + "\nsubprocess output will be unavailable."
             )
             self._pipe_flag = False
             pipe_in.close()
@@ -161,7 +162,7 @@ class IOPubThread:
         # must be new context after fork
         ctx = zmq.Context()
         pipe_out = ctx.socket(zmq.PUSH)
-        pipe_out.linger = 3000 # 3s timeout for pipe_out sends before discarding the message
+        pipe_out.linger = 3000  # 3s timeout for pipe_out sends before discarding the message
         pipe_out.connect("tcp://127.0.0.1:%i" % self._pipe_port)
         return ctx, pipe_out
 
@@ -213,7 +214,7 @@ class IOPubThread:
         if self.thread.is_alive():
             self._events.append(f)
             # wake event thread (message content is ignored)
-            self._event_pipe.send(b'')
+            self._event_pipe.send(b"")
         else:
             f()
 
@@ -222,7 +223,7 @@ class IOPubThread:
 
         If my thread isn't running (e.g. forked process), send immediately.
         """
-        self.schedule(lambda : self._really_send(*args, **kwargs))
+        self.schedule(lambda: self._really_send(*args, **kwargs))
 
     def _really_send(self, msg, *args, **kwargs):
         """The callback that actually sends messages"""
@@ -243,6 +244,7 @@ class IOPubThread:
 
 class BackgroundSocket:
     """Wrapper around IOPub thread that provides zmq send[_multipart]"""
+
     io_thread = None
 
     def __init__(self, io_thread):
@@ -250,7 +252,7 @@ class BackgroundSocket:
 
     def __getattr__(self, attr):
         """Wrap socket attr access for backward-compatibility"""
-        if attr.startswith('__') and attr.endswith('__'):
+        if attr.startswith("__") and attr.endswith("__"):
             # don't wrap magic methods
             super().__getattr__(attr)
         if hasattr(self.io_thread.socket, attr):
@@ -265,7 +267,7 @@ class BackgroundSocket:
         super().__getattr__(attr)
 
     def __setattr__(self, attr, value):
-        if attr == 'io_thread' or (attr.startswith('__' and attr.endswith('__'))):
+        if attr == "io_thread" or (attr.startswith("__" and attr.endswith("__"))):
             super().__setattr__(attr, value)
         else:
             warnings.warn(
@@ -297,8 +299,7 @@ class OutStream(TextIOBase):
     # The time interval between automatic flushes, in seconds.
     flush_interval = 0.2
     topic = None
-    encoding = 'UTF-8'
-
+    encoding = "UTF-8"
 
     def fileno(self):
         """
@@ -332,7 +333,15 @@ class OutStream(TextIOBase):
             self._exc = sys.exc_info()
 
     def __init__(
-        self, session, pub_thread, name, pipe=None, echo=None, *, watchfd=True, isatty=False,
+        self,
+        session,
+        pub_thread,
+        name,
+        pipe=None,
+        echo=None,
+        *,
+        watchfd=True,
+        isatty=False,
     ):
         """
         Parameters
@@ -392,7 +401,7 @@ class OutStream(TextIOBase):
             self._setup_stream_redirects(name)
 
         if echo:
-            if hasattr(echo, 'read') and hasattr(echo, 'write'):
+            if hasattr(echo, "read") and hasattr(echo, "write"):
                 self.echo = echo
             else:
                 raise ValueError("echo argument must be a file like object")
@@ -449,6 +458,7 @@ class OutStream(TextIOBase):
         # add_timeout has to be handed to the io thread via event pipe
         def _schedule_in_thread():
             self._io_loop.call_later(self.flush_interval, self._flush)
+
         self.pub_thread.schedule(_schedule_in_thread)
 
     def flush(self):
@@ -457,10 +467,10 @@ class OutStream(TextIOBase):
         send will happen in the background thread
         """
         if (
-                self.pub_thread
-                and self.pub_thread.thread is not None
-                and self.pub_thread.thread.is_alive()
-                and self.pub_thread.thread.ident != threading.current_thread().ident
+            self.pub_thread
+            and self.pub_thread.thread is not None
+            and self.pub_thread.thread.is_alive()
+            and self.pub_thread.thread.ident != threading.current_thread().ident
         ):
             # request flush on the background thread
             self.pub_thread.schedule(self._flush)
@@ -492,8 +502,7 @@ class OutStream(TextIOBase):
                 self.echo.flush()
             except OSError as e:
                 if self.echo is not sys.__stderr__:
-                    print(f"Flush failed: {e}",
-                          file=sys.__stderr__)
+                    print(f"Flush failed: {e}", file=sys.__stderr__)
 
         data = self._flush_buffer()
         if data:
@@ -501,9 +510,14 @@ class OutStream(TextIOBase):
             # since pub_thread is itself fork-safe.
             # There should be a better way to do this.
             self.session.pid = os.getpid()
-            content = {'name':self.name, 'text':data}
-            self.session.send(self.pub_thread, 'stream', content=content,
-                parent=self.parent_header, ident=self.topic)
+            content = {"name": self.name, "text": data}
+            self.session.send(
+                self.pub_thread,
+                "stream",
+                content=content,
+                parent=self.parent_header,
+                ident=self.topic,
+            )
 
     def write(self, string: str) -> int:
         """Write to current stream after encoding if necessary
@@ -516,23 +530,20 @@ class OutStream(TextIOBase):
         """
 
         if not isinstance(string, str):
-            raise TypeError(
-                f"write() argument must be str, not {type(string)}"
-            )
+            raise TypeError(f"write() argument must be str, not {type(string)}")
 
         if self.echo is not None:
             try:
                 self.echo.write(string)
             except OSError as e:
                 if self.echo is not sys.__stderr__:
-                    print(f"Write failed: {e}",
-                          file=sys.__stderr__)
+                    print(f"Write failed: {e}", file=sys.__stderr__)
 
         if self.pub_thread is None:
-            raise ValueError('I/O operation on closed file')
+            raise ValueError("I/O operation on closed file")
         else:
 
-            is_child = (not self._is_master_process())
+            is_child = not self._is_master_process()
             # only touch the buffer in the IO thread to avoid races
             with self._buffer_lock:
                 self._buffer.write(string)
@@ -551,7 +562,7 @@ class OutStream(TextIOBase):
 
     def writelines(self, sequence):
         if self.pub_thread is None:
-            raise ValueError('I/O operation on closed file')
+            raise ValueError("I/O operation on closed file")
         else:
             for string in sequence:
                 self.write(string)

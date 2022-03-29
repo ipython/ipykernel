@@ -8,38 +8,31 @@ import sys
 import tempfile
 from unittest import mock
 
+import pytest
 from jupyter_core.paths import jupyter_data_dir
 
 from ipykernel.kernelspec import (
-    make_ipkernel_cmd,
-    get_kernel_dict,
-    write_kernel_spec,
-    install,
-    InstallIPythonKernelSpecApp,
     KERNEL_NAME,
     RESOURCES,
+    InstallIPythonKernelSpecApp,
+    get_kernel_dict,
+    install,
+    make_ipkernel_cmd,
+    write_kernel_spec,
 )
-
-import pytest
 
 pjoin = os.path.join
 
 
 def test_make_ipkernel_cmd():
     cmd = make_ipkernel_cmd()
-    assert cmd == [
-        sys.executable,
-        '-m',
-        'ipykernel_launcher',
-        '-f',
-        '{connection_file}'
-    ]
+    assert cmd == [sys.executable, "-m", "ipykernel_launcher", "-f", "{connection_file}"]
 
 
 def assert_kernel_dict(d):
-    assert d['argv'] == make_ipkernel_cmd()
-    assert d['display_name'] == 'Python %i (ipykernel)' % sys.version_info[0]
-    assert d['language'] == 'python'
+    assert d["argv"] == make_ipkernel_cmd()
+    assert d["display_name"] == "Python %i (ipykernel)" % sys.version_info[0]
+    assert d["language"] == "python"
 
 
 def test_get_kernel_dict():
@@ -62,9 +55,9 @@ def assert_is_spec(path):
     for fname in os.listdir(RESOURCES):
         dst = pjoin(path, fname)
         assert os.path.exists(dst)
-    kernel_json = pjoin(path, 'kernel.json')
+    kernel_json = pjoin(path, "kernel.json")
     assert os.path.exists(kernel_json)
-    with open(kernel_json, encoding='utf8') as f:
+    with open(kernel_json, encoding="utf8") as f:
         json.load(f)
 
 
@@ -95,31 +88,29 @@ def test_install_kernelspec():
 def test_install_user():
     tmp = tempfile.mkdtemp()
 
-    with mock.patch.dict(os.environ, {'HOME': tmp}):
+    with mock.patch.dict(os.environ, {"HOME": tmp}):
         install(user=True)
         data_dir = jupyter_data_dir()
 
-    assert_is_spec(os.path.join(data_dir, 'kernels', KERNEL_NAME))
+    assert_is_spec(os.path.join(data_dir, "kernels", KERNEL_NAME))
 
 
 def test_install():
     system_jupyter_dir = tempfile.mkdtemp()
 
-    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
-            [system_jupyter_dir]):
+    with mock.patch("jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH", [system_jupyter_dir]):
         install()
 
-    assert_is_spec(os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME))
+    assert_is_spec(os.path.join(system_jupyter_dir, "kernels", KERNEL_NAME))
 
 
 def test_install_profile():
     system_jupyter_dir = tempfile.mkdtemp()
 
-    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
-            [system_jupyter_dir]):
+    with mock.patch("jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH", [system_jupyter_dir]):
         install(profile="Test")
 
-    spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
+    spec = os.path.join(system_jupyter_dir, "kernels", KERNEL_NAME, "kernel.json")
     with open(spec) as f:
         spec = json.load(f)
     assert spec["display_name"].endswith(" [profile=Test]")
@@ -129,34 +120,28 @@ def test_install_profile():
 def test_install_display_name_overrides_profile():
     system_jupyter_dir = tempfile.mkdtemp()
 
-    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
-            [system_jupyter_dir]):
+    with mock.patch("jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH", [system_jupyter_dir]):
         install(display_name="Display", profile="Test")
 
-    spec = os.path.join(system_jupyter_dir, 'kernels', KERNEL_NAME, "kernel.json")
+    spec = os.path.join(system_jupyter_dir, "kernels", KERNEL_NAME, "kernel.json")
     with open(spec) as f:
         spec = json.load(f)
     assert spec["display_name"] == "Display"
 
 
-@pytest.mark.parametrize("env", [
-    None,
-    dict(spam="spam"),
-    dict(spam="spam", foo='bar')
-])
+@pytest.mark.parametrize("env", [None, dict(spam="spam"), dict(spam="spam", foo="bar")])
 def test_install_env(tmp_path, env):
     # python 3.5 // tmp_path must be converted to str
-    with mock.patch('jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH',
-            [str(tmp_path)]):
+    with mock.patch("jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH", [str(tmp_path)]):
         install(env=env)
 
-    spec = tmp_path / 'kernels' / KERNEL_NAME / "kernel.json"
+    spec = tmp_path / "kernels" / KERNEL_NAME / "kernel.json"
     with spec.open() as f:
         spec = json.load(f)
 
     if env:
-        assert len(env) == len(spec['env'])
+        assert len(env) == len(spec["env"])
         for k, v in env.items():
-            assert spec['env'][k] == v
+            assert spec["env"][k] == v
     else:
-        assert 'env' not in spec
+        assert "env" not in spec

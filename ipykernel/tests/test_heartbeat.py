@@ -14,7 +14,7 @@ from ipykernel.heartbeat import Heartbeat
 
 def test_port_bind_failure_raises():
     heart = Heartbeat(None)
-    with patch.object(heart, '_try_bind_socket') as mock_try_bind:
+    with patch.object(heart, "_try_bind_socket") as mock_try_bind:
         mock_try_bind.side_effect = zmq.ZMQError(-100, "fails for unknown error types")
         with pytest.raises(zmq.ZMQError):
             heart._bind_socket()
@@ -23,7 +23,7 @@ def test_port_bind_failure_raises():
 
 def test_port_bind_success():
     heart = Heartbeat(None)
-    with patch.object(heart, '_try_bind_socket') as mock_try_bind:
+    with patch.object(heart, "_try_bind_socket") as mock_try_bind:
         heart._bind_socket()
         assert mock_try_bind.call_count == 1
 
@@ -37,10 +37,10 @@ def test_port_bind_failure_recovery():
 
     try:
         heart = Heartbeat(None)
-        with patch.object(heart, '_try_bind_socket') as mock_try_bind:
+        with patch.object(heart, "_try_bind_socket") as mock_try_bind:
             mock_try_bind.side_effect = [
                 zmq.ZMQError(errno.EADDRINUSE, "fails for non-bind unix"),
-                zmq.ZMQError(errno.WSAEADDRINUSE, "fails for non-bind windows")
+                zmq.ZMQError(errno.WSAEADDRINUSE, "fails for non-bind windows"),
             ] + [0] * 100
             # Shouldn't raise anything as retries will kick in
             heart._bind_socket()
@@ -52,7 +52,7 @@ def test_port_bind_failure_recovery():
 
 def test_port_bind_failure_gives_up_retries():
     heart = Heartbeat(None)
-    with patch.object(heart, '_try_bind_socket') as mock_try_bind:
+    with patch.object(heart, "_try_bind_socket") as mock_try_bind:
         mock_try_bind.side_effect = zmq.ZMQError(errno.EADDRINUSE, "fails for non-bind")
         with pytest.raises(zmq.ZMQError):
             heart._bind_socket()

@@ -1,15 +1,13 @@
 """Test async/await integration"""
 
-from distutils.version import LooseVersion as V
 import sys
+from distutils.version import LooseVersion as V
 
-import pytest
 import IPython
+import pytest
 
-
-from .utils import execute, flush_channels, start_new_kernel, TIMEOUT
 from .test_message_spec import validate_message
-
+from .utils import TIMEOUT, execute, flush_channels, start_new_kernel
 
 KC = KM = None
 
@@ -24,7 +22,6 @@ def setup_function():
 def teardown_function():
     KC.stop_channels()
     KM.shutdown_kernel(now=True)
-
 
 
 def test_async_await():
@@ -46,9 +43,7 @@ def test_async_interrupt(asynclib, request):
     assert content["status"] == "ok", content
 
     flush_channels(KC)
-    msg_id = KC.execute(
-        f"print('begin'); import {asynclib}; await {asynclib}.sleep(5)"
-    )
+    msg_id = KC.execute(f"print('begin'); import {asynclib}; await {asynclib}.sleep(5)")
     busy = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(busy, "status", msg_id)
     assert busy["content"]["execution_state"] == "busy"

@@ -1,6 +1,8 @@
-from .test_embed_kernel import setup_kernel
-from flaky import flaky
 from textwrap import dedent
+
+from flaky import flaky
+
+from .test_embed_kernel import setup_kernel
 
 TIMEOUT = 15
 
@@ -18,10 +20,10 @@ def test_ipython_start_kernel_userns():
     with setup_kernel(cmd) as client:
         client.inspect("tre")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['found']
-        text = content['data']['text/plain']
-        assert '123' in text
+        content = msg["content"]
+        assert content["found"]
+        text = content["data"]["text/plain"]
+        assert "123" in text
 
         # user_module should be an instance of DummyMod
         client.execute("usermod = get_ipython().user_module")
@@ -30,10 +32,10 @@ def test_ipython_start_kernel_userns():
         assert content["status"] == "ok"
         client.inspect("usermod")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['found']
-        text = content['data']['text/plain']
-        assert 'DummyMod' in text
+        content = msg["content"]
+        assert content["found"]
+        text = content["data"]["text/plain"]
+        assert "DummyMod" in text
 
 
 @flaky(max_runs=3)
@@ -54,7 +56,7 @@ def test_ipython_start_kernel_no_userns():
         assert content["status"] == "ok"
         client.inspect("usermod")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['found']
-        text = content['data']['text/plain']
-        assert 'DummyMod' not in text
+        content = msg["content"]
+        assert content["found"]
+        text = content["data"]["text/plain"]
+        assert "DummyMod" not in text

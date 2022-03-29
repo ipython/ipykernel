@@ -1,7 +1,8 @@
 import sys
+
 import pytest
 
-from .utils import TIMEOUT, new_kernel, get_reply
+from .utils import TIMEOUT, get_reply, new_kernel
 
 seq = 0
 
@@ -64,9 +65,7 @@ def kernel_with_debug(kernel):
         yield kernel
     finally:
         # Detach
-        wait_for_debug_request(
-            kernel, "disconnect", {"restart": False, "terminateDebuggee": True}
-        )
+        wait_for_debug_request(kernel, "disconnect", {"restart": False, "terminateDebuggee": True})
 
 
 def test_debug_initialize(kernel):
@@ -156,7 +155,7 @@ f(2, 3)"""
 
     # Wait for stop on breakpoint
     msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
+    while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
         msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
     assert msg["content"]["body"]["reason"] == "breakpoint"
@@ -192,7 +191,7 @@ f(2, 3)"""
 
     # Wait for stop on breakpoint
     msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
+    while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
         msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
     assert msg["content"]["body"]["reason"] == "breakpoint"
@@ -227,7 +226,6 @@ def test_rich_inspect_at_breakpoint(kernel_with_debug):
 
 f(2, 3)"""
 
-
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
     source = r["body"]["sourcePath"]
 
@@ -249,16 +247,16 @@ f(2, 3)"""
 
     # Wait for stop on breakpoint
     msg = {"msg_type": "", "content": {}}
-    while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
+    while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
         msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
-    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})[
-        "body"
-    ]["stackFrames"]
+    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})["body"][
+        "stackFrames"
+    ]
 
-    scopes = wait_for_debug_request(
-        kernel_with_debug, "scopes", {"frameId": stacks[0]["id"]}
-    )["body"]["scopes"]
+    scopes = wait_for_debug_request(kernel_with_debug, "scopes", {"frameId": stacks[0]["id"]})[
+        "body"
+    ]["scopes"]
 
     locals_ = wait_for_debug_request(
         kernel_with_debug,
@@ -280,6 +278,7 @@ f(2, 3)"""
 
 
 def test_convert_to_long_pathname():
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         from ipykernel.compiler import _convert_to_long_pathname
+
         _convert_to_long_pathname(__file__)

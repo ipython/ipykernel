@@ -2,11 +2,10 @@
 
 import io
 
-import zmq
-
 import pytest
-
+import zmq
 from jupyter_client.session import Session
+
 from ipykernel.iostream import IOPubThread, OutStream
 
 
@@ -18,7 +17,7 @@ def test_io_api():
     thread = IOPubThread(pub)
     thread.start()
 
-    stream = OutStream(session, thread, 'stdout')
+    stream = OutStream(session, thread, "stdout")
 
     # cleanup unused zmq objects before we start testing
     thread.stop()
@@ -40,7 +39,8 @@ def test_io_api():
     with pytest.raises(io.UnsupportedOperation):
         stream.tell()
     with pytest.raises(TypeError):
-        stream.write(b'')
+        stream.write(b"")
+
 
 def test_io_isatty():
     session = Session()
@@ -49,5 +49,5 @@ def test_io_isatty():
     thread = IOPubThread(pub)
     thread.start()
 
-    stream = OutStream(session, thread, 'stdout', isatty=True)
+    stream = OutStream(session, thread, "stdout", isatty=True)
     assert stream.isatty()

@@ -5,11 +5,10 @@
 
 import json
 import sys
-from subprocess import Popen, PIPE
+from subprocess import PIPE, Popen
 
 import jupyter_client
 from jupyter_client import write_connection_file
-
 
 
 def get_connection_file(app=None):
@@ -21,13 +20,15 @@ def get_connection_file(app=None):
         If unspecified, the currently running app will be used
     """
     from traitlets.utils import filefind
+
     if app is None:
         from ipykernel.kernelapp import IPKernelApp
+
         if not IPKernelApp.initialized():
             raise RuntimeError("app not specified, and not in a running Kernel")
 
         app = IPKernelApp.instance()
-    return filefind(app.connection_file, ['.', app.connection_dir])
+    return filefind(app.connection_file, [".", app.connection_dir])
 
 
 def _find_connection_file(connection_file):
@@ -102,25 +103,25 @@ def connect_qtconsole(connection_file=None, argv=None):
 
     cf = _find_connection_file(connection_file)
 
-    cmd = ';'.join([
-        "from IPython.qt.console import qtconsoleapp",
-        "qtconsoleapp.main()"
-    ])
+    cmd = ";".join(["from IPython.qt.console import qtconsoleapp", "qtconsoleapp.main()"])
 
     kwargs = {}
     # Launch the Qt console in a separate session & process group, so
     # interrupting the kernel doesn't kill it.
-    kwargs['start_new_session'] = True
+    kwargs["start_new_session"] = True
 
-    return Popen([sys.executable, '-c', cmd, '--existing', cf] + argv,
-        stdout=PIPE, stderr=PIPE, close_fds=(sys.platform != 'win32'),
+    return Popen(
+        [sys.executable, "-c", cmd, "--existing", cf] + argv,
+        stdout=PIPE,
+        stderr=PIPE,
+        close_fds=(sys.platform != "win32"),
         **kwargs
     )
 
 
 __all__ = [
-    'write_connection_file',
-    'get_connection_file',
-    'get_connection_info',
-    'connect_qtconsole',
+    "write_connection_file",
+    "get_connection_file",
+    "get_connection_info",
+    "connect_qtconsole",
 ]

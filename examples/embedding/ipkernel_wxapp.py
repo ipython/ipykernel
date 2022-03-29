@@ -16,18 +16,18 @@ they will notice that their kernel died.
 
 Ref: Modified from wxPython source code wxPython/samples/simple/simple.py
 """
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 import sys
 
 import wx
-
 from internal_ipkernel import InternalIPKernel
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Functions and classes
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class MyFrame(wx.Frame, InternalIPKernel):
     """
@@ -36,8 +36,7 @@ class MyFrame(wx.Frame, InternalIPKernel):
     """
 
     def __init__(self, parent, title):
-        wx.Frame.__init__(self, parent, -1, title,
-                          pos=(150, 150), size=(350, 285))
+        wx.Frame.__init__(self, parent, -1, title, pos=(150, 150), size=(350, 285))
 
         # Create the menubar
         menuBar = wx.MenuBar()
@@ -86,7 +85,7 @@ class MyFrame(wx.Frame, InternalIPKernel):
         panel.Layout()
 
         # Start the IPython kernel with gui support
-        self.init_ipkernel('wx')
+        self.init_ipkernel("wx")
 
     def OnTimeToClose(self, evt):
         """Event handler for the button click."""
@@ -107,11 +106,12 @@ class MyApp(wx.App):
         self.ipkernel = frame.ipkernel
         return True
 
-#-----------------------------------------------------------------------------
-# Main script
-#-----------------------------------------------------------------------------
 
-if __name__ == '__main__':
+# -----------------------------------------------------------------------------
+# Main script
+# -----------------------------------------------------------------------------
+
+if __name__ == "__main__":
     app = MyApp(redirect=False, clearSigInt=False)
 
     # Very important, IPython-specific step: this gets GUI event loop

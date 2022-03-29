@@ -14,55 +14,54 @@ Upon exit, it should automatically close all consoles opened from the GUI.
 Consoles attached separately from a terminal will not be terminated, though
 they will notice that their kernel died.
 """
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
-
-from PyQt4 import Qt
+# -----------------------------------------------------------------------------
 
 from internal_ipkernel import InternalIPKernel
+from PyQt4 import Qt
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Functions and classes
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 class SimpleWindow(Qt.QWidget, InternalIPKernel):
-
     def __init__(self, app):
         Qt.QWidget.__init__(self)
         self.app = app
         self.add_widgets()
-        self.init_ipkernel('qt')
+        self.init_ipkernel("qt")
 
     def add_widgets(self):
         self.setGeometry(300, 300, 400, 70)
-        self.setWindowTitle('IPython in your app')
+        self.setWindowTitle("IPython in your app")
 
         # Add simple buttons:
-        console = Qt.QPushButton('Qt Console', self)
+        console = Qt.QPushButton("Qt Console", self)
         console.setGeometry(10, 10, 100, 35)
-        self.connect(console, Qt.SIGNAL('clicked()'), self.new_qt_console)
+        self.connect(console, Qt.SIGNAL("clicked()"), self.new_qt_console)
 
-        namespace = Qt.QPushButton('Namespace', self)
+        namespace = Qt.QPushButton("Namespace", self)
         namespace.setGeometry(120, 10, 100, 35)
-        self.connect(namespace, Qt.SIGNAL('clicked()'), self.print_namespace)
+        self.connect(namespace, Qt.SIGNAL("clicked()"), self.print_namespace)
 
-        count = Qt.QPushButton('Count++', self)
+        count = Qt.QPushButton("Count++", self)
         count.setGeometry(230, 10, 80, 35)
-        self.connect(count, Qt.SIGNAL('clicked()'), self.count)
+        self.connect(count, Qt.SIGNAL("clicked()"), self.count)
 
         # Quit and cleanup
-        quit = Qt.QPushButton('Quit', self)
+        quit = Qt.QPushButton("Quit", self)
         quit.setGeometry(320, 10, 60, 35)
-        self.connect(quit, Qt.SIGNAL('clicked()'), Qt.qApp, Qt.SLOT('quit()'))
+        self.connect(quit, Qt.SIGNAL("clicked()"), Qt.qApp, Qt.SLOT("quit()"))
 
-        self.app.connect(self.app, Qt.SIGNAL("lastWindowClosed()"),
-                         self.app, Qt.SLOT("quit()"))
+        self.app.connect(self.app, Qt.SIGNAL("lastWindowClosed()"), self.app, Qt.SLOT("quit()"))
 
         self.app.aboutToQuit.connect(self.cleanup_consoles)
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Main script
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     app = Qt.QApplication([])

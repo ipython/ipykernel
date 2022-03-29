@@ -5,7 +5,6 @@
 
 import atexit
 import os
-import platform
 import sys
 from contextlib import contextmanager
 from queue import Empty

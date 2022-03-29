@@ -19,7 +19,7 @@ def mpl_kernel(gui):
         [
             "python",
             "--matplotlib=%s" % gui,
-            #'--log-level=10'
+            #'--log-level=10'  # noqa
         ]
     )
     return kernel

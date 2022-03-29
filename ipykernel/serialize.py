@@ -189,7 +189,7 @@ def unpack_apply_message(bufs, g=None, copy=True):
     arg_bufs, kwarg_bufs = bufs[: info["narg_bufs"]], bufs[info["narg_bufs"] :]
 
     args = []
-    for i in range(info["nargs"]):
+    for _ in range(info["nargs"]):
         arg, arg_bufs = deserialize_object(arg_bufs, g)
         args.append(arg)
     args = tuple(args)

@@ -164,7 +164,7 @@ def test_embed_kernel_reentrant():
             "    embed_kernel()",
             "    count = count + 1",
             "",
-            "while True:" "    go()",
+            "while True:    go()",
             "",
         ]
     )

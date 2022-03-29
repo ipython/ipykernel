@@ -942,7 +942,7 @@ class Kernel(SingletonConfigurable):
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
-        if cpu_percent != None and cpu_percent != 0.0:
+        if cpu_percent is not None and cpu_percent != 0.0:
             reply_content["host_cpu_percent"] = cpu_percent
         reply_content["host_virtual_memory"] = dict(psutil.virtual_memory()._asdict())
         reply_msg = self.session.send(stream, "usage_reply", reply_content, parent, ident)
@@ -1083,7 +1083,7 @@ class Kernel(SingletonConfigurable):
         """Raise StdinNotImplementedError if active frontend doesn't support
         stdin."""
         raise StdinNotImplementedError(
-            "raw_input was called, but this " "frontend does not support stdin."
+            "raw_input was called, but this frontend does not support stdin."
         )
 
     def getpass(self, prompt="", stream=None):

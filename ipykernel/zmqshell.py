@@ -205,7 +205,7 @@ class KernelMagics(Magics):
     _find_edit_target = CodeMagics._find_edit_target
 
     @line_magic
-    def edit(self, parameter_s="", last_call=["", ""]):
+    def edit(self, parameter_s="", last_call=None):
         """Bring up an editor and execute the resulting code.
 
         Usage:
@@ -281,7 +281,7 @@ class KernelMagics(Magics):
 
         Note that %edit is also available through the alias %ed.
         """
-
+        last_call = last_call or ["", ""]
         opts, args = self.parse_options(parameter_s, "prn:")
 
         try:

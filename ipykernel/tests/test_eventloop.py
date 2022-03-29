@@ -1,7 +1,5 @@
 """Test eventloop integration"""
 
-import sys
-
 import pytest
 import tornado
 

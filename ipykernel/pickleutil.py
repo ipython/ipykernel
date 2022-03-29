@@ -118,7 +118,7 @@ def use_cloudpickle():
 
 
 class CannedObject:
-    def __init__(self, obj, keys=[], hook=None):
+    def __init__(self, obj, keys=None, hook=None):
         """can an object for safe pickling
 
         Parameters
@@ -136,7 +136,7 @@ class CannedObject:
         large data may be offloaded into the buffers list,
         used for zero-copy transfers.
         """
-        self.keys = keys
+        self.keys = keys or []
         self.obj = copy.copy(obj)
         self.hook = can(hook)
         for key in keys:
@@ -326,7 +326,7 @@ def _import_mapping(mapping, original=None):
     """import any string-keys in a type mapping"""
     log = get_logger()
     log.debug("Importing canning map")
-    for key, value in list(mapping.items()):
+    for key, _ in list(mapping.items()):
         if isinstance(key, str):
             try:
                 cls = import_item(key)

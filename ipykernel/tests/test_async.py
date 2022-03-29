@@ -1,9 +1,5 @@
 """Test async/await integration"""
 
-import sys
-from distutils.version import LooseVersion as V
-
-import IPython
 import pytest
 
 from .test_message_spec import validate_message

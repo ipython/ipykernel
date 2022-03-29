@@ -128,12 +128,12 @@ def loop_qt5(kernel):
     """Start a kernel with PyQt5 event loop integration."""
     if os.environ.get("QT_API", None) is None:
         try:
-            import PyQt5
+            import PyQt5  # noqa
 
             os.environ["QT_API"] = "pyqt5"
         except ImportError:
             try:
-                import PySide2
+                import PySide2  # noqa
 
                 os.environ["QT_API"] = "pyside2"
             except ImportError:

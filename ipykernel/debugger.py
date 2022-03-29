@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-import threading
 
 import zmq
 from IPython.core.getipython import get_ipython

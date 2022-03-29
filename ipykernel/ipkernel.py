@@ -307,9 +307,10 @@ class IPythonKernel(KernelBase):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
         else:
-            should_run_async = lambda cell: False
+            should_run_async = lambda cell: False  # noqa
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
+
             async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
 

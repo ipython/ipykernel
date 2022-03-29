@@ -336,7 +336,7 @@ def test_message_order():
         cell = "a += 1\na"
         msg_ids = []
         # submit N executions as fast as we can
-        for i in range(N):
+        for _ in range(N):
             msg_ids.append(kc.execute(cell))
         # check message-handling order
         for i, msg_id in enumerate(msg_ids, offset):
@@ -388,7 +388,7 @@ def test_shutdown():
         execute("a = 1", kc=kc)
         wait_for_idle(kc)
         kc.shutdown()
-        for i in range(300):  # 30s timeout
+        for _ in range(300):  # 30s timeout
             if km.is_alive():
                 time.sleep(0.1)
             else:
@@ -482,7 +482,7 @@ def test_control_thread_priority():
 
         # now send N control messages
         control_msg_ids = []
-        for i in range(N):
+        for _ in range(N):
             msg = kc.session.msg("kernel_info_request", {})
             kc.control_channel.send(msg)
             control_msg_ids.append(msg["header"]["msg_id"])
@@ -557,7 +557,7 @@ def test_shutdown_subprocesses():
         wait_for_idle(kc)
 
         kc.shutdown()
-        for i in range(300):  # 30s timeout
+        for _ in range(300):  # 30s timeout
             if km.is_alive():
                 time.sleep(0.1)
             else:

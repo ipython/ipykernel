@@ -35,7 +35,7 @@ class DummyKernelApp(IPKernelApp):
     def _default_shell_port(self):
         return 0
 
-    def initialize(self, argv=[]):
+    def initialize(self, argv=None):
         self.init_profile_dir()
         self.init_connection_file()
 

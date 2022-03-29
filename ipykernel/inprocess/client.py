@@ -99,7 +99,7 @@ class InProcessKernelClient(KernelClient):
     # -------------------------------------
 
     def execute(
-        self, code, silent=False, store_history=True, user_expressions={}, allow_stdin=None
+        self, code, silent=False, store_history=True, user_expressions=None, allow_stdin=None
     ):
         if allow_stdin is None:
             allow_stdin = self.allow_stdin
@@ -107,7 +107,7 @@ class InProcessKernelClient(KernelClient):
             code=code,
             silent=silent,
             store_history=store_history,
-            user_expressions=user_expressions,
+            user_expressions=user_expressions or {},
             allow_stdin=allow_stdin,
         )
         msg = self.session.msg("execute_request", content)

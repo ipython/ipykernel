@@ -528,7 +528,7 @@ def test_single_payload():
     """
     flush_channels()
     msg_id, reply = execute(
-        code="ip = get_ipython()\n" "for i in range(3):\n" "   ip.set_next_input('Hello There')\n"
+        code="ip = get_ipython()\nfor i in range(3):\n   ip.set_next_input('Hello There')\n"
     )
     payload = reply["payload"]
     next_input_pls = [pl for pl in payload if pl["source"] == "set_next_input"]

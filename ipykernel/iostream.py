@@ -12,7 +12,6 @@ import traceback
 import warnings
 from binascii import b2a_hex
 from collections import deque
-from imp import lock_held as import_lock_held
 from io import StringIO, TextIOBase
 from weakref import WeakSet
 
@@ -122,7 +121,7 @@ class IOPubThread:
         # freeze event count so new writes don't extend the queue
         # while we are processing
         n_events = len(self._events)
-        for i in range(n_events):
+        for _ in range(n_events):
             event_f = self._events.popleft()
             event_f()
 
@@ -475,16 +474,13 @@ class OutStream(TextIOBase):
             # request flush on the background thread
             self.pub_thread.schedule(self._flush)
             # wait for flush to actually get through, if we can.
-            # waiting across threads during import can cause deadlocks
-            # so only wait if import lock is not held
-            if not import_lock_held():
-                evt = threading.Event()
-                self.pub_thread.schedule(evt.set)
-                # and give a timeout to avoid
-                if not evt.wait(self.flush_timeout):
-                    # write directly to __stderr__ instead of warning because
-                    # if this is happening sys.stderr may be the problem.
-                    print("IOStream.flush timed out", file=sys.__stderr__)
+            evt = threading.Event()
+            self.pub_thread.schedule(evt.set)
+            # and give a timeout to avoid
+            if not evt.wait(self.flush_timeout):
+                # write directly to __stderr__ instead of warning because
+                # if this is happening sys.stderr may be the problem.
+                print("IOStream.flush timed out", file=sys.__stderr__)
         else:
             self._flush()
 

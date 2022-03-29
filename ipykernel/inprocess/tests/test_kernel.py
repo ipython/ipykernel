@@ -64,7 +64,7 @@ class InProcessKernelTestCase(unittest.TestCase):
 
     def test_pylab(self):
         """Does %pylab work in the in-process kernel?"""
-        matplotlib = pytest.importorskip("matplotlib", reason="This test requires matplotlib")
+        _ = pytest.importorskip("matplotlib", reason="This test requires matplotlib")
         kc = self.kc
         kc.execute("%pylab")
         out, err = assemble_output(kc.get_iopub_msg)

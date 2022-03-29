@@ -49,12 +49,3 @@ repos:
     rev: v8.12.0
     hooks:
       - id: eslint
-
-  - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.14.1
-    hooks:
-      - id: check-jsonschema
-        name: "Check GitHub Workflows"
-        files: ^\.github/workflows/
-        types: [yaml]
-        args: ["--schemafile", "https://json.schemastore.org/github-workflow"]

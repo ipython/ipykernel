@@ -19,12 +19,13 @@ from .compiler import get_file_name, get_tmp_directory, get_tmp_hash_seed
 
 try:
     # This import is required to have the next ones working...
-    from _pydevd_bundle import pydevd_frame_utils
-    from _pydevd_bundle.pydevd_suspended_frames import (
+    from debugpy.server import api  # noqa
+
+    from _pydevd_bundle import pydevd_frame_utils  # isort: skip
+    from _pydevd_bundle.pydevd_suspended_frames import (  # isort: skip
         SuspendedFramesManager,
         _FramesTracker,
     )
-    from debugpy.server import api  # noqa
 
     _is_debugpy_available = True
 except ImportError:

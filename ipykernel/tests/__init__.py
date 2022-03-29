@@ -29,7 +29,7 @@ def setup():
     ]
     for p in patchers:
         p.start()
-    
+
     # install IPython in the temp home:
     install(user=True)
 

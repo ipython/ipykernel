@@ -153,7 +153,7 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
-    
+
     # Wait for stop on breakpoint
     msg = {"msg_type": "", "content": {}}
     while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":
@@ -189,7 +189,7 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
-    
+
     # Wait for stop on breakpoint
     msg = {"msg_type": "", "content": {}}
     while msg.get('msg_type') != 'debug_event' or msg["content"].get("event") != "stopped":

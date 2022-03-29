@@ -68,7 +68,7 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
     """
     if path is None:
         path = os.path.join(tempfile.mkdtemp(suffix='_kernels'), KERNEL_NAME)
-    
+
     # stage resources
     shutil.copytree(RESOURCES, path)
 
@@ -84,7 +84,7 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
         kernel_dict.update(overrides)
     with open(pjoin(path, 'kernel.json'), 'w') as f:
         json.dump(kernel_dict, f, indent=1)
-    
+
     return path
 
 
@@ -152,12 +152,12 @@ from traitlets.config import Application
 class InstallIPythonKernelSpecApp(Application):
     """Dummy app wrapping argparse"""
     name = 'ipython-kernel-install'
-    
+
     def initialize(self, argv=None):
         if argv is None:
             argv = sys.argv[1:]
         self.argv = argv
-    
+
     def start(self):
         import argparse
         parser = argparse.ArgumentParser(prog=self.name,

@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # Create our window
     win = SimpleWindow(app)
     win.show()
-    
+
     # Very important, IPython-specific step: this gets GUI event loop
     # integration going, and it replaces calling app.exec_()
     win.ipkernel.start()

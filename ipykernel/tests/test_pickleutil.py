@@ -17,7 +17,7 @@ def test_no_closure():
     def foo():
         a = 5
         return a
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     assert foo() == bar()
@@ -29,7 +29,7 @@ def test_generator_closure():
         i = 'i'
         r = [ i for j in (1,2) ]
         return r
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     assert foo() == bar()
@@ -41,7 +41,7 @@ def test_nested_closure():
         def g():
             return i
         return g()
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     assert foo() == bar()
@@ -51,7 +51,7 @@ def test_closure():
     @interactive
     def foo():
         return i
-    
+
     pfoo = dumps(foo)
     bar = loads(pfoo)
     assert foo() == bar()

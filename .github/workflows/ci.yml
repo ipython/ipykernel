@@ -14,6 +14,30 @@ defaults:
     shell: bash
 
 jobs:
+  # Run "pre-commit run --all-files"
+  pre-commit:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 2
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      # ref: https://github.com/pre-commit/action
+      - uses: pre-commit/action@v2.0.0
+      - name: Help message if pre-commit fail
+        if: ${{ failure() }}
+        run: |
+          echo "You can install pre-commit hooks to automatically run formatting"
+          echo "on each commit with:"
+          echo "    pre-commit install"
+          echo "or you can run by hand on staged files with"
+          echo "    pre-commit run"
+          echo "or after-the-fact on already committed files with"
+          echo "    pre-commit run --all-files"
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -29,53 +53,53 @@ jobs:
           - os: macos-latest
             python-version: "3.8"
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Base Setup
-      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-    - name: Install the Python dependencies
-      run: |
-        pip install .[test] codecov
+      - name: Install the Python dependencies
+        run: |
+          pip install .[test] codecov
 
-    - name: Install matplotlib
-      if: ${{ !startsWith(matrix.os, 'macos') && !startsWith(matrix.python-version, 'pypy') }}
-      run: |
-        pip install matplotlib || echo 'failed to install matplotlib'
+      - name: Install matplotlib
+        if: ${{ !startsWith(matrix.os, 'macos') && !startsWith(matrix.python-version, 'pypy') }}
+        run: |
+          pip install matplotlib || echo 'failed to install matplotlib'
 
-    - name: Install alternate event loops
-      if: ${{ !startsWith(matrix.os, 'windows') }}
-      run: |
-        pip install curio || echo 'ignoring curio install failure'
-        pip install trio || echo 'ignoring trio install failure'
+      - name: Install alternate event loops
+        if: ${{ !startsWith(matrix.os, 'windows') }}
+        run: |
+          pip install curio || echo 'ignoring curio install failure'
+          pip install trio || echo 'ignoring trio install failure'
 
-    - name: List installed packages
-      run: |
-        pip uninstall pipx -y
-        pip install pipdeptree
-        pipdeptree 
-        pipdeptree --reverse 
-        pip freeze
-        pip check
+      - name: List installed packages
+        run: |
+          pip uninstall pipx -y
+          pip install pipdeptree
+          pipdeptree
+          pipdeptree --reverse
+          pip freeze
+          pip check
 
-    - name: Run the tests
-      timeout-minutes: 15
-      if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
-      run: |
-        cmd="python -m pytest -vv -raXs --cov ipykernel --cov-branch --cov-report term-missing:skip-covered --durations 10 --color=yes"
-        $cmd || $cmd --lf
+      - name: Run the tests
+        timeout-minutes: 15
+        if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
+        run: |
+          cmd="python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered"
+          $cmd || $cmd --lf
 
-    - name: Run the tests on pypy and windows
-      timeout-minutes: 15
-      if: ${{ startsWith( matrix.python-version, 'pypy' ) || startsWith(matrix.os, 'windows') }}
-      run: |
-        cmd="python -m pytest -vv -raXs --durations 10 --color=yes"
-        $cmd || $cmd --lf
+      - name: Run the tests on pypy and windows
+        timeout-minutes: 15
+        if: ${{ startsWith( matrix.python-version, 'pypy' ) || startsWith(matrix.os, 'windows') }}
+        run: |
+          cmd="python -m pytest -vv"
+          $cmd || $cmd --lf
 
-    - name: Coverage
-      run: |
-        codecov
+      - name: Coverage
+        run: |
+          codecov
 
   test_docs:
     runs-on: ${{ matrix.os }}
@@ -83,60 +107,60 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [ '3.9' ]
+        python-version: ["3.9"]
         exclude:
-        - os: windows-latest
-          python-version: pypy-3.7
+          - os: windows-latest
+            python-version: pypy-3.7
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Base Setup
-      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-    - name: Build the docs
-      run: |
-        cd docs
-        pip install -r requirements.txt
-        make html SPHINXOPTS="-W"
+      - name: Build the docs
+        run: |
+          cd docs
+          pip install -r requirements.txt
+          make html SPHINXOPTS="-W"
 
-    - name: Install the Python dependencies
-      run: |
-        pip install  .
-        pip install velin
+      - name: Install the Python dependencies
+        run: |
+          pip install  .
+          pip install velin
 
-    - name: Check Docstrings
-      run: |
-        velin . --check --compact
+      - name: Check Docstrings
+        run: |
+          velin . --check --compact
 
   test_without_debugpy:
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu]
-        python-version: [ '3.9' ]
+        os: [ubuntu-latest]
+        python-version: ["3.9"]
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Base Setup
-      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-    - name: Install the Python dependencies without debugpy
-      run: |
-        pip install .[test]
-        pip uninstall --yes debugpy
+      - name: Install the Python dependencies without debugpy
+        run: |
+          pip install .[test]
+          pip uninstall --yes debugpy
 
-    - name: List installed packages
-      run: |
-        pip freeze
+      - name: List installed packages
+        run: |
+          pip freeze
 
-    - name: Run the tests
-      timeout-minutes: 10
-      run: |
-        cmd="python -m pytest -vv -raXxs --durations 10 --color=yes"
-        $cmd || $cmd --lf
+      - name: Run the tests
+        timeout-minutes: 10
+        run: |
+          cmd="python -m pytest -vv -raXxs"
+          $cmd || $cmd --lf
 
   test_miniumum_versions:
     name: Test Minimum Versions
@@ -152,7 +176,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
       - name: Run the unit tests
         run: |
-          cmd="python -m pytest -vv -raXxs --durations 10 --color=yes"
+          cmd="python -m pytest -vv -raXxs"
           $cmd || $cmd --lf
 
   test_prereleases:
@@ -173,7 +197,7 @@ jobs:
           pip check
       - name: Run the tests
         run: |
-          cmd="python -m pytest -vv -raXs --durations 10 --color=yes"
+          cmd="python -m pytest -vv"
           $cmd || $cmd --lf
 
   make_sdist:
@@ -214,5 +238,5 @@ jobs:
       - name: Run Test
         run: |
           cd sdist/test
-          cmd="python -m pytest -vv -raXs --durations 10 --color=yes"
+          cmd="python -m pytest -vv"
           $cmd || $cmd --lf

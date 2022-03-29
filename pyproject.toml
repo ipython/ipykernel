@@ -28,3 +28,12 @@ tag_template = "v{new_version}"
 
 [[tool.tbump.file]]
 src = "ipykernel/_version.py"
+
+[tool.pytest.ini_options]
+addopts = "-raXs --durations 10 --color=yes --doctest-modules"
+testpaths = [
+    "ipykernel/tests/"
+]
+timeout = 300
+# Restore this setting to debug failures
+# timeout_method = "thread"

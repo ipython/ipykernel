@@ -1,31 +1,33 @@
 """GUI support for the IPython ZeroMQ kernel - GTK toolkit support.
 """
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 #  Copyright (C) 2010-2011  The IPython Development Team
 #
 #  Distributed under the terms of the BSD License.  The full license is in
 #  the file COPYING.txt, distributed as part of this software.
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # stdlib
 import sys
 
 # Third-party
 import gi
-gi.require_version ('Gdk', '3.0')
-gi.require_version ('Gtk', '3.0')
+
+gi.require_version("Gdk", "3.0")
+gi.require_version("Gtk", "3.0")
 from gi.repository import GObject, Gtk
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Classes and functions
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class GTKEmbed:
-    """A class to embed a kernel into the GTK main event loop.
-    """
+    """A class to embed a kernel into the GTK main event loop."""
+
     def __init__(self, kernel):
         self.kernel = kernel
         # These two will later store the real gtk functions when we hijack them
@@ -33,8 +35,7 @@ class GTKEmbed:
         self.gtk_main_quit = None
 
     def start(self):
-        """Starts the GTK main event loop and sets our kernel startup routine.
-        """
+        """Starts the GTK main event loop and sets our kernel startup routine."""
         # Register our function to initiate the kernel and start gtk
         GObject.idle_add(self._wire_kernel)
         Gtk.main()
@@ -46,8 +47,7 @@ class GTKEmbed:
         returns False to ensure it doesn't get run again by GTK.
         """
         self.gtk_main, self.gtk_main_quit = self._hijack_gtk()
-        GObject.timeout_add(int(1000*self.kernel._poll_interval),
-                            self.iterate_kernel)
+        GObject.timeout_add(int(1000 * self.kernel._poll_interval), self.iterate_kernel)
         return False
 
     def iterate_kernel(self):
@@ -80,8 +80,10 @@ class GTKEmbed:
         - Gtk.main
         - Gtk.main_quit
         """
+
         def dummy(*args, **kw):
             pass
+
         # save and trap main and main_quit from gtk
         orig_main, Gtk.main = Gtk.main, dummy
         orig_main_quit, Gtk.main_quit = Gtk.main_quit, dummy

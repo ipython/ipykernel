@@ -1,20 +1,18 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from io import StringIO
 import sys
 import unittest
+from io import StringIO
 
 import pytest
-
 import tornado
-
-from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
-from ipykernel.inprocess.manager import InProcessKernelManager
-from ipykernel.inprocess.ipkernel import InProcessKernel
-from ipykernel.tests.utils import assemble_output
 from IPython.utils.io import capture_output
 
+from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
+from ipykernel.inprocess.ipkernel import InProcessKernel
+from ipykernel.inprocess.manager import InProcessKernelManager
+from ipykernel.tests.utils import assemble_output
 
 
 def _init_asyncio_patch():
@@ -33,8 +31,13 @@ def _init_asyncio_patch():
     FIXME: if/when tornado supports the defaults in asyncio,
            remove and bump tornado requirement for py38
     """
-    if sys.platform.startswith("win") and sys.version_info >= (3, 8) and tornado.version_info < (6, 1):
+    if (
+        sys.platform.startswith("win")
+        and sys.version_info >= (3, 8)
+        and tornado.version_info < (6, 1)
+    ):
         import asyncio
+
         try:
             from asyncio import (
                 WindowsProactorEventLoopPolicy,
@@ -51,7 +54,6 @@ def _init_asyncio_patch():
 
 
 class InProcessKernelTestCase(unittest.TestCase):
-
     def setUp(self):
         _init_asyncio_patch()
         self.km = InProcessKernelManager()
@@ -62,46 +64,39 @@ class InProcessKernelTestCase(unittest.TestCase):
 
     def test_pylab(self):
         """Does %pylab work in the in-process kernel?"""
-        matplotlib = pytest.importorskip('matplotlib', reason='This test requires matplotlib')
+        matplotlib = pytest.importorskip("matplotlib", reason="This test requires matplotlib")
         kc = self.kc
-        kc.execute('%pylab')
+        kc.execute("%pylab")
         out, err = assemble_output(kc.get_iopub_msg)
-        self.assertIn('matplotlib', out)
+        self.assertIn("matplotlib", out)
 
     def test_raw_input(self):
-        """ Does the in-process kernel handle raw_input correctly?
-        """
-        io = StringIO('foobar\n')
+        """Does the in-process kernel handle raw_input correctly?"""
+        io = StringIO("foobar\n")
         sys_stdin = sys.stdin
         sys.stdin = io
         try:
-            self.kc.execute('x = input()')
+            self.kc.execute("x = input()")
         finally:
             sys.stdin = sys_stdin
-        assert self.km.kernel.shell.user_ns.get('x') == 'foobar'
+        assert self.km.kernel.shell.user_ns.get("x") == "foobar"
 
-    @pytest.mark.skipif(
-        '__pypy__' in sys.builtin_module_names,
-        reason="fails on pypy"
-    )
+    @pytest.mark.skipif("__pypy__" in sys.builtin_module_names, reason="fails on pypy")
     def test_stdout(self):
-        """ Does the in-process kernel correctly capture IO?
-        """
+        """Does the in-process kernel correctly capture IO?"""
         kernel = InProcessKernel()
 
         with capture_output() as io:
             kernel.shell.run_cell('print("foo")')
-        assert io.stdout == 'foo\n'
+        assert io.stdout == "foo\n"
 
         kc = BlockingInProcessKernelClient(kernel=kernel, session=kernel.session)
         kernel.frontends.append(kc)
         kc.execute('print("bar")')
         out, err = assemble_output(kc.get_iopub_msg)
-        assert out == 'bar\n'
+        assert out == "bar\n"
 
-    @pytest.mark.skip(
-        reason="Currently don't capture during test as pytest does its own capturing"
-    )
+    @pytest.mark.skip(reason="Currently don't capture during test as pytest does its own capturing")
     def test_capfd(self):
         """Does correctly capture fd"""
         kernel = InProcessKernel()
@@ -121,6 +116,6 @@ class InProcessKernelTestCase(unittest.TestCase):
         "Tests that kernel getpass accept the stream parameter"
         kernel = InProcessKernel()
         kernel._allow_stdin = True
-        kernel._input_request = lambda *args, **kwargs : None
+        kernel._input_request = lambda *args, **kwargs: None
 
-        kernel.getpass(stream='non empty')
+        kernel.getpass(stream="non empty")

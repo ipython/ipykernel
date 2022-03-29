@@ -24,8 +24,6 @@ else:
     SIGKILL = "windown-SIGKILL-sentinel"
 
 
-
-
 try:
     # jupyter_client >= 5, use tz-aware now
     from jupyter_client.session import utcnow as now
@@ -39,8 +37,19 @@ from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
 from tornado import ioloop
 from tornado.queues import Queue, QueueEmpty
-from traitlets import (Any, Bool, Dict, Float, Instance, Integer, List, Set,
-                       Unicode, default, observe)
+from traitlets import (
+    Any,
+    Bool,
+    Dict,
+    Float,
+    Instance,
+    Integer,
+    List,
+    Set,
+    Unicode,
+    default,
+    observe,
+)
 from traitlets.config.configurable import SingletonConfigurable
 from zmq.eventloop.zmqstream import ZMQStream
 
@@ -51,14 +60,14 @@ from ._version import kernel_protocol_version
 
 class Kernel(SingletonConfigurable):
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Kernel interface
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     # attribute to override with a GUI
     eventloop = Any(None)
 
-    @observe('eventloop')
+    @observe("eventloop")
     def _update_eventloop(self, change):
         """schedule call to eventloop from IOLoop"""
         loop = ioloop.IOLoop.current()
@@ -66,7 +75,7 @@ class Kernel(SingletonConfigurable):
             loop.add_callback(self.enter_eventloop)
 
     session = Instance(Session, allow_none=True)
-    profile_dir = Instance('IPython.core.profiledir.ProfileDir', allow_none=True)
+    profile_dir = Instance("IPython.core.profiledir.ProfileDir", allow_none=True)
     shell_stream = Instance(ZMQStream, allow_none=True)
 
     shell_streams = List(
@@ -119,7 +128,7 @@ class Kernel(SingletonConfigurable):
     int_id = Integer(-1)
     ident = Unicode()
 
-    @default('ident')
+    @default("ident")
     def _default_ident(self):
         return str(uuid.uuid4())
 
@@ -133,25 +142,27 @@ class Kernel(SingletonConfigurable):
     # Experimental option to break in non-user code.
     # The ipykernel source is in the call stack, so the user
     # has to manipulate the step-over and step-into in a wize way.
-    debug_just_my_code = Bool(True,
+    debug_just_my_code = Bool(
+        True,
         help="""Set to False if you want to debug python standard and dependent libraries.
-        """
+        """,
     ).tag(config=True)
 
     # track associations with current request
     # Private interface
 
-    _darwin_app_nap = Bool(True,
+    _darwin_app_nap = Bool(
+        True,
         help="""Whether to use appnope for compatibility with OS X App Nap.
 
         Only affects OS X >= 10.9.
-        """
+        """,
     ).tag(config=True)
 
     # track associations with current request
     _allow_stdin = Bool(False)
     _parents = Dict({"shell": {}, "control": {}})
-    _parent_ident = Dict({'shell': b'', 'control': b''})
+    _parent_ident = Dict({"shell": b"", "control": b""})
 
     @property
     def _parent_header(self):
@@ -189,7 +200,7 @@ class Kernel(SingletonConfigurable):
         causing significant delays,
         which can manifest as e.g. "Run all" in a notebook
         aborting some, but not all, messages after an error.
-        """
+        """,
     )
 
     # If the shutdown was requested over the network, we leave here the
@@ -211,16 +222,26 @@ class Kernel(SingletonConfigurable):
     execution_count = 0
 
     msg_types = [
-        'execute_request', 'complete_request',
-        'inspect_request', 'history_request',
-        'comm_info_request', 'kernel_info_request',
-        'connect_request', 'shutdown_request',
-        'is_complete_request', 'interrupt_request',
+        "execute_request",
+        "complete_request",
+        "inspect_request",
+        "history_request",
+        "comm_info_request",
+        "kernel_info_request",
+        "connect_request",
+        "shutdown_request",
+        "is_complete_request",
+        "interrupt_request",
         # deprecated:
-        'apply_request',
+        "apply_request",
     ]
     # add deprecated ipyparallel control messages
-    control_msg_types = msg_types + ['clear_request', 'abort_request', 'debug_request', 'usage_request']
+    control_msg_types = msg_types + [
+        "clear_request",
+        "abort_request",
+        "debug_request",
+        "usage_request",
+    ]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -281,11 +302,11 @@ class Kernel(SingletonConfigurable):
         self.log.debug("Control received: %s", msg)
 
         # Set the parent message for side effects.
-        self.set_parent(idents, msg, channel='control')
-        self._publish_status('busy', 'control')
+        self.set_parent(idents, msg, channel="control")
+        self._publish_status("busy", "control")
 
-        header = msg['header']
-        msg_type = header['msg_type']
+        header = msg["header"]
+        msg_type = header["msg_type"]
 
         handler = self.control_handlers.get(msg_type, None)
         if handler is None:
@@ -300,7 +321,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status('idle', 'control')
+        self._publish_status("idle", "control")
         # flush to ensure reply is sent
         self.control_stream.flush(zmq.POLLOUT)
 
@@ -309,7 +330,7 @@ class Kernel(SingletonConfigurable):
 
         Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
         """
-        msg_id = msg['header']['msg_id']
+        msg_id = msg["header"]["msg_id"]
         if msg_id in self.aborted:
             # is it safe to assume a msg_id will not be resubmitted?
             self.aborted.remove(msg_id)
@@ -331,15 +352,15 @@ class Kernel(SingletonConfigurable):
             return
 
         # Set the parent message for side effects.
-        self.set_parent(idents, msg, channel='shell')
-        self._publish_status('busy', 'shell')
+        self.set_parent(idents, msg, channel="shell")
+        self._publish_status("busy", "shell")
 
-        msg_type = msg['header']['msg_type']
+        msg_type = msg["header"]["msg_type"]
 
         # Only abort execute requests
-        if self._aborting and msg_type == 'execute_request':
+        if self._aborting and msg_type == "execute_request":
             self._send_abort_reply(self.shell_stream, msg, idents)
-            self._publish_status('idle', 'shell')
+            self._publish_status("idle", "shell")
             # flush to ensure reply is sent before
             # handling the next request
             self.shell_stream.flush(zmq.POLLOUT)
@@ -348,8 +369,8 @@ class Kernel(SingletonConfigurable):
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each
         # handler prints its message at the end.
-        self.log.debug('\n*** MESSAGE TYPE:%s***', msg_type)
-        self.log.debug('   Content: %s\n   --->\n   ', msg['content'])
+        self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
+        self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
         if not self.should_handle(self.shell_stream, msg, idents):
             return
@@ -380,7 +401,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status('idle', 'shell')
+        self._publish_status("idle", "shell")
         # flush to ensure reply is sent before
         # handling the next request
         self.shell_stream.flush(zmq.POLLOUT)
@@ -478,7 +499,8 @@ class Kernel(SingletonConfigurable):
         help="""Monotonic counter of messages
         """,
     )
-    @default('_message_counter')
+
+    @default("_message_counter")
     def _message_counter_default(self):
         return itertools.count()
 
@@ -520,8 +542,7 @@ class Kernel(SingletonConfigurable):
         )
 
         # publish idle status
-        self._publish_status('starting', 'shell')
-
+        self._publish_status("starting", "shell")
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.
@@ -531,16 +552,19 @@ class Kernel(SingletonConfigurable):
         """
         self._recorded_ports = ports
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Kernel request handlers
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     def _publish_execute_input(self, code, parent, execution_count):
         """Publish the code request on the iopub stream."""
 
-        self.session.send(self.iopub_socket, 'execute_input',
-                          {'code':code, 'execution_count': execution_count},
-                          parent=parent, ident=self._topic('execute_input')
+        self.session.send(
+            self.iopub_socket,
+            "execute_input",
+            {"code": code, "execution_count": execution_count},
+            parent=parent,
+            ident=self._topic("execute_input"),
         )
 
     def _publish_status(self, status, channel, parent=None):
@@ -562,7 +586,7 @@ class Kernel(SingletonConfigurable):
             ident=self._topic("debug_event"),
         )
 
-    def set_parent(self, ident, parent, channel='shell'):
+    def set_parent(self, ident, parent, channel="shell"):
         """Set the current parent request
 
         Side effects (IOPub messages) and replies are associated with
@@ -591,8 +615,18 @@ class Kernel(SingletonConfigurable):
         """
         return self._parents.get(channel, {})
 
-    def send_response(self, stream, msg_or_type, content=None, ident=None,
-             buffers=None, track=False, header=None, metadata=None, channel='shell'):
+    def send_response(
+        self,
+        stream,
+        msg_or_type,
+        content=None,
+        ident=None,
+        buffers=None,
+        track=False,
+        header=None,
+        metadata=None,
+        channel="shell",
+    ):
         """Send a response to the message we're currently processing.
 
         This accepts all the parameters of :meth:`jupyter_client.session.Session.send`
@@ -621,7 +655,7 @@ class Kernel(SingletonConfigurable):
         # FIXME: `started` is part of ipyparallel
         # Remove for ipykernel 5.0
         return {
-            'started': now(),
+            "started": now(),
         }
 
     def finish_metadata(self, parent, metadata, reply_content):
@@ -635,18 +669,18 @@ class Kernel(SingletonConfigurable):
         """handle an execute_request"""
 
         try:
-            content = parent['content']
-            code = content['code']
-            silent = content['silent']
-            store_history = content.get('store_history', not silent)
-            user_expressions = content.get('user_expressions', {})
-            allow_stdin = content.get('allow_stdin', False)
+            content = parent["content"]
+            code = content["code"]
+            silent = content["silent"]
+            store_history = content.get("store_history", not silent)
+            user_expressions = content.get("user_expressions", {})
+            allow_stdin = content.get("allow_stdin", False)
         except Exception:
             self.log.error("Got bad msg: ")
             self.log.error("%s", parent)
             return
 
-        stop_on_error = content.get('stop_on_error', True)
+        stop_on_error = content.get("stop_on_error", True)
 
         metadata = self.init_metadata(parent)
 
@@ -657,8 +691,11 @@ class Kernel(SingletonConfigurable):
             self._publish_execute_input(code, parent, self.execution_count)
 
         reply_content = self.do_execute(
-            code, silent, store_history,
-            user_expressions, allow_stdin,
+            code,
+            silent,
+            store_history,
+            user_expressions,
+            allow_stdin,
         )
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
@@ -676,25 +713,25 @@ class Kernel(SingletonConfigurable):
         reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
-        reply_msg = self.session.send(stream, 'execute_reply',
-                                      reply_content, parent, metadata=metadata,
-                                      ident=ident)
+        reply_msg = self.session.send(
+            stream, "execute_reply", reply_content, parent, metadata=metadata, ident=ident
+        )
 
         self.log.debug("%s", reply_msg)
 
-        if not silent and reply_msg['content']['status'] == 'error' and stop_on_error:
+        if not silent and reply_msg["content"]["status"] == "error" and stop_on_error:
             self._abort_queues()
 
-    def do_execute(self, code, silent, store_history=True,
-                   user_expressions=None, allow_stdin=False):
-        """Execute user code. Must be overridden by subclasses.
-        """
+    def do_execute(
+        self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
+    ):
+        """Execute user code. Must be overridden by subclasses."""
         raise NotImplementedError
 
     async def complete_request(self, stream, ident, parent):
-        content = parent['content']
-        code = content['code']
-        cursor_pos = content['cursor_pos']
+        content = parent["content"]
+        code = content["code"]
+        cursor_pos = content["cursor_pos"]
 
         matches = self.do_complete(code, cursor_pos)
         if inspect.isawaitable(matches):
@@ -704,88 +741,94 @@ class Kernel(SingletonConfigurable):
         self.session.send(stream, "complete_reply", matches, parent, ident)
 
     def do_complete(self, code, cursor_pos):
-        """Override in subclasses to find completions.
-        """
-        return {'matches' : [],
-                'cursor_end' : cursor_pos,
-                'cursor_start' : cursor_pos,
-                'metadata' : {},
-                'status' : 'ok'}
+        """Override in subclasses to find completions."""
+        return {
+            "matches": [],
+            "cursor_end": cursor_pos,
+            "cursor_start": cursor_pos,
+            "metadata": {},
+            "status": "ok",
+        }
 
     async def inspect_request(self, stream, ident, parent):
-        content = parent['content']
+        content = parent["content"]
 
         reply_content = self.do_inspect(
-            content['code'], content['cursor_pos'],
-            content.get('detail_level', 0),
-            set(content.get('omit_sections', [])),
+            content["code"],
+            content["cursor_pos"],
+            content.get("detail_level", 0),
+            set(content.get("omit_sections", [])),
         )
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
 
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
-        msg = self.session.send(stream, 'inspect_reply',
-                                reply_content, parent, ident)
+        msg = self.session.send(stream, "inspect_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
     def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
-        """Override in subclasses to allow introspection.
-        """
-        return {'status': 'ok', 'data': {}, 'metadata': {}, 'found': False}
+        """Override in subclasses to allow introspection."""
+        return {"status": "ok", "data": {}, "metadata": {}, "found": False}
 
     async def history_request(self, stream, ident, parent):
-        content = parent['content']
+        content = parent["content"]
 
         reply_content = self.do_history(**content)
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
 
         reply_content = json_clean(reply_content)
-        msg = self.session.send(stream, 'history_reply',
-                                reply_content, parent, ident)
+        msg = self.session.send(stream, "history_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    def do_history(self, hist_access_type, output, raw, session=None, start=None,
-                   stop=None, n=None, pattern=None, unique=False):
-        """Override in subclasses to access history.
-        """
-        return {'status': 'ok', 'history': []}
+    def do_history(
+        self,
+        hist_access_type,
+        output,
+        raw,
+        session=None,
+        start=None,
+        stop=None,
+        n=None,
+        pattern=None,
+        unique=False,
+    ):
+        """Override in subclasses to access history."""
+        return {"status": "ok", "history": []}
 
     async def connect_request(self, stream, ident, parent):
         if self._recorded_ports is not None:
             content = self._recorded_ports.copy()
         else:
             content = {}
-        content['status'] = 'ok'
-        msg = self.session.send(stream, 'connect_reply',
-                                content, parent, ident)
+        content["status"] = "ok"
+        msg = self.session.send(stream, "connect_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
     @property
     def kernel_info(self):
         return {
-            'protocol_version': kernel_protocol_version,
-            'implementation': self.implementation,
-            'implementation_version': self.implementation_version,
-            'language_info': self.language_info,
-            'banner': self.banner,
-            'help_links': self.help_links,
+            "protocol_version": kernel_protocol_version,
+            "implementation": self.implementation,
+            "implementation_version": self.implementation_version,
+            "language_info": self.language_info,
+            "banner": self.banner,
+            "help_links": self.help_links,
         }
 
     async def kernel_info_request(self, stream, ident, parent):
-        content = {'status': 'ok'}
+        content = {"status": "ok"}
         content.update(self.kernel_info)
-        msg = self.session.send(stream, 'kernel_info_reply',
-                                content, parent, ident)
+        msg = self.session.send(stream, "kernel_info_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
     async def comm_info_request(self, stream, ident, parent):
-        content = parent['content']
-        target_name = content.get('target_name', None)
+        content = parent["content"]
+        target_name = content.get("target_name", None)
 
         # Should this be moved to ipkernel?
-        if hasattr(self, 'comm_manager'):
+        if hasattr(self, "comm_manager"):
             comms = {
                 k: dict(target_name=v.target_name)
                 for (k, v) in self.comm_manager.comms.items()
@@ -793,9 +836,8 @@ class Kernel(SingletonConfigurable):
             }
         else:
             comms = {}
-        reply_content = dict(comms=comms, status='ok')
-        msg = self.session.send(stream, 'comm_info_reply',
-                                reply_content, parent, ident)
+        reply_content = dict(comms=comms, status="ok")
+        msg = self.session.send(stream, "comm_info_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
     def _send_interupt_children(self):
@@ -819,27 +861,25 @@ class Kernel(SingletonConfigurable):
 
     async def interrupt_request(self, stream, ident, parent):
         self._send_interupt_children()
-        content = parent['content']
-        self.session.send(stream, 'interrupt_reply', content, parent, ident=ident)
+        content = parent["content"]
+        self.session.send(stream, "interrupt_reply", content, parent, ident=ident)
         return
 
     async def shutdown_request(self, stream, ident, parent):
-        content = self.do_shutdown(parent['content']['restart'])
+        content = self.do_shutdown(parent["content"]["restart"])
         if inspect.isawaitable(content):
             content = await content
-        self.session.send(stream, 'shutdown_reply', content, parent, ident=ident)
+        self.session.send(stream, "shutdown_reply", content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
-        self._shutdown_message = self.session.msg('shutdown_reply',
-                                                  content, parent
-        )
+        self._shutdown_message = self.session.msg("shutdown_reply", content, parent)
 
         await self._at_shutdown()
 
-        self.log.debug('Stopping control ioloop')
+        self.log.debug("Stopping control ioloop")
         control_io_loop = self.control_stream.io_loop
         control_io_loop.add_callback(control_io_loop.stop)
 
-        self.log.debug('Stopping shell ioloop')
+        self.log.debug("Stopping shell ioloop")
         shell_io_loop = self.shell_stream.io_loop
         shell_io_loop.add_callback(shell_io_loop.stop)
 
@@ -847,34 +887,31 @@ class Kernel(SingletonConfigurable):
         """Override in subclasses to do things when the frontend shuts down the
         kernel.
         """
-        return {'status': 'ok', 'restart': restart}
+        return {"status": "ok", "restart": restart}
 
     async def is_complete_request(self, stream, ident, parent):
-        content = parent['content']
-        code = content['code']
+        content = parent["content"]
+        code = content["code"]
 
         reply_content = self.do_is_complete(code)
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
-        reply_msg = self.session.send(stream, 'is_complete_reply',
-                                      reply_content, parent, ident)
+        reply_msg = self.session.send(stream, "is_complete_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
     def do_is_complete(self, code):
-        """Override in subclasses to find completions.
-        """
-        return { 'status' : 'unknown'}
+        """Override in subclasses to find completions."""
+        return {"status": "unknown"}
 
     async def debug_request(self, stream, ident, parent):
-        content = parent['content']
+        content = parent["content"]
 
         reply_content = self.do_debug_request(content)
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
-        reply_msg = self.session.send(stream, 'debug_reply', reply_content,
-                                      parent, ident)
+        reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
     # Taken from https://github.com/jupyter-server/jupyter-resource-usage/blob/e6ec53fa69fdb6de8e878974bcff006310658408/jupyter_resource_usage/metrics.py#L16
@@ -892,37 +929,38 @@ class Kernel(SingletonConfigurable):
             return None
 
     async def usage_request(self, stream, ident, parent):
-        reply_content = {
-            'hostname': socket.gethostname()
-        }
+        reply_content = {"hostname": socket.gethostname()}
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
         process_metric_value = self.get_process_metric_value
-        reply_content['kernel_cpu'] = sum([process_metric_value(process, 'cpu_percent', None) for process in all_processes])
-        reply_content['kernel_memory'] = sum([process_metric_value(process, 'memory_info', 'rss') for process in all_processes])
+        reply_content["kernel_cpu"] = sum(
+            [process_metric_value(process, "cpu_percent", None) for process in all_processes]
+        )
+        reply_content["kernel_memory"] = sum(
+            [process_metric_value(process, "memory_info", "rss") for process in all_processes]
+        )
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
         if cpu_percent != None and cpu_percent != 0.0:
-            reply_content['host_cpu_percent'] = cpu_percent
-        reply_content['host_virtual_memory'] = dict(psutil.virtual_memory()._asdict())
-        reply_msg = self.session.send(stream, 'usage_reply', reply_content,
-                                      parent, ident)
+            reply_content["host_cpu_percent"] = cpu_percent
+        reply_content["host_virtual_memory"] = dict(psutil.virtual_memory()._asdict())
+        reply_msg = self.session.send(stream, "usage_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
     async def do_debug_request(self, msg):
         raise NotImplementedError
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     async def apply_request(self, stream, ident, parent):
         self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
         try:
-            content = parent['content']
-            bufs = parent['buffers']
-            msg_id = parent['header']['msg_id']
+            content = parent["content"]
+            bufs = parent["buffers"]
+            msg_id = parent["header"]["msg_id"]
         except Exception:
             self.log.error("Got bad msg: %s", parent, exc_info=True)
             return
@@ -937,21 +975,30 @@ class Kernel(SingletonConfigurable):
 
         md = self.finish_metadata(parent, md, reply_content)
 
-        self.session.send(stream, 'apply_reply', reply_content,
-                    parent=parent, ident=ident,buffers=result_buf, metadata=md)
+        self.session.send(
+            stream,
+            "apply_reply",
+            reply_content,
+            parent=parent,
+            ident=ident,
+            buffers=result_buf,
+            metadata=md,
+        )
 
     def do_apply(self, content, bufs, msg_id, reply_metadata):
         """DEPRECATED"""
         raise NotImplementedError
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Control messages (DEPRECATED)
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     async def abort_request(self, stream, ident, parent):
         """abort a specific msg by id"""
-        self.log.warning("abort_request is deprecated in kernel_base. It is only part of IPython parallel")
-        msg_ids = parent['content'].get('msg_ids', None)
+        self.log.warning(
+            "abort_request is deprecated in kernel_base. It is only part of IPython parallel"
+        )
+        msg_ids = parent["content"].get("msg_ids", None)
         if isinstance(msg_ids, str):
             msg_ids = [msg_ids]
         if not msg_ids:
@@ -959,25 +1006,27 @@ class Kernel(SingletonConfigurable):
         for mid in msg_ids:
             self.aborted.add(str(mid))
 
-        content = dict(status='ok')
-        reply_msg = self.session.send(stream, 'abort_reply', content=content,
-                parent=parent, ident=ident)
+        content = dict(status="ok")
+        reply_msg = self.session.send(
+            stream, "abort_reply", content=content, parent=parent, ident=ident
+        )
         self.log.debug("%s", reply_msg)
 
     async def clear_request(self, stream, idents, parent):
         """Clear our namespace."""
-        self.log.warning("clear_request is deprecated in kernel_base. It is only part of IPython parallel")
+        self.log.warning(
+            "clear_request is deprecated in kernel_base. It is only part of IPython parallel"
+        )
         content = self.do_clear()
-        self.session.send(stream, 'clear_reply', ident=idents, parent=parent,
-                content = content)
+        self.session.send(stream, "clear_reply", ident=idents, parent=parent, content=content)
 
     def do_clear(self):
         """DEPRECATED since 4.0.3"""
         raise NotImplementedError
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # Protected interface
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     def _topic(self, topic):
         """prefixed topic for IOPub messages"""
@@ -1010,15 +1059,11 @@ class Kernel(SingletonConfigurable):
 
         # if we have a delay, give messages this long to arrive on the queue
         # before we stop aborting requests
-        asyncio.get_event_loop().call_later(
-            self.stop_on_error_timeout, schedule_stop_aborting
-        )
+        asyncio.get_event_loop().call_later(self.stop_on_error_timeout, schedule_stop_aborting)
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""
-        self.log.info(
-            f"Aborting {msg['header']['msg_id']}: {msg['header']['msg_type']}"
-        )
+        self.log.info(f"Aborting {msg['header']['msg_id']}: {msg['header']['msg_type']}")
         reply_type = msg["header"]["msg_type"].rsplit("_", 1)[0] + "_reply"
         status = {"status": "aborted"}
         md = self.init_metadata(msg)
@@ -1026,17 +1071,22 @@ class Kernel(SingletonConfigurable):
         md.update(status)
 
         self.session.send(
-            stream, reply_type, metadata=md,
-            content=status, parent=msg, ident=idents,
+            stream,
+            reply_type,
+            metadata=md,
+            content=status,
+            parent=msg,
+            ident=idents,
         )
 
     def _no_raw_input(self):
         """Raise StdinNotImplementedError if active frontend doesn't support
         stdin."""
-        raise StdinNotImplementedError("raw_input was called, but this "
-                                       "frontend does not support stdin.")
+        raise StdinNotImplementedError(
+            "raw_input was called, but this " "frontend does not support stdin."
+        )
 
-    def getpass(self, prompt='', stream=None):
+    def getpass(self, prompt="", stream=None):
         """Forward getpass to frontends
 
         Raises
@@ -1062,7 +1112,7 @@ class Kernel(SingletonConfigurable):
             password=True,
         )
 
-    def raw_input(self, prompt=''):
+    def raw_input(self, prompt=""):
         """Forward raw_input to frontends
 
         Raises
@@ -1097,8 +1147,7 @@ class Kernel(SingletonConfigurable):
 
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))
-        self.session.send(self.stdin_socket, 'input_request', content, parent,
-                          ident=ident)
+        self.session.send(self.stdin_socket, "input_request", content, parent, ident=ident)
 
         # Await a response.
         while True:
@@ -1109,9 +1158,7 @@ class Kernel(SingletonConfigurable):
                 # zmq.select() is also uninterruptible, but at least this
                 # way reads get noticed immediately and KeyboardInterrupts
                 # get noticed fairly quickly by human response time standards.
-                rlist, _, xlist = zmq.select(
-                    [self.stdin_socket], [], [self.stdin_socket], 0.01
-                )
+                rlist, _, xlist = zmq.select([self.stdin_socket], [], [self.stdin_socket], 0.01)
                 if rlist or xlist:
                     ident, reply = self.session.recv(self.stdin_socket)
                     if (ident, reply) != (None, None):
@@ -1126,8 +1173,8 @@ class Kernel(SingletonConfigurable):
             value = reply["content"]["value"]
         except Exception:
             self.log.error("Bad input_reply: %s", parent)
-            value = ''
-        if value == '\x04':
+            value = ""
+        if value == "\x04":
             # EOF
             raise EOFError
         return value
@@ -1194,8 +1241,7 @@ class Kernel(SingletonConfigurable):
                 await asyncio.sleep(delay)
 
     async def _at_shutdown(self):
-        """Actions taken at shutdown by the kernel, called by python's atexit.
-        """
+        """Actions taken at shutdown by the kernel, called by python's atexit."""
         try:
             await self._progressively_terminate_all_children()
         except Exception as e:

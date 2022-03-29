@@ -5,12 +5,14 @@
 
 from jupyter_client.channelsabc import HBChannelABC
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Channel classes
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class InProcessChannel:
     """Base class for in-process channels."""
+
     proxy_methods = []
 
     def __init__(self, client=None):
@@ -28,18 +30,17 @@ class InProcessChannel:
         self._is_alive = False
 
     def call_handlers(self, msg):
-        """ This method is called in the main thread when a message arrives.
+        """This method is called in the main thread when a message arrives.
 
         Subclasses should override this method to handle incoming messages.
         """
-        raise NotImplementedError('call_handlers must be defined in a subclass.')
+        raise NotImplementedError("call_handlers must be defined in a subclass.")
 
     def flush(self, timeout=1.0):
         pass
 
-
     def call_handlers_later(self, *args, **kwds):
-        """ Call the message handlers later.
+        """Call the message handlers later.
 
         The default implementation just calls the handlers immediately, but this
         method exists so that GUI toolkits can defer calling the handlers until
@@ -48,13 +49,12 @@ class InProcessChannel:
         self.call_handlers(*args, **kwds)
 
     def process_events(self):
-        """ Process any pending GUI events.
+        """Process any pending GUI events.
 
         This method will be never be called from a frontend without an event
         loop (e.g., a terminal frontend).
         """
         raise NotImplementedError
-
 
 
 class InProcessHBChannel:

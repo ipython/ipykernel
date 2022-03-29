@@ -2,15 +2,19 @@ import pickle
 
 from ipykernel.pickleutil import can, uncan
 
+
 def interactive(f):
-    f.__module__ = '__main__'
+    f.__module__ = "__main__"
     return f
+
 
 def dumps(obj):
     return pickle.dumps(can(obj))
 
+
 def loads(obj):
     return uncan(pickle.loads(obj))
+
 
 def test_no_closure():
     @interactive
@@ -22,32 +26,38 @@ def test_no_closure():
     bar = loads(pfoo)
     assert foo() == bar()
 
+
 def test_generator_closure():
     # this only creates a closure on Python 3
     @interactive
     def foo():
-        i = 'i'
-        r = [ i for j in (1,2) ]
+        i = "i"
+        r = [i for j in (1, 2)]
         return r
 
     pfoo = dumps(foo)
     bar = loads(pfoo)
     assert foo() == bar()
 
+
 def test_nested_closure():
     @interactive
     def foo():
-        i = 'i'
+        i = "i"
+
         def g():
             return i
+
         return g()
 
     pfoo = dumps(foo)
     bar = loads(pfoo)
     assert foo() == bar()
 
+
 def test_closure():
-    i = 'i'
+    i = "i"
+
     @interactive
     def foo():
         return i
@@ -56,8 +66,9 @@ def test_closure():
     bar = loads(pfoo)
     assert foo() == bar()
 
+
 def test_uncan_bytes_buffer():
-    data = b'data'
+    data = b"data"
     canned = can(data)
     canned.buffers = [memoryview(buf) for buf in canned.buffers]
     out = uncan(canned)

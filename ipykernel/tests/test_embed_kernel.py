@@ -3,18 +3,16 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import json
 import os
 import sys
 import time
-import json
-
 from contextlib import contextmanager
-from subprocess import Popen, PIPE
-from flaky import flaky
+from subprocess import PIPE, Popen
 
+from flaky import flaky
 from jupyter_client import BlockingKernelClient
 from jupyter_core import paths
-
 
 SETUP_TIMEOUT = 60
 TIMEOUT = 15
@@ -40,17 +38,19 @@ def setup_kernel(cmd):
         except ValueError:
             return False
 
-    kernel = Popen([sys.executable, '-c', cmd], stdout=PIPE, stderr=PIPE, encoding="utf-8")
+    kernel = Popen([sys.executable, "-c", cmd], stdout=PIPE, stderr=PIPE, encoding="utf-8")
     try:
         connection_file = os.path.join(
             paths.jupyter_runtime_dir(),
-            'kernel-%i.json' % kernel.pid,
+            "kernel-%i.json" % kernel.pid,
         )
         # wait for connection file to exist, timeout after 5s
         tic = time.time()
-        while not connection_file_ready(connection_file) \
-            and kernel.poll() is None \
-            and time.time() < tic + SETUP_TIMEOUT:
+        while (
+            not connection_file_ready(connection_file)
+            and kernel.poll() is None
+            and time.time() < tic + SETUP_TIMEOUT
+        ):
             time.sleep(0.1)
 
         # Wait 100ms for the writing to finish
@@ -80,96 +80,102 @@ def setup_kernel(cmd):
 @flaky(max_runs=3)
 def test_embed_kernel_basic():
     """IPython.embed_kernel() is basically functional"""
-    cmd = '\n'.join([
-        'from IPython import embed_kernel',
-        'def go():',
-        '    a=5',
-        '    b="hi there"',
-        '    embed_kernel()',
-        'go()',
-        '',
-    ])
+    cmd = "\n".join(
+        [
+            "from IPython import embed_kernel",
+            "def go():",
+            "    a=5",
+            '    b="hi there"',
+            "    embed_kernel()",
+            "go()",
+            "",
+        ]
+    )
 
     with setup_kernel(cmd) as client:
         # oinfo a (int)
         client.inspect("a")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['found']
+        content = msg["content"]
+        assert content["found"]
 
         client.execute("c=a*2")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['status'] == 'ok'
+        content = msg["content"]
+        assert content["status"] == "ok"
 
         # oinfo c (should be 10)
         client.inspect("c")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['found']
-        text = content['data']['text/plain']
-        assert '10' in text
+        content = msg["content"]
+        assert content["found"]
+        text = content["data"]["text/plain"]
+        assert "10" in text
 
 
 @flaky(max_runs=3)
 def test_embed_kernel_namespace():
     """IPython.embed_kernel() inherits calling namespace"""
-    cmd = '\n'.join([
-        'from IPython import embed_kernel',
-        'def go():',
-        '    a=5',
-        '    b="hi there"',
-        '    embed_kernel()',
-        'go()',
-        '',
-    ])
+    cmd = "\n".join(
+        [
+            "from IPython import embed_kernel",
+            "def go():",
+            "    a=5",
+            '    b="hi there"',
+            "    embed_kernel()",
+            "go()",
+            "",
+        ]
+    )
 
     with setup_kernel(cmd) as client:
         # oinfo a (int)
         client.inspect("a")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['found']
-        text = content['data']['text/plain']
-        assert '5' in text
+        content = msg["content"]
+        assert content["found"]
+        text = content["data"]["text/plain"]
+        assert "5" in text
 
         # oinfo b (str)
         client.inspect("b")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert content['found']
-        text = content['data']['text/plain']
-        assert 'hi there' in text
+        content = msg["content"]
+        assert content["found"]
+        text = content["data"]["text/plain"]
+        assert "hi there" in text
 
         # oinfo c (undefined)
         client.inspect("c")
         msg = client.get_shell_msg(timeout=TIMEOUT)
-        content = msg['content']
-        assert not content['found']
+        content = msg["content"]
+        assert not content["found"]
+
 
 @flaky(max_runs=3)
 def test_embed_kernel_reentrant():
     """IPython.embed_kernel() can be called multiple times"""
-    cmd = '\n'.join([
-        'from IPython import embed_kernel',
-        'count = 0',
-        'def go():',
-        '    global count',
-        '    embed_kernel()',
-        '    count = count + 1',
-        '',
-        'while True:'
-        '    go()',
-        '',
-    ])
+    cmd = "\n".join(
+        [
+            "from IPython import embed_kernel",
+            "count = 0",
+            "def go():",
+            "    global count",
+            "    embed_kernel()",
+            "    count = count + 1",
+            "",
+            "while True:" "    go()",
+            "",
+        ]
+    )
 
     with setup_kernel(cmd) as client:
         for i in range(5):
             client.inspect("count")
             msg = client.get_shell_msg(timeout=TIMEOUT)
-            content = msg['content']
-            assert content['found']
-            text = content['data']['text/plain']
+            content = msg["content"]
+            assert content["found"]
+            text = content["data"]["text/plain"]
             assert str(i) in text
 
             # exit from embed_kernel

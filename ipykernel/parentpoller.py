@@ -9,15 +9,15 @@ import os
 import platform
 import signal
 import time
+import warnings
 from _thread import interrupt_main  # Py 3
 from threading import Thread
 
 from traitlets.log import get_logger
 
-import warnings
 
 class ParentPollerUnix(Thread):
-    """ A Unix-specific daemon thread that terminates the program immediately
+    """A Unix-specific daemon thread that terminates the program immediately
     when the parent process no longer exists.
     """
 
@@ -28,6 +28,7 @@ class ParentPollerUnix(Thread):
     def run(self):
         # We cannot use os.waitpid because it works only for child processes.
         from errno import EINTR
+
         while True:
             try:
                 if os.getppid() == 1:
@@ -41,13 +42,13 @@ class ParentPollerUnix(Thread):
 
 
 class ParentPollerWindows(Thread):
-    """ A Windows-specific daemon thread that listens for a special event that
+    """A Windows-specific daemon thread that listens for a special event that
     signals an interrupt and, optionally, terminates the program immediately
     when the parent process no longer exists.
     """
 
     def __init__(self, interrupt_handle=None, parent_handle=None):
-        """ Create the poller. At least one of the optional parameters must be
+        """Create the poller. At least one of the optional parameters must be
         provided.
 
         Parameters
@@ -59,7 +60,7 @@ class ParentPollerWindows(Thread):
             If provided, the program will terminate immediately when this
             handle is signaled.
         """
-        assert(interrupt_handle or parent_handle)
+        assert interrupt_handle or parent_handle
         super().__init__()
         if ctypes is None:
             raise ImportError("ParentPollerWindows requires ctypes")
@@ -68,12 +69,11 @@ class ParentPollerWindows(Thread):
         self.parent_handle = parent_handle
 
     def run(self):
-        """ Run the poll loop. This method never returns.
-        """
+        """Run the poll loop. This method never returns."""
         try:
-            from _winapi import WAIT_OBJECT_0, INFINITE
+            from _winapi import INFINITE, WAIT_OBJECT_0
         except ImportError:
-            from _subprocess import WAIT_OBJECT_0, INFINITE
+            from _subprocess import INFINITE, WAIT_OBJECT_0
 
         # Build the list of handle to listen on.
         handles = []
@@ -82,15 +82,16 @@ class ParentPollerWindows(Thread):
         if self.parent_handle:
             handles.append(self.parent_handle)
         arch = platform.architecture()[0]
-        c_int = ctypes.c_int64 if arch.startswith('64') else ctypes.c_int
+        c_int = ctypes.c_int64 if arch.startswith("64") else ctypes.c_int
 
         # Listen forever.
         while True:
             result = ctypes.windll.kernel32.WaitForMultipleObjects(
-                len(handles),                            # nCount
-                (c_int * len(handles))(*handles),        # lpHandles
-                False,                                   # bWaitAll
-                INFINITE)                                # dwMilliseconds
+                len(handles),  # nCount
+                (c_int * len(handles))(*handles),  # lpHandles
+                False,  # bWaitAll
+                INFINITE,
+            )  # dwMilliseconds
 
             if WAIT_OBJECT_0 <= result < len(handles):
                 handle = handles[result - WAIT_OBJECT_0]
@@ -106,8 +107,10 @@ class ParentPollerWindows(Thread):
                     os._exit(1)
             elif result < 0:
                 # wait failed, just give up and stop polling.
-                warnings.warn("""Parent poll failed.  If the frontend dies,
+                warnings.warn(
+                    """Parent poll failed.  If the frontend dies,
                 the kernel may be left running.  Please let us know
                 about your system (bitness, Python, etc.) at
-                ipython-dev@scipy.org""")
+                ipython-dev@scipy.org"""
+                )
                 return

@@ -5,10 +5,9 @@
 
 import logging
 
+from traitlets import Dict, Instance
 from traitlets.config import LoggingConfigurable
-
 from traitlets.utils.importstring import import_item
-from traitlets import Instance, Dict
 
 from .comm import Comm
 
@@ -16,7 +15,7 @@ from .comm import Comm
 class CommManager(LoggingConfigurable):
     """Manager for Comms in the Kernel"""
 
-    kernel = Instance('ipykernel.kernelbase.Kernel')
+    kernel = Instance("ipykernel.kernelbase.Kernel")
     comms = Dict()
     targets = Dict()
 
@@ -72,13 +71,14 @@ class CommManager(LoggingConfigurable):
     # Message handlers
     def comm_open(self, stream, ident, msg):
         """Handler for comm_open messages"""
-        content = msg['content']
-        comm_id = content['comm_id']
-        target_name = content['target_name']
+        content = msg["content"]
+        comm_id = content["comm_id"]
+        target_name = content["target_name"]
         f = self.targets.get(target_name, None)
-        comm = Comm(comm_id=comm_id,
-                    primary=False,
-                    target_name=target_name,
+        comm = Comm(
+            comm_id=comm_id,
+            primary=False,
+            target_name=target_name,
         )
         self.register_comm(comm)
         if f is None:
@@ -94,13 +94,16 @@ class CommManager(LoggingConfigurable):
         try:
             comm.close()
         except Exception:
-            self.log.error("""Could not close comm during `comm_open` failure
-                clean-up.  The comm may not have been opened yet.""", exc_info=True)
+            self.log.error(
+                """Could not close comm during `comm_open` failure
+                clean-up.  The comm may not have been opened yet.""",
+                exc_info=True,
+            )
 
     def comm_msg(self, stream, ident, msg):
         """Handler for comm_msg messages"""
-        content = msg['content']
-        comm_id = content['comm_id']
+        content = msg["content"]
+        comm_id = content["comm_id"]
         comm = self.get_comm(comm_id)
         if comm is None:
             return
@@ -108,12 +111,12 @@ class CommManager(LoggingConfigurable):
         try:
             comm.handle_msg(msg)
         except Exception:
-            self.log.error('Exception in comm_msg for %s', comm_id, exc_info=True)
+            self.log.error("Exception in comm_msg for %s", comm_id, exc_info=True)
 
     def comm_close(self, stream, ident, msg):
         """Handler for comm_close messages"""
-        content = msg['content']
-        comm_id = content['comm_id']
+        content = msg["content"]
+        comm_id = content["comm_id"]
         comm = self.get_comm(comm_id)
         if comm is None:
             return
@@ -124,6 +127,7 @@ class CommManager(LoggingConfigurable):
         try:
             comm.handle_close(msg)
         except Exception:
-            self.log.error('Exception in comm_close for %s', comm_id, exc_info=True)
+            self.log.error("Exception in comm_close for %s", comm_id, exc_info=True)
 
-__all__ = ['CommManager']
+
+__all__ = ["CommManager"]

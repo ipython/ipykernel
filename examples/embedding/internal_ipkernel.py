@@ -1,27 +1,31 @@
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import sys
 
 from IPython.lib.kernel import connect_qtconsole
+
 from ipykernel.kernelapp import IPKernelApp
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Functions and classes
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def mpl_kernel(gui):
-    """Launch and return an IPython kernel with matplotlib support for the desired gui
-    """
+    """Launch and return an IPython kernel with matplotlib support for the desired gui"""
     kernel = IPKernelApp.instance()
-    kernel.initialize(['python', '--matplotlib=%s' % gui,
-                       #'--log-level=10'
-                       ])
+    kernel.initialize(
+        [
+            "python",
+            "--matplotlib=%s" % gui,
+            #'--log-level=10'
+        ]
+    )
     return kernel
 
 
 class InternalIPKernel:
-
     def init_ipkernel(self, backend):
         # Start IPython kernel with GUI event loop and mpl support
         self.ipkernel = mpl_kernel(backend)
@@ -33,14 +37,14 @@ class InternalIPKernel:
 
         # Example: a variable that will be seen by the user in the shell, and
         # that the GUI modifies (the 'Counter++' button increments it):
-        self.namespace['app_counter'] = 0
-        #self.namespace['ipkernel'] = self.ipkernel  # dbg
+        self.namespace["app_counter"] = 0
+        # self.namespace['ipkernel'] = self.ipkernel  # dbg
 
     def print_namespace(self, evt=None):
         print("\n***Variables in User namespace***")
         for k, v in self.namespace.items():
-            if not k.startswith('_'):
-                print('%s -> %r' % (k, v))
+            if not k.startswith("_"):
+                print("%s -> %r" % (k, v))
         sys.stdout.flush()
 
     def new_qt_console(self, evt=None):
@@ -48,7 +52,7 @@ class InternalIPKernel:
         return connect_qtconsole(self.ipkernel.abs_connection_file, profile=self.ipkernel.profile)
 
     def count(self, evt=None):
-        self.namespace['app_counter'] += 1
+        self.namespace["app_counter"] += 1
 
     def cleanup_consoles(self, evt=None):
         for c in self.consoles:

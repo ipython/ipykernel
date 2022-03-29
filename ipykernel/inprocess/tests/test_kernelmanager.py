@@ -5,12 +5,12 @@ import unittest
 
 from ipykernel.inprocess.manager import InProcessKernelManager
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Test case
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class InProcessKernelManagerTestCase(unittest.TestCase):
-
     def setUp(self):
         self.km = InProcessKernelManager()
 
@@ -19,8 +19,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
             self.km.shutdown_kernel()
 
     def test_interface(self):
-        """ Does the in-process kernel manager implement the basic KM interface?
-        """
+        """Does the in-process kernel manager implement the basic KM interface?"""
         km = self.km
         assert not km.has_kernel
 
@@ -49,64 +48,59 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
         assert not kc.channels_running
 
     def test_execute(self):
-        """ Does executing code in an in-process kernel work?
-        """
+        """Does executing code in an in-process kernel work?"""
         km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
         kc.wait_for_ready()
-        kc.execute('foo = 1')
-        assert km.kernel.shell.user_ns['foo'] == 1
+        kc.execute("foo = 1")
+        assert km.kernel.shell.user_ns["foo"] == 1
 
     def test_complete(self):
-        """ Does requesting completion from an in-process kernel work?
-        """
+        """Does requesting completion from an in-process kernel work?"""
         km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
         kc.wait_for_ready()
-        km.kernel.shell.push({'my_bar': 0, 'my_baz': 1})
-        kc.complete('my_ba', 5)
+        km.kernel.shell.push({"my_bar": 0, "my_baz": 1})
+        kc.complete("my_ba", 5)
         msg = kc.get_shell_msg()
-        assert msg['header']['msg_type'] == 'complete_reply'
-        self.assertEqual(sorted(msg['content']['matches']),
-                          ['my_bar', 'my_baz'])
+        assert msg["header"]["msg_type"] == "complete_reply"
+        self.assertEqual(sorted(msg["content"]["matches"]), ["my_bar", "my_baz"])
 
     def test_inspect(self):
-        """ Does requesting object information from an in-process kernel work?
-        """
+        """Does requesting object information from an in-process kernel work?"""
         km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
         kc.wait_for_ready()
-        km.kernel.shell.user_ns['foo'] = 1
-        kc.inspect('foo')
+        km.kernel.shell.user_ns["foo"] = 1
+        kc.inspect("foo")
         msg = kc.get_shell_msg()
-        assert msg['header']['msg_type'] == 'inspect_reply'
-        content = msg['content']
-        assert content['found']
-        text = content['data']['text/plain']
-        self.assertIn('int', text)
+        assert msg["header"]["msg_type"] == "inspect_reply"
+        content = msg["content"]
+        assert content["found"]
+        text = content["data"]["text/plain"]
+        self.assertIn("int", text)
 
     def test_history(self):
-        """ Does requesting history from an in-process kernel work?
-        """
+        """Does requesting history from an in-process kernel work?"""
         km = self.km
         km.start_kernel()
         kc = km.client()
         kc.start_channels()
         kc.wait_for_ready()
-        kc.execute('1')
-        kc.history(hist_access_type='tail', n=1)
+        kc.execute("1")
+        kc.history(hist_access_type="tail", n=1)
         msg = kc.shell_channel.get_msgs()[-1]
-        assert msg['header']['msg_type'] == 'history_reply'
-        history = msg['content']['history']
+        assert msg["header"]["msg_type"] == "history_reply"
+        history = msg["content"]["history"]
         assert len(history) == 1
-        assert history[0][2] == '1'
+        assert history[0][2] == "1"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

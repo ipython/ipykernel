@@ -6,25 +6,26 @@
 from queue import Queue
 
 import zmq
-
 from traitlets import HasTraits, Instance, Int
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Dummy socket class
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+
 
 class DummySocket(HasTraits):
-    """ A dummy socket implementing (part of) the zmq.Socket interface. """
+    """A dummy socket implementing (part of) the zmq.Socket interface."""
 
     queue = Instance(Queue, ())
-    message_sent = Int(0) # Should be an Event
+    message_sent = Int(0)  # Should be an Event
     context = Instance(zmq.Context)
+
     def _context_default(self):
         return zmq.Context()
 
-    #-------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Socket interface
-    #-------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def recv_multipart(self, flags=0, copy=True, track=False):
         return self.queue.get_nowait()

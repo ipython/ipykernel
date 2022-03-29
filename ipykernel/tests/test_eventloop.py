@@ -5,7 +5,7 @@ import sys
 import pytest
 import tornado
 
-from .utils import flush_channels, start_new_kernel, execute
+from .utils import execute, flush_channels, start_new_kernel
 
 KC = KM = None
 
@@ -31,15 +31,15 @@ async_func()
 @pytest.mark.skipif(tornado.version_info < (5,), reason="only relevant on tornado 5")
 def test_asyncio_interrupt():
     flush_channels(KC)
-    msg_id, content = execute('%gui asyncio', KC)
-    assert content['status'] == 'ok', content
+    msg_id, content = execute("%gui asyncio", KC)
+    assert content["status"] == "ok", content
 
     flush_channels(KC)
     msg_id, content = execute(async_code, KC)
-    assert content['status'] == 'ok', content
+    assert content["status"] == "ok", content
 
     KM.interrupt_kernel()
 
     flush_channels(KC)
     msg_id, content = execute(async_code, KC)
-    assert content['status'] == 'ok'
+    assert content["status"] == "ok"

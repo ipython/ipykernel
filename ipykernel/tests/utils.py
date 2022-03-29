@@ -7,15 +7,13 @@ import atexit
 import os
 import platform
 import sys
-from tempfile import TemporaryDirectory
-from time import time
-
 from contextlib import contextmanager
 from queue import Empty
 from subprocess import STDOUT
+from tempfile import TemporaryDirectory
+from time import time
 
 from jupyter_client import manager
-
 
 STARTUP_TIMEOUT = 60
 TIMEOUT = 100
@@ -29,10 +27,11 @@ def start_new_kernel(**kwargs):
 
     Integrates with our output capturing for tests.
     """
-    kwargs['stderr'] = STDOUT
+    kwargs["stderr"] = STDOUT
     try:
         import nose
-        kwargs['stdout'] = nose.iptest_stdstreams_fileno()
+
+        kwargs["stdout"] = nose.iptest_stdstreams_fileno()
     except (ImportError, AttributeError):
         pass
     return manager.start_new_kernel(startup_timeout=STARTUP_TIMEOUT, **kwargs)
@@ -54,12 +53,12 @@ def flush_channels(kc=None):
                 validate_message(msg)
 
 
-def get_reply(kc, msg_id, timeout=TIMEOUT, channel='shell'):
+def get_reply(kc, msg_id, timeout=TIMEOUT, channel="shell"):
     t0 = time()
     while True:
-        get_msg = getattr(kc, f'get_{channel}_msg')
+        get_msg = getattr(kc, f"get_{channel}_msg")
         reply = get_msg(timeout=timeout)
-        if reply['parent_header']['msg_id'] == msg_id:
+        if reply["parent_header"]["msg_id"] == msg_id:
             break
         # Allow debugging ignored replies
         print(f"Ignoring reply not to {msg_id}: {reply}")
@@ -69,29 +68,30 @@ def get_reply(kc, msg_id, timeout=TIMEOUT, channel='shell'):
     return reply
 
 
-def execute(code='', kc=None, **kwargs):
+def execute(code="", kc=None, **kwargs):
     """wrapper for doing common steps for validating an execution request"""
     from .test_message_spec import validate_message
+
     if kc is None:
         kc = KC
     msg_id = kc.execute(code=code, **kwargs)
     reply = get_reply(kc, msg_id, TIMEOUT)
-    validate_message(reply, 'execute_reply', msg_id)
+    validate_message(reply, "execute_reply", msg_id)
     busy = kc.get_iopub_msg(timeout=TIMEOUT)
-    validate_message(busy, 'status', msg_id)
-    assert busy['content']['execution_state'] == 'busy'
+    validate_message(busy, "status", msg_id)
+    assert busy["content"]["execution_state"] == "busy"
 
-    if not kwargs.get('silent'):
+    if not kwargs.get("silent"):
         execute_input = kc.get_iopub_msg(timeout=TIMEOUT)
-        validate_message(execute_input, 'execute_input', msg_id)
-        assert execute_input['content']['code'] == code
+        validate_message(execute_input, "execute_input", msg_id)
+        assert execute_input["content"]["code"] == code
 
     # show tracebacks if present for debugging
-    if reply['content'].get('traceback'):
-        print('\n'.join(reply['content']['traceback']), file=sys.stderr)
+    if reply["content"].get("traceback"):
+        print("\n".join(reply["content"]["traceback"]), file=sys.stderr)
 
+    return msg_id, reply["content"]
 
-    return msg_id, reply['content']
 
 def start_global_kernel():
     """start the global kernel (if it isn't running) and return its client"""
@@ -102,6 +102,7 @@ def start_global_kernel():
     else:
         flush_channels(KC)
     return KC
+
 
 @contextmanager
 def kernel():
@@ -115,14 +116,18 @@ def kernel():
     """
     yield start_global_kernel()
 
+
 def uses_kernel(test_f):
     """Decorator for tests that use the global kernel"""
+
     def wrapped_test():
         with kernel() as kc:
             test_f(kc)
+
     wrapped_test.__doc__ = test_f.__doc__
     wrapped_test.__name__ = test_f.__name__
     return wrapped_test
+
 
 def stop_global_kernel():
     """Stop the global shared kernel instance, if it exists"""
@@ -134,6 +139,7 @@ def stop_global_kernel():
     KM.shutdown_kernel(now=True)
     KM = None
 
+
 def new_kernel(argv=None):
     """Context manager for a new kernel in a subprocess
 
@@ -143,45 +149,48 @@ def new_kernel(argv=None):
     -------
     kernel_client: connected KernelClient instance
     """
-    kwargs = {'stderr': STDOUT}
+    kwargs = {"stderr": STDOUT}
     try:
         import nose
-        kwargs['stdout'] = nose.iptest_stdstreams_fileno()
+
+        kwargs["stdout"] = nose.iptest_stdstreams_fileno()
     except (ImportError, AttributeError):
         pass
     if argv is not None:
-        kwargs['extra_arguments'] = argv
+        kwargs["extra_arguments"] = argv
     return manager.run_kernel(**kwargs)
+
 
 def assemble_output(get_msg):
     """assemble stdout/err from an execution"""
-    stdout = ''
-    stderr = ''
+    stdout = ""
+    stderr = ""
     while True:
         msg = get_msg(timeout=1)
-        msg_type = msg['msg_type']
-        content = msg['content']
-        if msg_type == 'status' and content['execution_state'] == 'idle':
+        msg_type = msg["msg_type"]
+        content = msg["content"]
+        if msg_type == "status" and content["execution_state"] == "idle":
             # idle message signals end of output
             break
-        elif msg['msg_type'] == 'stream':
-            if content['name'] == 'stdout':
-                stdout += content['text']
-            elif content['name'] == 'stderr':
-                stderr += content['text']
+        elif msg["msg_type"] == "stream":
+            if content["name"] == "stdout":
+                stdout += content["text"]
+            elif content["name"] == "stderr":
+                stderr += content["text"]
             else:
-                raise KeyError("bad stream: %r" % content['name'])
+                raise KeyError("bad stream: %r" % content["name"])
         else:
             # other output, ignored
             pass
     return stdout, stderr
 
+
 def wait_for_idle(kc):
     while True:
         msg = kc.get_iopub_msg(timeout=1)
-        msg_type = msg['msg_type']
-        content = msg['content']
-        if msg_type == 'status' and content['execution_state'] == 'idle':
+        msg_type = msg["msg_type"]
+        content = msg["content"]
+        if msg_type == "status" and content["execution_state"] == "idle":
             break
 
 
@@ -194,6 +203,7 @@ class TemporaryWorkingDirectory(TemporaryDirectory):
         with TemporaryWorkingDirectory() as tmpdir:
             ...
     """
+
     def __enter__(self):
         self.old_wd = os.getcwd()
         os.chdir(self.name)

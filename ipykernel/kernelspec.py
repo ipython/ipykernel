@@ -17,10 +17,10 @@ from .debugger import _is_debugpy_available
 
 pjoin = os.path.join
 
-KERNEL_NAME = 'python%i' % sys.version_info[0]
+KERNEL_NAME = "python%i" % sys.version_info[0]
 
 # path to kernelspec resources
-RESOURCES = pjoin(os.path.dirname(__file__), 'resources')
+RESOURCES = pjoin(os.path.dirname(__file__), "resources")
 
 
 def make_ipkernel_cmd(mod="ipykernel_launcher", executable=None, extra_arguments=None):
@@ -42,7 +42,7 @@ def make_ipkernel_cmd(mod="ipykernel_launcher", executable=None, extra_arguments
     if executable is None:
         executable = sys.executable
     extra_arguments = extra_arguments or []
-    arguments = [executable, '-m', mod, '-f', '{connection_file}']
+    arguments = [executable, "-m", mod, "-f", "{connection_file}"]
     arguments.extend(extra_arguments)
 
     return arguments
@@ -51,10 +51,10 @@ def make_ipkernel_cmd(mod="ipykernel_launcher", executable=None, extra_arguments
 def get_kernel_dict(extra_arguments=None):
     """Construct dict for kernel.json"""
     return {
-        'argv': make_ipkernel_cmd(extra_arguments=extra_arguments),
-        'display_name': 'Python %i (ipykernel)' % sys.version_info[0],
-        'language': 'python',
-        'metadata': { 'debugger': _is_debugpy_available}
+        "argv": make_ipkernel_cmd(extra_arguments=extra_arguments),
+        "display_name": "Python %i (ipykernel)" % sys.version_info[0],
+        "language": "python",
+        "metadata": {"debugger": _is_debugpy_available},
     }
 
 
@@ -67,7 +67,7 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
     The path to the kernelspec is always returned.
     """
     if path is None:
-        path = os.path.join(tempfile.mkdtemp(suffix='_kernels'), KERNEL_NAME)
+        path = os.path.join(tempfile.mkdtemp(suffix="_kernels"), KERNEL_NAME)
 
     # stage resources
     shutil.copytree(RESOURCES, path)
@@ -82,14 +82,21 @@ def write_kernel_spec(path=None, overrides=None, extra_arguments=None):
 
     if overrides:
         kernel_dict.update(overrides)
-    with open(pjoin(path, 'kernel.json'), 'w') as f:
+    with open(pjoin(path, "kernel.json"), "w") as f:
         json.dump(kernel_dict, f, indent=1)
 
     return path
 
 
-def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, display_name=None,
-            prefix=None, profile=None, env=None):
+def install(
+    kernel_spec_manager=None,
+    user=False,
+    kernel_name=KERNEL_NAME,
+    display_name=None,
+    prefix=None,
+    profile=None,
+    env=None,
+):
     """Install the IPython kernelspec for Jupyter
 
     Parameters
@@ -132,17 +139,19 @@ def install(kernel_spec_manager=None, user=False, kernel_name=KERNEL_NAME, displ
         extra_arguments = ["--profile", profile]
         if not display_name:
             # add the profile to the default display name
-            overrides["display_name"] = 'Python %i [profile=%s]' % (sys.version_info[0], profile)
+            overrides["display_name"] = "Python %i [profile=%s]" % (sys.version_info[0], profile)
     else:
         extra_arguments = None
     if env:
-        overrides['env'] = env
+        overrides["env"] = env
     path = write_kernel_spec(overrides=overrides, extra_arguments=extra_arguments)
     dest = kernel_spec_manager.install_kernel_spec(
-        path, kernel_name=kernel_name, user=user, prefix=prefix)
+        path, kernel_name=kernel_name, user=user, prefix=prefix
+    )
     # cleanup afterward
     shutil.rmtree(path)
     return dest
+
 
 # Entrypoint
 
@@ -151,7 +160,8 @@ from traitlets.config import Application
 
 class InstallIPythonKernelSpecApp(Application):
     """Dummy app wrapping argparse"""
-    name = 'ipython-kernel-install'
+
+    name = "ipython-kernel-install"
 
     def initialize(self, argv=None):
         if argv is None:
@@ -160,33 +170,67 @@ class InstallIPythonKernelSpecApp(Application):
 
     def start(self):
         import argparse
-        parser = argparse.ArgumentParser(prog=self.name,
-            description="Install the IPython kernel spec.")
-        parser.add_argument('--user', action='store_true',
-            help="Install for the current user instead of system-wide")
-        parser.add_argument('--name', type=str, default=KERNEL_NAME,
+
+        parser = argparse.ArgumentParser(
+            prog=self.name, description="Install the IPython kernel spec."
+        )
+        parser.add_argument(
+            "--user",
+            action="store_true",
+            help="Install for the current user instead of system-wide",
+        )
+        parser.add_argument(
+            "--name",
+            type=str,
+            default=KERNEL_NAME,
             help="Specify a name for the kernelspec."
-            " This is needed to have multiple IPython kernels at the same time.")
-        parser.add_argument('--display-name', type=str,
+            " This is needed to have multiple IPython kernels at the same time.",
+        )
+        parser.add_argument(
+            "--display-name",
+            type=str,
             help="Specify the display name for the kernelspec."
-            " This is helpful when you have multiple IPython kernels.")
-        parser.add_argument('--profile', type=str,
+            " This is helpful when you have multiple IPython kernels.",
+        )
+        parser.add_argument(
+            "--profile",
+            type=str,
             help="Specify an IPython profile to load. "
-            "This can be used to create custom versions of the kernel.")
-        parser.add_argument('--prefix', type=str,
+            "This can be used to create custom versions of the kernel.",
+        )
+        parser.add_argument(
+            "--prefix",
+            type=str,
             help="Specify an install prefix for the kernelspec."
-            " This is needed to install into a non-default location, such as a conda/virtual-env.")
-        parser.add_argument('--sys-prefix', action='store_const', const=sys.prefix, dest='prefix',
+            " This is needed to install into a non-default location, such as a conda/virtual-env.",
+        )
+        parser.add_argument(
+            "--sys-prefix",
+            action="store_const",
+            const=sys.prefix,
+            dest="prefix",
             help="Install to Python's sys.prefix."
-            " Shorthand for --prefix='%s'. For use in conda/virtual-envs." % sys.prefix)
-        parser.add_argument('--env', action='append', nargs=2, metavar=('ENV', 'VALUE'),
-            help="Set environment variables for the kernel.")
+            " Shorthand for --prefix='%s'. For use in conda/virtual-envs." % sys.prefix,
+        )
+        parser.add_argument(
+            "--env",
+            action="append",
+            nargs=2,
+            metavar=("ENV", "VALUE"),
+            help="Set environment variables for the kernel.",
+        )
         opts = parser.parse_args(self.argv)
         if opts.env:
-            opts.env = {k:v for (k, v) in opts.env}
+            opts.env = {k: v for (k, v) in opts.env}
         try:
-            dest = install(user=opts.user, kernel_name=opts.name, profile=opts.profile,
-                           prefix=opts.prefix, display_name=opts.display_name, env=opts.env)
+            dest = install(
+                user=opts.user,
+                kernel_name=opts.name,
+                profile=opts.profile,
+                prefix=opts.prefix,
+                display_name=opts.display_name,
+                env=opts.env,
+            )
         except OSError as e:
             if e.errno == errno.EACCES:
                 print(e, file=sys.stderr)
@@ -197,5 +241,5 @@ class InstallIPythonKernelSpecApp(Application):
         print("Installed kernelspec %s in %s" % (opts.name, dest))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     InstallIPythonKernelSpecApp.launch_instance()

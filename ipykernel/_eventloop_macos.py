@@ -10,7 +10,7 @@ import ctypes
 import ctypes.util
 from threading import Event
 
-objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('objc'))
+objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
 
 void_p = ctypes.c_void_p
 
@@ -25,7 +25,7 @@ msg = objc.objc_msgSend
 def _utf8(s):
     """ensure utf8 bytes"""
     if not isinstance(s, bytes):
-        s = s.encode('utf8')
+        s = s.encode("utf8")
     return s
 
 
@@ -42,7 +42,7 @@ def C(classname):
 # end obj-c boilerplate from appnope
 
 # CoreFoundation C-API calls we will use:
-CoreFoundation = ctypes.cdll.LoadLibrary(ctypes.util.find_library('CoreFoundation'))
+CoreFoundation = ctypes.cdll.LoadLibrary(ctypes.util.find_library("CoreFoundation"))
 
 CFAbsoluteTimeGetCurrent = CoreFoundation.CFAbsoluteTimeGetCurrent
 CFAbsoluteTimeGetCurrent.restype = ctypes.c_double
@@ -60,43 +60,46 @@ CFRunLoopStop.argtypes = [void_p]
 CFRunLoopTimerCreate = CoreFoundation.CFRunLoopTimerCreate
 CFRunLoopTimerCreate.restype = void_p
 CFRunLoopTimerCreate.argtypes = [
-    void_p,             # allocator (NULL)
-    ctypes.c_double,    # fireDate
-    ctypes.c_double,    # interval
-    ctypes.c_int,       # flags (0)
-    ctypes.c_int,       # order (0)
-    void_p,             # callout
-    void_p,             # context
+    void_p,  # allocator (NULL)
+    ctypes.c_double,  # fireDate
+    ctypes.c_double,  # interval
+    ctypes.c_int,  # flags (0)
+    ctypes.c_int,  # order (0)
+    void_p,  # callout
+    void_p,  # context
 ]
 
 CFRunLoopAddTimer = CoreFoundation.CFRunLoopAddTimer
 CFRunLoopAddTimer.restype = None
-CFRunLoopAddTimer.argtypes = [ void_p, void_p, void_p ]
+CFRunLoopAddTimer.argtypes = [void_p, void_p, void_p]
 
-kCFRunLoopCommonModes = void_p.in_dll(CoreFoundation, 'kCFRunLoopCommonModes')
+kCFRunLoopCommonModes = void_p.in_dll(CoreFoundation, "kCFRunLoopCommonModes")
 
 
 def _NSApp():
     """Return the global NSApplication instance (NSApp)"""
-    return msg(C('NSApplication'), n('sharedApplication'))
+    return msg(C("NSApplication"), n("sharedApplication"))
 
 
 def _wake(NSApp):
     """Wake the Application"""
-    event = msg(C('NSEvent'),
-        n('otherEventWithType:location:modifierFlags:'
-          'timestamp:windowNumber:context:subtype:data1:data2:'),
-        15, # Type
-        0, # location
-        0, # flags
-        0, # timestamp
-        0, # window
-        None, # context
-        0, # subtype
-        0, # data1
-        0, # data2
+    event = msg(
+        C("NSEvent"),
+        n(
+            "otherEventWithType:location:modifierFlags:"
+            "timestamp:windowNumber:context:subtype:data1:data2:"
+        ),
+        15,  # Type
+        0,  # location
+        0,  # flags
+        0,  # timestamp
+        0,  # window
+        None,  # context
+        0,  # subtype
+        0,  # data1
+        0,  # data2
     )
-    msg(NSApp, n('postEvent:atStart:'), void_p(event), True)
+    msg(NSApp, n("postEvent:atStart:"), void_p(event), True)
 
 
 _triggered = Event()
@@ -108,8 +111,8 @@ def stop(timer=None, loop=None):
     NSApp = _NSApp()
     # if NSApp is not running, stop CFRunLoop directly,
     # otherwise stop and wake NSApp
-    if msg(NSApp, n('isRunning')):
-        msg(NSApp, n('stop:'), NSApp)
+    if msg(NSApp, n("isRunning")):
+        msg(NSApp, n("stop:"), NSApp)
         _wake(NSApp)
     else:
         CFRunLoopStop(CFRunLoopGetCurrent())
@@ -122,11 +125,11 @@ _c_stop_callback = _c_callback_func_type(stop)
 def _stop_after(delay):
     """Register callback to stop eventloop after a delay"""
     timer = CFRunLoopTimerCreate(
-        None, # allocator
-        CFAbsoluteTimeGetCurrent() + delay, # fireDate
-        0, # interval
-        0, # flags
-        0, # order
+        None,  # allocator
+        CFAbsoluteTimeGetCurrent() + delay,  # fireDate
+        0,  # interval
+        0,  # flags
+        0,  # order
         _c_stop_callback,
         None,
     )
@@ -143,7 +146,7 @@ def mainloop(duration=1):
     _triggered.clear()
     NSApp = _NSApp()
     _stop_after(duration)
-    msg(NSApp, n('run'))
+    msg(NSApp, n("run"))
     if not _triggered.is_set():
         # app closed without firing callback,
         # probably due to last window being closed.

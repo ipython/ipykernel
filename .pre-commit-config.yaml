@@ -16,21 +16,21 @@ repos:
       - id: check-builtin-literals
       - id: trailing-whitespace
 
-  # - repo: https://github.com/psf/black
-  #   rev: 22.1.0
-  #   hooks:
-  #     - id: black
-  #       args: ["--line-length", "100"]
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: ["--line-length", "100"]
 
-  # - repo: https://github.com/PyCQA/isort
-  #   rev: 5.10.1
-  #   hooks:
-  #     - id: isort
-  #       files: \.py$
-  #       args: [--profile=black]
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        files: \.py$
+        args: [--profile=black]
 
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.5.1
+    rev: v2.6.1
     hooks:
       - id: prettier
 
@@ -46,15 +46,6 @@ repos:
   #         ]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.8.0
+    rev: v8.12.0
     hooks:
       - id: eslint
-
-  - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.10.2
-    hooks:
-      - id: check-jsonschema
-        name: "Check GitHub Workflows"
-        files: ^\.github/workflows/
-        types: [yaml]
-        args: ["--schemafile", "https://json.schemastore.org/github-workflow"]

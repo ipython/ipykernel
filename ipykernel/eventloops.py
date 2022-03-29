@@ -3,14 +3,13 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from functools import partial
 import os
-import sys
 import platform
+import sys
+from distutils.version import LooseVersion as V
+from functools import partial
 
 import zmq
-
-from distutils.version import LooseVersion as V
 from traitlets.config.application import Application
 
 
@@ -19,7 +18,7 @@ def _use_appnope():
 
     Checks if we are on OS X 10.9 or greater.
     """
-    return sys.platform == 'darwin' and V(platform.mac_ver()[0]) >= V('10.9')
+    return sys.platform == "darwin" and V(platform.mac_ver()[0]) >= V("10.9")
 
 
 def _notify_stream_qt(kernel, stream):
@@ -51,15 +50,17 @@ def _notify_stream_qt(kernel, stream):
     timer.timeout.connect(process_stream_events)
     timer.start(0)
 
+
 # mapping of keys to loop functions
 loop_map = {
-    'inline': None,
-    'nbagg': None,
-    'notebook': None,
-    'ipympl': None,
-    'widget': None,
+    "inline": None,
+    "nbagg": None,
+    "notebook": None,
+    "ipympl": None,
+    "widget": None,
     None: None,
 }
+
 
 def register_integration(*toolkitnames):
     """Decorator to register an event loop to integrate with the IPython kernel
@@ -74,6 +75,7 @@ def register_integration(*toolkitnames):
     :mod:`ipykernel.eventloops` provides and registers such functions
     for a few common event loops.
     """
+
     def decorator(func):
         for name in toolkitnames:
             loop_map[name] = func
@@ -106,12 +108,12 @@ def _loop_qt(app):
     app._in_event_loop = False
 
 
-@register_integration('qt4')
+@register_integration("qt4")
 def loop_qt4(kernel):
     """Start a kernel with PyQt4 event loop integration."""
 
-    from IPython.lib.guisupport import get_app_qt4
     from IPython.external.qt_for_kernel import QtGui
+    from IPython.lib.guisupport import get_app_qt4
 
     kernel.app = get_app_qt4([" "])
     if isinstance(kernel.app, QtGui.QApplication):
@@ -121,19 +123,21 @@ def loop_qt4(kernel):
     _loop_qt(kernel.app)
 
 
-@register_integration('qt', 'qt5')
+@register_integration("qt", "qt5")
 def loop_qt5(kernel):
     """Start a kernel with PyQt5 event loop integration."""
-    if os.environ.get('QT_API', None) is None:
+    if os.environ.get("QT_API", None) is None:
         try:
             import PyQt5
-            os.environ['QT_API'] = 'pyqt5'
+
+            os.environ["QT_API"] = "pyqt5"
         except ImportError:
             try:
                 import PySide2
-                os.environ['QT_API'] = 'pyside2'
+
+                os.environ["QT_API"] = "pyside2"
             except ImportError:
-                os.environ['QT_API'] = 'pyqt5'
+                os.environ["QT_API"] = "pyqt5"
     return loop_qt4(kernel)
 
 
@@ -156,7 +160,7 @@ def _loop_wx(app):
     app._in_event_loop = False
 
 
-@register_integration('wx')
+@register_integration("wx")
 def loop_wx(kernel):
     """Start a kernel with wx event loop support."""
 
@@ -195,16 +199,14 @@ def loop_wx(kernel):
 
     # The redirect=False here makes sure that wx doesn't replace
     # sys.stdout/stderr with its own classes.
-    if not (
-        getattr(kernel, 'app', None)
-        and isinstance(kernel.app, wx.App)
-    ):
+    if not (getattr(kernel, "app", None) and isinstance(kernel.app, wx.App)):
         kernel.app = IPWxApp(redirect=False)
 
     # The import of wx on Linux sets the handler for signal.SIGINT
     # to 0.  This is a bug in wx or gtk.  We fix by just setting it
     # back to the Python default.
     import signal
+
     if not callable(signal.getsignal(signal.SIGINT)):
         signal.signal(signal.SIGINT, signal.default_int_handler)
 
@@ -214,20 +216,21 @@ def loop_wx(kernel):
 @loop_wx.exit
 def loop_wx_exit(kernel):
     import wx
+
     wx.Exit()
 
 
-@register_integration('tk')
+@register_integration("tk")
 def loop_tk(kernel):
     """Start a kernel with the Tk event loop."""
 
-    from tkinter import Tk, READABLE
+    from tkinter import READABLE, Tk
 
     app = Tk()
     # Capability detection:
     # per https://docs.python.org/3/library/tkinter.html#file-handlers
     # file handlers are not available on Windows
-    if hasattr(app, 'createfilehandler'):
+    if hasattr(app, "createfilehandler"):
         # A basic wrapper for structural similarity with the Windows version
         class BasicAppWrapper:
             def __init__(self, app):
@@ -254,7 +257,9 @@ def loop_tk(kernel):
 
     else:
         import asyncio
+
         import nest_asyncio
+
         nest_asyncio.apply()
 
         doi = kernel.do_one_iteration
@@ -291,7 +296,7 @@ def loop_tk_exit(kernel):
         pass
 
 
-@register_integration('gtk')
+@register_integration("gtk")
 def loop_gtk(kernel):
     """Start the kernel, coordinating with the GTK event loop"""
     from .gui.gtkembed import GTKEmbed
@@ -306,7 +311,7 @@ def loop_gtk_exit(kernel):
     kernel._gtk.stop()
 
 
-@register_integration('gtk3')
+@register_integration("gtk3")
 def loop_gtk3(kernel):
     """Start the kernel, coordinating with the GTK event loop"""
     from .gui.gtk3embed import GTKEmbed
@@ -321,7 +326,7 @@ def loop_gtk3_exit(kernel):
     kernel._gtk.stop()
 
 
-@register_integration('osx')
+@register_integration("osx")
 def loop_cocoa(kernel):
     """Start the kernel, coordinating with the Cocoa CFRunLoop event loop
     via the matplotlib MacOSX backend.
@@ -329,6 +334,7 @@ def loop_cocoa(kernel):
     from ._eventloop_macos import mainloop, stop
 
     real_excepthook = sys.excepthook
+
     def handle_int(etype, value, tb):
         """don't let KeyboardInterrupts look like crashes"""
         # wake the eventloop when we get a signal
@@ -362,13 +368,15 @@ def loop_cocoa(kernel):
 @loop_cocoa.exit
 def loop_cocoa_exit(kernel):
     from ._eventloop_macos import stop
+
     stop()
 
 
-@register_integration('asyncio')
+@register_integration("asyncio")
 def loop_asyncio(kernel):
-    '''Start a kernel with asyncio event loop support.'''
+    """Start a kernel with asyncio event loop support."""
     import asyncio
+
     loop = asyncio.get_event_loop()
     # loop is already running (e.g. tornado 5), nothing left to do
     if loop.is_running():
@@ -409,11 +417,12 @@ def loop_asyncio(kernel):
 def loop_asyncio_exit(kernel):
     """Exit hook for asyncio"""
     import asyncio
+
     loop = asyncio.get_event_loop()
 
     @asyncio.coroutine
     def close_loop():
-        if hasattr(loop, 'shutdown_asyncgens'):
+        if hasattr(loop, "shutdown_asyncgens"):
             yield from loop.shutdown_asyncgens()
         loop._should_close = True
         loop.stop()
@@ -433,9 +442,10 @@ def enable_gui(gui, kernel=None):
         raise ValueError(e)
     if kernel is None:
         if Application.initialized():
-            kernel = getattr(Application.instance(), 'kernel', None)
+            kernel = getattr(Application.instance(), "kernel", None)
         if kernel is None:
-            raise RuntimeError("You didn't specify a kernel,"
+            raise RuntimeError(
+                "You didn't specify a kernel,"
                 " and no IPython Application with a kernel appears to be running."
             )
     loop = loop_map[gui]

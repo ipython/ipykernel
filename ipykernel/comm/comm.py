@@ -5,39 +5,44 @@
 
 import uuid
 
+from traitlets import Any, Bool, Bytes, Dict, Instance, Unicode, default
 from traitlets.config import LoggingConfigurable
-from ipykernel.kernelbase import Kernel
 
 from ipykernel.jsonutil import json_clean
-from traitlets import Instance, Unicode, Bytes, Bool, Dict, Any, default
+from ipykernel.kernelbase import Kernel
 
 
 class Comm(LoggingConfigurable):
     """Class for communicating between a Frontend and a Kernel"""
-    kernel = Instance('ipykernel.kernelbase.Kernel', allow_none=True)
 
-    @default('kernel')
+    kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)
+
+    @default("kernel")
     def _default_kernel(self):
         if Kernel.initialized():
             return Kernel.instance()
 
     comm_id = Unicode()
 
-    @default('comm_id')
+    @default("comm_id")
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
     primary = Bool(True, help="Am I the primary or secondary Comm?")
 
-    target_name = Unicode('comm')
-    target_module = Unicode(None, allow_none=True, help="""requirejs module from
-        which to load comm target.""")
+    target_name = Unicode("comm")
+    target_module = Unicode(
+        None,
+        allow_none=True,
+        help="""requirejs module from
+        which to load comm target.""",
+    )
 
     topic = Bytes()
 
-    @default('topic')
+    @default("topic")
     def _default_topic(self):
-        return ('comm-%s' % self.comm_id).encode('ascii')
+        return ("comm-%s" % self.comm_id).encode("ascii")
 
     _open_data = Dict(help="data dict, if any, to be included in comm_open")
     _close_data = Dict(help="data dict, if any, to be included in comm_close")
@@ -47,9 +52,9 @@ class Comm(LoggingConfigurable):
 
     _closed = Bool(True)
 
-    def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
+    def __init__(self, target_name="", data=None, metadata=None, buffers=None, **kwargs):
         if target_name:
-            kwargs['target_name'] = target_name
+            kwargs["target_name"] = target_name
         super().__init__(**kwargs)
         if self.kernel:
             if self.primary:
@@ -63,7 +68,9 @@ class Comm(LoggingConfigurable):
         data = {} if data is None else data
         metadata = {} if metadata is None else metadata
         content = json_clean(dict(data=data, comm_id=self.comm_id, **keys))
-        self.kernel.session.send(self.kernel.iopub_socket, msg_type,
+        self.kernel.session.send(
+            self.kernel.iopub_socket,
+            msg_type,
             content,
             metadata=json_clean(metadata),
             parent=self.kernel.get_parent("shell"),
@@ -81,18 +88,23 @@ class Comm(LoggingConfigurable):
         """Open the frontend-side version of this comm"""
         if data is None:
             data = self._open_data
-        comm_manager = getattr(self.kernel, 'comm_manager', None)
+        comm_manager = getattr(self.kernel, "comm_manager", None)
         if comm_manager is None:
-            raise RuntimeError("Comms cannot be opened without a kernel "
-                        "and a comm_manager attached to that kernel.")
+            raise RuntimeError(
+                "Comms cannot be opened without a kernel "
+                "and a comm_manager attached to that kernel."
+            )
 
         comm_manager.register_comm(self)
         try:
-            self._publish_msg('comm_open',
-                              data=data, metadata=metadata, buffers=buffers,
-                              target_name=self.target_name,
-                              target_module=self.target_module,
-                              )
+            self._publish_msg(
+                "comm_open",
+                data=data,
+                metadata=metadata,
+                buffers=buffers,
+                target_name=self.target_name,
+                target_module=self.target_module,
+            )
             self._closed = False
         except Exception:
             comm_manager.unregister_comm(self)
@@ -110,8 +122,11 @@ class Comm(LoggingConfigurable):
             return
         if data is None:
             data = self._close_data
-        self._publish_msg('comm_close',
-            data=data, metadata=metadata, buffers=buffers,
+        self._publish_msg(
+            "comm_close",
+            data=data,
+            metadata=metadata,
+            buffers=buffers,
         )
         if not deleting:
             # If deleting, the comm can't be registered
@@ -119,8 +134,11 @@ class Comm(LoggingConfigurable):
 
     def send(self, data=None, metadata=None, buffers=None):
         """Send a message to the frontend-side version of this comm"""
-        self._publish_msg('comm_msg',
-            data=data, metadata=metadata, buffers=buffers,
+        self._publish_msg(
+            "comm_msg",
+            data=data,
+            metadata=metadata,
+            buffers=buffers,
         )
 
     # registering callbacks
@@ -157,10 +175,10 @@ class Comm(LoggingConfigurable):
         if self._msg_callback:
             shell = self.kernel.shell
             if shell:
-                shell.events.trigger('pre_execute')
+                shell.events.trigger("pre_execute")
             self._msg_callback(msg)
             if shell:
-                shell.events.trigger('post_execute')
+                shell.events.trigger("post_execute")
 
 
-__all__ = ['Comm']
+__all__ = ["Comm"]

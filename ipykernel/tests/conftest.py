@@ -1,3 +1,5 @@
+import asyncio
+import os
 
 try:
     import resource
@@ -19,3 +21,8 @@ if resource is not None:
         hard = soft
 
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
+
+
+# Enforce selector event loop on Windows.
+if os.name == "nt":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())

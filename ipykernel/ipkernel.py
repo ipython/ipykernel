@@ -452,6 +452,7 @@ class IPythonKernel(KernelBase):
                         end=comp.end,
                         text=comp.text,
                         type=comp.type,
+                        signature=comp.signature,
                     )
                 )
 

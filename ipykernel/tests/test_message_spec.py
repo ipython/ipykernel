@@ -5,12 +5,22 @@
 
 import re
 import sys
-from pkg_resources import parse_version as V
 from queue import Empty
 
 import jupyter_client
 import pytest
-from traitlets import Bool, Dict, Enum, HasTraits, Integer, List, TraitError, Unicode, observe
+from pkg_resources import parse_version as V
+from traitlets import (
+    Bool,
+    Dict,
+    Enum,
+    HasTraits,
+    Integer,
+    List,
+    TraitError,
+    Unicode,
+    observe,
+)
 
 from .utils import TIMEOUT, execute, flush_channels, get_reply, start_global_kernel
 
@@ -98,9 +108,9 @@ class MimeBundle(Reference):
     metadata = Dict()
     data = Dict()
 
-    @observe('data')
+    @observe("data")
     def _on_data_changed(self, change):
-        for k, v in change['new'].items():
+        for k, v in change["new"].items():
             assert mime_pat.match(k)
             assert isinstance(v, str)
 

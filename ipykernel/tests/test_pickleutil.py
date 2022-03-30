@@ -1,7 +1,6 @@
 import pickle
 import warnings
 
-
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from ipykernel.pickleutil import can, uncan

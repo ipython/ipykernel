@@ -77,7 +77,7 @@ def setup_kernel(cmd):
         kernel.terminate()
         kernel.wait()
         # Make sure all the fds get closed.
-        for attr in ['stdout', 'stderr', 'stdin']:
+        for attr in ["stdout", "stderr", "stdin"]:
             fid = getattr(kernel, attr)
             if fid:
                 fid.close()

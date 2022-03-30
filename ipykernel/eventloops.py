@@ -6,10 +6,10 @@
 import os
 import platform
 import sys
-from pkg_resources import parse_version as V
 from functools import partial
 
 import zmq
+from pkg_resources import parse_version as V
 from traitlets.config.application import Application
 
 

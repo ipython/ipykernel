@@ -62,19 +62,20 @@ setup_args = dict(
     keywords=["Interactive", "Interpreter", "Shell", "Web"],
     python_requires=">=3.7",
     install_requires=[
-        "debugpy>=1.0.0,<2.0",
+        "debugpy>=1.0",
         "ipython>=7.23.1",
-        "traitlets>=5.1.0,<6.0",
-        "jupyter_client<8.0",
-        "tornado>=5.0,<7.0",
-        "matplotlib-inline>=0.1.0,<0.2.0",
+        "traitlets>=5.1.0",
+        "jupyter_client>=6.1.12",
+        "tornado>=6.1",
+        "matplotlib-inline>=0.1",
         'appnope;platform_system=="Darwin"',
         "psutil",
         "nest_asyncio",
+        "setuptools>=60"  # for pkg_resources
     ],
     extras_require={
         "test": [
-            "pytest !=5.3.4",
+            "pytest>=6.0",
             "pytest-cov",
             "flaky",
             "ipyparallel",
@@ -92,6 +93,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
 )
 

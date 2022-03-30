@@ -6,7 +6,7 @@
 import os
 import platform
 import sys
-from distutils.version import LooseVersion as V
+from pkg_resources import parse_version as V
 from functools import partial
 
 import zmq

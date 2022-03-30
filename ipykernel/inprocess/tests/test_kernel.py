@@ -3,20 +3,18 @@
 
 import sys
 import unittest
+from contextlib import contextmanager
 from io import StringIO
 
 import pytest
 import tornado
 from IPython.utils.io import capture_output
+from jupyter_client.session import Session
 
 from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
 from ipykernel.inprocess.ipkernel import InProcessKernel
 from ipykernel.inprocess.manager import InProcessKernelManager
 from ipykernel.tests.utils import assemble_output
-from IPython.utils.io import capture_output
-
-from jupyter_client.session import Session
-from contextlib import contextmanager
 
 orig_msg = Session.msg
 

@@ -44,7 +44,5 @@ filterwarnings= [
   # Ignore jupyter_client warnings
   "ignore:unclosed <socket.socket:ResourceWarning",
   "ignore:unclosed event loop:ResourceWarning",
-  "ignore:unclosed context <zmq:ResourceWarning",
-  "ignore:unclosed socket <zmq:ResourceWarning",
   "ignore:There is no current event loop:DeprecationWarning"
 ]

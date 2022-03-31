@@ -2,6 +2,31 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.11.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.10.0...d8520c1c68e0e1c401ecc36e962cf369366c3707))
+
+### Enhancements made
+
+- Include method signatures in experimental completion results [#895](https://github.com/ipython/ipykernel/pull/895) ([@MrBago](https://github.com/MrBago))
+- Try to pass cell id to executing kernel. [#886](https://github.com/ipython/ipykernel/pull/886) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+- Handle warnings in tests [#896](https://github.com/ipython/ipykernel/pull/896) ([@blink1073](https://github.com/blink1073))
+- Run flake and remove deprecated import [#894](https://github.com/ipython/ipykernel/pull/894) ([@blink1073](https://github.com/blink1073))
+- Add ignore-revs file [#893](https://github.com/ipython/ipykernel/pull/893) ([@blink1073](https://github.com/blink1073))
+- Autoformat with black and isort [#892](https://github.com/ipython/ipykernel/pull/892) ([@blink1073](https://github.com/blink1073))
+- Add pytest opts and pre-commit [#889](https://github.com/ipython/ipykernel/pull/889) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-03-28&to=2022-03-31&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-03-28..2022-03-31&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2022-03-28..2022-03-31&type=Issues) | [@MrBago](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AMrBago+updated%3A2022-03-28..2022-03-31&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2022-03-28..2022-03-31&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.10.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.9.2...3059fd97b7ccbd72e778f123bfb0ad92e7d9e9c8))
@@ -28,8 +53,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-03-14&to=2022-03-28&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-03-14..2022-03-28&type=Issues) | [@jamadeo](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajamadeo+updated%3A2022-03-14..2022-03-28&type=Issues) | [@lesteve](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Alesteve+updated%3A2022-03-14..2022-03-28&type=Issues) | [@MrBago](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AMrBago+updated%3A2022-03-14..2022-03-28&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2022-03-14..2022-03-28&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.9.2
 

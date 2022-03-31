@@ -226,6 +226,9 @@ class IOPubThread:
 
     def _really_send(self, msg, *args, **kwargs):
         """The callback that actually sends messages"""
+        if self.closed:
+            return
+
         mp_mode = self._check_mp_mode()
 
         if mp_mode != CHILD:

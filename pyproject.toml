@@ -37,3 +37,12 @@ testpaths = [
 timeout = 300
 # Restore this setting to debug failures
 # timeout_method = "thread"
+filterwarnings= [
+  # Fail on warnings
+  "error",
+
+  # Ignore jupyter_client warnings
+  "ignore:unclosed <socket.socket:ResourceWarning",
+  "ignore:unclosed event loop:ResourceWarning",
+  "ignore:There is no current event loop:DeprecationWarning"
+]

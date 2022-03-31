@@ -135,7 +135,7 @@ jobs:
       - name: Run the tests
         timeout-minutes: 10
         run: |
-          cmd="python -m pytest -vv -raXxs"
+          cmd="python -m pytest -vv"
           $cmd || $cmd --lf
 
   test_miniumum_versions:
@@ -152,7 +152,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
       - name: Run the unit tests
         run: |
-          cmd="python -m pytest -vv -raXxs"
+          cmd="python -m pytest -vv -W default"
           $cmd || $cmd --lf
 
   test_prereleases:

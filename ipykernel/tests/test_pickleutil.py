@@ -1,6 +1,9 @@
 import pickle
+import warnings
 
-from ipykernel.pickleutil import can, uncan
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from ipykernel.pickleutil import can, uncan
 
 
 def interactive(f):

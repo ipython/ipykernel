@@ -3,16 +3,20 @@
 
 import sys
 import unittest
+from contextlib import contextmanager
 from io import StringIO
 
 import pytest
 import tornado
 from IPython.utils.io import capture_output
+from jupyter_client.session import Session
 
 from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
 from ipykernel.inprocess.ipkernel import InProcessKernel
 from ipykernel.inprocess.manager import InProcessKernelManager
 from ipykernel.tests.utils import assemble_output
+
+orig_msg = Session.msg
 
 
 def _init_asyncio_patch():
@@ -53,6 +57,26 @@ def _init_asyncio_patch():
                 asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 
+def _inject_cell_id(_self, *args, **kwargs):
+    """
+    This patch jupyter_client.session:Session.msg to add a cell_id to the return message metadata
+    """
+    assert isinstance(_self, Session)
+    res = orig_msg(_self, *args, **kwargs)
+    assert "cellId" not in res["metadata"]
+    res["metadata"]["cellId"] = "test_cell_id"
+    return res
+
+
+@contextmanager
+def patch_cell_id():
+    try:
+        Session.msg = _inject_cell_id
+        yield
+    finally:
+        Session.msg = orig_msg
+
+
 class InProcessKernelTestCase(unittest.TestCase):
     def setUp(self):
         _init_asyncio_patch()
@@ -61,6 +85,11 @@ class InProcessKernelTestCase(unittest.TestCase):
         self.kc = self.km.client()
         self.kc.start_channels()
         self.kc.wait_for_ready()
+
+    def test_with_cell_id(self):
+
+        with patch_cell_id():
+            self.kc.execute("1+1")
 
     def test_pylab(self):
         """Does %pylab work in the in-process kernel?"""

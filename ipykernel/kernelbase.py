@@ -58,6 +58,14 @@ from ipykernel.jsonutil import json_clean
 from ._version import kernel_protocol_version
 
 
+def _accepts_cell_id(meth):
+    parameters = inspect.signature(meth).parameters
+    cid_param = parameters.get("cell_id")
+    return (cid_param and cid_param.kind == cid_param.KEYWORD_ONLY) or any(
+        p.kind == p.VAR_KEYWORD for p in parameters.values()
+    )
+
+
 class Kernel(SingletonConfigurable):
 
     # ---------------------------------------------------------------------------
@@ -690,13 +698,26 @@ class Kernel(SingletonConfigurable):
             self.execution_count += 1
             self._publish_execute_input(code, parent, self.execution_count)
 
-        reply_content = self.do_execute(
-            code,
-            silent,
-            store_history,
-            user_expressions,
-            allow_stdin,
-        )
+        cell_id = (parent.get("metadata") or {}).get("cellId")
+
+        if _accepts_cell_id(self.do_execute):
+            reply_content = self.do_execute(
+                code,
+                silent,
+                store_history,
+                user_expressions,
+                allow_stdin,
+                cell_id=cell_id,
+            )
+        else:
+            reply_content = self.do_execute(
+                code,
+                silent,
+                store_history,
+                user_expressions,
+                allow_stdin,
+            )
+
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
 
@@ -714,7 +735,12 @@ class Kernel(SingletonConfigurable):
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
         reply_msg = self.session.send(
-            stream, "execute_reply", reply_content, parent, metadata=metadata, ident=ident
+            stream,
+            "execute_reply",
+            reply_content,
+            parent,
+            metadata=metadata,
+            ident=ident,
         )
 
         self.log.debug("%s", reply_msg)

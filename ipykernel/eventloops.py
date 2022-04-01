@@ -9,7 +9,7 @@ import sys
 from functools import partial
 
 import zmq
-from pkg_resources import parse_version as V
+from packaging.version import Version as V
 from traitlets.config.application import Application
 
 

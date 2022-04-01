@@ -9,7 +9,7 @@ from queue import Empty
 
 import jupyter_client
 import pytest
-from pkg_resources import parse_version as V
+from packaging.version import Version as V
 from traitlets import (
     Bool,
     Dict,

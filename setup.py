@@ -71,7 +71,7 @@ setup_args = dict(
         'appnope;platform_system=="Darwin"',
         "psutil",
         "nest_asyncio",
-        "setuptools>=60",  # for pkg_resources
+        "packaging",
     ],
     extras_require={
         "test": [

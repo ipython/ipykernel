@@ -32,7 +32,8 @@ src = "ipykernel/_version.py"
 [tool.pytest.ini_options]
 addopts = "-raXs --durations 10 --color=yes --doctest-modules --ignore=ipykernel/pylab/backend_inline.py --ignore=ipykernel/pylab/config.py --ignore=ipykernel/gui/gtk3embed.py --ignore=ipykernel/gui/gtkembed.py --ignore=ipykernel/datapub.py --ignore=ipykernel/log.py --ignore=ipykernel/pickleutil.py --ignore=ipykernel/serialize.py --ignore=ipykernel/_eventloop_macos.py"
 testpaths = [
-    "ipykernel/"
+    "ipykernel/tests",
+    "ipykernel/inprocess/tests"
 ]
 timeout = 300
 # Restore this setting to debug failures
@@ -40,12 +41,6 @@ timeout = 300
 filterwarnings= [
   # Fail on warnings
   "error",
-
-  # Ignore our own warnings
-  "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
-
-  # https://github.com/minrk/appnope/issues/13
-  "ignore:distutils Version classes are deprecated:DeprecationWarning:appnope",
 
   # Ignore jupyter_client warnings
   "ignore:unclosed <socket.socket:ResourceWarning",

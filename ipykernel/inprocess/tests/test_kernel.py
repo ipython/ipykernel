@@ -1,6 +1,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 import sys
 import unittest
 from contextlib import contextmanager
@@ -148,3 +149,8 @@ class InProcessKernelTestCase(unittest.TestCase):
         kernel._input_request = lambda *args, **kwargs: None
 
         kernel.getpass(stream="non empty")
+
+    def test_do_execute(self):
+        kernel = InProcessKernel()
+        asyncio.run(kernel.do_execute("a=1", True))
+        assert kernel.shell.user_ns["a"] == 1

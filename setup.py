@@ -81,6 +81,8 @@ setup_args = dict(
             "ipyparallel",
             "pre-commit",
             "pytest-timeout",
+            "gobject",
+            "trio",
         ],
     },
     classifiers=[

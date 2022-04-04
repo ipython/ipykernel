@@ -749,7 +749,14 @@ class Kernel(SingletonConfigurable):
             self._abort_queues()
 
     def do_execute(
-        self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
+        self,
+        code,
+        silent,
+        store_history=True,
+        user_expressions=None,
+        allow_stdin=False,
+        *,
+        cell_id=None,
     ):
         """Execute user code. Must be overridden by subclasses."""
         raise NotImplementedError

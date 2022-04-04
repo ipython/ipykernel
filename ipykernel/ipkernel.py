@@ -304,7 +304,7 @@ class IPythonKernel(KernelBase):
         user_expressions=None,
         allow_stdin=False,
         *,
-        cell_id,
+        cell_id=None,
     ):
         shell = self.shell  # we'll need this a lot here
 

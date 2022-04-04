@@ -41,6 +41,9 @@ filterwarnings= [
   # Fail on warnings
   "error",
 
+  # Ignore our own warnings
+  "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
+
   # https://github.com/minrk/appnope/issues/13
   "ignore:distutils Version classes are deprecated:DeprecationWarning:appnope",
 

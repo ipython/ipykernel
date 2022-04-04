@@ -42,6 +42,9 @@ filterwarnings= [
   # Fail on warnings
   "error",
 
+  # Ignore our own warnings
+  "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
+
   # Ignore jupyter_client warnings
   "ignore:unclosed <socket.socket:ResourceWarning",
   "ignore:unclosed event loop:ResourceWarning",

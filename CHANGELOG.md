@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.12.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.11.0...70073edbdae17be396093be96bf880da069e7e52))
+
+### Enhancements made
+
+- use packaging instead of pkg_resources to parse versions [#900](https://github.com/ipython/ipykernel/pull/900) ([@minrk](https://github.com/minrk))
+
+### Bugs fixed
+
+- Make cell_id optional [#902](https://github.com/ipython/ipykernel/pull/902) ([@blink1073](https://github.com/blink1073))
+- Do not try to send on iostream if closed [#899](https://github.com/ipython/ipykernel/pull/899) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-03-31&to=2022-04-04&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-03-31..2022-04-04&type=Issues) | [@bollwyvl](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abollwyvl+updated%3A2022-03-31..2022-04-04&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2022-03-31..2022-04-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.11.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.10.0...d8520c1c68e0e1c401ecc36e962cf369366c3707))
@@ -24,8 +45,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-03-28&to=2022-03-31&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-03-28..2022-03-31&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2022-03-28..2022-03-31&type=Issues) | [@MrBago](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AMrBago+updated%3A2022-03-28..2022-03-31&type=Issues) | [@SylvainCorlay](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2022-03-28..2022-03-31&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.10.0
 

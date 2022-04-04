@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.12.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.12.0...3a04ea3fa50d01bcc09f10e3de8bb5570c2cd619))
+
+### Maintenance and upkeep improvements
+
+- Clean up test deps and test setup [#904](https://github.com/ipython/ipykernel/pull/904) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-04-04&to=2022-04-04&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-04-04..2022-04-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.12.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.11.0...70073edbdae17be396093be96bf880da069e7e52))
@@ -20,8 +36,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-03-31&to=2022-04-04&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-03-31..2022-04-04&type=Issues) | [@bollwyvl](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abollwyvl+updated%3A2022-03-31..2022-04-04&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2022-03-31..2022-04-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.11.0
 

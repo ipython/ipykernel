@@ -929,10 +929,7 @@ class Kernel(SingletonConfigurable):
             return None
 
     async def usage_request(self, stream, ident, parent):
-        reply_content = {
-            "hostname": socket.gethostname(),
-            "pid": os.getpid()
-        }
+        reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
         process_metric_value = self.get_process_metric_value

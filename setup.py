@@ -65,7 +65,7 @@ setup_args = dict(
         "Funding": "https://numfocus.org/",
         "Source": "https://github.com/ipython/ipykernel",
         "Tracker": "https://github.com/ipython/ipykernel/issues",
-    }
+    },
     python_requires=">=3.7",
     install_requires=[
         "debugpy>=1.0",

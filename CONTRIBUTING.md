@@ -42,6 +42,9 @@ hook with `pre-commit install`, you can fix everything up using
 `pre-commit run --all-files`. You need to make the fixing commit
 yourself after that.
 
+Some of the hooks only run on CI by default, but you can invoke them by
+running with the `--hook-stage manual` argument.
+
 ## Releasing ipykernel
 
 Releasing ipykernel is _almost_ standard for a Python package:

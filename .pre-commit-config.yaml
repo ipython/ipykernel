@@ -34,6 +34,13 @@ repos:
     hooks:
       - id: prettier
 
+  - repo: https://github.com/PyCQA/doc8
+    rev: 0.11.1
+    hooks:
+      - id: doc8
+        args: [--max-line-length=200]
+        stages: [manual]
+
   - repo: https://github.com/pycqa/flake8
     rev: 4.0.1
     hooks:
@@ -44,8 +51,20 @@ repos:
             "flake8-logging-format==0.6.0",
             "flake8-implicit-str-concat==0.2.0",
           ]
+        stages: [manual]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v8.12.0
     hooks:
       - id: eslint
+        stages: [manual]
+
+  - repo: https://github.com/sirosen/check-jsonschema
+    rev: 0.14.2
+    hooks:
+      - id: check-jsonschema
+        name: "Check GitHub Workflows"
+        files: ^\.github/workflows/
+        types: [yaml]
+        args: ["--schemafile", "https://json.schemastore.org/github-workflow"]
+        stages: [manual]

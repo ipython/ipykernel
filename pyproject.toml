@@ -44,25 +44,25 @@ warn_redundant_casts = true
 
 [[tool.mypy.overrides]]
 module = [
-    "appnope",
-    "traitlets.*",
-    "jupyter_core.*",
-    "jupyter_console.*",
     "_pydevd_bundle.*",
+    "appnope",
     "debugpy.*",
-    "nest_asyncio",
+    "entrypoints",
     "flaky",
     "ipykernel.*",
     "ipyparallel.*",
     "IPython.*",
-    "entrypoints",
-    "trio",
-    "qtconsole.*",
+    "jupyter_console.*",
+    "jupyter_core.*",
+    "nest_asyncio",
     "psutil",
-    "wx",
+    "PySide2",
     "PyQt4",
     "PyQt5",
-    "PySide2"
+    "qtconsole.*",
+    "traitlets.*",
+    "trio",
+    "wx",
 ]
 ignore_missing_imports = true
 

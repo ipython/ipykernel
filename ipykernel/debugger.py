@@ -358,9 +358,9 @@ class Debugger:
         event = await self.stopped_queue.get()
         req = {"seq": event["seq"] + 1, "type": "request", "command": "threads"}
         rep = await self._forward_message(req)
-        for t in rep["body"]["threads"]:
-            if self._accept_stopped_thread(t["name"]):
-                self.stopped_threads.add(t["id"])
+        for thread in rep["body"]["threads"]:
+            if self._accept_stopped_thread(thread["name"]):
+                self.stopped_threads.add(thread["id"])
         self.event_callback(event)
 
     @property

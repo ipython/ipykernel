@@ -4,7 +4,7 @@ import sys
 import tornado
 from jupyter_console.ptshell import ZMQTerminalInteractiveShell
 
-from ipykernel.inprocess import InProcessKernelManager
+from ipykernel.inprocess.manager import InProcessKernelManager
 
 
 def print_process_id():

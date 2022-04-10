@@ -23,7 +23,7 @@ from .client import InProcessKernelClient
 class BlockingInProcessChannel(InProcessChannel):
     def __init__(self, *args, **kwds):
         super().__init__(*args, **kwds)
-        self._in_queue = Queue()
+        self._in_queue: Queue[object] = Queue()
 
     def call_handlers(self, msg):
         self._in_queue.put(msg)

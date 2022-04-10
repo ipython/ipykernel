@@ -13,6 +13,7 @@ import warnings
 from binascii import b2a_hex
 from collections import deque
 from io import StringIO, TextIOBase
+from typing import Any, Callable, Optional
 from weakref import WeakSet
 
 import zmq
@@ -66,13 +67,13 @@ class IOPubThread:
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
-        self._events = deque()
-        self._event_pipes = WeakSet()
+        self._events: deque[Callable[..., Any]] = deque()
+        self._event_pipes: WeakSet[Any] = WeakSet()
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main, name="IOPub")
         self.thread.daemon = True
-        self.thread.pydev_do_not_trace = True
-        self.thread.is_pydev_daemon_thread = True
+        self.thread.pydev_do_not_trace = True  # type:ignore[attr-defined]
+        self.thread.is_pydev_daemon_thread = True  # type:ignore[attr-defined]
         self.thread.name = "IOPub"
 
     def _thread_main(self):
@@ -256,7 +257,8 @@ class BackgroundSocket:
         """Wrap socket attr access for backward-compatibility"""
         if attr.startswith("__") and attr.endswith("__"):
             # don't wrap magic methods
-            super().__getattr__(attr)
+            super().__getattr__(attr)  # type:ignore[misc]
+        assert self.io_thread is not None
         if hasattr(self.io_thread.socket, attr):
             warnings.warn(
                 f"Accessing zmq Socket attribute {attr} on BackgroundSocket"
@@ -266,7 +268,7 @@ class BackgroundSocket:
                 stacklevel=2,
             )
             return getattr(self.io_thread.socket, attr)
-        super().__getattr__(attr)
+        super().__getattr__(attr)  # type:ignore[misc]
 
     def __setattr__(self, attr, value):
         if attr == "io_thread" or (attr.startswith("__" and attr.endswith("__"))):
@@ -279,6 +281,7 @@ class BackgroundSocket:
                 DeprecationWarning,
                 stacklevel=2,
             )
+            assert self.io_thread is not None
             setattr(self.io_thread.socket, attr, value)
 
     def send(self, msg, *args, **kwargs):
@@ -286,6 +289,7 @@ class BackgroundSocket:
 
     def send_multipart(self, *args, **kwargs):
         """Schedule send in IO thread"""
+        assert self.io_thread is not None
         return self.io_thread.send_multipart(*args, **kwargs)
 
 
@@ -302,6 +306,7 @@ class OutStream(TextIOBase):
     flush_interval = 0.2
     topic = None
     encoding = "UTF-8"
+    _exc: Optional[Any] = None
 
     def fileno(self):
         """
@@ -362,8 +367,7 @@ class OutStream(TextIOBase):
         """
         if pipe is not None:
             warnings.warn(
-                "pipe argument to OutStream is deprecated and ignored",
-                " since ipykernel 4.2.3.",
+                "pipe argument to OutStream is deprecated and ignored since ipykernel 4.2.3.",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -518,7 +522,7 @@ class OutStream(TextIOBase):
                 ident=self.topic,
             )
 
-    def write(self, string: str) -> int:
+    def write(self, string: str) -> Optional[int]:  # type:ignore[override]
         """Write to current stream after encoding if necessary
 
         Returns
@@ -550,7 +554,7 @@ class OutStream(TextIOBase):
                 # mp.Pool cannot be trusted to flush promptly (or ever),
                 # and this helps.
                 if self._subprocess_flush_pending:
-                    return
+                    return None
                 self._subprocess_flush_pending = True
                 # We can not rely on self._io_loop.call_later from a subprocess
                 self.pub_thread.schedule(self._flush)

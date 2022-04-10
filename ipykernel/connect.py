@@ -6,6 +6,7 @@
 import json
 import sys
 from subprocess import PIPE, Popen
+from typing import Any, Dict
 
 import jupyter_client
 from jupyter_client import write_connection_file
@@ -68,13 +69,15 @@ def get_connection_info(connection_file=None, unpack=False):
     cf = _find_connection_file(connection_file)
 
     with open(cf) as f:
-        info = f.read()
+        info_str = f.read()
 
     if unpack:
-        info = json.loads(info)
+        info = json.loads(info_str)
         # ensure key is bytes:
         info["key"] = info.get("key", "").encode()
-    return info
+        return info
+
+    return info_str
 
 
 def connect_qtconsole(connection_file=None, argv=None):
@@ -105,7 +108,7 @@ def connect_qtconsole(connection_file=None, argv=None):
 
     cmd = ";".join(["from IPython.qt.console import qtconsoleapp", "qtconsoleapp.main()"])
 
-    kwargs = {}
+    kwargs: Dict[str, Any] = {}
     # Launch the Qt console in a separate session & process group, so
     # interrupting the kernel doesn't kill it.
     kwargs["start_new_session"] = True

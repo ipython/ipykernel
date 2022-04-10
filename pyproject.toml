@@ -29,6 +29,25 @@ tag_template = "v{new_version}"
 [[tool.tbump.file]]
 src = "ipykernel/_version.py"
 
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+follow_imports = "normal"
+ignore_missing_imports = true
+no_implicit_optional = true
+no_implicit_reexport = true
+pretty = true
+show_error_context = true
+show_error_codes = true
+strict_equality = true
+strict_optional = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_ignores = true
+
 [tool.pytest.ini_options]
 addopts = "-raXs --durations 10 --color=yes --doctest-modules --ignore=ipykernel/pylab/backend_inline.py --ignore=ipykernel/pylab/config.py --ignore=ipykernel/gui/gtk3embed.py --ignore=ipykernel/gui/gtkembed.py --ignore=ipykernel/datapub.py --ignore=ipykernel/log.py --ignore=ipykernel/pickleutil.py --ignore=ipykernel/serialize.py --ignore=ipykernel/_eventloop_macos.py"
 testpaths = [

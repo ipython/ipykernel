@@ -10,7 +10,7 @@ import ctypes
 import ctypes.util
 from threading import Event
 
-objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))
+objc = ctypes.cdll.LoadLibrary(ctypes.util.find_library("objc"))  # type:ignore[arg-type]
 
 void_p = ctypes.c_void_p
 
@@ -42,7 +42,9 @@ def C(classname):
 # end obj-c boilerplate from appnope
 
 # CoreFoundation C-API calls we will use:
-CoreFoundation = ctypes.cdll.LoadLibrary(ctypes.util.find_library("CoreFoundation"))
+CoreFoundation = ctypes.cdll.LoadLibrary(
+    ctypes.util.find_library("CoreFoundation")  # type:ignore[arg-type]
+)
 
 CFAbsoluteTimeGetCurrent = CoreFoundation.CFAbsoluteTimeGetCurrent
 CFAbsoluteTimeGetCurrent.restype = ctypes.c_double

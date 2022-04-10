@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import typing as t
 
 import zmq
 from IPython.core.getipython import get_ipython
@@ -89,7 +90,7 @@ class DebugpyMessageQueue:
         self.tcp_buffer = ""
         self._reset_tcp_pos()
         self.event_callback = event_callback
-        self.message_queue = Queue()
+        self.message_queue: Queue[t.Any] = Queue()
         self.log = log
 
     def _reset_tcp_pos(self):
@@ -100,7 +101,7 @@ class DebugpyMessageQueue:
 
     def _put_message(self, raw_msg):
         self.log.debug("QUEUE - _put_message:")
-        msg = jsonapi.loads(raw_msg)
+        msg = t.cast(t.Dict[str, t.Any], jsonapi.loads(raw_msg))
         if msg["type"] == "event":
             self.log.debug("QUEUE - received event:")
             self.log.debug(msg)
@@ -290,7 +291,7 @@ class Debugger:
         self.is_started = False
         self.event_callback = event_callback
         self.just_my_code = just_my_code
-        self.stopped_queue = Queue()
+        self.stopped_queue: Queue[t.Any] = Queue()
 
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:
@@ -357,9 +358,9 @@ class Debugger:
         event = await self.stopped_queue.get()
         req = {"seq": event["seq"] + 1, "type": "request", "command": "threads"}
         rep = await self._forward_message(req)
-        for t in rep["body"]["threads"]:
-            if self._accept_stopped_thread(t["name"]):
-                self.stopped_threads.add(t["id"])
+        for thread in rep["body"]["threads"]:
+            if self._accept_stopped_thread(thread["name"]):
+                self.stopped_threads.add(thread["id"])
         self.event_callback(event)
 
     @property

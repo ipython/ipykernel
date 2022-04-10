@@ -188,11 +188,11 @@ def unpack_apply_message(bufs, g=None, copy=True):
     info = pickle.loads(pinfo)
     arg_bufs, kwarg_bufs = bufs[: info["narg_bufs"]], bufs[info["narg_bufs"] :]
 
-    args = []
+    args_list = []
     for _ in range(info["nargs"]):
         arg, arg_bufs = deserialize_object(arg_bufs, g)
-        args.append(arg)
-    args = tuple(args)
+        args_list.append(arg)
+    args = tuple(args_list)
     assert not arg_bufs, "Shouldn't be any arg bufs left over"
 
     kwargs = {}

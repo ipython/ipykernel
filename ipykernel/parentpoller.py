@@ -4,7 +4,7 @@
 try:
     import ctypes
 except ImportError:
-    ctypes = None
+    ctypes = None  # type:ignore[assignment]
 import os
 import platform
 import signal
@@ -71,7 +71,7 @@ class ParentPollerWindows(Thread):
     def run(self):
         """Run the poll loop. This method never returns."""
         try:
-            from _winapi import INFINITE, WAIT_OBJECT_0
+            from _winapi import INFINITE, WAIT_OBJECT_0  # type:ignore[attr-defined]
         except ImportError:
             from _subprocess import INFINITE, WAIT_OBJECT_0
 
@@ -86,7 +86,7 @@ class ParentPollerWindows(Thread):
 
         # Listen forever.
         while True:
-            result = ctypes.windll.kernel32.WaitForMultipleObjects(
+            result = ctypes.windll.kernel32.WaitForMultipleObjects(  # type:ignore[attr-defined]
                 len(handles),  # nCount
                 (c_int * len(handles))(*handles),  # lpHandles
                 False,  # bWaitAll

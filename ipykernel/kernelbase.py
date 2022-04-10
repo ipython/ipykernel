@@ -12,6 +12,7 @@ import os
 import socket
 import sys
 import time
+import typing as t
 import uuid
 import warnings
 from datetime import datetime
@@ -142,7 +143,7 @@ class Kernel(SingletonConfigurable):
 
     # This should be overridden by wrapper kernels that implement any real
     # language.
-    language_info = {}
+    language_info: t.Dict[str, object] = {}
 
     # any links that should go in the help menu
     help_links = List()
@@ -262,7 +263,7 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.control_queue = Queue()
+        self.control_queue: Queue[Any] = Queue()
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -278,6 +279,7 @@ class Kernel(SingletonConfigurable):
 
     async def _flush_control_queue(self):
         """Flush the control queue, wait for processing of any pending messages"""
+        tracer_future: t.Union[concurrent.futures.Future[object], asyncio.Future[object]]
         if self.control_thread:
             control_loop = self.control_thread.io_loop
             # concurrent.futures.Futures are threadsafe
@@ -529,7 +531,7 @@ class Kernel(SingletonConfigurable):
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue = Queue()
+        self.msg_queue: Queue[Any] = Queue()
         self.io_loop.add_callback(self.dispatch_queue)
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
@@ -1191,7 +1193,9 @@ class Kernel(SingletonConfigurable):
                 # zmq.select() is also uninterruptible, but at least this
                 # way reads get noticed immediately and KeyboardInterrupts
                 # get noticed fairly quickly by human response time standards.
-                rlist, _, xlist = zmq.select([self.stdin_socket], [], [self.stdin_socket], 0.01)
+                rlist, _, xlist = zmq.select(
+                    [self.stdin_socket], [], [self.stdin_socket], 0.01  # type:ignore[arg-type]
+                )
                 if rlist or xlist:
                     ident, reply = self.session.recv(self.stdin_socket)
                     if (ident, reply) != (None, None):

@@ -248,7 +248,7 @@ def loop_tk(kernel):
 
         notifier = partial(process_stream_events, kernel.shell_stream)
         # seems to be needed for tk
-        notifier.__name__ = "notifier"
+        notifier.__name__ = "notifier"  # type:ignore[attr-defined]
         app.tk.createfilehandler(kernel.shell_stream.getsockopt(zmq.FD), READABLE, notifier)
         # schedule initial call after start
         app.after(0, notifier)
@@ -386,7 +386,7 @@ def loop_asyncio(kernel):
         # main loop is closed, create a new one
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-    loop._should_close = False
+    loop._should_close = False  # type:ignore[attr-defined]
 
     # pause eventloop when there's an event on a zmq socket
     def process_stream_events(stream):
@@ -406,7 +406,7 @@ def loop_asyncio(kernel):
             continue
         except Exception as e:
             error = e
-        if loop._should_close:
+        if loop._should_close:  # type:ignore[attr-defined]
             loop.close()
         if error is not None:
             raise error
@@ -424,14 +424,14 @@ def loop_asyncio_exit(kernel):
     def close_loop():
         if hasattr(loop, "shutdown_asyncgens"):
             yield from loop.shutdown_asyncgens()
-        loop._should_close = True
+        loop._should_close = True  # type:ignore[attr-defined]
         loop.stop()
 
     if loop.is_running():
         close_loop()
 
     elif not loop.is_closed():
-        loop.run_until_complete(close_loop)
+        loop.run_until_complete(close_loop)  # type:ignore[call-overload]
         loop.close()
 
 

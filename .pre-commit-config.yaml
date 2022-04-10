@@ -41,6 +41,15 @@ repos:
         args: [--max-line-length=200]
         stages: [manual]
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.942
+    hooks:
+      - id: mypy
+        exclude: "ipykernel.*tests"
+        args: ["--config-file", "pyproject.toml"]
+        additional_dependencies: [tornado, jupyter_client, pytest]
+        stages: [manual]
+
   - repo: https://github.com/pycqa/flake8
     rev: 4.0.1
     hooks:

@@ -63,7 +63,8 @@ class GTKEmbed:
         # FIXME: this one isn't getting called because we have no reliable
         # kernel shutdown.  We need to fix that: once the kernel has a
         # shutdown mechanism, it can call this.
-        self.gtk_main_quit()
+        if self.gtk_main_quit:
+            self.gtk_main_quit()
         sys.exit()
 
     def _hijack_gtk(self):

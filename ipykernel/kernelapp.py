@@ -464,7 +464,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
 
                         handler.stream = TextIOWrapper(
-                            FileIO(sys.stderr._original_stdstream_copy, "w")  # type:ignore[attr-defined]
+                            FileIO(
+                                sys.stderr._original_stdstream_copy, "w"
+                            )  # type:ignore[attr-defined]
                         )
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))

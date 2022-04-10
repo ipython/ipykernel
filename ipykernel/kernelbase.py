@@ -1193,7 +1193,9 @@ class Kernel(SingletonConfigurable):
                 # zmq.select() is also uninterruptible, but at least this
                 # way reads get noticed immediately and KeyboardInterrupts
                 # get noticed fairly quickly by human response time standards.
-                rlist, _, xlist = zmq.select([self.stdin_socket], [], [self.stdin_socket], 0.01)  # type:ignore[arg-type]
+                rlist, _, xlist = zmq.select(
+                    [self.stdin_socket], [], [self.stdin_socket], 0.01
+                )  # type:ignore[arg-type]
                 if rlist or xlist:
                     ident, reply = self.session.recv(self.stdin_socket)
                     if (ident, reply) != (None, None):

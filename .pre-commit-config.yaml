@@ -45,7 +45,7 @@ repos:
     rev: v0.942
     hooks:
       - id: mypy
-        exclude: 'ipykernel.*tests'
+        exclude: "ipykernel.*tests"
         args: ["--config-file", "pyproject.toml"]
         additional_dependencies: [tornado, jupyter_client, pytest]
         stages: [manual]

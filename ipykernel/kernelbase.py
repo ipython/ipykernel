@@ -263,7 +263,7 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.control_queue: Queue = Queue()
+        self.control_queue: Queue[Any] = Queue()
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -279,7 +279,7 @@ class Kernel(SingletonConfigurable):
 
     async def _flush_control_queue(self):
         """Flush the control queue, wait for processing of any pending messages"""
-        tracer_future: t.Union[concurrent.futures.Future, asyncio.Future]
+        tracer_future: t.Union[concurrent.futures.Future[object], asyncio.Future[object]]
         if self.control_thread:
             control_loop = self.control_thread.io_loop
             # concurrent.futures.Futures are threadsafe
@@ -531,7 +531,7 @@ class Kernel(SingletonConfigurable):
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue: Queue = Queue()
+        self.msg_queue: Queue[Any] = Queue()
         self.io_loop.add_callback(self.dispatch_queue)
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)

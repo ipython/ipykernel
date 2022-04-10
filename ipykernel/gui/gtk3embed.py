@@ -14,11 +14,11 @@
 import sys
 
 # Third-party
-import gi  # type:ignore[import]
+import gi
 
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import GObject, Gtk  # type:ignore[import]
+from gi.repository import GObject, Gtk
 
 # -----------------------------------------------------------------------------
 # Classes and functions

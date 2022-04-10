@@ -72,7 +72,7 @@ def use_dill():
     adds support for object methods and closures to serialization.
     """
     # import dill causes most of the magic
-    import dill  # type:ignore[import]
+    import dill
 
     # dill doesn't work with cPickle,
     # tell the two relevant modules to use plain pickle
@@ -85,7 +85,7 @@ def use_dill():
     except ImportError:
         pass
     else:
-        serialize.pickle = dill
+        serialize.pickle = dill  # type:ignore[attr-defined]
 
     # disable special function handling, let dill take care of it
     can_map.pop(FunctionType, None)
@@ -96,7 +96,7 @@ def use_cloudpickle():
 
     adds support for object methods and closures to serialization.
     """
-    import cloudpickle  # type:ignore[import]
+    import cloudpickle
 
     global pickle
     pickle = cloudpickle
@@ -106,7 +106,7 @@ def use_cloudpickle():
     except ImportError:
         pass
     else:
-        serialize.pickle = cloudpickle
+        serialize.pickle = cloudpickle  # type:ignore[attr-defined]
 
     # disable special function handling, let cloudpickle take care of it
     can_map.pop(FunctionType, None)
@@ -195,13 +195,13 @@ class CannedFunction(CannedObject):
     def __init__(self, f):
         self._check_type(f)
         self.code = f.__code__
-        self.defaults: typing.Optional[list]
+        self.defaults: typing.Optional[list[typing.Any]]
         if f.__defaults__:
             self.defaults = [can(fd) for fd in f.__defaults__]
         else:
             self.defaults = None
 
-        self.closure: typing.Optional[tuple]
+        self.closure: typing.Any
         closure = f.__closure__
         if closure:
             self.closure = tuple(can(cell) for cell in closure)
@@ -262,7 +262,7 @@ class CannedClass(CannedObject):
 
 class CannedArray(CannedObject):
     def __init__(self, obj):
-        from numpy import ascontiguousarray  # type:ignore[import]
+        from numpy import ascontiguousarray
 
         self.shape = obj.shape
         self.dtype = obj.dtype.descr if obj.dtype.fields else obj.dtype.str
@@ -461,7 +461,7 @@ can_map = {
 if buffer is not memoryview:
     can_map[buffer] = CannedBuffer
 
-uncan_map: dict[type, typing.Callable] = {
+uncan_map: dict[type, typing.Any] = {
     CannedObject: lambda obj, g: obj.get_object(g),
     dict: uncan_dict,
 }

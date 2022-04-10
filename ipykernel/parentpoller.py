@@ -73,7 +73,7 @@ class ParentPollerWindows(Thread):
         try:
             from _winapi import INFINITE, WAIT_OBJECT_0  # type:ignore[attr-defined]
         except ImportError:
-            from _subprocess import INFINITE, WAIT_OBJECT_0  # type:ignore[import]
+            from _subprocess import INFINITE, WAIT_OBJECT_0
 
         # Build the list of handle to listen on.
         handles = []

@@ -13,7 +13,7 @@ from jupyter_client.channelsabc import HBChannelABC
 class InProcessChannel:
     """Base class for in-process channels."""
 
-    proxy_methods: list = []
+    proxy_methods: list[object] = []
 
     def __init__(self, client=None):
         super().__init__()

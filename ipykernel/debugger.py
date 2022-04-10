@@ -90,7 +90,7 @@ class DebugpyMessageQueue:
         self.tcp_buffer = ""
         self._reset_tcp_pos()
         self.event_callback = event_callback
-        self.message_queue: Queue = Queue()
+        self.message_queue: Queue[t.Any] = Queue()
         self.log = log
 
     def _reset_tcp_pos(self):
@@ -101,7 +101,7 @@ class DebugpyMessageQueue:
 
     def _put_message(self, raw_msg):
         self.log.debug("QUEUE - _put_message:")
-        msg = t.cast(dict, jsonapi.loads(raw_msg))
+        msg = t.cast(dict[str, t.Any], jsonapi.loads(raw_msg))
         if msg["type"] == "event":
             self.log.debug("QUEUE - received event:")
             self.log.debug(msg)
@@ -291,7 +291,7 @@ class Debugger:
         self.is_started = False
         self.event_callback = event_callback
         self.just_my_code = just_my_code
-        self.stopped_queue: Queue = Queue()
+        self.stopped_queue: Queue[t.Any] = Queue()
 
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:

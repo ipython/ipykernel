@@ -14,8 +14,8 @@
 import sys
 
 # Third-party
-import gobject  # type:ignore[import]
-import gtk  # type:ignore[import]
+import gobject
+import gtk
 
 # -----------------------------------------------------------------------------
 # Classes and functions

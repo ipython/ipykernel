@@ -13,7 +13,7 @@ import warnings
 from binascii import b2a_hex
 from collections import deque
 from io import StringIO, TextIOBase
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 from weakref import WeakSet
 
 import zmq
@@ -67,8 +67,8 @@ class IOPubThread:
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
-        self._events: deque = deque()
-        self._event_pipes: WeakSet = WeakSet()
+        self._events: deque[Callable[..., Any]] = deque()
+        self._event_pipes: WeakSet[Any] = WeakSet()
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main, name="IOPub")
         self.thread.daemon = True

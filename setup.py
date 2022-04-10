@@ -8,8 +8,8 @@ import shutil
 import sys
 from glob import glob
 
-from setuptools import setup  # type:ignore[import]
-from setuptools.command.bdist_egg import bdist_egg  # type:ignore[import]
+from setuptools import setup
+from setuptools.command.bdist_egg import bdist_egg
 
 # the name of the package
 name = "ipykernel"

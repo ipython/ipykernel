@@ -465,8 +465,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
                         handler.stream = TextIOWrapper(
                             FileIO(
-                                sys.stderr._original_stdstream_copy, "w"
-                            )  # type:ignore[attr-defined]
+                                sys.stderr._original_stdstream_copy, "w"  # type:ignore[attr-defined]
+                            )
                         )
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))

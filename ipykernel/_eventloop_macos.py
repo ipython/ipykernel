@@ -43,8 +43,8 @@ def C(classname):
 
 # CoreFoundation C-API calls we will use:
 CoreFoundation = ctypes.cdll.LoadLibrary(
-    ctypes.util.find_library("CoreFoundation")
-)  # type:ignore[arg-type]
+    ctypes.util.find_library("CoreFoundation")  # type:ignore[arg-type]
+)
 
 CFAbsoluteTimeGetCurrent = CoreFoundation.CFAbsoluteTimeGetCurrent
 CFAbsoluteTimeGetCurrent.restype = ctypes.c_double

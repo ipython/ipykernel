@@ -13,7 +13,7 @@ import warnings
 from binascii import b2a_hex
 from collections import deque
 from io import StringIO, TextIOBase
-from typing import Any, Optional, Callable
+from typing import Any, Callable, Optional
 from weakref import WeakSet
 
 import zmq

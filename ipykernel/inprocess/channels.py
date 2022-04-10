@@ -3,8 +3,9 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from jupyter_client.channelsabc import HBChannelABC
 from typing import List
+
+from jupyter_client.channelsabc import HBChannelABC
 
 # -----------------------------------------------------------------------------
 # Channel classes

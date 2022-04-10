@@ -5,6 +5,7 @@ import builtins
 import getpass
 import signal
 import sys
+import typing as t
 from contextlib import contextmanager
 from functools import partial
 
@@ -242,7 +243,7 @@ class IPythonKernel(KernelBase):
 
         getpass.getpass = self._save_getpass
 
-    @property
+    @property  # type:ignore[override]
     def execution_count(self):
         return self.shell.execution_count
 
@@ -263,7 +264,7 @@ class IPythonKernel(KernelBase):
         but this turns it into a CancelledError.
         At least it gets a decent traceback to the user.
         """
-        sigint_future = asyncio.Future()
+        sigint_future: asyncio.Future[int] = asyncio.Future()
 
         # whichever future finishes first,
         # cancel the other one
@@ -310,7 +311,7 @@ class IPythonKernel(KernelBase):
 
         self._forward_input(allow_stdin)
 
-        reply_content = {}
+        reply_content: dict[str, t.Any] = {}
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
@@ -506,7 +507,7 @@ class IPythonKernel(KernelBase):
     def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
         name = token_at_cursor(code, cursor_pos)
 
-        reply_content = {"status": "ok"}
+        reply_content: dict[str, t.Any] = {"status": "ok"}
         reply_content["data"] = {}
         reply_content["metadata"] = {}
         try:

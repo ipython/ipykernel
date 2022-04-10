@@ -31,7 +31,7 @@ class DummySocket(HasTraits):
         return self.queue.get_nowait()
 
     def send_multipart(self, msg_parts, flags=0, copy=True, track=False):
-        msg_parts = list(map(zmq.Message, msg_parts))
+        msg_parts = list(map(zmq.Message, msg_parts))  # type:ignore[arg-type]
         self.queue.put_nowait(msg_parts)
         self.message_sent += 1
 

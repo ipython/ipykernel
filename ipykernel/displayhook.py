@@ -32,7 +32,7 @@ class ZMQDisplayHook:
         if obj is None:
             return
 
-        builtins._ = obj
+        builtins._ = obj  # type:ignore[attr-defined]
         sys.stdout.flush()
         sys.stderr.flush()
         contents = {

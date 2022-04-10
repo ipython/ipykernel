@@ -575,11 +575,11 @@ class ZMQInteractiveShell(InteractiveShell):
         if hasattr(self, "_data_pub"):
             self.data_pub.set_parent(parent)
         try:
-            sys.stdout.set_parent(parent)
+            sys.stdout.set_parent(parent)  # type:ignore[attr-defined]
         except AttributeError:
             pass
         try:
-            sys.stderr.set_parent(parent)
+            sys.stderr.set_parent(parent)  # type:ignore[attr-defined]
         except AttributeError:
             pass
 

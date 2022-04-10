@@ -41,7 +41,7 @@ class TrioRunner:
                 # TODO This hack prevents the nursery from cancelling all child
                 # tasks when an uncaught exception occurs, but it's ugly.
                 nursery._add_exc = log_nursery_exc
-                builtins.GLOBAL_NURSERY = nursery
+                builtins.GLOBAL_NURSERY = nursery  # type:ignore[attr-defined]
                 await trio.sleep_forever()
 
         trio.run(trio_main)

@@ -64,7 +64,7 @@ class Heartbeat(Thread):
 
     def _bind_socket(self):
         try:
-            win_in_use = errno.WSAEADDRINUSE
+            win_in_use = errno.WSAEADDRINUSE  # type:ignore[attr-defined]
         except AttributeError:
             win_in_use = None
 

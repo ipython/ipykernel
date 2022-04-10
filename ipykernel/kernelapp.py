@@ -232,7 +232,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def _bind_socket(self, s, port):
         try:
-            win_in_use = errno.WSAEADDRINUSE
+            win_in_use = errno.WSAEADDRINUSE  # type:ignore[attr-defined]
         except AttributeError:
             win_in_use = None
 
@@ -464,7 +464,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
 
                         handler.stream = TextIOWrapper(
-                            FileIO(sys.stderr._original_stdstream_copy, "w")
+                            FileIO(sys.stderr._original_stdstream_copy, "w")  # type:ignore[attr-defined]
                         )
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
@@ -560,11 +560,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         # is not associated with any execute request.
 
         shell = self.shell
+        assert shell is not None
         _showtraceback = shell._showtraceback
         try:
             # replace error-sending traceback with stderr
             def print_tb(etype, evalue, stb):
                 print("GUI event loop or pylab initialization failed", file=sys.stderr)
+                assert shell is not None
                 print(shell.InteractiveTB.stb2text(stb), file=sys.stderr)
 
             shell._showtraceback = print_tb
@@ -644,7 +646,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if hasattr(debugger, "InterruptiblePdb"):
             # Only available in newer IPython releases:
             debugger.Pdb = debugger.InterruptiblePdb
-            pdb.Pdb = debugger.Pdb
+            pdb.Pdb = debugger.Pdb  # type:ignore[misc]
             pdb.set_trace = debugger.set_trace
 
     @catch_config_error

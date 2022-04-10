@@ -61,7 +61,7 @@ author = "IPython Development Team"
 # built documents.
 #
 
-version_ns = {}
+version_ns: dict = {}
 here = os.path.dirname(__file__)
 version_py = os.path.join(here, os.pardir, "ipykernel", "_version.py")
 with open(version_py) as f:
@@ -150,7 +150,7 @@ todo_include_todos = False
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+html_static_path: list = []
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -217,7 +217,7 @@ htmlhelp_basename = "ipykerneldoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {}
+latex_elements: dict = {}
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,

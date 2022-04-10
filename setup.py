@@ -8,8 +8,8 @@ import shutil
 import sys
 from glob import glob
 
-from setuptools import setup
-from setuptools.command.bdist_egg import bdist_egg
+from setuptools import setup  # type:ignore[import]
+from setuptools.command.bdist_egg import bdist_egg  # type:ignore[import]
 
 # the name of the package
 name = "ipykernel"
@@ -36,13 +36,13 @@ for d, _, _ in os.walk(pjoin(here, name)):
         packages.append(d[len(here) + 1 :].replace(os.path.sep, "."))
 
 package_data = {
-    "ipykernel": ["resources/*.*"],
+    "ipykernel": ["resources/*.*", "py.typed"],
 }
 
 with open(pjoin(here, "README.md")) as fid:
     LONG_DESCRIPTION = fid.read()
 
-setup_args = dict(
+setup_args: dict[str, object] = dict(
     name=name,
     cmdclass={
         "bdist_egg": bdist_egg if "bdist_egg" in sys.argv else bdist_egg_disabled,

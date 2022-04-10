@@ -1,5 +1,6 @@
 include *.md
 include pyproject.toml
+include ipykernel/py.typed
 
 # Documentation
 graft docs

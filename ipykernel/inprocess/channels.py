@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from jupyter_client.channelsabc import HBChannelABC
+from typing import List
 
 # -----------------------------------------------------------------------------
 # Channel classes
@@ -13,7 +14,7 @@ from jupyter_client.channelsabc import HBChannelABC
 class InProcessChannel:
     """Base class for in-process channels."""
 
-    proxy_methods: list[object] = []
+    proxy_methods: List[object] = []
 
     def __init__(self, client=None):
         super().__init__()

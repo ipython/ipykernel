@@ -311,7 +311,7 @@ class IPythonKernel(KernelBase):
 
         self._forward_input(allow_stdin)
 
-        reply_content: dict[str, t.Any] = {}
+        reply_content: t.Dict[str, t.Any] = {}
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
@@ -507,7 +507,7 @@ class IPythonKernel(KernelBase):
     def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
         name = token_at_cursor(code, cursor_pos)
 
-        reply_content: dict[str, t.Any] = {"status": "ok"}
+        reply_content: t.Dict[str, t.Any] = {"status": "ok"}
         reply_content["data"] = {}
         reply_content["metadata"] = {}
         try:

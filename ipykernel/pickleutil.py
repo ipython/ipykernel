@@ -195,7 +195,7 @@ class CannedFunction(CannedObject):
     def __init__(self, f):
         self._check_type(f)
         self.code = f.__code__
-        self.defaults: typing.Optional[list[typing.Any]]
+        self.defaults: typing.Optional[typing.List[typing.Any]]
         if f.__defaults__:
             self.defaults = [can(fd) for fd in f.__defaults__]
         else:
@@ -461,7 +461,7 @@ can_map = {
 if buffer is not memoryview:
     can_map[buffer] = CannedBuffer
 
-uncan_map: dict[type, typing.Any] = {
+uncan_map: typing.Dict[type, typing.Any] = {
     CannedObject: lambda obj, g: obj.get_object(g),
     dict: uncan_dict,
 }

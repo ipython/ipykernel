@@ -101,7 +101,7 @@ class DebugpyMessageQueue:
 
     def _put_message(self, raw_msg):
         self.log.debug("QUEUE - _put_message:")
-        msg = t.cast(dict[str, t.Any], jsonapi.loads(raw_msg))
+        msg = t.cast(t.Dict[str, t.Any], jsonapi.loads(raw_msg))
         if msg["type"] == "event":
             self.log.debug("QUEUE - received event:")
             self.log.debug(msg)

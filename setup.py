@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 from glob import glob
+from typing import Dict
 
 from setuptools import setup
 from setuptools.command.bdist_egg import bdist_egg
@@ -42,7 +43,7 @@ package_data = {
 with open(pjoin(here, "README.md")) as fid:
     LONG_DESCRIPTION = fid.read()
 
-setup_args: dict[str, object] = dict(
+setup_args: Dict[str, object] = dict(
     name=name,
     cmdclass={
         "bdist_egg": bdist_egg if "bdist_egg" in sys.argv else bdist_egg_disabled,

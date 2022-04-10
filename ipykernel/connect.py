@@ -6,7 +6,7 @@
 import json
 import sys
 from subprocess import PIPE, Popen
-from typing import Any
+from typing import Any, Dict
 
 import jupyter_client
 from jupyter_client import write_connection_file
@@ -108,7 +108,7 @@ def connect_qtconsole(connection_file=None, argv=None):
 
     cmd = ";".join(["from IPython.qt.console import qtconsoleapp", "qtconsoleapp.main()"])
 
-    kwargs: dict[str, Any] = {}
+    kwargs: Dict[str, Any] = {}
     # Launch the Qt console in a separate session & process group, so
     # interrupting the kernel doesn't kill it.
     kwargs["start_new_session"] = True

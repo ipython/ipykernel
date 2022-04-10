@@ -143,7 +143,7 @@ class Kernel(SingletonConfigurable):
 
     # This should be overridden by wrapper kernels that implement any real
     # language.
-    language_info: dict[str, object] = {}
+    language_info: t.Dict[str, object] = {}
 
     # any links that should go in the help menu
     help_links = List()

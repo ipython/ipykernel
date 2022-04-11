@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.13.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.12.1...05c6e655e497a944fd738d9b744fad90bc78b70a))
+
+### Enhancements made
+
+- Add the PID to the resource usage reply [#908](https://github.com/ipython/ipykernel/pull/908) ([@echarles](https://github.com/echarles))
+
+### Bugs fixed
+
+- Fix qtconsole spawn [#915](https://github.com/ipython/ipykernel/pull/915) ([@andia89](https://github.com/andia89))
+
+### Maintenance and upkeep improvements
+
+- Add basic mypy support [#913](https://github.com/ipython/ipykernel/pull/913) ([@blink1073](https://github.com/blink1073))
+- Clean up pre-commit [#911](https://github.com/ipython/ipykernel/pull/911) ([@blink1073](https://github.com/blink1073))
+- Update setup.py [#909](https://github.com/ipython/ipykernel/pull/909) ([@tlinhart](https://github.com/tlinhart))
+- [pre-commit.ci] pre-commit autoupdate [#906](https://github.com/ipython/ipykernel/pull/906) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-04-04&to=2022-04-11&type=c))
+
+[@andia89](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aandia89+updated%3A2022-04-04..2022-04-11&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-04-04..2022-04-11&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-04-04..2022-04-11&type=Issues) | [@meeseeksdev](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ameeseeksdev+updated%3A2022-04-04..2022-04-11&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-04-04..2022-04-11&type=Issues) | [@tlinhart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Atlinhart+updated%3A2022-04-04..2022-04-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.12.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.12.0...3a04ea3fa50d01bcc09f10e3de8bb5570c2cd619))
@@ -15,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-04-04&to=2022-04-04&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-04-04..2022-04-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.12.0
 

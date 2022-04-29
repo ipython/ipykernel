@@ -54,6 +54,7 @@ testpaths = [
     "ipykernel/tests",
     "ipykernel/inprocess/tests"
 ]
+asyncio_mode = "strict"
 timeout = 300
 # Restore this setting to debug failures
 # timeout_method = "thread"

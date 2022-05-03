@@ -1,6 +1,10 @@
 import os
 import sys
 import shutil
+
+here = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, here)
+
 from ipykernel.kernelspec import KERNEL_NAME, make_ipkernel_cmd, write_kernel_spec
 
 
@@ -13,7 +17,7 @@ else:
     argv = make_ipkernel_cmd()
 
 
-here = os.path.abspath(os.path.dirname(__file__))
+
 dest = os.path.join(here, "jupyter-data", "share", "jupyter", "kernels", KERNEL_NAME)
 if os.path.exists(dest):
     shutil.rmtree(dest)

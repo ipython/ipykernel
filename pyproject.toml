@@ -1,19 +1,56 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires=[
-  "setuptools",
-  "wheel",
-  "debugpy",
-  "ipython>=5",
-  "jupyter_core>=4.2",
-  "jupyter_client",
-]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
-[tool.check-manifest]
-ignore = []
+[project]
+name = "ipykernel"
+authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
+license = {file = "COPYING.md"}
+keywords = ["Interactive", "Interpreter", "Shell", "Web"]
+readme = "README.md"
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+urls = {Homepage = "https://ipython.org"}
+requires-python = ">=3.7"
+dependencies = [
+    "debugpy>=1.0",
+    "ipython>=7.23.1",
+    "traitlets>=5.1.0",
+    "jupyter_client>=6.1.12",
+    "tornado>=6.1",
+    "matplotlib-inline>=0.1",
+    'appnope;platform_system=="Darwin"',
+    "psutil",
+    "nest_asyncio",
+    "packaging",
+]
+dynamic = ["description", "version"]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "flaky",
+    "ipyparallel",
+    "pre-commit",
+    "pytest-timeout",
+]
 
 [tool.jupyter-releaser]
 skip = ["check-links"]
+
+[tool.jupyter-releaser.hooks]
+after-git-prep = ["python", "create_data_files.py", "--dist"]
 
 [tool.tbump.version]
 current = "6.13.0"

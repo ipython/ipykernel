@@ -27,6 +27,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          python create_data_files.py
           pip install -e .
 
       - name: Check Release

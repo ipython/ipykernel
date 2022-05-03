@@ -13,6 +13,8 @@ ipykernel is a pure Python package, so setting up for development is the same as
 # clone the repo
 git clone https://github.com/ipython/ipykernel
 cd ipykernel
+# Create the data files needed for the kernelspec
+python create_data_files.py
 # do a 'development' or 'editable' install with pip:
 pip install -e .
 ```
@@ -74,12 +76,10 @@ git push
 git push --tags
 
 # publish the release to PyPI
-# note the extra `python2 setup.py bdist_wheel` for creating
-# the wheel for Python 2
-pip install --upgrade twine
+pip install --upgrade twine build
 git clean -xfd
-python3 setup.py sdist bdist_wheel
-python2 setup.py bdist_wheel  # the extra step for the 4.x branch.
+python -m build .
+twine check --strict dist/*
 twine upload dist/*
 
 # set the version back to '.dev' in ipykernel/_version.py

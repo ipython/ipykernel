@@ -1,3 +1,4 @@
+"""IPython Kernel for Jupyter"""
 from ._version import __version__  # noqa
 from ._version import kernel_protocol_version  # noqa
 from ._version import kernel_protocol_version_info  # noqa

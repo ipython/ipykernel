@@ -37,6 +37,7 @@ jobs:
 
       - name: Install the Python dependencies
         run: |
+          python create_data_files.py
           pip install .[test] codecov
 
       - name: Install matplotlib
@@ -122,6 +123,7 @@ jobs:
 
       - name: Install the Python dependencies
         run: |
+          python create_data_files.py
           pip install  .
           pip install velin
 
@@ -145,6 +147,7 @@ jobs:
 
       - name: Install the Python dependencies without debugpy
         run: |
+          python create_data_files.py
           pip install .[test]
           pip uninstall --yes debugpy
 
@@ -168,7 +171,8 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           python_version: "3.7"
-      - name: Install miniumum versions
+      - run: python create_data_files.py
+      - name: Install minimum versions
         uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
       - name: Run the unit tests
         run: |
@@ -186,6 +190,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Install the Python dependencies
         run: |
+          python create_data_files.py
           pip install --pre -e ".[test]"
       - name: List installed packages
         run: |
@@ -199,19 +204,12 @@ jobs:
   make_sdist:
     name: Make SDist
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - name: Build SDist
-        run: |
-          pip install build
-          python -m build --sdist
-      - uses: actions/upload-artifact@v2
-        with:
-          name: "sdist"
-          path: dist/*.tar.gz
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - run: python create_data_files.py
+      - uses: jupyterlab/maintainer-tools/.github/actions/make-sdist@v1
 
   test_sdist:
     runs-on: ubuntu-latest
@@ -219,20 +217,7 @@ jobs:
     name: Install from SDist and Test
     timeout-minutes: 20
     steps:
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - name: Download sdist
-        uses: actions/download-artifact@v2
-      - name: Install From SDist
-        run: |
-          set -ex
-          cd sdist
-          mkdir test
-          tar --strip-components=1 -zxvf *.tar.gz -C ./test
-          cd test
-          pip install .[test]
-      - name: Run Test
-        run: |
-          cd sdist/test
-          cmd="python -m pytest -vv"
-          $cmd || $cmd --lf
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/test-sdist@v1
+        with:
+          extra_test: "jupyter kernelspec list | grep python"

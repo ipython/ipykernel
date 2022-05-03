@@ -27,3 +27,5 @@ data_kernelspec
 
 # copied changelog file
 docs/changelog.md
+
+jupyter-data

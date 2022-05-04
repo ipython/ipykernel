@@ -19,8 +19,6 @@ jobs:
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-      - run: python create_data_files.py
-
       - name: Run Test
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
@@ -36,8 +34,6 @@ jobs:
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-      - run: python create_data_files.py
-
       - name: Run Test
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
@@ -51,8 +47,6 @@ jobs:
 
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-      - run: python create_data_files.py
 
       - name: Run Test
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
@@ -68,8 +62,6 @@ jobs:
 
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-
-      - run: python create_data_files.py
 
       - name: Run Test
         run: |

@@ -13,8 +13,6 @@ ipykernel is a pure Python package, so setting up for development is the same as
 # clone the repo
 git clone https://github.com/ipython/ipykernel
 cd ipykernel
-# Create the data files needed for the kernelspec
-python create_data_files.py
 # do a 'development' or 'editable' install with pip:
 pip install -e .
 ```

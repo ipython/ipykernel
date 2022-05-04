@@ -37,7 +37,6 @@ jobs:
 
       - name: Install the Python dependencies
         run: |
-          python create_data_files.py
           pip install .[test] codecov
 
       - name: Install matplotlib
@@ -123,7 +122,6 @@ jobs:
 
       - name: Install the Python dependencies
         run: |
-          python create_data_files.py
           pip install  .
           pip install velin
 
@@ -147,7 +145,6 @@ jobs:
 
       - name: Install the Python dependencies without debugpy
         run: |
-          python create_data_files.py
           pip install .[test]
           pip uninstall --yes debugpy
 
@@ -171,7 +168,6 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           python_version: "3.7"
-      - run: python create_data_files.py
       - name: Install minimum versions
         uses: jupyterlab/maintainer-tools/.github/actions/install-minimums@v1
       - name: Run the unit tests
@@ -190,7 +186,6 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Install the Python dependencies
         run: |
-          python create_data_files.py
           pip install --pre -e ".[test]"
       - name: List installed packages
         run: |
@@ -208,7 +203,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-      - run: python create_data_files.py
       - uses: jupyterlab/maintainer-tools/.github/actions/make-sdist@v1
 
   test_sdist:

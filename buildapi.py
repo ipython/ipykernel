@@ -39,7 +39,7 @@ def get_requires_for_build_wheel(config_settings=None):
 
 
 def get_requires_for_build_sdist(config_settings=None):
-    make_kernel_spec(executable="python")
+    make_kernel_spec(executable=sys.executable)
     return get_requires_for_build_sdist_orig(config_settings=config_settings)
 
 

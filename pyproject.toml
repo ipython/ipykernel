@@ -1,16 +1,62 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires=[
-  "setuptools",
-  "wheel",
-  "debugpy",
-  "ipython>=5",
-  "jupyter_core>=4.2",
-  "jupyter_client",
+requires = ["hatchling", "jupyter_client"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ipykernel"
+authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
+license = {text = "BSD"}
+description = "IPython Kernel for Jupyter"
+keywords = ["Interactive", "Interpreter", "Shell", "Web"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+urls = {Homepage = "https://ipython.org"}
+requires-python = ">=3.7"
+dependencies = [
+    "debugpy>=1.0",
+    "ipython>=7.23.1",
+    "traitlets>=5.1.0",
+    "jupyter_client>=6.1.12",
+    "tornado>=6.1",
+    "matplotlib-inline>=0.1",
+    'appnope;platform_system=="Darwin"',
+    "psutil",
+    "nest_asyncio",
+    "packaging",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "flaky",
+    "ipyparallel",
+    "pre-commit",
+    "pytest-timeout",
 ]
 
-[tool.check-manifest]
-ignore = []
+# Used to call hatch_build.py
+[tool.hatch.build.targets.wheel.hooks.custom]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"data_kernelspec" = "share/jupyter/kernels/python3"
+
+[tool.hatch.build]
+include = ["ipykernel/**", "ipykernel_launcher.py"]
+
+[tool.hatch.version]
+path = "ipykernel/_version.py"
 
 [tool.jupyter-releaser]
 skip = ["check-links"]

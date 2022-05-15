@@ -47,14 +47,13 @@ test = [
 ]
 
 # Used to call hatch_build.py
-[tool.hatch.build.targets.wheel.hooks.custom]
-[tool.hatch.build.targets.sdist.hooks.custom]
+[tool.hatch.build.hooks.custom]
 
 [tool.hatch.build.targets.wheel.shared-data]
 "data_kernelspec" = "share/jupyter/kernels/python3"
 
-[tool.hatch.build]
-include = ["ipykernel/**", "ipykernel_launcher.py"]
+[tool.hatch.build.force-include]
+"./ipykernel_launcher.py" = "ipykernel_launcher.py"
 
 [tool.hatch.version]
 path = "ipykernel/_version.py"

@@ -48,6 +48,7 @@ test = [
 
 # Used to call hatch_build.py
 [tool.hatch.build.targets.wheel.hooks.custom]
+[tool.hatch.build.targets.sdist.hooks.custom]
 
 [tool.hatch.build.targets.wheel.shared-data]
 "data_kernelspec" = "share/jupyter/kernels/python3"

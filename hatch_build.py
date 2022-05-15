@@ -7,7 +7,6 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 class CustomHook(BuildHookInterface):
     def initialize(self, version, build_data):
-
         here = os.path.abspath(os.path.dirname(__file__))
         sys.path.insert(0, here)
         from ipykernel.kernelspec import make_ipkernel_cmd, write_kernel_spec

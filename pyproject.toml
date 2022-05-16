@@ -1,11 +1,13 @@
 [build-system]
-requires = ["hatchling", "jupyter_client"]
+requires = ["hatchling>=0.25", "jupyter_client>=6"]
 build-backend = "hatchling.build"
 
 [project]
 name = "ipykernel"
+version = "6.13.0"
 authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
-license = {text = "BSD"}
+license = {file = "COPYING.md"}
+readme = "README.md"
 description = "IPython Kernel for Jupyter"
 keywords = ["Interactive", "Interpreter", "Shell", "Web"]
 classifiers = [
@@ -34,7 +36,6 @@ dependencies = [
     "nest_asyncio",
     "packaging",
 ]
-dynamic = ["version"]
 
 [project.optional-dependencies]
 test = [
@@ -52,11 +53,8 @@ test = [
 [tool.hatch.build.targets.wheel.shared-data]
 "data_kernelspec" = "share/jupyter/kernels/python3"
 
-[tool.hatch.build.force-include]
-"./ipykernel_launcher.py" = "ipykernel_launcher.py"
-
-[tool.hatch.version]
-path = "ipykernel/_version.py"
+[tool.hatch.build]
+artifacts = ["ipykernel_launcher.py"]
 
 [tool.jupyter-releaser]
 skip = ["check-links"]
@@ -74,6 +72,9 @@ tag_template = "v{new_version}"
 
 [[tool.tbump.file]]
 src = "ipykernel/_version.py"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
 
 [tool.mypy]
 check_untyped_defs = true

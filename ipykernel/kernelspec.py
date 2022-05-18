@@ -12,6 +12,7 @@ import sys
 import tempfile
 
 from jupyter_client.kernelspec import KernelSpecManager
+from traitlets import Unicode
 
 from .debugger import _is_debugpy_available
 
@@ -161,7 +162,7 @@ from traitlets.config import Application
 class InstallIPythonKernelSpecApp(Application):
     """Dummy app wrapping argparse"""
 
-    name = "ipython-kernel-install"
+    name = Unicode("ipython-kernel-install")
 
     def initialize(self, argv=None):
         if argv is None:

@@ -48,7 +48,7 @@ class InProcessKernel(IPythonKernel):
 
     shell_class = Type(allow_none=True)
     _underlying_iopub_socket = Instance(DummySocket, ())
-    iopub_thread = Instance(IOPubThread)
+    iopub_thread: IOPubThread = Instance(IOPubThread)  # type:ignore[assignment]
 
     shell_stream = Instance(DummySocket, ())
 
@@ -58,13 +58,13 @@ class InProcessKernel(IPythonKernel):
         thread.start()
         return thread
 
-    iopub_socket = Instance(BackgroundSocket)
+    iopub_socket: BackgroundSocket = Instance(BackgroundSocket)  # type:ignore[assignment]
 
     @default("iopub_socket")
     def _default_iopub_socket(self):
         return self.iopub_thread.background_socket
 
-    stdin_socket = Instance(DummySocket, ())
+    stdin_socket = Instance(DummySocket, ())  # type:ignore[assignment]
 
     def __init__(self, **traits):
         super().__init__(**traits)
@@ -127,6 +127,7 @@ class InProcessKernel(IPythonKernel):
 
     def _io_dispatch(self, change):
         """Called when a message is sent to the IO socket."""
+        assert self.iopub_socket.io_thread is not None
         ident, msg = self.session.recv(self.iopub_socket.io_thread.socket, copy=False)
         for frontend in self.frontends:
             frontend.iopub_channel.call_handlers(msg)
@@ -163,7 +164,9 @@ class InProcessKernel(IPythonKernel):
 
 class InProcessInteractiveShell(ZMQInteractiveShell):
 
-    kernel = Instance("ipykernel.inprocess.ipkernel.InProcessKernel", allow_none=True)
+    kernel: InProcessKernel = Instance(
+        "ipykernel.inprocess.ipkernel.InProcessKernel", allow_none=True
+    )  # type:ignore[assignment]
 
     # -------------------------------------------------------------------------
     # InteractiveShell interface

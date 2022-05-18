@@ -38,7 +38,8 @@ from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
 from tornado import ioloop
 from tornado.queues import Queue, QueueEmpty
-from traitlets import (
+from traitlets.config.configurable import SingletonConfigurable
+from traitlets.traitlets import (
     Any,
     Bool,
     Dict,
@@ -51,7 +52,6 @@ from traitlets import (
     default,
     observe,
 )
-from traitlets.config.configurable import SingletonConfigurable
 from zmq.eventloop.zmqstream import ZMQStream
 
 from ipykernel.jsonutil import json_clean
@@ -95,6 +95,10 @@ class Kernel(SingletonConfigurable):
         """
     )
 
+    implementation: str
+    implementation_version: str
+    banner: str
+
     @default("shell_streams")
     def _shell_streams_default(self):
         warnings.warn(
@@ -131,7 +135,7 @@ class Kernel(SingletonConfigurable):
     iopub_socket = Any()
     iopub_thread = Any()
     stdin_socket = Any()
-    log = Instance(logging.Logger, allow_none=True)
+    log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
     # identities:
     int_id = Integer(-1)
@@ -263,7 +267,7 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.control_queue: Queue[Any] = Queue()
+        self.control_queue: Queue[t.Any] = Queue()
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -531,7 +535,7 @@ class Kernel(SingletonConfigurable):
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue: Queue[Any] = Queue()
+        self.msg_queue: Queue[t.Any] = Queue()
         self.io_loop.add_callback(self.dispatch_queue)
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
@@ -866,7 +870,7 @@ class Kernel(SingletonConfigurable):
         if hasattr(self, "comm_manager"):
             comms = {
                 k: dict(target_name=v.target_name)
-                for (k, v) in self.comm_manager.comms.items()
+                for (k, v) in self.comm_manager.comms.items()  # type:ignore[attr-defined]
                 if v.target_name == target_name or target_name is None
             }
         else:

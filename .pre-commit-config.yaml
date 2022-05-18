@@ -47,7 +47,8 @@ repos:
       - id: mypy
         exclude: "ipykernel.*tests"
         args: ["--config-file", "pyproject.toml"]
-        additional_dependencies: [tornado, jupyter_client, pytest]
+        additional_dependencies:
+          [tornado, jupyter_client, pytest, traitlets, jupyter_core]
         stages: [manual]
 
   - repo: https://github.com/pycqa/flake8

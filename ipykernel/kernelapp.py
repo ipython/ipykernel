@@ -28,7 +28,7 @@ from jupyter_client.connect import ConnectionFileMixin
 from jupyter_client.session import Session, session_aliases, session_flags
 from jupyter_core.paths import jupyter_runtime_dir
 from tornado import ioloop
-from traitlets import (
+from traitlets.traitlets import (
     Any,
     Bool,
     Dict,

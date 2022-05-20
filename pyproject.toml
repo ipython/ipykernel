@@ -1,16 +1,60 @@
 [build-system]
-build-backend = "setuptools.build_meta"
-requires=[
-  "setuptools",
-  "wheel",
-  "debugpy",
-  "ipython>=5",
-  "jupyter_core>=4.2",
-  "jupyter_client",
+requires = ["hatchling>=0.25", "jupyter_client>=6"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ipykernel"
+version = "6.13.0"
+authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
+license = {file = "COPYING.md"}
+readme = "README.md"
+description = "IPython Kernel for Jupyter"
+keywords = ["Interactive", "Interpreter", "Shell", "Web"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+urls = {Homepage = "https://ipython.org"}
+requires-python = ">=3.7"
+dependencies = [
+    "debugpy>=1.0",
+    "ipython>=7.23.1",
+    "traitlets>=5.1.0",
+    "jupyter_client>=6.1.12",
+    "tornado>=6.1",
+    "matplotlib-inline>=0.1",
+    'appnope;platform_system=="Darwin"',
+    "psutil",
+    "nest_asyncio",
+    "packaging",
 ]
 
-[tool.check-manifest]
-ignore = []
+[project.optional-dependencies]
+test = [
+    "pytest>=6.0",
+    "pytest-cov",
+    "flaky",
+    "ipyparallel",
+    "pre-commit",
+    "pytest-timeout",
+]
+
+# Used to call hatch_build.py
+[tool.hatch.build.hooks.custom]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"data_kernelspec" = "share/jupyter/kernels/python3"
+
+[tool.hatch.build]
+artifacts = ["ipykernel_launcher.py"]
 
 [tool.jupyter-releaser]
 skip = ["check-links"]
@@ -28,6 +72,9 @@ tag_template = "v{new_version}"
 
 [[tool.tbump.file]]
 src = "ipykernel/_version.py"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
 
 [tool.mypy]
 check_untyped_defs = true

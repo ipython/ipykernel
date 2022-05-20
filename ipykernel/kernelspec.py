@@ -14,7 +14,10 @@ import tempfile
 from jupyter_client.kernelspec import KernelSpecManager
 from traitlets import Unicode
 
-from .debugger import _is_debugpy_available
+try:
+    from .debugger import _is_debugpy_available
+except ImportError:
+    _is_debugpy_available = False
 
 pjoin = os.path.join
 

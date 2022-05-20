@@ -1,11 +1,3 @@
-
-[bdist_wheel]
-universal=0
-
-[metadata]
-license_file = COPYING.md
-version = attr: ipykernel._version.__version__
-
 [flake8]
 ignore = E501, W503, E402
 builtins = c, get_config

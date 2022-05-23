@@ -976,7 +976,7 @@ class Kernel(SingletonConfigurable):
             [process_metric_value(process, "cpu_percent", None) for process in all_processes]
         )
         reply_content["kernel_memory"] = sum(
-            [process_metric_value(process, "memory_info", "rss") for process in all_processes]
+            [process_metric_value(process, "memory_info", "pss") for process in all_processes]
         )
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent

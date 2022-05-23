@@ -953,30 +953,15 @@ class Kernel(SingletonConfigurable):
         reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
-    # Taken from https://github.com/jupyter-server/jupyter-resource-usage/blob/e6ec53fa69fdb6de8e878974bcff006310658408/jupyter_resource_usage/metrics.py#L16
-    def get_process_metric_value(self, process, name, attribute=None):
-        try:
-            # psutil.Process methods will either return...
-            metric_value = getattr(process, name)()
-            if attribute is not None:  # ... a named tuple
-                return getattr(metric_value, attribute)
-            else:  # ... or a number
-                return metric_value
-        # Avoid littering logs with stack traces
-        # complaining about dead processes
-        except BaseException:
-            return None
-
     async def usage_request(self, stream, ident, parent):
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
-        process_metric_value = self.get_process_metric_value
         reply_content["kernel_cpu"] = sum(
-            [process_metric_value(process, "cpu_percent", None) for process in all_processes]
+            [self.control_thread.get_process_metric_value(process, "cpu_percent", None) for process in all_processes]
         )
         reply_content["kernel_memory"] = sum(
-            [process_metric_value(process, "memory_info", "rss") for process in all_processes]
+            [self.control_thread.get_process_metric_value(process, "memory_info", "rss") for process in all_processes]
         )
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent

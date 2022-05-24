@@ -10,7 +10,6 @@ else:
 
 
 class ControlThread(Thread):
-
     def __init__(self, **kwargs):
         Thread.__init__(self, name="Control", **kwargs)
         self.io_loop = IOLoop(make_current=False)

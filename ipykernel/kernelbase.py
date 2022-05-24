@@ -76,6 +76,8 @@ class Kernel(SingletonConfigurable):
     # attribute to override with a GUI
     eventloop = Any(None)
 
+    processes = {}
+
     @observe("eventloop")
     def _update_eventloop(self, change):
         """schedule call to eventloop from IOLoop"""
@@ -953,15 +955,33 @@ class Kernel(SingletonConfigurable):
         reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
+    def get_process_metric_value(self, process, name, attribute=None):
+        try:
+            # psutil.Process methods will either return...
+            pid = process.pid
+            p = self.processes.get(pid, None)
+            if not p:
+                self.processes[pid] = process
+                p = self.processes.get(pid)
+            metric_value = getattr(p, name)()
+            if attribute is not None:  # ... a named tuple
+                return getattr(metric_value, attribute)
+            else:  # ... or a number
+                return metric_value
+        # Avoid littering logs with stack traces
+        # complaining about dead processes
+        except BaseException:
+            return None
+
     async def usage_request(self, stream, ident, parent):
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
         reply_content["kernel_cpu"] = sum(
-            [self.control_thread.get_process_metric_value(process, "cpu_percent", None) for process in all_processes]
+            [self.get_process_metric_value(process, "cpu_percent", None) for process in all_processes]
         )
         reply_content["kernel_memory"] = sum(
-            [self.control_thread.get_process_metric_value(process, "memory_info", "rss") for process in all_processes]
+            [self.get_process_metric_value(process, "memory_info", "rss") for process in all_processes]
         )
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent

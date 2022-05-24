@@ -8,6 +8,7 @@ else:
     # deprecated since pyzmq 17
     from zmq.eventloop.ioloop import IOLoop
 
+
 class ControlThread(Thread):
 
     def __init__(self, **kwargs):

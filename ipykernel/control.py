@@ -1,17 +1,12 @@
 from threading import Thread
 
 import zmq
-import psutil
 
 if zmq.pyzmq_version_info() >= (17, 0):
     from tornado.ioloop import IOLoop
 else:
     # deprecated since pyzmq 17
     from zmq.eventloop.ioloop import IOLoop
-
-import logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 class ControlThread(Thread):
 

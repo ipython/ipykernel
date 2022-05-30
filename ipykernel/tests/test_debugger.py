@@ -1,7 +1,7 @@
 import sys
 
-from IPython.core.display import HTML
 import pytest
+from IPython.core.display import HTML
 
 from .utils import TIMEOUT, get_reply, new_kernel
 

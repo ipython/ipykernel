@@ -26,7 +26,10 @@ try:
         SuspendedFramesManager,
         _FramesTracker,
     )
+    from _pydevd_bundle.pydevd_safe_repr import SafeRepr  # isort: skip
 
+    SafeRepr.maxstring_inner = 2**16
+    SafeRepr.maxother_inner = 2**16
     _is_debugpy_available = True
 except ImportError:
     _is_debugpy_available = False

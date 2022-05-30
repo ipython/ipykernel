@@ -1,5 +1,6 @@
 import sys
 
+from IPython.core.display import HTML
 import pytest
 
 from .utils import TIMEOUT, get_reply, new_kernel
@@ -220,12 +221,15 @@ print({var_name})
 
 
 def test_rich_inspect_at_breakpoint(kernel_with_debug):
-    code = """def f(a, b, html):
+    text_html = "<div><p>Hello World!</p></div>"
+    text_plain = str(HTML(text_html))
+
+    code = f"""def f(a, b, html):
     c = a + b
     return c
 
 from IPython.core.display import HTML
-html = HTML("<div><p>Hello World!</p></div>")
+html = HTML("{text_html}")
 f(2, 3, html)"""
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
@@ -284,7 +288,10 @@ f(2, 3, html)"""
         {"variableName": locals_[2]["name"], "frameId": stacks[0]["id"]},
     )
 
-    assert reply["body"]["data"] == {'text/html': '<div><p>Hello World!</p></div>', 'text/plain': '<IPython.core.displa...ML object>'}
+    assert reply["body"]["data"] == {
+        "text/html": text_html,
+        "text/plain": text_plain,
+    }
 
 
 def test_convert_to_long_pathname():

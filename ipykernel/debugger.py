@@ -595,7 +595,7 @@ class Debugger:
                     "type": "request",
                     "command": "evaluate",
                     "seq": seq + 1,
-                    "arguments": {"expression": code, "frameId": frame_id},
+                    "arguments": {"expression": code, "frameId": frame_id, "context": "clipboard"},
                 }
             )
             if reply["success"]:

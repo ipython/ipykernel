@@ -64,13 +64,13 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.16.0
+    rev: v8.17.0
     hooks:
       - id: eslint
         stages: [manual]
 
   - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.15.1
+    rev: 0.16.0
     hooks:
       - id: check-jsonschema
         name: "Check GitHub Workflows"

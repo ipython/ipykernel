@@ -2,6 +2,38 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.13.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.13.0...82179ef8ae4e9bdcd99a4a4c3807e8f773f1e92c))
+
+### Bugs fixed
+
+- Fix richInspectVariables [#943](https://github.com/ipython/ipykernel/pull/943) ([@davidbrochart](https://github.com/davidbrochart))
+- Force debugger metadata in built wheel [#941](https://github.com/ipython/ipykernel/pull/941) ([@blink1073](https://github.com/blink1073))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#945](https://github.com/ipython/ipykernel/pull/945) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Clean up typings [#939](https://github.com/ipython/ipykernel/pull/939) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#938](https://github.com/ipython/ipykernel/pull/938) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Clean up types [#933](https://github.com/ipython/ipykernel/pull/933) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#932](https://github.com/ipython/ipykernel/pull/932) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Switch to hatch backend [#931](https://github.com/ipython/ipykernel/pull/931) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#928](https://github.com/ipython/ipykernel/pull/928) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#926](https://github.com/ipython/ipykernel/pull/926) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Allow enforce PR label workflow to add labels [#921](https://github.com/ipython/ipykernel/pull/921) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#920](https://github.com/ipython/ipykernel/pull/920) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#919](https://github.com/ipython/ipykernel/pull/919) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#917](https://github.com/ipython/ipykernel/pull/917) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-04-11&to=2022-06-06&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-04-11..2022-06-06&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2022-04-11..2022-06-06&type=Issues) | [@fabioz](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afabioz+updated%3A2022-04-11..2022-06-06&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afcollonval+updated%3A2022-04-11..2022-06-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-04-11..2022-06-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.13.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.12.1...05c6e655e497a944fd738d9b744fad90bc78b70a))
@@ -26,8 +58,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-04-04&to=2022-04-11&type=c))
 
 [@andia89](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aandia89+updated%3A2022-04-04..2022-04-11&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-04-04..2022-04-11&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-04-04..2022-04-11&type=Issues) | [@meeseeksdev](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ameeseeksdev+updated%3A2022-04-04..2022-04-11&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-04-04..2022-04-11&type=Issues) | [@tlinhart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Atlinhart+updated%3A2022-04-04..2022-04-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.12.1
 

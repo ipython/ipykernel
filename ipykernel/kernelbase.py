@@ -977,6 +977,12 @@ class Kernel(SingletonConfigurable):
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
+        pruned_processes = {}
+        for process in all_processes:
+            p = self.processes.get(process.pid)
+            if p is not None:
+                pruned_processes[process.pid] = p
+        self.processes = pruned_processes
         reply_content["kernel_cpu"] = sum(
             [self.get_process_metric_value(process, "cpu_percent", None) for process in all_processes]
         )

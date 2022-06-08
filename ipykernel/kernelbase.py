@@ -957,13 +957,7 @@ class Kernel(SingletonConfigurable):
 
     def get_process_metric_value(self, process, name, attribute=None):
         try:
-            # psutil.Process methods will either return...
-            pid = process.pid
-            p = self.processes.get(pid, None)
-            if not p:
-                self.processes[pid] = process
-                p = self.processes.get(pid)
-            metric_value = getattr(p, name)()
+            metric_value = getattr(process, name)()
             if attribute is not None:  # ... a named tuple
                 return getattr(metric_value, attribute)
             else:  # ... or a number
@@ -979,15 +973,14 @@ class Kernel(SingletonConfigurable):
         all_processes = [current_process] + current_process.children(recursive=True)
         # Ensure 1) self.processes is updated to only current subprocesses
         # and 2) we reuse processes when possible (needed for accurate CPU)
-        self.processes = {process.pid: self.processes.get(process.pid, process) for process in all_processes}
         self.processes = {
             process.pid: self.processes.get(process.pid, process) for process in all_processes
         }
         reply_content["kernel_cpu"] = sum(
-            [self.get_process_metric_value(process, "cpu_percent", None) for process in all_processes]
+            [self.get_process_metric_value(process, "cpu_percent", None) for process in self.processes.values()]
         )
         reply_content["kernel_memory"] = sum(
-            [self.get_process_metric_value(process, "memory_info", "rss") for process in all_processes]
+            [self.get_process_metric_value(process, "memory_info", "rss") for process in self.processes.values()]
         )
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent

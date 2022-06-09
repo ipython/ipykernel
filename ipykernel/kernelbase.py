@@ -977,10 +977,16 @@ class Kernel(SingletonConfigurable):
             process.pid: self.processes.get(process.pid, process) for process in all_processes
         }
         reply_content["kernel_cpu"] = sum(
-            [self.get_process_metric_value(process, "cpu_percent", None) for process in self.processes.values()]
+            [
+                self.get_process_metric_value(process, "cpu_percent", None)
+                for process in self.processes.values()
+            ]
         )
         reply_content["kernel_memory"] = sum(
-            [self.get_process_metric_value(process, "memory_info", "rss") for process in self.processes.values()]
+            [
+                self.get_process_metric_value(process, "memory_info", "rss")
+                for process in self.processes.values()
+            ]
         )
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent

@@ -983,6 +983,7 @@ class Kernel(SingletonConfigurable):
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
         if cpu_percent is not None and cpu_percent != 0.0:
             reply_content["host_cpu_percent"] = cpu_percent
+        reply_content["cpu_count"] = psutil.cpu_count(logical=True)
         reply_content["host_virtual_memory"] = dict(psutil.virtual_memory()._asdict())
         reply_msg = self.session.send(stream, "usage_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)

@@ -76,7 +76,7 @@ class Kernel(SingletonConfigurable):
     # attribute to override with a GUI
     eventloop = Any(None)
 
-    processes = {}
+    processes: dict[str, psutil.Process] = {}
 
     @observe("eventloop")
     def _update_eventloop(self, change):

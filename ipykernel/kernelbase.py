@@ -982,9 +982,10 @@ class Kernel(SingletonConfigurable):
                 for process in self.processes.values()
             ]
         )
+        mem_info_type = "pss" if hasattr(current_process.memory_full_info(), "pss") else "rss"
         reply_content["kernel_memory"] = sum(
             [
-                self.get_process_metric_value(process, "memory_info", "rss")
+                self.get_process_metric_value(process, "memory_full_info", mem_info_type)
                 for process in self.processes.values()
             ]
         )

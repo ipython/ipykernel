@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.14.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.13.1...269569787419a47da562ed69fbe6363619f3b7e5))
+
+### Enhancements made
+
+- Add cpu_count to the usage_reply [#952](https://github.com/ipython/ipykernel/pull/952) ([@echarles](https://github.com/echarles))
+
+### Bugs fixed
+
+- use pss memory info type if available for the resource usage reply [#948](https://github.com/ipython/ipykernel/pull/948) ([@echarles](https://github.com/echarles))
+- Ensure psutil for the  process is accurate [#937](https://github.com/ipython/ipykernel/pull/937) ([@echarles](https://github.com/echarles))
+
+### Maintenance and upkeep improvements
+
+- Fix sphinx 5.0 support [#951](https://github.com/ipython/ipykernel/pull/951) ([@blink1073](https://github.com/blink1073))
+- [pre-commit.ci] pre-commit autoupdate [#950](https://github.com/ipython/ipykernel/pull/950) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-06-06&to=2022-06-13&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-06-06..2022-06-13&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-06-06..2022-06-13&type=Issues) | [@nishikantparmariam](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anishikantparmariam+updated%3A2022-06-06..2022-06-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-06-06..2022-06-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.13.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.13.0...82179ef8ae4e9bdcd99a4a4c3807e8f773f1e92c))
@@ -31,8 +57,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-04-11&to=2022-06-06&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-04-11..2022-06-06&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2022-04-11..2022-06-06&type=Issues) | [@fabioz](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afabioz+updated%3A2022-04-11..2022-06-06&type=Issues) | [@fcollonval](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afcollonval+updated%3A2022-04-11..2022-06-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-04-11..2022-06-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.13.0
 

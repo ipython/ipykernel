@@ -13,7 +13,7 @@
 ### Bugs fixed
 
 - use pss memory info type if available for the resource usage reply [#948](https://github.com/ipython/ipykernel/pull/948) ([@echarles](https://github.com/echarles))
-- Ensure psutil for the  process is accurate [#937](https://github.com/ipython/ipykernel/pull/937) ([@echarles](https://github.com/echarles))
+- Ensure psutil for the process is accurate [#937](https://github.com/ipython/ipykernel/pull/937) ([@echarles](https://github.com/echarles))
 
 ### Maintenance and upkeep improvements
 

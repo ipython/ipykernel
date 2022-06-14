@@ -37,7 +37,7 @@ jobs:
 
       - name: Install the Python dependencies
         run: |
-          pip install --pre .[test] codecov
+          pip install .[test] codecov
 
       - name: Install matplotlib
         if: ${{ !startsWith(matrix.os, 'macos') && !startsWith(matrix.python-version, 'pypy') }}

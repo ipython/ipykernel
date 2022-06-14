@@ -57,6 +57,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
+from .shell import ShellThread
 
 
 def _accepts_cell_id(meth):
@@ -245,6 +246,7 @@ class Kernel(SingletonConfigurable):
         "kernel_info_request",
         "connect_request",
         "shutdown_request",
+        "subshell_request",
         "is_complete_request",
         "interrupt_request",
         # deprecated:
@@ -270,6 +272,9 @@ class Kernel(SingletonConfigurable):
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
         self.control_queue: Queue[t.Any] = Queue()
+        mainshell_thread = ShellThread(shell_id="main", daemon=True)
+        self.shell_threads: dict[str, ShellThread] = dict(main=mainshell_thread)
+        mainshell_thread.start()
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -367,9 +372,11 @@ class Kernel(SingletonConfigurable):
             self.log.error("Invalid Message", exc_info=True)
             return
 
-        # Set the parent message for side effects.
-        self.set_parent(idents, msg, channel="shell")
-        self._publish_status("busy", "shell")
+        shell_id = msg.get("metadata", {}).get("shell_id", "main")
+        if shell_id == "main":
+            # Set the parent message for side effects.
+            self.set_parent(idents, msg, channel="shell")
+            self._publish_status("busy", "shell")
 
         msg_type = msg["header"]["msg_type"]
 
@@ -396,28 +403,33 @@ class Kernel(SingletonConfigurable):
             self.log.warning("Unknown message type: %r", msg_type)
         else:
             self.log.debug("%s: %s", msg_type, msg)
-            try:
-                self.pre_handler_hook()
-            except Exception:
-                self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
-            try:
-                result = handler(self.shell_stream, idents, msg)
-                if inspect.isawaitable(result):
-                    await result
-            except Exception:
-                self.log.error("Exception in message handler:", exc_info=True)
-            except KeyboardInterrupt:
-                # Ctrl-c shouldn't crash the kernel here.
-                self.log.error("KeyboardInterrupt caught in kernel.")
-            finally:
-                try:
-                    self.post_handler_hook()
-                except Exception:
-                    self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
+            asyncio.run_coroutine_threadsafe(self.call_handler(shell_id, handler, idents, msg), self.shell_threads[shell_id].io_loop.asyncio_loop)
 
-        sys.stdout.flush()
-        sys.stderr.flush()
-        self._publish_status("idle", "shell")
+    async def call_handler(self, shell_id, handler, idents, msg):
+        try:
+            self.pre_handler_hook()
+        except Exception:
+            self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
+        try:
+            result = handler(self.shell_stream, idents, msg)
+            if inspect.isawaitable(result):
+                await result
+        except Exception:
+            self.log.error("Exception in message handler:", exc_info=True)
+        except KeyboardInterrupt:
+            # Ctrl-c shouldn't crash the kernel here.
+            self.log.error("KeyboardInterrupt caught in kernel.")
+        finally:
+            try:
+                self.post_handler_hook()
+            except Exception:
+                self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
+
+        if shell_id == "main":
+            sys.stdout.flush()
+            sys.stderr.flush()
+            self._publish_status("idle", "shell")
+
         # flush to ensure reply is sent before
         # handling the next request
         self.shell_stream.flush(zmq.POLLOUT)
@@ -923,6 +935,16 @@ class Kernel(SingletonConfigurable):
         self.log.debug("Stopping shell ioloop")
         shell_io_loop = self.shell_stream.io_loop
         shell_io_loop.add_callback(shell_io_loop.stop)
+
+    async def subshell_request(self, stream, ident, parent):
+        shell_id = parent.get("content", {}).get("shell_id")
+        if shell_id is None:
+            shell_id = str(uuid.uuid4())
+        self.log.debug(f"Creating new shell with ID: {shell_id}")
+        self.shell_threads[shell_id] = subshell_thread = ShellThread(shell_id=shell_id, daemon=True)
+        subshell_thread.start()
+        content = dict(shell_id=shell_id)
+        self.session.send(stream, "subshell_reply", content, parent, ident=ident)
 
     def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the

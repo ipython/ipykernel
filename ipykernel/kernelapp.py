@@ -43,6 +43,7 @@ from traitlets.utils import filefind
 from traitlets.utils.importstring import import_item
 from zmq.eventloop.zmqstream import ZMQStream
 
+from .shell import ShellThread
 from .control import ControlThread
 from .heartbeat import Heartbeat
 
@@ -137,6 +138,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     stdin_socket = Any()
     iopub_socket = Any()
     iopub_thread = Any()
+    shell_thread = Any()
     control_thread = Any()
 
     _ports = Dict()
@@ -317,6 +319,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # in certain rare circumstances
             # see ipython/ipykernel#270 and zeromq/libzmq#2892
             self.shell_socket.router_handover = self.stdin_socket.router_handover = 1
+
+        self.shell_thread = ShellThread()
 
         self.init_control(context)
         self.init_iopub(context)
@@ -519,9 +523,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def init_kernel(self):
         """Create the Kernel object itself"""
-        shell_stream = ZMQStream(self.shell_socket)
+        shell_stream = ZMQStream(self.shell_socket, self.shell_thread.io_loop)
         control_stream = ZMQStream(self.control_socket, self.control_thread.io_loop)
         debugpy_stream = ZMQStream(self.debugpy_socket, self.control_thread.io_loop)
+        self.shell_thread.start()
         self.control_thread.start()
         kernel_factory = self.kernel_class.instance
 
@@ -532,6 +537,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             debugpy_stream=debugpy_stream,
             debug_shell_socket=self.debug_shell_socket,
             shell_stream=shell_stream,
+            shell_thread=self.shell_thread,
             control_thread=self.control_thread,
             iopub_thread=self.iopub_thread,
             iopub_socket=self.iopub_socket,

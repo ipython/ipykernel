@@ -32,6 +32,7 @@ except ImportError:
     # jupyter_client < 5, use local now()
     now = datetime.now
 
+import janus
 import psutil
 import zmq
 from IPython.core.error import StdinNotImplementedError
@@ -57,7 +58,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
-from .shell import ShellThread
+from .shell import SubshellThread, handle_messages
 
 
 def _accepts_cell_id(meth):
@@ -134,6 +135,7 @@ class Kernel(SingletonConfigurable):
 
     debug_shell_socket = Any()
 
+    shell_thread = Any()
     control_thread = Any()
     iopub_socket = Any()
     iopub_thread = Any()
@@ -272,9 +274,11 @@ class Kernel(SingletonConfigurable):
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
         self.control_queue: Queue[t.Any] = Queue()
-        mainshell_thread = ShellThread(shell_id="main", daemon=True)
-        self.shell_threads: dict[str, ShellThread] = dict(main=mainshell_thread)
-        mainshell_thread.start()
+        self.subshell_threads: dict[str, SubshellThread] = dict()
+
+    async def handle_main_shell(self):
+        self.shell_queues: dict[str, janus.Queue] = dict(main=janus.Queue())
+        await handle_messages(self.shell_queues["main"].async_q, self)
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -373,69 +377,8 @@ class Kernel(SingletonConfigurable):
             return
 
         shell_id = msg.get("metadata", {}).get("shell_id", "main")
-        if shell_id == "main":
-            # Set the parent message for side effects.
-            self.set_parent(idents, msg, channel="shell")
-            self._publish_status("busy", "shell")
-
-        msg_type = msg["header"]["msg_type"]
-
-        # Only abort execute requests
-        if self._aborting and msg_type == "execute_request":
-            self._send_abort_reply(self.shell_stream, msg, idents)
-            self._publish_status("idle", "shell")
-            # flush to ensure reply is sent before
-            # handling the next request
-            self.shell_stream.flush(zmq.POLLOUT)
-            return
-
-        # Print some info about this message and leave a '--->' marker, so it's
-        # easier to trace visually the message chain when debugging.  Each
-        # handler prints its message at the end.
-        self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
-        self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
-
-        if not self.should_handle(self.shell_stream, msg, idents):
-            return
-
-        handler = self.shell_handlers.get(msg_type, None)
-        if handler is None:
-            self.log.warning("Unknown message type: %r", msg_type)
-        else:
-            self.log.debug("%s: %s", msg_type, msg)
-            asyncio.run_coroutine_threadsafe(
-                self.call_handler(shell_id, handler, idents, msg),
-                self.shell_threads[shell_id].io_loop.asyncio_loop,
-            )
-
-    async def call_handler(self, shell_id, handler, idents, msg):
-        try:
-            self.pre_handler_hook()
-        except Exception:
-            self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
-        try:
-            result = handler(self.shell_stream, idents, msg)
-            if inspect.isawaitable(result):
-                await result
-        except Exception:
-            self.log.error("Exception in message handler:", exc_info=True)
-        except KeyboardInterrupt:
-            # Ctrl-c shouldn't crash the kernel here.
-            self.log.error("KeyboardInterrupt caught in kernel.")
-        finally:
-            try:
-                self.post_handler_hook()
-            except Exception:
-                self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
-
-        if shell_id == "main":
-            sys.stdout.flush()
-            sys.stderr.flush()
-            self._publish_status("idle", "shell")
-
-        # flush to ensure reply is sent before
-        # handling the next request
-        self.shell_stream.flush(zmq.POLLOUT)
+        is_main = shell_id == "main"
+        self.shell_queues[shell_id].sync_q.put((is_main, idents, msg))
 
     def pre_handler_hook(self):
         """Hook to execute before calling message handler"""
@@ -553,6 +496,7 @@ class Kernel(SingletonConfigurable):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
         self.msg_queue: Queue[t.Any] = Queue()
+        self.io_loop.add_callback(self.handle_main_shell)
         self.io_loop.add_callback(self.dispatch_queue)
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
@@ -944,7 +888,8 @@ class Kernel(SingletonConfigurable):
         if shell_id is None:
             shell_id = str(uuid.uuid4())
         self.log.debug(f"Creating new shell with ID: {shell_id}")
-        self.shell_threads[shell_id] = subshell_thread = ShellThread(shell_id=shell_id, daemon=True)
+        self.shell_queues[shell_id] = subshell_queue = janus.Queue()
+        self.subshell_threads[shell_id] = subshell_thread = SubshellThread(shell_id, subshell_queue, self)
         subshell_thread.start()
         content = dict(shell_id=shell_id)
         self.session.send(stream, "subshell_reply", content, parent, ident=ident)

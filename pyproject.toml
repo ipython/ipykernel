@@ -35,6 +35,7 @@ dependencies = [
     "psutil",
     "nest_asyncio",
     "packaging",
+    "janus>=1.0.0",
 ]
 
 [project.optional-dependencies]

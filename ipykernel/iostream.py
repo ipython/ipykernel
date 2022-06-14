@@ -17,14 +17,11 @@ from typing import Any, Callable, Deque, Optional
 from weakref import WeakSet
 
 import zmq
-
-if zmq.pyzmq_version_info() >= (17, 0):
-    from tornado.ioloop import IOLoop
-else:
-    # deprecated since pyzmq 17
-    from zmq.eventloop.ioloop import IOLoop
-
 from jupyter_client.session import extract_header
+
+# AsyncIOLoop always creates a new asyncio event loop,
+# rather than the default AsyncIOMainLoop
+from tornado.platform.asyncio import AsyncIOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
 # -----------------------------------------------------------------------------
@@ -63,7 +60,7 @@ class IOPubThread:
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
         self._pipe_flag = pipe
-        self.io_loop = IOLoop(make_current=False)
+        self.io_loop = AsyncIOLoop(make_current=False)
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
@@ -78,7 +75,6 @@ class IOPubThread:
 
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""
-        self.io_loop.make_current()
         self.io_loop.start()
         self.io_loop.close(all_fds=True)
 

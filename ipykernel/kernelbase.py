@@ -403,7 +403,10 @@ class Kernel(SingletonConfigurable):
             self.log.warning("Unknown message type: %r", msg_type)
         else:
             self.log.debug("%s: %s", msg_type, msg)
-            asyncio.run_coroutine_threadsafe(self.call_handler(shell_id, handler, idents, msg), self.shell_threads[shell_id].io_loop.asyncio_loop)
+            asyncio.run_coroutine_threadsafe(
+                self.call_handler(shell_id, handler, idents, msg),
+                self.shell_threads[shell_id].io_loop.asyncio_loop,
+            )
 
     async def call_handler(self, shell_id, handler, idents, msg):
         try:

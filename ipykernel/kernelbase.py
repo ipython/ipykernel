@@ -889,7 +889,9 @@ class Kernel(SingletonConfigurable):
             shell_id = str(uuid.uuid4())
         self.log.debug(f"Creating new shell with ID: {shell_id}")
         self.shell_queues[shell_id] = subshell_queue = janus.Queue()
-        self.subshell_threads[shell_id] = subshell_thread = SubshellThread(shell_id, subshell_queue, self)
+        self.subshell_threads[shell_id] = subshell_thread = SubshellThread(
+            shell_id, subshell_queue, self
+        )
         subshell_thread.start()
         content = dict(shell_id=shell_id)
         self.session.send(stream, "subshell_reply", content, parent, ident=ident)

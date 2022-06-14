@@ -43,7 +43,6 @@ from traitlets.utils import filefind
 from traitlets.utils.importstring import import_item
 from zmq.eventloop.zmqstream import ZMQStream
 
-from .shell import ShellThread
 from .control import ControlThread
 from .heartbeat import Heartbeat
 
@@ -51,6 +50,7 @@ from .heartbeat import Heartbeat
 from .iostream import IOPubThread
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
+from .shell import ShellThread
 from .zmqshell import ZMQInteractiveShell
 
 # -----------------------------------------------------------------------------

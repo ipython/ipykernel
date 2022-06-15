@@ -41,20 +41,19 @@ def test_subshell():
     msg1 = kc.session.msg("execute_request", get_content(0.1), metadata=metadata)
     kc.shell_channel.send(msg1)
 
-    msg_cnt = 0
-    while True:
-        msg = kc.get_shell_msg()
-        t = time.time()
-        if msg["parent_header"]["msg_id"] == msg0["msg_id"]:
-            # main shell execution should take ~0.3s
-            assert 0.3 < t - t0 < 0.4
-            msg_cnt += 1
-        elif msg["parent_header"]["msg_id"] == msg1["msg_id"]:
-            # subshell execution should take ~0.1s if done in parallel
-            assert 0.1 < t - t1 < 0.2
-            msg_cnt += 1
-        if msg_cnt == 2:
-            break
+    msg = kc.get_shell_msg()
+    t = time.time()
+    # subshell should have finished execution first
+    assert msg["parent_header"]["msg_id"] == msg1["msg_id"]
+    # subshell execution should take ~0.1s if done in parallel
+    assert 0.1 < t - t1 < 0.2
+
+    msg = kc.get_shell_msg()
+    t = time.time()
+    # main shell shoud have finished execution last
+    assert msg["parent_header"]["msg_id"] == msg0["msg_id"]
+    # main shell execution should take ~0.3s
+    assert 0.3 < t - t0 < 0.4
 
     kc.stop_channels()
     km.shutdown_kernel()

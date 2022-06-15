@@ -366,8 +366,9 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
-    async def dispatch_shell(self, idents, msg):
+    async def dispatch_shell(self, *args):
         """dispatch shell requests"""
+        idents, msg = args
 
         # flush control queue before handling shell requests
         await self._flush_control_queue()
@@ -446,13 +447,13 @@ class Kernel(SingletonConfigurable):
         Returns None if no message was handled.
         """
         if wait:
-            t, dispatch, idents, msg = await self.msg_queue.async_q.get()
+            t, dispatch, args = await self.msg_queue.async_q.get()
         else:
             try:
-                t, dispatch, idents, msg = self.msg_queue.async_q.get_nowait()
+                t, dispatch, args = self.msg_queue.async_q.get_nowait()
             except (asyncio.QueueEmpty, QueueEmpty):
                 return None
-        await dispatch(idents, msg)
+        await dispatch(*args)
 
     async def dispatch_queue(self):
         """Coroutine to preserve order of message handling
@@ -476,28 +477,33 @@ class Kernel(SingletonConfigurable):
     def _message_counter_default(self):
         return itertools.count()
 
-    def schedule_dispatch(self, dispatch, msg):
+    def schedule_dispatch(self, dispatch, *args):
         """schedule a message for dispatch"""
         idx = next(self._message_counter)
-
-        idents, msg = self.session.feed_identities(msg, copy=False)
-        try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
-        except Exception:
-            self.log.error("Invalid Shell Message", exc_info=True)
-            return
+        if args:
+            idents, msg = self.session.feed_identities(args[0], copy=False)
+            try:
+                msg = self.session.deserialize(msg, content=True, copy=False)
+            except Exception:
+                self.log.error("Invalid Shell Message", exc_info=True)
+                return
+        else:
+            idents, msg = None, {}
 
         shell_id = msg.get("metadata", {}).get("shell_id")
 
         if shell_id:
             self.subshell_queues[shell_id].put((idents, msg))
         else:
+            if not msg:
+                args = ()
+            else:
+                args = (idents, msg)
             self.msg_queue.sync_q.put(
                 (
                     idx,
                     dispatch,
-                    idents,
-                    msg,
+                    args,
                 )
             )
             # ensure the eventloop wakes up
@@ -1092,7 +1098,7 @@ class Kernel(SingletonConfigurable):
 
         # if we have a delay, give messages this long to arrive on the queue
         # before we stop aborting requests
-        asyncio.get_event_loop().call_later(self.stop_on_error_timeout, schedule_stop_aborting)
+        self.shell_thread.io_loop.call_later(self.stop_on_error_timeout, schedule_stop_aborting)
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""

@@ -317,8 +317,15 @@ class Kernel(SingletonConfigurable):
         control_loop.add_callback(_flush)
         return awaitable_future
 
-    async def process_control(self, idents, msg):
+    async def process_control(self, msg):
         """dispatch control requests"""
+        idents, msg = self.session.feed_identities(msg, copy=False)
+        try:
+            msg = self.session.deserialize(msg, content=True, copy=False)
+        except Exception:
+            self.log.error("Invalid Control Message", exc_info=True)
+            return
+
         self.log.debug("Control received: %s", msg)
 
         # Set the parent message for side effects.
@@ -476,13 +483,12 @@ class Kernel(SingletonConfigurable):
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
         except Exception:
-            self.log.error("Invalid Message", exc_info=True)
+            self.log.error("Invalid Shell Message", exc_info=True)
             return
 
         shell_id = msg.get("metadata", {}).get("shell_id", "main")
 
         if shell_id == "main":
-            msg_queue = self.msg_queue.sync_q
             self.msg_queue.sync_q.put(
                 (
                     idx,

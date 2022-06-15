@@ -10,8 +10,8 @@ def test_subshell():
     shell_id = "foo"
     content = dict(shell_id=shell_id)
     msg = kc.session.msg("subshell_request", content)
-    kc.shell_channel.send(msg)
-    msg = kc.get_shell_msg()
+    kc.control_channel.send(msg)
+    msg = kc.get_control_msg()
     assert msg["content"]["shell_id"] == shell_id
 
     def get_content(t):

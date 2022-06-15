@@ -32,7 +32,7 @@ async def handle_messages(msg_queue, kernel, is_main):
             # flush to ensure reply is sent before
             # handling the next request
             kernel.shell_stream.flush(zmq.POLLOUT)
-            return
+            continue
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each
@@ -41,7 +41,7 @@ async def handle_messages(msg_queue, kernel, is_main):
         kernel.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
         if not kernel.should_handle(kernel.shell_stream, msg, idents):
-            return
+            continue
 
         handler = kernel.shell_handlers.get(msg_type, None)
         if handler is None:

@@ -9,6 +9,7 @@ import inspect
 import itertools
 import logging
 import os
+import queue
 import socket
 import sys
 import time
@@ -277,8 +278,9 @@ class Kernel(SingletonConfigurable):
         self.subshell_threads: dict[str, SubshellThread] = dict()
 
     async def handle_main_shell(self):
-        self.shell_queues: dict[str, janus.Queue] = dict(main=janus.Queue())
-        await handle_messages(self.shell_queues["main"].async_q, self)
+        self.msg_queue: janus.Queue[t.Any] = janus.Queue()
+        self.shell_queues: dict[str, t.Union[queue.Queue, janus.Queue]] = dict(main=janus.Queue())
+        await handle_messages(self.shell_queues["main"].async_q, self, True)
 
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
@@ -315,15 +317,8 @@ class Kernel(SingletonConfigurable):
         control_loop.add_callback(_flush)
         return awaitable_future
 
-    async def process_control(self, msg):
+    async def process_control(self, idents, msg):
         """dispatch control requests"""
-        idents, msg = self.session.feed_identities(msg, copy=False)
-        try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
-        except Exception:
-            self.log.error("Invalid Control Message", exc_info=True)
-            return
-
         self.log.debug("Control received: %s", msg)
 
         # Set the parent message for side effects.
@@ -363,22 +358,17 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
-    async def dispatch_shell(self, msg):
+    async def dispatch_shell(self, idents, msg):
         """dispatch shell requests"""
 
         # flush control queue before handling shell requests
         await self._flush_control_queue()
 
-        idents, msg = self.session.feed_identities(msg, copy=False)
-        try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
-        except Exception:
-            self.log.error("Invalid Message", exc_info=True)
-            return
-
         shell_id = msg.get("metadata", {}).get("shell_id", "main")
-        is_main = shell_id == "main"
-        self.shell_queues[shell_id].sync_q.put((is_main, idents, msg))
+        shell_queue = self.shell_queues[shell_id]
+        if shell_id == "main":
+            shell_queue = shell_queue.sync_q
+        shell_queue.put((idents, msg))
 
     def pre_handler_hook(self):
         """Hook to execute before calling message handler"""
@@ -448,13 +438,13 @@ class Kernel(SingletonConfigurable):
         Returns None if no message was handled.
         """
         if wait:
-            t, dispatch, args = await self.msg_queue.get()
+            t, dispatch, idents, msg = await self.msg_queue.async_q.get()
         else:
             try:
-                t, dispatch, args = self.msg_queue.get_nowait()
+                t, dispatch, idents, msg = self.msg_queue.async_q.get_nowait()
             except (asyncio.QueueEmpty, QueueEmpty):
                 return None
-        await dispatch(*args)
+        await dispatch(idents, msg)
 
     async def dispatch_queue(self):
         """Coroutine to preserve order of message handling
@@ -478,24 +468,37 @@ class Kernel(SingletonConfigurable):
     def _message_counter_default(self):
         return itertools.count()
 
-    def schedule_dispatch(self, dispatch, *args):
+    def schedule_dispatch(self, dispatch, msg):
         """schedule a message for dispatch"""
         idx = next(self._message_counter)
 
-        self.msg_queue.put_nowait(
-            (
-                idx,
-                dispatch,
-                args,
+        idents, msg = self.session.feed_identities(msg, copy=False)
+        try:
+            msg = self.session.deserialize(msg, content=True, copy=False)
+        except Exception:
+            self.log.error("Invalid Message", exc_info=True)
+            return
+
+        shell_id = msg.get("metadata", {}).get("shell_id", "main")
+
+        if shell_id == "main":
+            msg_queue = self.msg_queue.sync_q
+            self.msg_queue.sync_q.put(
+                (
+                    idx,
+                    dispatch,
+                    idents,
+                    msg,
+                )
             )
-        )
-        # ensure the eventloop wakes up
-        self.io_loop.add_callback(lambda: None)
+            # ensure the eventloop wakes up
+            self.io_loop.add_callback(lambda: None)
+        else:
+            self.shell_queues[shell_id].put((idents, msg))
 
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue: Queue[t.Any] = Queue()
         self.io_loop.add_callback(self.handle_main_shell)
         self.io_loop.add_callback(self.dispatch_queue)
 
@@ -658,6 +661,8 @@ class Kernel(SingletonConfigurable):
         stop_on_error = content.get("stop_on_error", True)
 
         metadata = self.init_metadata(parent)
+        if "shell_id" in parent["metadata"]:
+            metadata["shell_id"] = parent["metadata"]["shell_id"]
 
         # Re-broadcast our input for the benefit of listening clients, and
         # start computing output
@@ -888,7 +893,7 @@ class Kernel(SingletonConfigurable):
         if shell_id is None:
             shell_id = str(uuid.uuid4())
         self.log.debug(f"Creating new shell with ID: {shell_id}")
-        self.shell_queues[shell_id] = subshell_queue = janus.Queue()
+        self.shell_queues[shell_id] = subshell_queue = queue.Queue()
         self.subshell_threads[shell_id] = subshell_thread = SubshellThread(
             shell_id, subshell_queue, self
         )

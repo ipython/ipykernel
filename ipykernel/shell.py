@@ -12,9 +12,12 @@ else:
     from zmq.eventloop.ioloop import IOLoop
 
 
-async def handle_messages(msg_queue, kernel):
+async def handle_messages(msg_queue, kernel, is_main):
     while True:
-        is_main, idents, msg = await msg_queue.get()
+        res = msg_queue.get()
+        if is_main:
+            res = await res
+        idents, msg = res
         if is_main:
             # Set the parent message for side effects.
             kernel.set_parent(idents, msg, channel="shell")
@@ -82,8 +85,7 @@ class SubshellThread(Thread):
 
     def run(self):
         loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        asyncio.run(handle_messages(self.msg_queue, self.kernel))
+        loop.run_until_complete(handle_messages(self.msg_queue, self.kernel, False))
 
 
 class ShellThread(Thread):

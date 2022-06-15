@@ -1,12 +1,12 @@
 from threading import Thread
 
-from tornado.platform.asyncio import AsyncIOLoop
+from tornado.ioloop import IOLoop
 
 
 class ControlThread(Thread):
     def __init__(self, **kwargs):
         Thread.__init__(self, name="Control", **kwargs)
-        self.io_loop = AsyncIOLoop(make_current=False)
+        self.io_loop = IOLoop(make_current=False)
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
 

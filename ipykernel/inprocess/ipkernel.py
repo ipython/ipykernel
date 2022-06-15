@@ -71,6 +71,7 @@ class InProcessKernel(IPythonKernel):
 
         self._underlying_iopub_socket.observe(self._io_dispatch, names=["message_sent"])
         self.shell.kernel = self
+        self.main_shell_queue = None
 
     async def execute_request(self, stream, ident, parent):
         """Override for temporary IO redirection."""

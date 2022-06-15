@@ -59,7 +59,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
-from .shell import SubshellThread, handle_messages
+from .shell import SubshellThread, handle_message, handle_messages
 
 
 def _accepts_cell_id(meth):
@@ -368,7 +368,16 @@ class Kernel(SingletonConfigurable):
 
     async def dispatch_shell(self, *args):
         """dispatch shell requests"""
-        idents, msg = args
+        if len(args) == 1:
+            # in-process kernel
+            idents, msg = self.session.feed_identities(args[0], copy=False)
+            try:
+                msg = self.session.deserialize(msg, content=True, copy=False)
+            except Exception:
+                self.log.error("Invalid Shell Message", exc_info=True)
+                return
+        else:
+            idents, msg = args
 
         # flush control queue before handling shell requests
         await self._flush_control_queue()
@@ -377,7 +386,11 @@ class Kernel(SingletonConfigurable):
         if shell_id:
             self.subshell_queues[shell_id].put((idents, msg))
         else:
-            self.main_shell_queue.sync_q.put((idents, msg))
+            if self.main_shell_queue is None:
+                # in-process kernel
+                await handle_message(idents, msg, self, True)
+            else:
+                self.main_shell_queue.sync_q.put((idents, msg))
 
     def pre_handler_hook(self):
         """Hook to execute before calling message handler"""

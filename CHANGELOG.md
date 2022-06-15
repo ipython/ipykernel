@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.15.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.14.0...5c1adcae929d8b4d28bf2b7849fe0e220c729b26))
+
+### Bugs fixed
+
+- Fix compatibility with tornado 6.2 beta [#956](https://github.com/ipython/ipykernel/pull/956) ([@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+- Back to top-level tornado IOLoop [#958](https://github.com/ipython/ipykernel/pull/958) ([@minrk](https://github.com/minrk))
+- Explicitly require pyzmq >= 17 [#957](https://github.com/ipython/ipykernel/pull/957) ([@minrk](https://github.com/minrk))
+- [pre-commit.ci] pre-commit autoupdate [#954](https://github.com/ipython/ipykernel/pull/954) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-06-13&to=2022-06-15&type=c))
+
+[@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2022-06-13..2022-06-15&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-06-13..2022-06-15&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.14.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.13.1...269569787419a47da562ed69fbe6363619f3b7e5))
@@ -25,8 +47,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-06-06&to=2022-06-13&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-06-06..2022-06-13&type=Issues) | [@echarles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aecharles+updated%3A2022-06-06..2022-06-13&type=Issues) | [@nishikantparmariam](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anishikantparmariam+updated%3A2022-06-06..2022-06-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-06-06..2022-06-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.13.1
 

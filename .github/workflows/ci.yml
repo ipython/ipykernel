@@ -78,7 +78,8 @@ jobs:
           codecov
 
       - name: Check Launcher
-        run: cd $HOME
+        run: |
+          cd $HOME
           python -m ipykernel_launcher --help
 
   pre-commit:

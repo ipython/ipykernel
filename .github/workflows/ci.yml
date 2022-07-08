@@ -77,6 +77,10 @@ jobs:
         run: |
           codecov
 
+      - name: Check Launcher
+        run: cd $HOME
+          python -m ipykernel_launcher --help
+
   pre-commit:
     name: pre-commit
     runs-on: ubuntu-latest

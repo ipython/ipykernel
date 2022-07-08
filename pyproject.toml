@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=0.25", "jupyter_client>=6"]
+requires = ["hatchling>=1.4", "jupyter_client>=6"]
 build-backend = "hatchling.build"
 
 [project]
@@ -54,8 +54,8 @@ test = [
 [tool.hatch.build.targets.wheel.shared-data]
 "data_kernelspec" = "share/jupyter/kernels/python3"
 
-[tool.hatch.build]
-artifacts = ["ipykernel_launcher.py"]
+[tool.hatch.build.force-include]
+"./ipykernel_launcher.py" = "ipykernel_launcher.py"
 
 [tool.jupyter-releaser]
 skip = ["check-links"]

@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.15.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.15.1...724753a185b0954f0e662c226b86dc8146c62bcb))
+
+### Bugs fixed
+
+- `_abort_queues` is no longer async [#942](https://github.com/ipython/ipykernel/pull/942) ([@rhelmot](https://github.com/rhelmot))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#978](https://github.com/ipython/ipykernel/pull/978) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#977](https://github.com/ipython/ipykernel/pull/977) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#976](https://github.com/ipython/ipykernel/pull/976) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#974](https://github.com/ipython/ipykernel/pull/974) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#971](https://github.com/ipython/ipykernel/pull/971) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#968](https://github.com/ipython/ipykernel/pull/968) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#966](https://github.com/ipython/ipykernel/pull/966) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-07-08&to=2022-08-29&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-07-08..2022-08-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-07-08..2022-08-29&type=Issues) | [@rayosborn](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Arayosborn+updated%3A2022-07-08..2022-08-29&type=Issues) | [@rhelmot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Arhelmot+updated%3A2022-07-08..2022-08-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.15.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.15.0...d9a8578ab2864b4ee636b12252e04a9b70047d0b))
@@ -21,8 +47,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-06-15&to=2022-07-08&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-06-15..2022-07-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-06-15..2022-07-08&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.15.0
 

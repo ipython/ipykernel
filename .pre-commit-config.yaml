@@ -17,7 +17,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
         args: ["--line-length", "100"]
@@ -66,7 +66,7 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.18.1
+    rev: 0.18.2
     hooks:
       - id: check-jsonschema
         name: "Check GitHub Workflows"

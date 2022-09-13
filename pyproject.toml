@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ipykernel"
-version = "6.15.2"
+version = "6.15.3"
 authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
 license = {file = "COPYING.md"}
 readme = "README.md"
@@ -61,7 +61,7 @@ test = [
 skip = ["check-links"]
 
 [tool.tbump.version]
-current = "6.15.2"
+current = "6.15.3"
 regex = '''
   (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)
   ((?P<channel>a|b|rc|.dev)(?P<release>\d+))?

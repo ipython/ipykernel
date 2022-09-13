@@ -21,7 +21,7 @@ def _use_appnope():
     return sys.platform == "darwin" and V(platform.mac_ver()[0]) >= V("10.9")
 
 
-def _notify_stream_qt(kernel, stream):
+def _notify_stream_qt(kernel):
 
     from IPython.external.qt_for_kernel import QtCore
 
@@ -31,13 +31,17 @@ def _notify_stream_qt(kernel, stream):
         # due to our consuming of the edge-triggered FD
         # flush returns the number of events consumed.
         # if there were any, wake it up
-        if stream.flush(limit=1):
-            notifier.setEnabled(False)
+        if kernel.shell_stream.flush(limit=1):
+            kernel._qt_notifier.setEnabled(False)
             kernel.app.quit()
 
-    fd = stream.getsockopt(zmq.FD)
-    notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
-    notifier.activated.connect(process_stream_events)
+    if not hasattr(kernel, "_qt_notifier"):
+        fd = kernel.shell_stream.getsockopt(zmq.FD)
+        kernel._qt_notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
+        kernel._qt_notifier.activated.connect(process_stream_events)
+    else:
+        kernel._qt_notifier.setEnabled(True)
+
     # there may already be unprocessed events waiting.
     # these events will not wake zmq's edge-triggered FD
     # since edge-triggered notification only occurs on new i/o activity.
@@ -45,10 +49,11 @@ def _notify_stream_qt(kernel, stream):
     # so we start in a clean state ensuring that any new i/o events will notify.
     # schedule first call on the eventloop as soon as it's running,
     # so we don't block here processing events
-    timer = QtCore.QTimer(kernel.app)
-    timer.setSingleShot(True)
-    timer.timeout.connect(process_stream_events)
-    timer.start(0)
+    if not hasattr(kernel, "_qt_timer"):
+        kernel._qt_timer = QtCore.QTimer(kernel.app)
+        kernel._qt_timer.setSingleShot(True)
+        kernel._qt_timer.timeout.connect(process_stream_events)
+    kernel._qt_timer.start(0)
 
 
 # mapping of keys to loop functions
@@ -118,7 +123,7 @@ def loop_qt4(kernel):
     kernel.app = get_app_qt4([" "])
     if isinstance(kernel.app, QtGui.QApplication):
         kernel.app.setQuitOnLastWindowClosed(False)
-    _notify_stream_qt(kernel, kernel.shell_stream)
+    _notify_stream_qt(kernel)
 
     _loop_qt(kernel.app)
 

@@ -30,6 +30,14 @@ try:
     _is_debugpy_available = True
 except ImportError:
     _is_debugpy_available = False
+except Exception as e:
+    # We cannot import the module where the DebuggerInitializationError
+    # is defined
+    if e.__class__.__name__ == "DebuggerInitializationError":
+        _is_debugpy_available = False
+    else:
+        raise e
+
 
 # Required for backwards compatiblity
 ROUTING_ID = getattr(zmq, "ROUTING_ID", None) or zmq.IDENTITY

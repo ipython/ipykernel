@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.15.3
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.15.2...861b1242a7601f1608707ed8bbfb6e801914cb4a))
+
+### Bugs fixed
+
+- PR: Close memory leak [#990](https://github.com/ipython/ipykernel/pull/990) ([@impact27](https://github.com/impact27))
+- Handle all possible exceptions when trying to import the debugger [#987](https://github.com/ipython/ipykernel/pull/987) ([@JohanMabille](https://github.com/JohanMabille))
+
+### Maintenance and upkeep improvements
+
+- [pre-commit.ci] pre-commit autoupdate [#989](https://github.com/ipython/ipykernel/pull/989) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#985](https://github.com/ipython/ipykernel/pull/985) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Add python logo in svg format [#984](https://github.com/ipython/ipykernel/pull/984) ([@steff456](https://github.com/steff456))
+- [pre-commit.ci] pre-commit autoupdate [#982](https://github.com/ipython/ipykernel/pull/982) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-08-29&to=2022-09-13&type=c))
+
+[@impact27](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aimpact27+updated%3A2022-08-29..2022-09-13&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2022-08-29..2022-09-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-08-29..2022-09-13&type=Issues) | [@steff456](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Asteff456+updated%3A2022-08-29..2022-09-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.15.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.15.1...724753a185b0954f0e662c226b86dc8146c62bcb))
@@ -25,8 +49,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-07-08&to=2022-08-29&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-07-08..2022-08-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-07-08..2022-08-29&type=Issues) | [@rayosborn](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Arayosborn+updated%3A2022-07-08..2022-08-29&type=Issues) | [@rhelmot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Arhelmot+updated%3A2022-07-08..2022-08-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.15.1
 

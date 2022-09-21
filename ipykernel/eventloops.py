@@ -283,6 +283,7 @@ def loop_tk(kernel):
                     loop.run_until_complete(self.func())
                 except Exception:
                     kernel.log.exception("Error in message handler")
+                self.app.quit()
                 self.app.after(poll_interval, self.on_timer)
 
             def start(self):

@@ -15,10 +15,11 @@ import asyncio
 
 from jupyter_client.client import KernelClient
 from jupyter_client.clientabc import KernelClientABC
+
 try:
     from jupyter_client.utils import run_sync  # requires 7.0+
 except ImportError:
-    run_sync = None
+    run_sync = None  # type:ignore
 
 # IPython imports
 from traitlets import Instance, Type, default

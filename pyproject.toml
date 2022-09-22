@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ipykernel"
-version = "6.15.3"
+dynamic = ["version"]
 authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
 license = {file = "COPYING.md"}
 readme = "README.md"
@@ -48,6 +48,9 @@ test = [
     "pytest-timeout",
 ]
 
+[tool.hatch.version]
+path = "ipykernel/_version.py"
+
 # Used to call hatch_build.py
 [tool.hatch.build.hooks.custom]
 
@@ -59,23 +62,6 @@ test = [
 
 [tool.jupyter-releaser]
 skip = ["check-links"]
-
-[tool.tbump.version]
-current = "6.15.3"
-regex = '''
-  (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)
-  ((?P<channel>a|b|rc|.dev)(?P<release>\d+))?
-'''
-
-[tool.tbump.git]
-message_template = "Bump to {new_version}"
-tag_template = "v{new_version}"
-
-[[tool.tbump.file]]
-src = "ipykernel/_version.py"
-
-[[tool.tbump.file]]
-src = "pyproject.toml"
 
 [tool.mypy]
 check_untyped_defs = true

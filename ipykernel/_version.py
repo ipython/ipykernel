@@ -4,7 +4,7 @@ store the current version info of the server.
 import re
 from typing import List
 
-# Version string must appear intact for tbump versioning
+# Version string must appear intact for hatch versioning
 __version__ = "6.15.3"
 
 # Build up version_info tuple for backwards compatibility

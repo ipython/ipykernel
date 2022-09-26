@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.16.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.15.3...92292ad9d844e594e9c97f7f391149023e58de9e))
+
+### Maintenance and upkeep improvements
+
+- Use hatch for version [#998](https://github.com/ipython/ipykernel/pull/998) ([@blink1073](https://github.com/blink1073))
+- Add client 8 support [#996](https://github.com/ipython/ipykernel/pull/996) ([@blink1073](https://github.com/blink1073))
+- Remove unused manifest file [#994](https://github.com/ipython/ipykernel/pull/994) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-09-13&to=2022-09-26&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-09-13..2022-09-26&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-09-13..2022-09-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.15.3
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.15.2...861b1242a7601f1608707ed8bbfb6e801914cb4a))
@@ -23,8 +41,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-08-29&to=2022-09-13&type=c))
 
 [@impact27](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aimpact27+updated%3A2022-08-29..2022-09-13&type=Issues) | [@JohanMabille](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2022-08-29..2022-09-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-08-29..2022-09-13&type=Issues) | [@steff456](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Asteff456+updated%3A2022-08-29..2022-09-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.15.2
 

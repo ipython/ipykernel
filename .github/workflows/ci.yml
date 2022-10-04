@@ -198,7 +198,7 @@ jobs:
           pip check
       - name: Run the tests
         run: |
-          cmd="python -m pytest -vv"
+          cmd="python -m pytest -vv -W default"
           $cmd || $cmd --lf
 
   make_sdist:

@@ -5,8 +5,8 @@ This package provides the IPython kernel for Jupyter.
 ## Installation from source
 
 1. `git clone`
-2. `cd ipykernel`
-3. `pip install -e ".[test]"`
+1. `cd ipykernel`
+1. `pip install -e ".[test]"`
 
 After that, all normal `ipython` commands will use this newly-installed version of the kernel.
 

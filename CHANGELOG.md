@@ -31,10 +31,10 @@
 
 ### Maintenance and upkeep improvements
 
-- [pre-commit.ci] pre-commit autoupdate [#989](https://github.com/ipython/ipykernel/pull/989) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#985](https://github.com/ipython/ipykernel/pull/985) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#989](https://github.com/ipython/ipykernel/pull/989) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#985](https://github.com/ipython/ipykernel/pull/985) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Add python logo in svg format [#984](https://github.com/ipython/ipykernel/pull/984) ([@steff456](https://github.com/steff456))
-- [pre-commit.ci] pre-commit autoupdate [#982](https://github.com/ipython/ipykernel/pull/982) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#982](https://github.com/ipython/ipykernel/pull/982) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -52,13 +52,13 @@
 
 ### Maintenance and upkeep improvements
 
-- [pre-commit.ci] pre-commit autoupdate [#978](https://github.com/ipython/ipykernel/pull/978) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#977](https://github.com/ipython/ipykernel/pull/977) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#976](https://github.com/ipython/ipykernel/pull/976) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#974](https://github.com/ipython/ipykernel/pull/974) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#971](https://github.com/ipython/ipykernel/pull/971) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#968](https://github.com/ipython/ipykernel/pull/968) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#966](https://github.com/ipython/ipykernel/pull/966) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#978](https://github.com/ipython/ipykernel/pull/978) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#977](https://github.com/ipython/ipykernel/pull/977) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#976](https://github.com/ipython/ipykernel/pull/976) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#974](https://github.com/ipython/ipykernel/pull/974) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#971](https://github.com/ipython/ipykernel/pull/971) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#968](https://github.com/ipython/ipykernel/pull/968) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#966](https://github.com/ipython/ipykernel/pull/966) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -76,9 +76,9 @@
 
 ### Maintenance and upkeep improvements
 
-- [pre-commit.ci] pre-commit autoupdate [#962](https://github.com/ipython/ipykernel/pull/962) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#961](https://github.com/ipython/ipykernel/pull/961) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#960](https://github.com/ipython/ipykernel/pull/960) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#962](https://github.com/ipython/ipykernel/pull/962) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#961](https://github.com/ipython/ipykernel/pull/961) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#960](https://github.com/ipython/ipykernel/pull/960) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -98,7 +98,7 @@
 
 - Back to top-level tornado IOLoop [#958](https://github.com/ipython/ipykernel/pull/958) ([@minrk](https://github.com/minrk))
 - Explicitly require pyzmq >= 17 [#957](https://github.com/ipython/ipykernel/pull/957) ([@minrk](https://github.com/minrk))
-- [pre-commit.ci] pre-commit autoupdate [#954](https://github.com/ipython/ipykernel/pull/954) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#954](https://github.com/ipython/ipykernel/pull/954) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -122,7 +122,7 @@
 ### Maintenance and upkeep improvements
 
 - Fix sphinx 5.0 support [#951](https://github.com/ipython/ipykernel/pull/951) ([@blink1073](https://github.com/blink1073))
-- [pre-commit.ci] pre-commit autoupdate [#950](https://github.com/ipython/ipykernel/pull/950) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#950](https://github.com/ipython/ipykernel/pull/950) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -141,18 +141,18 @@
 
 ### Maintenance and upkeep improvements
 
-- [pre-commit.ci] pre-commit autoupdate [#945](https://github.com/ipython/ipykernel/pull/945) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#945](https://github.com/ipython/ipykernel/pull/945) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Clean up typings [#939](https://github.com/ipython/ipykernel/pull/939) ([@blink1073](https://github.com/blink1073))
-- [pre-commit.ci] pre-commit autoupdate [#938](https://github.com/ipython/ipykernel/pull/938) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#938](https://github.com/ipython/ipykernel/pull/938) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Clean up types [#933](https://github.com/ipython/ipykernel/pull/933) ([@blink1073](https://github.com/blink1073))
-- [pre-commit.ci] pre-commit autoupdate [#932](https://github.com/ipython/ipykernel/pull/932) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#932](https://github.com/ipython/ipykernel/pull/932) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Switch to hatch backend [#931](https://github.com/ipython/ipykernel/pull/931) ([@blink1073](https://github.com/blink1073))
-- [pre-commit.ci] pre-commit autoupdate [#928](https://github.com/ipython/ipykernel/pull/928) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#926](https://github.com/ipython/ipykernel/pull/926) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#928](https://github.com/ipython/ipykernel/pull/928) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#926](https://github.com/ipython/ipykernel/pull/926) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Allow enforce PR label workflow to add labels [#921](https://github.com/ipython/ipykernel/pull/921) ([@blink1073](https://github.com/blink1073))
-- [pre-commit.ci] pre-commit autoupdate [#920](https://github.com/ipython/ipykernel/pull/920) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#919](https://github.com/ipython/ipykernel/pull/919) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- [pre-commit.ci] pre-commit autoupdate [#917](https://github.com/ipython/ipykernel/pull/917) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#920](https://github.com/ipython/ipykernel/pull/920) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#919](https://github.com/ipython/ipykernel/pull/919) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#917](https://github.com/ipython/ipykernel/pull/917) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -177,7 +177,7 @@
 - Add basic mypy support [#913](https://github.com/ipython/ipykernel/pull/913) ([@blink1073](https://github.com/blink1073))
 - Clean up pre-commit [#911](https://github.com/ipython/ipykernel/pull/911) ([@blink1073](https://github.com/blink1073))
 - Update setup.py [#909](https://github.com/ipython/ipykernel/pull/909) ([@tlinhart](https://github.com/tlinhart))
-- [pre-commit.ci] pre-commit autoupdate [#906](https://github.com/ipython/ipykernel/pull/906) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- \[pre-commit.ci\] pre-commit autoupdate [#906](https://github.com/ipython/ipykernel/pull/906) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -595,7 +595,7 @@
 
 - Add watchfd keyword to InProcessKernel OutStream initialization [#727](https://github.com/ipython/ipykernel/pull/727) ([@rayosborn](https://github.com/rayosborn))
 - Fix typo in eventloops.py [#711](https://github.com/ipython/ipykernel/pull/711) ([@selasley](https://github.com/selasley))
-- [bugfix] fix in setup.py (comma before appnope) [#709](https://github.com/ipython/ipykernel/pull/709) ([@jstriebel](https://github.com/jstriebel))
+- \[bugfix\] fix in setup.py (comma before appnope) [#709](https://github.com/ipython/ipykernel/pull/709) ([@jstriebel](https://github.com/jstriebel))
 
 ### Maintenance and upkeep improvements
 
@@ -790,8 +790,8 @@ following non-exhaustive changes.
 
 ### 5.4.2
 
-- Revert \"Fix stop_on_error_timeout blocking other messages in
-  queue\". [#570](https://github.com/ipython/ipykernel/pull/570)
+- Revert "Fix stop_on_error_timeout blocking other messages in
+  queue". [#570](https://github.com/ipython/ipykernel/pull/570)
 
 ### 5.4.1
 
@@ -805,7 +805,7 @@ asyncio compatibility.
 - Add github actions, bail on asyncio patch for tornado 6.1.
   [#564](https://github.com/ipython/ipykernel/pull/564)
 - Start testing on Python 3.9. [#551](https://github.com/ipython/ipykernel/pull/551)
-- Fix stack levels for ipykernel\'s deprecation warnings and stop
+- Fix stack levels for ipykernel's deprecation warnings and stop
   using some deprecated APIs. [#547](https://github.com/ipython/ipykernel/pull/547)
 - Add env parameter to kernel installation [#541](https://github.com/ipython/ipykernel/pull/541)
 - Fix stop_on_error_timeout blocking other messages in queue.
@@ -831,7 +831,7 @@ asyncio compatibility.
 
 ### 5.3.1
 
-- Fix \#520: run post_execute and post_run_cell on async cells
+- Fix #520: run post_execute and post_run_cell on async cells
   [#521](https://github.com/ipython/ipykernel/pull/521)
 - Fix exception causes in zmqshell.py [#516](https://github.com/ipython/ipykernel/pull/516)
 - Make pdb on Windows interruptible [#490](https://github.com/ipython/ipykernel/pull/490)
@@ -893,7 +893,7 @@ asyncio compatibility.
   shutdown ([#433](https://github.com/ipython/ipykernel/pull/433), [#435](https://github.com/ipython/ipykernel/pull/435))
 - Fix `Heartbeat._bind_socket` to return on the first bind ([#431](https://github.com/ipython/ipykernel/pull/431))
 - Moved `InProcessKernelClient.flush` to `DummySocket` ([#437](https://github.com/ipython/ipykernel/pull/437))
-- Don\'t redirect stdout if nose machinery is not present ([#427](https://github.com/ipython/ipykernel/pull/427))
+- Don't redirect stdout if nose machinery is not present ([#427](https://github.com/ipython/ipykernel/pull/427))
 - Rename `_asyncio.py` to
   `_asyncio_utils.py` to avoid name conflicts on Python
   3.6+ ([#426](https://github.com/ipython/ipykernel/pull/426))
@@ -940,8 +940,8 @@ failures in nbconvert.
 
 [5.0.0 on GitHub](https://github.com/ipython/ipykernel/milestones/5.0)
 
-- Drop support for Python 2. `ipykernel` 5.0 requires Python \>= 3.4
-- Add support for IPython\'s asynchronous code execution
+- Drop support for Python 2. `ipykernel` 5.0 requires Python >= 3.4
+- Add support for IPython's asynchronous code execution
   [#323](https://github.com/ipython/ipykernel/pull/323)
 - Update release process in `CONTRIBUTING.md` [#339](https://github.com/ipython/ipykernel/pull/339)
 
@@ -1037,31 +1037,31 @@ failures in nbconvert.
 - Support new `transient` key in
   `display_data` messages spec for `publish`.
   For a display data message, `transient` contains data
-  that shouldn\'t be persisted to files or documents. Add a
+  that shouldn't be persisted to files or documents. Add a
   `display_id` to this `transient` dict by
   `display(obj, display_id=\...)`
 
 - Add `ipykernel_launcher` module which removes the
   current working directory from `sys.path` before
   launching the kernel. This helps to reduce the cases where the
-  kernel won\'t start because there\'s a `random.py` (or
+  kernel won't start because there's a `random.py` (or
   similar) module in the current working directory.
 
 - Add busy/idle messages on IOPub during processing of aborted
   requests
 
 - Add active event loop setting to GUI, which enables the correct
-  response to IPython\'s `is_event_loop_running_xxx`
+  response to IPython's `is_event_loop_running_xxx`
 
-- Include IPython kernelspec in wheels to reduce reliance on \"native
-  kernel spec\" in jupyter_client
+- Include IPython kernelspec in wheels to reduce reliance on "native
+  kernel spec" in jupyter_client
 
 - Modify `OutStream` to inherit from
   `TextIOBase` instead of object to improve API support
   and error reporting
 
-- Fix IPython kernel death messages at start, such as \"Kernel
-  Restarting\...\" and \"Kernel appears to have died\", when
+- Fix IPython kernel death messages at start, such as "Kernel
+  Restarting..." and "Kernel appears to have died", when
   parent-poller handles PID 1
 
 - Various bugfixes
@@ -1113,7 +1113,7 @@ failures in nbconvert.
 
 - Use
   [MPLBACKEND](http://matplotlib.org/devel/coding_guide.html?highlight=mplbackend#developing-a-new-backend)
-  environment variable to tell matplotlib \>= 1.5 use use the inline
+  environment variable to tell matplotlib >= 1.5 use use the inline
   backend by default. This is only done if MPLBACKEND is not already
   set and no backend has been explicitly loaded, so setting
   `MPLBACKEND=Qt4Agg` or calling `%matplotlib notebook` or
@@ -1124,7 +1124,7 @@ failures in nbconvert.
   `ipython kernel install`.
 - Allow Comm (Widget) messages to be sent from background threads.
 - Select inline matplotlib backend by default if `%matplotlib` magic
-  or `matplotlib.use()` are not called explicitly (for matplotlib \>=
+  or `matplotlib.use()` are not called explicitly (for matplotlib >=
   1.5).
 - Fix some longstanding minor deviations from the message protocol
   (missing status: ok in a few replies, connect_reply format).
@@ -1149,9 +1149,12 @@ failures in nbconvert.
 - Publish all IO in a thread, via `IOPubThread`. This solves the problem of requiring
   `sys.stdout.flush` to be called in
   the notebook to produce output promptly during long-running cells.
+
 - Remove references to outdated IPython guiref in kernel banner.
+
 - Patch faulthandler to use `sys.__stderr__` instead of forwarded
   `sys.stderr`, which has no fileno when forwarded.
+
 - Deprecate some vestiges of the Big Split:
 
   - `ipykernel.find_connection_file`
@@ -1167,7 +1170,7 @@ failures in nbconvert.
 
 [4.2.2 on GitHub](https://github.com/ipython/ipykernel/milestones/4.2.2)
 
-- Don\'t show interactive debugging info when kernel crashes
+- Don't show interactive debugging info when kernel crashes
 - Fix handling of numerical types in json_clean
 - Testing fixes for output capturing
 
@@ -1175,7 +1178,7 @@ failures in nbconvert.
 
 [4.2.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.2.1)
 
-- Fix default display name back to \"Python X\" instead of \"pythonX\"
+- Fix default display name back to "Python X" instead of "pythonX"
 
 ### 4.2.0
 

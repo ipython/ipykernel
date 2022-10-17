@@ -57,6 +57,7 @@ def get_connection_info(connection_file=None, unpack=False):
 
         If unspecified, the connection file for the currently running
         IPython Kernel will be used, which is only allowed from inside a kernel.
+
     unpack : bool [default: False]
         if True, return the unpacked dict, otherwise just the string contents
         of the file.
@@ -95,6 +96,7 @@ def connect_qtconsole(connection_file=None, argv=None):
 
         If unspecified, the connection file for the currently running
         IPython Kernel will be used, which is only allowed from inside a kernel.
+
     argv : list [optional]
         Any extra args to be passed to the console.
 

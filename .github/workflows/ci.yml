@@ -71,7 +71,7 @@ jobs:
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) || startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run test:test || hatch run test:test --lf
+          hatch run test:test -s || hatch run test:test -s --lf
 
       - name: Coverage
         run: |

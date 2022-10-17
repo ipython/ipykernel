@@ -179,9 +179,11 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/test-sdist@v1
 
   link_check:
-    - uses: actions/checkout@v2
-    - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
-    - uses: jupyterlab/maintainer-tools/.github/actions/link-check@v1
+    runs-on: ubuntu-latest
+    step:
+      - uses: actions/checkout@v2
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyterlab/maintainer-tools/.github/actions/link-check@v1
 
   tests_check: # This job does nothing and is only used for the branch protection
     if: always()

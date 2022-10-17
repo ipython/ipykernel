@@ -180,7 +180,7 @@ jobs:
 
   link_check:
     runs-on: ubuntu-latest
-    step:
+    steps:
       - uses: actions/checkout@v2
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyterlab/maintainer-tools/.github/actions/link-check@v1

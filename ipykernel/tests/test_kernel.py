@@ -72,7 +72,6 @@ def test_capture_fd():
 
 @pytest.mark.skip(reason="Currently don't capture during test as pytest does its own capturing")
 def test_subprocess_peek_at_stream_fileno():
-    """"""
     with kernel() as kc:
         iopub = kc.iopub_channel
         msg_id, content = execute(
@@ -417,7 +416,6 @@ def test_interrupt_during_input():
 
 @pytest.mark.skipif(os.name == "nt", reason="Message based interrupt not supported on Windows")
 def test_interrupt_with_message():
-    """ """
     with new_kernel() as kc:
         km = kc.parent
         km.kernel_spec.interrupt_mode = "message"

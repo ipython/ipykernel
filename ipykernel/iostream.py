@@ -346,8 +346,16 @@ class OutStream(TextIOBase):
         """
         Parameters
         ----------
+        session : object
+            the session object
+        pub_thread : threading.Thread
+            the publication thread
         name : str {'stderr', 'stdout'}
             the name of the standard stream to replace
+        pipe : object
+            the pip object
+        echo : bool
+            whether to echo output
         watchfd : bool (default, True)
             Watch the file descripttor corresponding to the replaced stream.
             This is useful if you know some underlying code will write directly

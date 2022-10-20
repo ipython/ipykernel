@@ -247,6 +247,8 @@ def loop_tk(kernel):
             if stream.flush(limit=1):
                 app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
                 app.quit()
+                app.destroy()
+                del kernel.app_wrapper
 
         # For Tkinter, we create a Tk object and call its withdraw method.
         kernel.app_wrapper = BasicAppWrapper(app)
@@ -297,7 +299,8 @@ def loop_tk(kernel):
 def loop_tk_exit(kernel):
     try:
         kernel.app_wrapper.app.destroy()
-    except RuntimeError:
+        del kernel.app_wrapper
+    except (RuntimeError, AttributeError):
         pass
 
 

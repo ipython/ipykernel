@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.16.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.16.0...632a1ba3892bed707e1ee19fe1344e92475e19c9))
+
+### Bugs fixed
+
+- PR: Destroy tk app to avoid memory leak [#1008](https://github.com/ipython/ipykernel/pull/1008) ([@impact27](https://github.com/impact27))
+
+### Maintenance and upkeep improvements
+
+- Maintenance cleanup [#1006](https://github.com/ipython/ipykernel/pull/1006) ([@blink1073](https://github.com/blink1073))
+- Ignore warnings in prereleases test [#1002](https://github.com/ipython/ipykernel/pull/1002) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-09-26&to=2022-10-20&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-09-26..2022-10-20&type=Issues) | [@impact27](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aimpact27+updated%3A2022-09-26..2022-10-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-09-26..2022-10-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.16.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.15.3...92292ad9d844e594e9c97f7f391149023e58de9e))
@@ -17,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-09-13&to=2022-09-26&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-09-13..2022-09-26&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-09-13..2022-09-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.15.3
 

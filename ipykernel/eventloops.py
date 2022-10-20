@@ -250,7 +250,6 @@ def loop_tk(kernel):
                 app.destroy()
                 del kernel.app_wrapper
 
-
         # For Tkinter, we create a Tk object and call its withdraw method.
         kernel.app_wrapper = BasicAppWrapper(app)
 

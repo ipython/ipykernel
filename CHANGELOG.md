@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.16.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.16.1...99706182995e0fd5431965d4c9d96a8ce7afae12))
+
+### Maintenance and upkeep improvements
+
+- Fix failing test and update matrix [#1010](https://github.com/ipython/ipykernel/pull/1010) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-10-20&to=2022-10-25&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-10-20..2022-10-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-10-20..2022-10-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.16.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.16.0...632a1ba3892bed707e1ee19fe1344e92475e19c9))
@@ -20,8 +36,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-09-26&to=2022-10-20&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-09-26..2022-10-20&type=Issues) | [@impact27](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aimpact27+updated%3A2022-09-26..2022-10-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-09-26..2022-10-20&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.16.0
 

@@ -203,7 +203,7 @@ def test_raw_input():
 
         input_f = "input"
         theprompt = "prompt> "
-        code = 'print({input_f}("{theprompt}"))'.format(**locals())
+        code = f'print({input_f}("{theprompt}"))'
         msg_id = kc.execute(code, allow_stdin=True)
         msg = kc.get_stdin_msg(timeout=TIMEOUT)
         assert msg["header"]["msg_type"] == "input_request"

@@ -600,7 +600,7 @@ class IPythonKernel(KernelBase):
             ns = {fname: f, argname: args, kwargname: kwargs, resultname: None}
             # print ns
             working.update(ns)
-            code = "%s = %s(*%s,**%s)" % (resultname, fname, argname, kwargname)
+            code = f"{resultname} = {fname}(*{argname},**{kwargname})"
             try:
                 exec(code, shell.user_global_ns, shell.user_ns)
                 result = working.get(resultname)

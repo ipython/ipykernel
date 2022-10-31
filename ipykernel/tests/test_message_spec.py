@@ -74,9 +74,9 @@ class Version(Unicode):
 
     def validate(self, obj, value):
         if self.min and V(value) < V(self.min):
-            raise TraitError("bad version: %s < %s" % (value, self.min))
+            raise TraitError(f"bad version: {value} < {self.min}")
         if self.max and (V(value) > V(self.max)):
-            raise TraitError("bad version: %s > %s" % (value, self.max))
+            raise TraitError(f"bad version: {value} > {self.max}")
 
 
 class RMessage(Reference):

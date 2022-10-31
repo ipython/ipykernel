@@ -447,7 +447,7 @@ def loop_asyncio_exit(kernel):
 def enable_gui(gui, kernel=None):
     """Enable integration with a given GUI"""
     if gui not in loop_map:
-        e = "Invalid GUI request %r, valid ones are:%s" % (gui, loop_map.keys())
+        e = f"Invalid GUI request {gui!r}, valid ones are:{loop_map.keys()}"
         raise ValueError(e)
     if kernel is None:
         if Application.initialized():

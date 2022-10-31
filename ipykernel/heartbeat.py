@@ -52,7 +52,7 @@ class Heartbeat(Thread):
             s.close()
         elif self.transport == "ipc":
             self.port = 1
-            while os.path.exists("%s-%s" % (self.ip, self.port)):
+            while os.path.exists(f"{self.ip}-{self.port}"):
                 self.port = self.port + 1
         else:
             raise ValueError("Unrecognized zmq transport: %s" % self.transport)
@@ -60,7 +60,7 @@ class Heartbeat(Thread):
 
     def _try_bind_socket(self):
         c = ":" if self.transport == "tcp" else "-"
-        return self.socket.bind("%s://%s" % (self.transport, self.ip) + c + str(self.port))
+        return self.socket.bind(f"{self.transport}://{self.ip}" + c + str(self.port))
 
     def _bind_socket(self):
         try:

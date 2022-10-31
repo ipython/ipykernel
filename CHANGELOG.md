@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.17.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.16.2...db00586a25a4f047a90386f4947e60ff1dbee2b6))
+
+### Enhancements made
+
+- Enable webagg in %matplotlib [#1012](https://github.com/ipython/ipykernel/pull/1012) ([@zhizheng1](https://github.com/zhizheng1))
+
+### Maintenance and upkeep improvements
+
+- Update supported pythons to 3.8-3.11 [#1013](https://github.com/ipython/ipykernel/pull/1013) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-10-25&to=2022-10-31&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-10-25..2022-10-31&type=Issues) | [@zhizheng1](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Azhizheng1+updated%3A2022-10-25..2022-10-31&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.16.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.16.1...99706182995e0fd5431965d4c9d96a8ce7afae12))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-10-20&to=2022-10-25&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-10-20..2022-10-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-10-20..2022-10-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.16.1
 

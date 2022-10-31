@@ -1083,7 +1083,7 @@ class Kernel(SingletonConfigurable):
         """prefixed topic for IOPub messages"""
         base = "kernel.%s" % self.ident
 
-        return ("%s.%s" % (base, topic)).encode()
+        return (f"{base}.{topic}").encode()
 
     _aborting = Bool(False)
 

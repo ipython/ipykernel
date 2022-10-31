@@ -212,7 +212,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.poller = ParentPollerUnix()
 
     def _try_bind_socket(self, s, port):
-        iface = "%s://%s" % (self.transport, self.ip)
+        iface = f"{self.transport}://{self.ip}"
         if self.transport == "tcp":
             if port <= 0:
                 port = s.bind_to_random_port(iface)

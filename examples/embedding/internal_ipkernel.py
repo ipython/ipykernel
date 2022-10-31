@@ -44,7 +44,7 @@ class InternalIPKernel:
         print("\n***Variables in User namespace***")
         for k, v in self.namespace.items():
             if not k.startswith("_"):
-                print("%s -> %r" % (k, v))
+                print(f"{k} -> {v!r}")
         sys.stdout.flush()
 
     def new_qt_console(self, evt=None):

@@ -242,7 +242,7 @@ class InstallIPythonKernelSpecApp(Application):
                     print("Perhaps you want `sudo` or `--user`?", file=sys.stderr)
                 self.exit(1)
             raise
-        print("Installed kernelspec %s in %s" % (opts.name, dest))
+        print(f"Installed kernelspec {opts.name} in {dest}")
 
 
 if __name__ == "__main__":

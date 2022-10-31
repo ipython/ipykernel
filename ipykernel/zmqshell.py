@@ -627,7 +627,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
             with AvoidUNCPath() as path:
                 if path is not None:
-                    cmd = "pushd %s &&%s" % (path, cmd)
+                    cmd = f"pushd {path} &&{cmd}"
                 self.user_ns["_exit_code"] = system(cmd)
         else:
             self.user_ns["_exit_code"] = system(self.var_expand(cmd, depth=1))

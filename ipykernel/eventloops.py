@@ -60,6 +60,7 @@ def _notify_stream_qt(kernel):
 loop_map = {
     "inline": None,
     "nbagg": None,
+    "webagg": None,
     "notebook": None,
     "ipympl": None,
     "widget": None,

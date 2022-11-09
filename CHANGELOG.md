@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.17.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.17.0...a06867786eaf0c5d9454d2df61f354c7012a625e))
+
+### Maintenance and upkeep improvements
+
+- Ignore the new Jupyter_core deprecation warning in CI [#1019](https://github.com/ipython/ipykernel/pull/1019) ([@jasongrout](https://github.com/jasongrout))
+- Bump actions/checkout from 2 to 3 [#1018](https://github.com/ipython/ipykernel/pull/1018) ([@dependabot](https://github.com/dependabot))
+- Add dependabot [#1017](https://github.com/ipython/ipykernel/pull/1017) ([@blink1073](https://github.com/blink1073))
+- Add pyupgrade to pre-commit [#1014](https://github.com/ipython/ipykernel/pull/1014) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-10-31&to=2022-11-09&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-10-31..2022-11-09&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2022-10-31..2022-11-09&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2022-10-31..2022-11-09&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-10-31..2022-11-09&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.17.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.16.2...db00586a25a4f047a90386f4947e60ff1dbee2b6))
@@ -19,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-10-25&to=2022-10-31&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-10-25..2022-10-31&type=Issues) | [@zhizheng1](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Azhizheng1+updated%3A2022-10-25..2022-10-31&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.16.2
 

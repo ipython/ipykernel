@@ -52,7 +52,11 @@ def test_asyncio_interrupt():
 def test_tk_loop(kernel):
     def do_thing():
         time.sleep(1)
-        kernel.app_wrapper.app.quit()
+        try:
+            kernel.app_wrapper.app.quit()
+        # guard for tk failing to start (if there is no display)
+        except AttributeError:
+            pass
 
     t = threading.Thread(target=do_thing)
     t.start()

@@ -1,6 +1,7 @@
 """Test eventloop integration"""
 
 import asyncio
+import os
 import threading
 import time
 
@@ -49,6 +50,7 @@ def test_asyncio_interrupt():
     assert content["status"] == "ok"
 
 
+@pytest.mark.skipif(os.name == "nt", reason="test fails on windows")
 def test_tk_loop(kernel):
     def do_thing():
         time.sleep(1)

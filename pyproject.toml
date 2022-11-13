@@ -51,7 +51,8 @@ test = [
     "flaky",
     "ipyparallel",
     "pre-commit",
-    "pytest-timeout",
+    "pytest-asyncio",
+    "pytest-timeout"
 ]
 
 [tool.hatch.version]
@@ -110,6 +111,7 @@ testpaths = [
     "ipykernel/tests",
     "ipykernel/inprocess/tests"
 ]
+asyncio_mode = "auto"
 timeout = 300
 # Restore this setting to debug failures
 # timeout_method = "thread"
@@ -125,6 +127,20 @@ filterwarnings= [
   "ignore:unclosed event loop:ResourceWarning",
   "ignore:There is no current event loop:DeprecationWarning",
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
 ]
 
 [tool.flake8]

@@ -60,7 +60,11 @@ def test_tk_loop(kernel):
 
     t = threading.Thread(target=do_thing)
     t.start()
-    loop_tk(kernel)
+    # guard for tk failing to start (if there is no display)
+    try:
+        loop_tk(kernel)
+    except Exception:
+        pass
     t.join()
 
 

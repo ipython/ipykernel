@@ -1,3 +1,16 @@
+"""test the IPython Kernel"""
+
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
+import os
+
+import pytest
+
+if os.name == "nt":
+    pytest.skip("skipping tests on windows", allow_module_level=True)
+
+
 async def test_direct_kernel_info_request(kernel):
     reply = await kernel.test_shell_message("kernel_info_request", {})
     assert reply["header"]["msg_type"] == "kernel_info_reply"

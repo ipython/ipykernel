@@ -50,7 +50,10 @@ def test_asyncio_interrupt():
     assert content["status"] == "ok"
 
 
-@pytest.mark.skipif(os.name == "nt", reason="test fails on windows")
+windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")
+
+
+@windows_skip
 def test_tk_loop(kernel):
     def do_thing():
         time.sleep(1)
@@ -70,6 +73,7 @@ def test_tk_loop(kernel):
     t.join()
 
 
+@windows_skip
 def test_asyncio_loop(kernel):
     def do_thing():
         loop.call_soon(loop.stop)
@@ -79,5 +83,6 @@ def test_asyncio_loop(kernel):
     loop_asyncio(kernel)
 
 
+@windows_skip
 def test_enable_gui(kernel):
     enable_gui("tk", kernel)

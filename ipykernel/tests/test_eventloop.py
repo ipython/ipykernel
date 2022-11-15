@@ -1,7 +1,14 @@
 """Test eventloop integration"""
 
+import asyncio
+import os
+import threading
+import time
+
 import pytest
 import tornado
+
+from ipykernel.eventloops import enable_gui, loop_asyncio, loop_tk
 
 from .utils import execute, flush_channels, start_new_kernel
 
@@ -41,3 +48,41 @@ def test_asyncio_interrupt():
     flush_channels(KC)
     msg_id, content = execute(async_code, KC)
     assert content["status"] == "ok"
+
+
+windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")
+
+
+@windows_skip
+def test_tk_loop(kernel):
+    def do_thing():
+        time.sleep(1)
+        try:
+            kernel.app_wrapper.app.quit()
+        # guard for tk failing to start (if there is no display)
+        except AttributeError:
+            pass
+
+    t = threading.Thread(target=do_thing)
+    t.start()
+    # guard for tk failing to start (if there is no display)
+    try:
+        loop_tk(kernel)
+    except Exception:
+        pass
+    t.join()
+
+
+@windows_skip
+def test_asyncio_loop(kernel):
+    def do_thing():
+        loop.call_soon(loop.stop)
+
+    loop = asyncio.get_event_loop()
+    loop.call_soon(do_thing)
+    loop_asyncio(kernel)
+
+
+@windows_skip
+def test_enable_gui(kernel):
+    enable_gui("tk", kernel)

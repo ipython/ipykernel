@@ -465,7 +465,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
                         handler.stream = TextIOWrapper(
                             FileIO(
-                                sys.stderr._original_stdstream_copy,  # type:ignore[attr-defined]
+                                sys.stderr._original_stdstream_copy, 
                                 "w",
                             )
                         )

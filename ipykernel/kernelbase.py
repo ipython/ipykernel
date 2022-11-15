@@ -872,7 +872,7 @@ class Kernel(SingletonConfigurable):
         if hasattr(self, "comm_manager"):
             comms = {
                 k: dict(target_name=v.target_name)
-                for (k, v) in self.comm_manager.comms.items()  # type:ignore[attr-defined]
+                for (k, v) in self.comm_manager.comms.items()
                 if v.target_name == target_name or target_name is None
             }
         else:

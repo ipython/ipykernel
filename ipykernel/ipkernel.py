@@ -243,7 +243,7 @@ class IPythonKernel(KernelBase):
 
         getpass.getpass = self._save_getpass
 
-    @property  # type:ignore[override]
+    @property
     def execution_count(self):
         return self.shell.execution_count
 

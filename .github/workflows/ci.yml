@@ -53,7 +53,7 @@ jobs:
         timeout-minutes: 15
         if: ${{  startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:nowarn || hatch run test:nowarn -lf
+          hatch run cov:nowarn || hatch run test:nowarn --lf
 
       - name: Coverage
         run: |
@@ -62,6 +62,7 @@ jobs:
 
       - name: Check Launcher
         run: |
+          pip install .
           cd $HOME
           python -m ipykernel_launcher --help
 
@@ -113,7 +114,7 @@ jobs:
 
       - name: Run the tests
         timeout-minutes: 10
-        run: hatch run test:test
+        run: pytest -W default -vv || pytest --vv -W default --lf
 
   test_miniumum_versions:
     name: Test Minimum Versions

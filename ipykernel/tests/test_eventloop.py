@@ -55,7 +55,7 @@ windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on w
 
 
 @windows_skip
-@pytest.marker.skipif(sys.platform == "darwin", reason="hangs on macos")
+@pytest.mark.skipif(sys.platform == "darwin", reason="hangs on macos")
 def test_tk_loop(kernel):
     def do_thing():
         time.sleep(1)

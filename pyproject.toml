@@ -80,11 +80,12 @@ nowarn = "python -m pytest -vv -W default {args}"
 
 [tool.hatch.envs.cov]
 features = ["test"]
-dependencies = ["coverage", "pytest-cov"]
+dependencies = ["coverage", "pytest-cov", "matplotlib", "curio", "trio"]
 [tool.hatch.envs.cov.env-vars]
 ARGS = "-vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered"
 [tool.hatch.envs.cov.scripts]
-test = "python -m pytest $ARGS --cov-fail-under 50 {args}"
+test = "python -m pytest $ARGS {args}"
+nowarn = "python -m pytest $ARGS -W default {args}"
 
 [tool.mypy]
 check_untyped_defs = true

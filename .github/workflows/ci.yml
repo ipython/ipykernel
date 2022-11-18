@@ -72,6 +72,15 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyterlab/maintainer-tools/.github/actions/pre-commit@v1
 
+  check_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: jupyter-server/jupyter_releaser/.github/actions/check-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   test_docs:
     runs-on: ubuntu-latest
     steps:
@@ -173,6 +182,7 @@ jobs:
       - test_miniumum_versions
       - pre_commit
       - test_prereleases
+      - check_release
       - link_check
       - test_sdist
     runs-on: ubuntu-latest

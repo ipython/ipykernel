@@ -15,7 +15,7 @@ class Comm(BaseComm):
     def __init__(self, *args, **kwargs):
         self.kernel = None
 
-        super(Comm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys):
         """Helper for sending a comm message on IOPub"""

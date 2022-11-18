@@ -1,10 +1,15 @@
+import os
 from textwrap import dedent
 
+import pytest
 from flaky import flaky
 
 from .test_embed_kernel import setup_kernel
 
 TIMEOUT = 15
+
+if os.name == "nt":
+    pytest.skip("skipping tests on windows", allow_module_level=True)
 
 
 @flaky(max_runs=3)

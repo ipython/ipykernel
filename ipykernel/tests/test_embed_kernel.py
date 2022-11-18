@@ -10,12 +10,17 @@ import time
 from contextlib import contextmanager
 from subprocess import PIPE, Popen
 
+import pytest
 from flaky import flaky
 from jupyter_client import BlockingKernelClient
 from jupyter_core import paths
 
 SETUP_TIMEOUT = 60
 TIMEOUT = 15
+
+
+if os.name == "nt":
+    pytest.skip("skipping tests on windows", allow_module_level=True)
 
 
 @contextmanager

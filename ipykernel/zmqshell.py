@@ -482,6 +482,9 @@ class ZMQInteractiveShell(InteractiveShell):
         # These two ensure 'ls' produces nice coloring on BSD-derived systems
         env["TERM"] = "xterm-color"
         env["CLICOLOR"] = "1"
+        # These two add terminal color in tools that support it.
+        env["FORCE_COLOR"] = "1"
+        env["CLICOLOR_FORCE"] = "1"
         # Since normal pagers don't work at all (over pexpect we don't have
         # single-key control of the subprocess), try to disable paging in
         # subprocesses as much as possible.

@@ -62,7 +62,7 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.990
+    rev: v0.991
     hooks:
       - id: mypy
         exclude: "ipykernel.*tests"
@@ -72,7 +72,7 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/john-hen/Flake8-pyproject
-    rev: 1.1.0.post0
+    rev: 1.2.0
     hooks:
       - id: Flake8-pyproject
         alias: flake8
@@ -81,13 +81,13 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.27.0
+    rev: v8.28.0
     hooks:
       - id: eslint
         stages: [manual]
 
   - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.19.1
+    rev: 0.19.2
     hooks:
       - id: check-jsonschema
         name: "Check GitHub Workflows"

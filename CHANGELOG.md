@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.18.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.17.1...ce0b6c296bc19223d426892657878f28af0ec206))
+
+### Enhancements made
+
+- Add terminal color support [#1025](https://github.com/ipython/ipykernel/pull/1025) ([@blink1073](https://github.com/blink1073))
+- Extract the Comm Python package [#973](https://github.com/ipython/ipykernel/pull/973) ([@martinRenou](https://github.com/martinRenou))
+
+### Maintenance and upkeep improvements
+
+- Add windows coverage and clean up workflows [#1023](https://github.com/ipython/ipykernel/pull/1023) ([@blink1073](https://github.com/blink1073))
+- Increase coverage [#1021](https://github.com/ipython/ipykernel/pull/1021) ([@blink1073](https://github.com/blink1073))
+- Allow releasing from repo [#1020](https://github.com/ipython/ipykernel/pull/1020) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-09&to=2022-11-21&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-09..2022-11-21&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2022-11-09..2022-11-21&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-09..2022-11-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.17.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.17.0...a06867786eaf0c5d9454d2df61f354c7012a625e))
@@ -18,8 +41,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-10-31&to=2022-11-09&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-10-31..2022-11-09&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2022-10-31..2022-11-09&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2022-10-31..2022-11-09&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-10-31..2022-11-09&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.17.0
 

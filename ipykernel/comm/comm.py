@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from typing import Optional
+
 import comm.base_comm
 import traitlets.config
 

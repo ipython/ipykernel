@@ -42,7 +42,8 @@ _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
 def create_comm(*args, **kwargs):
     """Create a new Comm."""
-    return Comm(*args, **kwargs)
+    from .comm.comm import BaseComm
+    return BaseComm(*args, **kwargs)
 
 
 comm.create_comm = create_comm

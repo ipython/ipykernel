@@ -3,19 +3,21 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import traitlets.config
 from comm.base_comm import BaseComm
 
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
 
 
-class Comm(BaseComm):
+class Comm(traitlets.config.LoggingConfigurable, BaseComm):
     """Class for communicating between a Frontend and a Kernel"""
 
     def __init__(self, *args, **kwargs):
         self.kernel = None
-
-        super().__init__(*args, **kwargs)
+        # Comm takes positional arguments, LoggingConfigurable does not, so we explicitly forward arguments
+        traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
+        BaseComm.__init__(self, *args, **kwargs)
 
     def publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys):
         """Helper for sending a comm message on IOPub"""

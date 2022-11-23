@@ -3,11 +3,11 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import comm.base_comm
 import traitlets.config
+
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
-
-import comm.base_comm
 
 
 # this is the class that will be created if we do comm.create_comm

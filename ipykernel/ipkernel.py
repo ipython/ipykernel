@@ -15,7 +15,7 @@ from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, Instance, List, Type, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
-from .comm import Comm
+from .comm.comm import BaseComm
 from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
@@ -42,7 +42,7 @@ _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
 def create_comm(*args, **kwargs):
     """Create a new Comm."""
-    return Comm(*args, **kwargs)
+    return BaseComm(*args, **kwargs)
 
 
 comm.create_comm = create_comm

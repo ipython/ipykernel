@@ -55,6 +55,13 @@ test = [
     "pytest-asyncio",
     "pytest-timeout"
 ]
+cov = [
+  "coverage[toml]",
+  "pytest-cov",
+  "matplotlib",
+  "curio",
+  "trio",
+]
 
 [tool.hatch.version]
 path = "ipykernel/_version.py"
@@ -80,8 +87,7 @@ test = "python -m pytest -vv {args}"
 nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
-features = ["test"]
-dependencies = ["coverage[toml]", "pytest-cov", "matplotlib", "curio", "trio"]
+features = ["test", "cov"]
 [tool.hatch.envs.cov.scripts]
 test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
@@ -148,6 +154,7 @@ omit = [
   "ipykernel/tests/*",
   "ipykernel/debugger.py",
   "ipykernel/eventloops.py",
+  "ipykernel/pickleutil.py"
 ]
 
 [tool.flake8]

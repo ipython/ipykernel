@@ -8,7 +8,9 @@ from jupyter_client.session import Session
 from tornado.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
+from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
+from ipykernel.zmqshell import ZMQInteractiveShell
 
 try:
     import resource
@@ -37,20 +39,10 @@ if os.name == "nt":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
-class TestKernel(Kernel):
-    implementation = "test"
-    implementation_version = "1.0"
-    language = "no-op"
-    language_version = "0.1"
-    language_info = {
-        "name": "test",
-        "mimetype": "text/plain",
-        "file_extension": ".txt",
-    }
-    banner = "test kernel"
+class KernelMixin:
     log = logging.getLogger()
 
-    def __init__(self, *args, **kwargs):
+    def _initialize(self):
         self.context = context = zmq.Context()
         self.iopub_socket = context.socket(zmq.PUB)
         self.session = Session()
@@ -64,7 +56,6 @@ class TestKernel(Kernel):
             self.test_sockets.append(socket)
             self.test_streams.append(stream)
             setattr(self, f"{name}_stream", stream)
-        super().__init__(*args, **kwargs)
 
     def do_execute(
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
@@ -123,9 +114,41 @@ class TestKernel(Kernel):
         pass
 
 
+class TestKernel(KernelMixin, Kernel):
+    implementation = "test"
+    implementation_version = "1.0"
+    language = "no-op"
+    language_version = "0.1"
+    language_info = {
+        "name": "test",
+        "mimetype": "text/plain",
+        "file_extension": ".txt",
+    }
+    banner = "test kernel"
+
+    def __init__(self, *args, **kwargs):
+        self._initialize()
+        super().__init__(*args, **kwargs)
+
+
+class TestIPyKernel(KernelMixin, IPythonKernel):
+    def __init__(self, *args, **kwargs):
+        self._initialize()
+        super().__init__(*args, **kwargs)
+
+
 @pytest.fixture
 async def kernel():
     kernel = TestKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
     kernel.destroy()
+
+
+@pytest.fixture
+async def ipkernel():
+    kernel = TestIPyKernel()
+    kernel.io_loop = IOLoop.current()
+    yield kernel
+    kernel.destroy()
+    ZMQInteractiveShell.clear_instance()

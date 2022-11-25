@@ -659,7 +659,7 @@ class IPythonKernel(KernelBase):
 
 
 class Kernel(IPythonKernel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # pragma: no cover
         import warnings
 
         warnings.warn(

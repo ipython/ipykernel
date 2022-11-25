@@ -538,9 +538,7 @@ class Kernel(SingletonConfigurable):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
         self.msg_queue: Queue[t.Any] = Queue()
-
-        asyncio.set_event_loop(self.io_loop.asyncio_loop)  # type:ignore
-        self._dispatch_task = asyncio.create_task(self.dispatch_queue())
+        self.io_loop.add_callback(self.dispatch_queue)
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
 

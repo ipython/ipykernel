@@ -139,7 +139,7 @@ def test_dispatch_debugpy(ipkernel: IPythonKernel):
     ipkernel.dispatch_debugpy([zmq.Message(m) for m in msg_list])
 
 
-def test_start(ipkernel: IPythonKernel):
+async def test_start(ipkernel: IPythonKernel):
     ipkernel.start()
     ipkernel.debugpy_stream = None
     ipkernel.start()

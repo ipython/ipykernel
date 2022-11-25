@@ -538,7 +538,9 @@ class Kernel(SingletonConfigurable):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
         self.msg_queue: Queue[t.Any] = Queue()
-        self.io_loop.add_callback(self.dispatch_queue)
+        loop = self.io_loop.asyncio_loop
+
+        self._dispatch_task = asyncio.create_task(self.dispatch_queue())
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
 
@@ -914,14 +916,6 @@ class Kernel(SingletonConfigurable):
         self._shutdown_message = self.session.msg("shutdown_reply", content, parent)
 
         await self._at_shutdown()
-
-        self.log.debug("Stopping control ioloop")
-        control_io_loop = self.control_stream.io_loop
-        control_io_loop.add_callback(control_io_loop.stop)
-
-        self.log.debug("Stopping shell ioloop")
-        shell_io_loop = self.shell_stream.io_loop
-        shell_io_loop.add_callback(shell_io_loop.stop)
 
     def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the
@@ -1305,3 +1299,11 @@ class Kernel(SingletonConfigurable):
                 )
                 self.log.debug("%s", self._shutdown_message)
             self.control_stream.flush(zmq.POLLOUT)
+
+        self.log.debug("Stopping control ioloop")
+        control_io_loop = self.control_stream.io_loop
+        control_io_loop.add_callback(control_io_loop.stop)
+
+        self.log.debug("Stopping shell ioloop")
+        shell_io_loop = self.shell_stream.io_loop
+        shell_io_loop.add_callback(shell_io_loop.stop)

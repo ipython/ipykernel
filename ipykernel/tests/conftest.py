@@ -72,13 +72,6 @@ class KernelMixin:
         self.control_stream.flush()
         return await self._wait_for_msg()
 
-    def destroy(self):
-        for stream in self.test_streams:
-            stream.close()
-        for socket in self.test_sockets:
-            socket.close()
-        self.context.destroy()
-
     def _on_send(self, msg, *args, **kwargs):
         self._reply = msg
 
@@ -142,7 +135,7 @@ async def kernel():
     kernel = MockKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
-    kernel.destroy()
+    await kernel._at_shutdown()
 
 
 @pytest.fixture
@@ -150,5 +143,5 @@ async def ipkernel():
     kernel = MockIPyKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
-    kernel.destroy()
+    await kernel._at_shutdown()
     ZMQInteractiveShell.clear_instance()

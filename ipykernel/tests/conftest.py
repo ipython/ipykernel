@@ -10,6 +10,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
+from ipykernel.zmqshell import ZMQInteractiveShell
 
 try:
     import resource
@@ -150,3 +151,4 @@ async def ipkernel():
     kernel.io_loop = IOLoop.current()
     yield kernel
     kernel.destroy()
+    ZMQInteractiveShell.clear_instance()

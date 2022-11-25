@@ -57,21 +57,6 @@ class KernelMixin:
             self.test_streams.append(stream)
             setattr(self, f"{name}_stream", stream)
 
-    def do_execute(
-        self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
-    ):
-        if not silent:
-            stream_content = {"name": "stdout", "text": code}
-            self.send_response(self.iopub_socket, "stream", stream_content)
-
-        return {
-            "status": "ok",
-            # The base class increments the execution count
-            "execution_count": self.execution_count,
-            "payload": [],
-            "user_expressions": {},
-        }
-
     async def do_debug_request(self, msg):
         return {}
 
@@ -114,7 +99,7 @@ class KernelMixin:
         pass
 
 
-class TestKernel(KernelMixin, Kernel):
+class MockKernel(KernelMixin, Kernel):
     implementation = "test"
     implementation_version = "1.0"
     language = "no-op"
@@ -130,8 +115,23 @@ class TestKernel(KernelMixin, Kernel):
         self._initialize()
         super().__init__(*args, **kwargs)
 
+    def do_execute(
+        self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
+    ):
+        if not silent:
+            stream_content = {"name": "stdout", "text": code}
+            self.send_response(self.iopub_socket, "stream", stream_content)
 
-class TestIPyKernel(KernelMixin, IPythonKernel):
+        return {
+            "status": "ok",
+            # The base class increments the execution count
+            "execution_count": self.execution_count,
+            "payload": [],
+            "user_expressions": {},
+        }
+
+
+class MockIPyKernel(KernelMixin, IPythonKernel):
     def __init__(self, *args, **kwargs):
         self._initialize()
         super().__init__(*args, **kwargs)
@@ -139,7 +139,7 @@ class TestIPyKernel(KernelMixin, IPythonKernel):
 
 @pytest.fixture
 async def kernel():
-    kernel = TestKernel()
+    kernel = MockKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
     kernel.destroy()
@@ -147,7 +147,7 @@ async def kernel():
 
 @pytest.fixture
 async def ipkernel():
-    kernel = TestIPyKernel()
+    kernel = MockIPyKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
     kernel.destroy()

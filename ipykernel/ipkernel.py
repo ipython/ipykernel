@@ -460,7 +460,6 @@ class IPythonKernel(KernelBase):
             cursor_pos = len(code)
         line, offset = line_at_cursor(code, cursor_pos)
         line_cursor = cursor_pos - offset
-
         txt, matches = self.shell.complete("", line, line_cursor)
         return {
             "matches": matches,
@@ -589,7 +588,10 @@ class IPythonKernel(KernelBase):
         return r
 
     def do_apply(self, content, bufs, msg_id, reply_metadata):
-        from .serialize import serialize_object, unpack_apply_message
+        try:
+            from ipyparallel.serialize import serialize_object, unpack_apply_message
+        except ImportError:
+            from .serialize import serialize_object, unpack_apply_message
 
         shell = self.shell
         try:

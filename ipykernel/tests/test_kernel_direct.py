@@ -45,6 +45,18 @@ async def test_history_request(kernel):
         "history_request", dict(hist_access_type="", output="", raw="")
     )
     assert reply["header"]["msg_type"] == "history_reply"
+    reply = await kernel.test_shell_message(
+        "history_request", dict(hist_access_type="tail", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await kernel.test_shell_message(
+        "history_request", dict(hist_access_type="range", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await kernel.test_shell_message(
+        "history_request", dict(hist_access_type="search", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
 
 
 async def test_comm_info_request(kernel):

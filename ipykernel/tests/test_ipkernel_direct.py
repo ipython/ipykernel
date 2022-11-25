@@ -4,8 +4,12 @@ import asyncio
 import os
 
 import pytest
+import zmq
+from IPython.core.history import DummyDB
 
-from ipykernel.ipkernel import IPythonKernel
+from ipykernel.ipkernel import BaseComm, IPythonKernel, create_comm
+
+from .conftest import MockIPyKernel
 
 if os.name == "nt":
     pytest.skip("skipping tests on windows", allow_module_level=True)
@@ -25,7 +29,15 @@ async def test_direct_kernel_info_request(ipkernel):
     assert reply["header"]["msg_type"] == "kernel_info_reply"
 
 
-async def test_direct_execute_request(ipkernel):
+async def test_direct_execute_request(ipkernel: MockIPyKernel):
+    reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
+    assert reply["header"]["msg_type"] == "execute_reply"
+    reply = await ipkernel.test_shell_message(
+        "execute_request", dict(code="trigger_error", silent=False)
+    )
+    assert reply["content"]["status"] == "aborted"
+
+    ipkernel.shell.should_run_async = False
     reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
     assert reply["header"]["msg_type"] == "execute_reply"
 
@@ -40,6 +52,9 @@ async def test_direct_execute_request_aborting(ipkernel):
 async def test_complete_request(ipkernel):
     reply = await ipkernel.test_shell_message("complete_request", dict(code="hello", cursor_pos=0))
     assert reply["header"]["msg_type"] == "complete_reply"
+    ipkernel.use_experimental_completions = False
+    reply = await ipkernel.test_shell_message("complete_request", dict(code="hello", cursor_pos=4))
+    assert reply["header"]["msg_type"] == "complete_reply"
 
 
 async def test_inspect_request(ipkernel):
@@ -48,8 +63,21 @@ async def test_inspect_request(ipkernel):
 
 
 async def test_history_request(ipkernel):
+    ipkernel.shell.history_manager.db = DummyDB()
     reply = await ipkernel.test_shell_message(
         "history_request", dict(hist_access_type="", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await ipkernel.test_shell_message(
+        "history_request", dict(hist_access_type="tail", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await ipkernel.test_shell_message(
+        "history_request", dict(hist_access_type="range", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await ipkernel.test_shell_message(
+        "history_request", dict(hist_access_type="search", output="", raw="")
     )
     assert reply["header"]["msg_type"] == "history_reply"
 
@@ -77,9 +105,16 @@ async def test_direct_interrupt_request(ipkernel):
 #     assert reply['header']['msg_type'] == 'usage_reply'
 
 
-async def test_is_complete_request(ipkernel):
+async def test_is_complete_request(ipkernel: MockIPyKernel):
     reply = await ipkernel.test_shell_message("is_complete_request", dict(code="hello"))
     assert reply["header"]["msg_type"] == "is_complete_reply"
+    setattr(ipkernel, "shell.input_transformer_manager", None)
+    reply = await ipkernel.test_shell_message("is_complete_request", dict(code="hello"))
+    assert reply["header"]["msg_type"] == "is_complete_reply"
+
+
+def test_do_apply(ipkernel: MockIPyKernel):
+    ipkernel.do_apply({}, [], "abc", {})
 
 
 async def test_direct_debug_request(ipkernel):
@@ -96,3 +131,31 @@ async def test_cancel_on_sigint(ipkernel: IPythonKernel):
     with ipkernel._cancel_on_sigint(future):
         pass
     future.set_result(None)
+
+
+def test_dispatch_debugpy(ipkernel: IPythonKernel):
+    msg = ipkernel.session.msg("debug_request", {})
+    msg_list = ipkernel.session.serialize(msg)
+    ipkernel.dispatch_debugpy([zmq.Message(m) for m in msg_list])
+
+
+def test_start(ipkernel: IPythonKernel):
+    ipkernel.start()
+    ipkernel.debugpy_stream = None
+    ipkernel.start()
+
+
+def test_create_comm():
+    assert isinstance(create_comm(), BaseComm)
+
+
+def test_finish_metadata(ipkernel: IPythonKernel):
+    reply_content = dict(status="error", ename="UnmetDependency")
+    metadata = ipkernel.finish_metadata({}, {}, reply_content)
+    assert metadata["dependencies_met"] is False
+
+
+async def test_do_debug_request(ipkernel: IPythonKernel):
+    msg = ipkernel.session.msg("debug_request", {})
+    msg_list = ipkernel.session.serialize(msg)
+    await ipkernel.do_debug_request(msg)

@@ -3,7 +3,9 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 import os
+import warnings
 
 import pytest
 
@@ -70,6 +72,69 @@ async def test_is_complete_request(kernel):
 async def test_direct_debug_request(kernel):
     reply = await kernel.test_control_message("debug_request", {})
     assert reply["header"]["msg_type"] == "debug_reply"
+
+
+async def test_deprecated_features(kernel):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        header = kernel._parent_header
+        assert isinstance(header, dict)
+        shell_streams = kernel.shell_streams
+        assert len(shell_streams) == 1
+        assert shell_streams[0] == kernel.shell_stream
+        warnings.simplefilter("ignore", RuntimeWarning)
+        kernel.shell_streams = [kernel.shell_stream, kernel.shell_stream]
+
+
+async def test_process_control(kernel):
+    from jupyter_client.session import DELIM
+
+    class FakeMsg:
+        def __init__(self, bytes):
+            self.bytes = bytes
+
+    await kernel.process_control([FakeMsg(DELIM), 1])
+    msg = kernel._prep_msg("does_not_exist")
+    await kernel.process_control(msg)
+
+
+def test_should_handle(kernel):
+    msg = kernel.session.msg("debug_request", {})
+    kernel.aborted.add(msg["header"]["msg_id"])
+    assert not kernel.should_handle(kernel.control_stream, msg, [])
+
+
+async def test_dispatch_shell(kernel):
+    from jupyter_client.session import DELIM
+
+    class FakeMsg:
+        def __init__(self, bytes):
+            self.bytes = bytes
+
+    await kernel.dispatch_shell([FakeMsg(DELIM), 1])
+    msg = kernel._prep_msg("does_not_exist")
+    await kernel.dispatch_shell(msg)
+
+
+async def test_enter_eventloop(kernel):
+    kernel.eventloop = None
+    kernel.enter_eventloop()
+    kernel.eventloop = asyncio.get_running_loop()
+    kernel.enter_eventloop()
+    called = 0
+
+    def check_status():
+        nonlocal called
+        if called == 0:
+            msg = kernel.session.msg("debug_request", {})
+            kernel.msg_queue.put(msg)
+        called += 1
+        kernel.io_loop.call_later(0.001, check_status)
+
+    kernel.io_loop.call_later(0.001, check_status)
+    kernel.start()
+    while called < 2:
+        await asyncio.sleep(0.1)
 
 
 # TODO: this causes deadlock

@@ -81,7 +81,7 @@ nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
 features = ["test"]
-dependencies = ["coverage", "pytest-cov", "matplotlib", "curio", "trio"]
+dependencies = ["coverage[toml]", "pytest-cov", "matplotlib", "curio", "trio"]
 [tool.hatch.envs.cov.scripts]
 test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
@@ -141,6 +141,13 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "class .*\bProtocol\\):",
   "@(abc\\.)?abstractmethod",
+]
+
+[tool.coverage.run]
+omit = [
+  "ipykernel/tests/*",
+  "ipykernel/debugger.py",
+  "ipykernel/eventloops.py",
 ]
 
 [tool.flake8]

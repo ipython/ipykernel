@@ -142,7 +142,13 @@ exclude_lines = [
   "class .*\bProtocol\\):",
   "@(abc\\.)?abstractmethod",
 ]
-omit = ["ipykernel/debugger.py", "ipykernel/eventloops.py"]
+
+[tool.coverage.run]
+omit = [
+  "ipykernel/tests/*",
+  "ipykernel/debugger.py",
+  "ipykernel/eventloops.py",
+]
 
 [tool.flake8]
 ignore = "E501, W503, E402"

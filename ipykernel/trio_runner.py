@@ -24,11 +24,8 @@ class TrioRunner:
         bg_thread.start()
 
     def interrupt(self, signum, frame):
-        self._interrupted = True
         if self._cell_cancel_scope:
             self._cell_cancel_scope.cancel()
-        elif hasattr(builtins, "GLOBAL_NURSERY"):
-            builtins.GLOBAL_NURSERY.cancel_scope.cancel()
         else:
             raise Exception("Kernel interrupted but no cell is running")
 
@@ -46,13 +43,7 @@ class TrioRunner:
                 # tasks when an uncaught exception occurs, but it's ugly.
                 nursery._add_exc = log_nursery_exc
                 builtins.GLOBAL_NURSERY = nursery  # type:ignore[attr-defined]
-                while True:
-                    try:
-                        await trio.sleep(0.1)
-                    except trio.Cancelled:
-                        pass
-                    if self._interrupted:
-                        break
+                await trio.sleep_forever()
 
         trio.run(trio_main)
         signal.signal(signal.SIGINT, old_sig)

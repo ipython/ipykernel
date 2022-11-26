@@ -1,9 +1,7 @@
-import builtins
 import os
-import signal
 import threading
 import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -55,16 +53,9 @@ def test_trio_loop():
     app = IPKernelApp(trio_loop=True)
     app.kernel = MockKernel()
     app.kernel.shell = MagicMock()
-
-    def trigger_kb_interrupt():
-        while not hasattr(builtins, "GLOBAL_NURSERY"):
-            time.sleep(0.1)
-        os.kill(os.getpid(), signal.SIGINT)
-
-    thread = threading.Thread(target=trigger_kb_interrupt)
-    thread.start()
     app.init_sockets()
-    app.start()
+    with patch("ipykernel.trio_runner.TrioRunner.run", lambda _: None):
+        app.start()
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()

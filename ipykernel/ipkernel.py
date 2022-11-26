@@ -598,7 +598,6 @@ class IPythonKernel(KernelBase):
             working = shell.user_ns
 
             prefix = "_" + str(msg_id).replace("-", "") + "_"
-
             f, args, kwargs = unpack_apply_message(bufs, working, copy=False)
 
             fname = getattr(f, "__name__", "f")

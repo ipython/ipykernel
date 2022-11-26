@@ -37,7 +37,6 @@ async def test_direct_execute_request(ipkernel: MockIPyKernel):
     )
     assert reply["content"]["status"] == "aborted"
 
-    ipkernel.shell.should_run_async = False
     reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
     assert reply["header"]["msg_type"] == "execute_reply"
 
@@ -53,7 +52,9 @@ async def test_complete_request(ipkernel):
     reply = await ipkernel.test_shell_message("complete_request", dict(code="hello", cursor_pos=0))
     assert reply["header"]["msg_type"] == "complete_reply"
     ipkernel.use_experimental_completions = False
-    reply = await ipkernel.test_shell_message("complete_request", dict(code="hello", cursor_pos=4))
+    reply = await ipkernel.test_shell_message(
+        "complete_request", dict(code="hello", cursor_pos=None)
+    )
     assert reply["header"]["msg_type"] == "complete_reply"
 
 
@@ -114,7 +115,14 @@ async def test_is_complete_request(ipkernel: MockIPyKernel):
 
 
 def test_do_apply(ipkernel: MockIPyKernel):
-    ipkernel.do_apply({}, [], "abc", {})
+    from ipyparallel import pack_apply_message
+
+    def hello():
+        pass
+
+    msg = pack_apply_message(hello, (), {})
+    ipkernel.do_apply(None, msg, "1", {})
+    ipkernel.do_apply(None, [], "1", {})
 
 
 async def test_direct_debug_request(ipkernel):
@@ -140,9 +148,42 @@ def test_dispatch_debugpy(ipkernel: IPythonKernel):
 
 
 async def test_start(ipkernel: IPythonKernel):
+    shell_future = asyncio.Future()
+    control_future = asyncio.Future()
+
+    async def fake_dispatch_queue():
+        shell_future.set_result(None)
+
+    async def fake_poll_control_queue():
+        control_future.set_result(None)
+
+    ipkernel.dispatch_queue = fake_dispatch_queue
+    ipkernel.poll_control_queue = fake_poll_control_queue
     ipkernel.start()
     ipkernel.debugpy_stream = None
     ipkernel.start()
+    await ipkernel.process_one(False)
+    await shell_future
+    await control_future
+
+
+async def test_start_no_debugpy(ipkernel: IPythonKernel):
+    shell_future = asyncio.Future()
+    control_future = asyncio.Future()
+
+    async def fake_dispatch_queue():
+        shell_future.set_result(None)
+
+    async def fake_poll_control_queue():
+        control_future.set_result(None)
+
+    ipkernel.dispatch_queue = fake_dispatch_queue
+    ipkernel.poll_control_queue = fake_poll_control_queue
+    ipkernel.debugpy_stream = None
+    ipkernel.start()
+
+    await shell_future
+    await control_future
 
 
 def test_create_comm():

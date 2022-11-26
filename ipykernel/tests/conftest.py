@@ -45,6 +45,7 @@ class KernelMixin:
     def _initialize(self):
         self.context = context = zmq.Context()
         self.iopub_socket = context.socket(zmq.PUB)
+        self.stdin_socket = context.socket(zmq.ROUTER)
         self.session = Session()
         self.test_sockets = [self.iopub_socket]
         self.test_streams = []
@@ -59,6 +60,13 @@ class KernelMixin:
 
     async def do_debug_request(self, msg):
         return {}
+
+    def destroy(self):
+        for stream in self.test_streams:
+            stream.close()
+        for socket in self.test_sockets:
+            socket.close()
+        self.context.destroy()
 
     async def test_shell_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
@@ -135,7 +143,7 @@ async def kernel():
     kernel = MockKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
-    await kernel._at_shutdown()
+    kernel.destroy()
 
 
 @pytest.fixture
@@ -143,5 +151,5 @@ async def ipkernel():
     kernel = MockIPyKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
-    await kernel._at_shutdown()
+    kernel.destroy()
     ZMQInteractiveShell.clear_instance()

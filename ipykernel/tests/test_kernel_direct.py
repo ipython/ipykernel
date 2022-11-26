@@ -9,6 +9,8 @@ import warnings
 
 import pytest
 
+from ipykernel.kernelbase import Kernel
+
 if os.name == "nt":
     pytest.skip("skipping tests on windows", allow_module_level=True)
 
@@ -28,6 +30,10 @@ async def test_direct_execute_request_aborting(kernel):
     reply = await kernel.test_shell_message("execute_request", dict(code="hello", silent=False))
     assert reply["header"]["msg_type"] == "execute_reply"
     assert reply["content"]["status"] == "aborted"
+
+
+async def test_direct_execute_request_error(kernel):
+    await kernel.execute_request(None, None, None)
 
 
 async def test_complete_request(kernel):
@@ -147,6 +153,23 @@ async def test_enter_eventloop(kernel):
     kernel.start()
     while called < 2:
         await asyncio.sleep(0.1)
+
+
+async def test_do_one_iteration(kernel):
+    kernel.msg_queue = asyncio.Queue()
+    await kernel.do_one_iteration()
+
+
+async def test_publish_debug_event(kernel):
+    kernel._publish_debug_event({})
+
+
+async def test_connect_request(kernel):
+    await kernel.connect_request(kernel.shell_stream, "foo", {})
+
+
+async def test_send_interupt_children(kernel):
+    kernel._send_interupt_children()
 
 
 # TODO: this causes deadlock

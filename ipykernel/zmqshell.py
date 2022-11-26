@@ -285,7 +285,7 @@ class KernelMagics(Magics):
         opts, args = self.parse_options(parameter_s, "prn:")
 
         try:
-            filename, lineno, _ = CodeMagics._find_edit_target(self.shell, args, opts, last_call)
+            filename, lineno, _ = self._find_edit_target(self.shell, args, opts, last_call)
         except MacroToEdit:
             # TODO: Implement macro editing over 2 processes.
             print("Macro editing not yet implemented in 2-process model.")
@@ -326,7 +326,8 @@ class KernelMagics(Magics):
         if arg_s.endswith(".py"):
             cont = self.shell.pycolorize(openpy.read_py_file(arg_s, skip_encoding_cookie=False))
         else:
-            cont = open(arg_s).read()
+            with open(arg_s) as fid:
+                cont = fid.read()
         page.page(cont)
 
     more = line_magic("more")(less)

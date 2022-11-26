@@ -59,8 +59,6 @@ cov = [
   "coverage[toml]",
   "pytest-cov",
   "matplotlib",
-  'PyGObject;platform_system=="Linux"',
-  'pygtk;platform_system=="Windows"',
   "curio",
   "trio",
 ]

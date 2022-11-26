@@ -10,14 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 import tornado
 
-from ipykernel.eventloops import (
-    enable_gui,
-    loop_asyncio,
-    loop_cocoa,
-    loop_gtk,
-    loop_gtk3,
-    loop_tk,
-)
+from ipykernel.eventloops import enable_gui, loop_asyncio, loop_cocoa, loop_tk
 
 from .utils import execute, flush_channels, start_new_kernel
 

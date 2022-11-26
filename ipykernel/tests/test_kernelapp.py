@@ -57,5 +57,6 @@ def test_trio_loop():
     with patch("ipykernel.trio_runner.TrioRunner.run", lambda _: None):
         app.start()
     app.cleanup_connection_file()
+    app.io_loop.add_callback(app.io_loop.stop)
     app.kernel.destroy()
     app.close()

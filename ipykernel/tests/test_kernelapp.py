@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ipykernel.kernelapp import IPKernelApp, main
+from ipykernel.kernelapp import IPKernelApp
 
 from .conftest import MockKernel
 
@@ -51,21 +51,3 @@ def test_trio_loop():
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()
-
-
-def test_main():
-    def trigger_kb_interrupt():
-        time.sleep(1)
-        os.kill(os.getpid(), signal.SIGQUIT)
-
-    def process_quit(*args, **kwargs):
-        sys.exit(0)
-
-    thread = threading.Thread(target=trigger_kb_interrupt)
-    signal.signal(signal.SIGQUIT, process_quit)
-    thread.start()
-
-    with pytest.raises(SystemExit):
-        sys.argv = sys.argv[:1]
-        main()
-    IPKernelApp.clear_instance()

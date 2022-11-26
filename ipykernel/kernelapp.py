@@ -717,7 +717,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 launch_new_instance = IPKernelApp.launch_instance
 
 
-def main():
+def main():  # pragma: no cover
     """Run an IPKernel as an application"""
     app = IPKernelApp.instance()
     app.initialize()

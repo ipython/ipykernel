@@ -1,6 +1,6 @@
+import os
 import sys
 import warnings
-from types import ModuleType
 from unittest import mock
 
 import pytest
@@ -8,7 +8,7 @@ import pytest
 from ipykernel.parentpoller import ParentPollerUnix, ParentPollerWindows
 
 
-@pytest.mark.skipif(sys.platform != "posix", reason="only works on posix")
+@pytest.mark.skipif(os.name == "nt", reason="only works on posix")
 def test_parent_poller_unix():
     poller = ParentPollerUnix()
     with mock.patch("os.getppid", lambda: 1):
@@ -26,7 +26,7 @@ def test_parent_poller_unix():
         poller.run()
 
 
-@pytest.mark.skipif(sys.platform == "posix", reason="only works on windows")
+@pytest.mark.skipif(os.name != "nt", reason="only works on windows")
 def test_parent_poller_windows():
     poller = ParentPollerWindows(interrupt_handle=1)
 

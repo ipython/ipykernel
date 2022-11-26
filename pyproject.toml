@@ -122,7 +122,7 @@ testpaths = [
 asyncio_mode = "auto"
 timeout = 30
 # Restore this setting to debug failures
-timeout_method = "thread"
+#timeout_method = "thread"
 filterwarnings= [
   # Fail on warnings
   "error",
@@ -160,7 +160,10 @@ omit = [
   "ipykernel/debugger.py",
   "ipykernel/eventloops.py",
   "ipykernel/pickleutil.py",
-  "ipykernel/serialize.py"
+  "ipykernel/serialize.py",
+  "ipykernel/inprocess/tests/*",
+  "ipykernel/gui/*",
+  "ipykernel/pylab/*",
 ]
 
 [tool.flake8]

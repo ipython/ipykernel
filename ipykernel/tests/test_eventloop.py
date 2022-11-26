@@ -107,7 +107,7 @@ def test_cocoa_loop(kernel):
 def test_gtk_loop(kernel):
     kernel.shell = MagicMock()
     try:
-        from ipykernel.gui.gtkembed import GTKEmbed
+        from ipykernel.gui.gtkembed import GTKEmbed  # noqa
     except (ValueError, ImportError):
         pytest.skip("Gtk not available")
     loop_gtk(kernel)
@@ -118,7 +118,7 @@ def test_gtk_loop(kernel):
 def test_gtk3_loop(kernel):
     kernel.shell = MagicMock()
     try:
-        from ipykernel.gui.gtk3embed import GTKEmbed
+        from ipykernel.gui.gtk3embed import GTKEmbed  # noqa
     except (ValueError, ImportError):
         pytest.skip("Gtk3 not available")
     loop_gtk3(kernel)

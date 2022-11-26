@@ -43,6 +43,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install libgtk-3-0
 
+      - name: Install Gtk on Windows
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        run: choco install gtk-runtime
+
       - name: Run the tests
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}

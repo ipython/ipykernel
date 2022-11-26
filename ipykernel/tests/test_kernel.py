@@ -534,6 +534,10 @@ def _start_children():
     platform.python_implementation() == "PyPy",
     reason="does not work on PyPy",
 )
+@pytest.mark.skipif(
+    sys.platform() == "linux",
+    reason="Stalls on linux",
+)
 def test_shutdown_subprocesses():
     """Kernel exits after polite shutdown_request"""
     with new_kernel() as kc:

@@ -14,7 +14,7 @@ from ipykernel.kernelbase import Kernel
 
 # this is the class that will be created if we do comm.create_comm
 class BaseComm(comm.base_comm.BaseComm):
-    kernel: Optional[Kernel]
+    kernel: Optional[Kernel] = None
 
     def publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys):
         """Helper for sending a comm message on IOPub"""

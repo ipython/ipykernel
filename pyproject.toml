@@ -120,13 +120,14 @@ testpaths = [
 asyncio_mode = "auto"
 timeout = 300
 # Restore this setting to debug failures
-# timeout_method = "thread"
+#timeout_method = "thread"
 filterwarnings= [
   # Fail on warnings
   "error",
 
   # Ignore our own warnings
   "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
+  "ignore:has moved to ipyparallel:DeprecationWarning",
 
   # IPython warnings
   "ignore: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`:PendingDeprecationWarning",
@@ -155,10 +156,15 @@ exclude_lines = [
 [tool.coverage.run]
 omit = [
   "ipykernel/tests/*",
+  "ipykernel/datapub.py",
   "ipykernel/debugger.py",
   "ipykernel/eventloops.py",
+  "ipykernel/log.py",
   "ipykernel/pickleutil.py",
-  "ipykernel/serialize.py"
+  "ipykernel/serialize.py",
+  "ipykernel/inprocess/tests/*",
+  "ipykernel/gui/*",
+  "ipykernel/pylab/*",
 ]
 
 [tool.flake8]

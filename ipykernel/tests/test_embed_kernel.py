@@ -1,4 +1,4 @@
-"""test IPython.embed_kernel()"""
+"""test embed_kernel"""
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
@@ -6,6 +6,7 @@
 import json
 import os
 import sys
+import threading
 import time
 from contextlib import contextmanager
 from subprocess import PIPE, Popen
@@ -14,6 +15,8 @@ import pytest
 from flaky import flaky
 from jupyter_client import BlockingKernelClient
 from jupyter_core import paths
+
+from ipykernel.embed import IPKernelApp, embed_kernel
 
 SETUP_TIMEOUT = 60
 TIMEOUT = 15
@@ -193,3 +196,20 @@ def test_embed_kernel_reentrant():
             client.execute("get_ipython().exit_now = True")
             msg = client.get_shell_msg(timeout=TIMEOUT)
             time.sleep(0.2)
+
+
+def test_embed_kernel_func():
+    from types import ModuleType
+
+    module = ModuleType("test")
+
+    def trigger_stop():
+        time.sleep(1)
+        app = IPKernelApp.instance()
+        app.io_loop.add_callback(app.io_loop.stop)
+        IPKernelApp.clear_instance()
+
+    thread = threading.Thread(target=trigger_stop)
+    thread.start()
+
+    embed_kernel(module, outstream_class=None)

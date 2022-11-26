@@ -157,7 +157,8 @@ omit = [
   "ipykernel/tests/*",
   "ipykernel/debugger.py",
   "ipykernel/eventloops.py",
-  "ipykernel/pickleutil.py"
+  "ipykernel/pickleutil.py",
+  "ipykernel/serialize.py"
 ]
 
 [tool.flake8]

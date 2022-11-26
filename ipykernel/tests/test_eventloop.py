@@ -5,11 +5,12 @@ import os
 import sys
 import threading
 import time
+from unittest.mock import MagicMock
 
 import pytest
 import tornado
 
-from ipykernel.eventloops import enable_gui, loop_asyncio, loop_tk
+from ipykernel.eventloops import enable_gui, loop_asyncio, loop_cocoa, loop_tk
 
 from .utils import execute, flush_channels, start_new_kernel
 
@@ -88,3 +89,9 @@ def test_asyncio_loop(kernel):
 @windows_skip
 def test_enable_gui(kernel):
     enable_gui("tk", kernel)
+
+
+@pytest.mark.skipif(sys.platform != "darwin", reason="MacOS-only")
+def test_cocoa_loop(kernel):
+    kernel.shell = MagicMock()
+    loop_cocoa(kernel)

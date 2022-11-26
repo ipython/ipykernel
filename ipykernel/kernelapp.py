@@ -720,7 +720,7 @@ launch_new_instance = IPKernelApp.launch_instance
 def main():
     """Run an IPKernel as an application"""
     app = IPKernelApp.instance()
-    app.initialize()
+    app.initialize([])
     app.start()
 
 

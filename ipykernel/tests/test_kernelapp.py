@@ -68,3 +68,4 @@ def test_main():
     with pytest.raises(SystemExit):
         sys.argv = sys.argv[:1]
         main()
+    IPKernelApp.clear_instance()

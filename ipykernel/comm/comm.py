@@ -25,7 +25,7 @@ class BaseComm(comm.base_comm.BaseComm):
         metadata = {} if metadata is None else metadata
         content = json_clean(dict(data=data, comm_id=self.comm_id, **keys))
 
-        if self.kernel is None:
+        if getattr(self, "kernel", None) is None:
             self.kernel = Kernel.instance()
 
         self.kernel.session.send(

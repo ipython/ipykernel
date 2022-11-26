@@ -32,6 +32,24 @@ def test_blackhole():
     app.init_blackhole()
 
 
+def test_start_app():
+    app = IPKernelApp()
+    app.kernel = MockKernel()
+    app.kernel.shell = MagicMock()
+
+    def trigger_stop():
+        time.sleep(1)
+        app.io_loop.add_callback(app.io_loop.stop)
+
+    thread = threading.Thread(target=trigger_stop)
+    thread.start()
+    app.init_sockets()
+    app.start()
+    app.cleanup_connection_file()
+    app.kernel.destroy()
+    app.close()
+
+
 @pytest.mark.skipif(trio is None, reason="requires trio")
 def test_trio_loop():
     app = IPKernelApp(trio_loop=True)

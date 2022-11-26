@@ -207,6 +207,7 @@ def test_embed_kernel_func():
         time.sleep(1)
         app = IPKernelApp.instance()
         app.io_loop.add_callback(app.io_loop.stop)
+        IPKernelApp.clear_instance()
 
     thread = threading.Thread(target=trigger_stop)
     thread.start()

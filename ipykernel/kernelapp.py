@@ -168,7 +168,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     trio_loop = Bool(False, help="Set main event loop.").tag(config=True)
     quiet = Bool(True, help="Only send stdout/stderr to output stream").tag(config=True)
     outstream_class = DottedObjectName(
-        "ipykernel.iostream.OutStream", help="The importstring for the OutStream factory"
+        "ipykernel.iostream.OutStream",
+        help="The importstring for the OutStream factory",
+        allow_none=True,
     ).tag(config=True)
     displayhook_class = DottedObjectName(
         "ipykernel.displayhook.ZMQDisplayHook", help="The importstring for the DisplayHook factory"

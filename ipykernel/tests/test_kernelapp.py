@@ -1,3 +1,4 @@
+import builtins
 import os
 import signal
 import threading
@@ -38,15 +39,14 @@ def test_trio_loop():
     app.kernel.shell = MagicMock()
 
     def trigger_kb_interrupt():
-        time.sleep(1)
+        while not hasattr(builtins, "GLOBAL_NURSERY"):
+            time.sleep(0.1)
         os.kill(os.getpid(), signal.SIGINT)
 
     thread = threading.Thread(target=trigger_kb_interrupt)
     thread.start()
     app.init_sockets()
-    with pytest.raises(Exception) as e:
-        app.start()
-    assert str(e.value) == "Kernel interrupted but no cell is running"
+    app.start()
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()

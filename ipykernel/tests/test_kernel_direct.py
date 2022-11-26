@@ -9,8 +9,6 @@ import warnings
 
 import pytest
 
-from ipykernel.kernelbase import Kernel
-
 if os.name == "nt":
     pytest.skip("skipping tests on windows", allow_module_level=True)
 

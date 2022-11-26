@@ -157,6 +157,7 @@ omit = [
   "ipykernel/tests/*",
   "ipykernel/debugger.py",
   "ipykernel/eventloops.py",
+  "ipykernel/log.py",
   "ipykernel/pickleutil.py",
   "ipykernel/serialize.py",
   "ipykernel/inprocess/tests/*",

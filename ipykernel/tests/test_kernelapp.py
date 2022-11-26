@@ -66,4 +66,5 @@ def test_main():
     thread.start()
 
     with pytest.raises(SystemExit):
+        sys.argv = sys.argv[:1]
         main()

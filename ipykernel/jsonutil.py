@@ -74,7 +74,7 @@ def encode_images(format_dict):
     return format_dict
 
 
-def json_clean(obj):
+def json_clean(obj):  # pragma: no cover
     """Deprecated, this is a no-op for jupyter-client>=7.
 
     Clean an object to ensure it's safe to encode in JSON.

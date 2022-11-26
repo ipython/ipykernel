@@ -30,6 +30,10 @@ async def test_direct_execute_request_aborting(kernel):
     assert reply["content"]["status"] == "aborted"
 
 
+async def test_direct_execute_request_error(kernel):
+    await kernel.execute_request(None, None, None)
+
+
 async def test_complete_request(kernel):
     reply = await kernel.test_shell_message("complete_request", dict(code="hello", cursor_pos=0))
     assert reply["header"]["msg_type"] == "complete_reply"
@@ -43,6 +47,18 @@ async def test_inspect_request(kernel):
 async def test_history_request(kernel):
     reply = await kernel.test_shell_message(
         "history_request", dict(hist_access_type="", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await kernel.test_shell_message(
+        "history_request", dict(hist_access_type="tail", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await kernel.test_shell_message(
+        "history_request", dict(hist_access_type="range", output="", raw="")
+    )
+    assert reply["header"]["msg_type"] == "history_reply"
+    reply = await kernel.test_shell_message(
+        "history_request", dict(hist_access_type="search", output="", raw="")
     )
     assert reply["header"]["msg_type"] == "history_reply"
 
@@ -135,6 +151,23 @@ async def test_enter_eventloop(kernel):
     kernel.start()
     while called < 2:
         await asyncio.sleep(0.1)
+
+
+async def test_do_one_iteration(kernel):
+    kernel.msg_queue = asyncio.Queue()
+    await kernel.do_one_iteration()
+
+
+async def test_publish_debug_event(kernel):
+    kernel._publish_debug_event({})
+
+
+async def test_connect_request(kernel):
+    await kernel.connect_request(kernel.shell_stream, "foo", {})
+
+
+async def test_send_interupt_children(kernel):
+    kernel._send_interupt_children()
 
 
 # TODO: this causes deadlock

@@ -128,6 +128,9 @@ filterwarnings= [
   # Ignore our own warnings
   "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
 
+  # IPython warnings
+  "ignore: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`:PendingDeprecationWarning",
+
   # Ignore jupyter_client warnings
   "ignore:unclosed <socket.socket:ResourceWarning",
   "ignore:unclosed event loop:ResourceWarning",

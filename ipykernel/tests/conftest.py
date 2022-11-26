@@ -45,6 +45,7 @@ class KernelMixin:
     def _initialize(self):
         self.context = context = zmq.Context()
         self.iopub_socket = context.socket(zmq.PUB)
+        self.stdin_socket = context.socket(zmq.ROUTER)
         self.session = Session()
         self.test_sockets = [self.iopub_socket]
         self.test_streams = []
@@ -57,23 +58,15 @@ class KernelMixin:
             self.test_streams.append(stream)
             setattr(self, f"{name}_stream", stream)
 
-    def do_execute(
-        self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
-    ):
-        if not silent:
-            stream_content = {"name": "stdout", "text": code}
-            self.send_response(self.iopub_socket, "stream", stream_content)
-
-        return {
-            "status": "ok",
-            # The base class increments the execution count
-            "execution_count": self.execution_count,
-            "payload": [],
-            "user_expressions": {},
-        }
-
     async def do_debug_request(self, msg):
         return {}
+
+    def destroy(self):
+        for stream in self.test_streams:
+            stream.close()
+        for socket in self.test_sockets:
+            socket.close()
+        self.context.destroy()
 
     async def test_shell_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
@@ -86,13 +79,6 @@ class KernelMixin:
         await self.process_control(msg_list)
         self.control_stream.flush()
         return await self._wait_for_msg()
-
-    def destroy(self):
-        for stream in self.test_streams:
-            stream.close()
-        for socket in self.test_sockets:
-            socket.close()
-        self.context.destroy()
 
     def _on_send(self, msg, *args, **kwargs):
         self._reply = msg
@@ -114,7 +100,7 @@ class KernelMixin:
         pass
 
 
-class TestKernel(KernelMixin, Kernel):
+class MockKernel(KernelMixin, Kernel):
     implementation = "test"
     implementation_version = "1.0"
     language = "no-op"
@@ -130,8 +116,23 @@ class TestKernel(KernelMixin, Kernel):
         self._initialize()
         super().__init__(*args, **kwargs)
 
+    def do_execute(
+        self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
+    ):
+        if not silent:
+            stream_content = {"name": "stdout", "text": code}
+            self.send_response(self.iopub_socket, "stream", stream_content)
 
-class TestIPyKernel(KernelMixin, IPythonKernel):
+        return {
+            "status": "ok",
+            # The base class increments the execution count
+            "execution_count": self.execution_count,
+            "payload": [],
+            "user_expressions": {},
+        }
+
+
+class MockIPyKernel(KernelMixin, IPythonKernel):
     def __init__(self, *args, **kwargs):
         self._initialize()
         super().__init__(*args, **kwargs)
@@ -139,7 +140,7 @@ class TestIPyKernel(KernelMixin, IPythonKernel):
 
 @pytest.fixture
 async def kernel():
-    kernel = TestKernel()
+    kernel = MockKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
     kernel.destroy()
@@ -147,7 +148,7 @@ async def kernel():
 
 @pytest.fixture
 async def ipkernel():
-    kernel = TestIPyKernel()
+    kernel = MockIPyKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
     kernel.destroy()

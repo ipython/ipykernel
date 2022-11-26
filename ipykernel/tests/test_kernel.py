@@ -535,7 +535,7 @@ def _start_children():
     reason="does not work on PyPy",
 )
 @pytest.mark.skipif(
-    sys.platform() == "linux",
+    sys.platform.lower() == "linux",
     reason="Stalls on linux",
 )
 def test_shutdown_subprocesses():

@@ -3,15 +3,24 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import os
 import unittest
+import warnings
 from queue import Queue
 from threading import Thread
+from unittest.mock import MagicMock
 
+import pytest
 import zmq
 from jupyter_client.session import Session
 from traitlets import Int
 
-from ipykernel.zmqshell import ZMQDisplayPublisher
+from ipykernel.zmqshell import (
+    InteractiveShell,
+    KernelMagics,
+    ZMQDisplayPublisher,
+    ZMQInteractiveShell,
+)
 
 
 class NoReturnDisplayHook:
@@ -199,6 +208,50 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         #
         second = self.disp_pub.unregister_hook(hook)
         self.assertFalse(second)
+
+
+def test_magics(tmp_path):
+    context = zmq.Context()
+    socket = context.socket(zmq.PUB)
+    shell = InteractiveShell()
+    shell.user_ns["hi"] = 1
+    magics = KernelMagics(shell)
+
+    def find_edit_target(*args):
+        return str(tmp_path), 0, 1
+
+    tmp_file = tmp_path / "test.txt"
+    tmp_file.write_text("hi", "utf8")
+    magics._find_edit_target = find_edit_target
+    magics.edit("hi")
+    magics.clear([])
+    magics.less(str(tmp_file))
+    if os.name == "posix":
+        magics.man("ls")
+    magics.autosave("10")
+
+    socket.close()
+    context.destroy()
+
+
+def test_zmq_interactive_shell(kernel):
+    shell = ZMQInteractiveShell()
+
+    with pytest.raises(RuntimeError):
+        shell.enable_gui("tk")
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        shell.data_pub_class = MagicMock()
+        shell.data_pub
+    shell.kernel = kernel
+    shell.set_next_input("hi")
+    assert shell.get_parent() is None
+    if os.name == "posix":
+        shell.system_piped("ls")
+    else:
+        shell.system_piped("dir")
+    shell.ask_exit()
 
 
 if __name__ == "__main__":

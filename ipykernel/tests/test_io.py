@@ -1,12 +1,13 @@
 """Test IO capturing functionality"""
 
 import io
+import warnings
 
 import pytest
 import zmq
 from jupyter_client.session import Session
 
-from ipykernel.iostream import IOPubThread, OutStream
+from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
 
 
 def test_io_api():
@@ -51,3 +52,57 @@ def test_io_isatty():
 
     stream = OutStream(session, thread, "stdout", isatty=True)
     assert stream.isatty()
+
+
+def test_io_thread():
+    ctx = zmq.Context()
+    pub = ctx.socket(zmq.PUB)
+    thread = IOPubThread(pub)
+    thread._setup_pipe_in()
+    msg = [thread._pipe_uuid, b"a"]
+    thread._handle_pipe_msg(msg)
+    ctx1, pipe = thread._setup_pipe_out()
+    pipe.close()
+    thread._pipe_in.close()
+    thread._check_mp_mode = lambda: MASTER
+    thread._really_send([b"hi"])
+    ctx1.destroy()
+    thread.close()
+    thread.close()
+    thread._really_send(None)
+
+
+def test_background_socket():
+    ctx = zmq.Context()
+    pub = ctx.socket(zmq.PUB)
+    thread = IOPubThread(pub)
+    sock = BackgroundSocket(thread)
+    assert sock.__class__ == BackgroundSocket
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        sock.linger = 101
+        assert thread.socket.linger == 101
+    assert sock.io_thread == thread
+    sock.send(b"hi")
+
+
+def test_outstream():
+    session = Session()
+    ctx = zmq.Context()
+    pub = ctx.socket(zmq.PUB)
+    thread = IOPubThread(pub)
+    thread.start()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        stream = OutStream(session, pub, "stdout")
+        stream = OutStream(session, thread, "stdout", pipe=object())
+
+    stream = OutStream(session, thread, "stdout", isatty=True, echo=io.StringIO())
+    with pytest.raises(io.UnsupportedOperation):
+        stream.fileno()
+    stream._watch_pipe_fd()
+    stream.flush()
+    stream.write("hi")
+    stream.writelines(["ab", "cd"])
+    assert stream.writable

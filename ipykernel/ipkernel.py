@@ -12,7 +12,16 @@ from functools import partial
 import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
-from traitlets import Any, Bool, Instance, List, Type, observe, observe_compat, HasTraits
+from traitlets import (
+    Any,
+    Bool,
+    HasTraits,
+    Instance,
+    List,
+    Type,
+    observe,
+    observe_compat,
+)
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm

@@ -12,7 +12,7 @@ from functools import partial
 import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
-from traitlets import Any, Bool, Instance, List, Type, observe, observe_compat
+from traitlets import Any, Bool, Instance, List, Type, observe, observe_compat, HasTraits
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm
@@ -112,6 +112,7 @@ class IPythonKernel(KernelBase):
 
         self.comm_manager = comm.get_comm_manager()
 
+        assert isinstance(self.comm_manager, HasTraits)
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = ["comm_open", "comm_msg", "comm_close"]
         for msg_type in comm_msg_types:

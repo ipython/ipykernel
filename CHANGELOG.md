@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.18.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.0...252c406a82fb9bab4071bfbc287b7a24a51752d8))
+
+### Bugs fixed
+
+- fix: use comm package in backwards compatible way [#1028](https://github.com/ipython/ipykernel/pull/1028) ([@maartenbreddels](https://github.com/maartenbreddels))
+
+### Maintenance and upkeep improvements
+
+- Add more testing and deprecate the Gtk event loops [#1036](https://github.com/ipython/ipykernel/pull/1036) ([@blink1073](https://github.com/blink1073))
+- More coverage improvements [#1035](https://github.com/ipython/ipykernel/pull/1035) ([@blink1073](https://github.com/blink1073))
+- Add more tests [#1034](https://github.com/ipython/ipykernel/pull/1034) ([@blink1073](https://github.com/blink1073))
+- Add more kernel tests [#1032](https://github.com/ipython/ipykernel/pull/1032) ([@blink1073](https://github.com/blink1073))
+- Add more coverage and add Readme badges [#1031](https://github.com/ipython/ipykernel/pull/1031) ([@blink1073](https://github.com/blink1073))
+- Clean up testing and coverage [#1030](https://github.com/ipython/ipykernel/pull/1030) ([@blink1073](https://github.com/blink1073))
+- Use base setup dependency type [#1029](https://github.com/ipython/ipykernel/pull/1029) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-21&to=2022-11-28&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-21..2022-11-28&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-11-21..2022-11-28&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2022-11-21..2022-11-28&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-21..2022-11-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.18.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.17.1...ce0b6c296bc19223d426892657878f28af0ec206))
@@ -22,8 +48,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-09&to=2022-11-21&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-09..2022-11-21&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2022-11-09..2022-11-21&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-09..2022-11-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.17.1
 

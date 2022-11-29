@@ -55,13 +55,13 @@ def _create_comm(*args, **kwargs):
     return BaseComm(*args, **kwargs)
 
 
-def _create_manager(*args, **kwargs):
+def _get_comm_manager(*args, **kwargs):
     """Create a new CommManager."""
     return CommManager(*args, **kwargs)
 
 
 comm.create_comm = _create_comm
-comm.create_manager = _create_manager
+comm.get_comm_manager = _get_comm_manager
 
 
 class IPythonKernel(KernelBase):

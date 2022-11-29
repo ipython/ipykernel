@@ -7,6 +7,7 @@ from typing import Optional
 
 import comm.base_comm
 import traitlets.config
+from traitlets import Instance, default
 
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
@@ -43,8 +44,14 @@ class BaseComm(comm.base_comm.BaseComm):
 class Comm(traitlets.config.LoggingConfigurable, BaseComm):
     """Class for communicating between a Frontend and a Kernel"""
 
+    kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)
+    @default("kernel")
+    def _default_kernel(self):
+        if Kernel.initialized():
+            return Kernel.instance()
+
+
     def __init__(self, *args, **kwargs):
-        self.kernel = None
         # Comm takes positional arguments, LoggingConfigurable does not, so we explicitly forward arguments
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
         BaseComm.__init__(self, *args, **kwargs)

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
       - id: end-of-file-fixer
       - id: check-case-conflict
@@ -72,7 +72,7 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/john-hen/Flake8-pyproject
-    rev: 1.2.0
+    rev: 1.2.1
     hooks:
       - id: Flake8-pyproject
         alias: flake8

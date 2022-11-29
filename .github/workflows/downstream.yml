@@ -39,6 +39,20 @@ jobs:
         with:
           package_name: ipywidgets
 
+  jdaviz:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Run Test
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        with:
+          package_name: jdaviz
+
   jupyter_client:
     runs-on: ubuntu-latest
     steps:

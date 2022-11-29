@@ -7,7 +7,7 @@ import pytest
 import zmq
 from IPython.core.history import DummyDB
 
-from ipykernel.ipkernel import BaseComm, IPythonKernel, create_comm
+from ipykernel.ipkernel import BaseComm, IPythonKernel, _create_comm
 
 from .conftest import MockIPyKernel
 
@@ -187,7 +187,7 @@ async def test_start_no_debugpy(ipkernel: IPythonKernel):
 
 
 def test_create_comm():
-    assert isinstance(create_comm(), BaseComm)
+    assert isinstance(_create_comm(), BaseComm)
 
 
 def test_finish_metadata(ipkernel: IPythonKernel):

@@ -5,14 +5,13 @@
 
 
 import comm.base_comm
-import traitlets.config
 import traitlets
-
+import traitlets.config
 
 
 class CommManager(traitlets.config.LoggingConfigurable, comm.base_comm.CommManager):
 
-    kernel = traitlets.Instance('ipykernel.kernelbase.Kernel')
+    kernel = traitlets.Instance("ipykernel.kernelbase.Kernel")
     comms = traitlets.Dict()
     targets = traitlets.Dict()
 

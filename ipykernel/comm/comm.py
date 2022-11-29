@@ -7,7 +7,7 @@ from typing import Optional
 
 import comm.base_comm
 import traitlets.config
-from traitlets import Instance, default, Unicode, Bool, Bytes 
+from traitlets import Bool, Bytes, Instance, Unicode, default
 
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
@@ -48,9 +48,13 @@ class Comm(traitlets.config.LoggingConfigurable, BaseComm):
     comm_id = Unicode()
     primary = Bool(True, help="Am I the primary or secondary Comm?")
 
-    target_name = Unicode('comm')
-    target_module = Unicode(None, allow_none=True, help="""requirejs module from
-        which to load comm target.""")
+    target_name = Unicode("comm")
+    target_module = Unicode(
+        None,
+        allow_none=True,
+        help="""requirejs module from
+        which to load comm target.""",
+    )
 
     topic = Bytes()
 
@@ -59,7 +63,7 @@ class Comm(traitlets.config.LoggingConfigurable, BaseComm):
         if Kernel.initialized():
             return Kernel.instance()
 
-    @default('comm_id')
+    @default("comm_id")
     def _default_comm_id(self):
         return uuid.uuid4().hex
 

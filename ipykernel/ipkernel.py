@@ -24,7 +24,7 @@ from traitlets import (
 )
 from zmq.eventloop.zmqstream import ZMQStream
 
-from .comm.comm import BaseComm, CommManager
+from .comm import BaseComm, CommManager
 from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope

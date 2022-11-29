@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.18.3
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.2...c0f5b7e3a5287c288eff477ae70848decf25332d))
+
+### Bugs fixed
+
+- Fix Comm interface for downstream users [#1042](https://github.com/ipython/ipykernel/pull/1042) ([@maartenbreddels](https://github.com/maartenbreddels))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-29&to=2022-11-29&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-29..2022-11-29&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-11-29..2022-11-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.18.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.1...a38167b1c689130df231fa77d712827bc75a8ba6))
@@ -17,8 +33,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-28&to=2022-11-29&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-28..2022-11-29&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2022-11-28..2022-11-29&type=Issues) | [@fperez](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afperez+updated%3A2022-11-28..2022-11-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-28..2022-11-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.18.1
 

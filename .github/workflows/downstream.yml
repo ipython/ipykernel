@@ -52,7 +52,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: jdaviz
-          test_command: pytest --pyargs jdaviz
+          test_command: pytest --pyargs jdaviz -W defaulut
 
   jupyter_client:
     runs-on: ubuntu-latest

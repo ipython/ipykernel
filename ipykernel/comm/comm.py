@@ -7,7 +7,7 @@ from typing import Optional
 
 import comm.base_comm
 import traitlets.config
-from traitlets import Instance, default
+from traitlets import Instance, default, Unicode, Bool, Bytes 
 
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
@@ -44,12 +44,24 @@ class BaseComm(comm.base_comm.BaseComm):
 class Comm(traitlets.config.LoggingConfigurable, BaseComm):
     """Class for communicating between a Frontend and a Kernel"""
 
-    kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)
+    kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)  # type:ignore[assignment]
+    comm_id = Unicode()
+    primary = Bool(True, help="Am I the primary or secondary Comm?")
+
+    target_name = Unicode('comm')
+    target_module = Unicode(None, allow_none=True, help="""requirejs module from
+        which to load comm target.""")
+
+    topic = Bytes()
 
     @default("kernel")
     def _default_kernel(self):
         if Kernel.initialized():
             return Kernel.instance()
+
+    @default('comm_id')
+    def _default_comm_id(self):
+        return uuid.uuid4().hex
 
     def __init__(self, *args, **kwargs):
         # Comm takes positional arguments, LoggingConfigurable does not, so we explicitly forward arguments

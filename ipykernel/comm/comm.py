@@ -45,11 +45,11 @@ class Comm(traitlets.config.LoggingConfigurable, BaseComm):
     """Class for communicating between a Frontend and a Kernel"""
 
     kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)
+
     @default("kernel")
     def _default_kernel(self):
         if Kernel.initialized():
             return Kernel.instance()
-
 
     def __init__(self, *args, **kwargs):
         # Comm takes positional arguments, LoggingConfigurable does not, so we explicitly forward arguments

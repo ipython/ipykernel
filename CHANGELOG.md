@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.18.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.1...a38167b1c689130df231fa77d712827bc75a8ba6))
+
+### Bugs fixed
+
+- Configurables needs to be configurable [#1037](https://github.com/ipython/ipykernel/pull/1037) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-28&to=2022-11-29&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-28..2022-11-29&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2022-11-28..2022-11-29&type=Issues) | [@fperez](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afperez+updated%3A2022-11-28..2022-11-29&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-28..2022-11-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.18.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.0...252c406a82fb9bab4071bfbc287b7a24a51752d8))
@@ -25,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-21&to=2022-11-28&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-21..2022-11-28&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-11-21..2022-11-28&type=Issues) | [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2022-11-21..2022-11-28&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-21..2022-11-28&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.18.0
 

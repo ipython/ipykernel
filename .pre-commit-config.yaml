@@ -49,7 +49,7 @@ repos:
           [mdformat-gfm, mdformat-frontmatter, mdformat-footnote]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.2.2
+    rev: v3.3.0
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
@@ -72,7 +72,7 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/john-hen/Flake8-pyproject
-    rev: 1.2.1
+    rev: 1.2.2
     hooks:
       - id: Flake8-pyproject
         alias: flake8
@@ -81,7 +81,7 @@ repos:
         stages: [manual]
 
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.28.0
+    rev: v8.29.0
     hooks:
       - id: eslint
         stages: [manual]

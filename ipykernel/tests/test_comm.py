@@ -1,7 +1,6 @@
 from ipykernel.comm import Comm
 from ipykernel.ipkernel import IPythonKernel
 
-from .utils import kernel
 
 
 async def test_comm(kernel):

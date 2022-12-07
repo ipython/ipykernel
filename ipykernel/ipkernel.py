@@ -48,18 +48,18 @@ def _create_comm(*args, **kwargs):
 
 
 # there can only be one comm manager in a ipykernel process
-lock = threading.Lock()
-comm_manager: t.Optional[CommManager] = None
+_comm_lock = threading.Lock()
+_comm_manager: t.Optional[CommManager] = None
 
 
 def _get_comm_manager(*args, **kwargs):
     """Create a new CommManager."""
-    global comm_manager
-    if comm_manager is None:
-        with lock:
-            if comm_manager is None:
-                comm_manager = CommManager(*args, **kwargs)
-    return comm_manager
+    global _comm_manager
+    if _comm_manager is None:
+        with _comm_lock:
+            if _comm_manager is None:
+                _comm_manager = CommManager(*args, **kwargs)
+    return _comm_manager
 
 
 comm.create_comm = _create_comm

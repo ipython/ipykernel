@@ -18,7 +18,7 @@ from .utils import TIMEOUT, execute, flush_channels, get_reply, start_global_ker
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-KC: BlockingKernelClient = None
+KC: BlockingKernelClient = None  # type:ignore
 
 
 def setup():

@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.19.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.3...2c80e6c31e4912b2deaf5276b27568ba5088ad97))
+
+### Bugs fixed
+
+- Fix: there can be only one comm_manager [#1049](https://github.com/ipython/ipykernel/pull/1049) ([@maartenbreddels](https://github.com/maartenbreddels))
+
+### Maintenance and upkeep improvements
+
+- Adopt ruff and address lint [#1046](https://github.com/ipython/ipykernel/pull/1046) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-29&to=2022-12-07&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-29..2022-12-07&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-11-29..2022-12-07&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-29..2022-12-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.18.3
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.2...c0f5b7e3a5287c288eff477ae70848decf25332d))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-29&to=2022-11-29&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-29..2022-11-29&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-11-29..2022-11-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.18.2
 

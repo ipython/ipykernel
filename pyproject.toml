@@ -27,8 +27,8 @@ requires-python = ">=3.8"
 dependencies = [
     "debugpy>=1.0",
     "ipython>=7.23.1",
-    "comm>=0.1",
-    "traitlets>=5.1.0",
+    "comm>=0.1.1",
+    "traitlets>=5.4.0",
     "jupyter_client>=6.1.12",
     "tornado>=6.1",
     "matplotlib-inline>=0.1",

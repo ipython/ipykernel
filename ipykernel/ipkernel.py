@@ -5,6 +5,7 @@ import builtins
 import getpass
 import signal
 import sys
+import threading
 import typing as t
 from contextlib import contextmanager
 from functools import partial
@@ -46,9 +47,19 @@ def _create_comm(*args, **kwargs):
     return BaseComm(*args, **kwargs)
 
 
+# there can only be one comm manager in a ipykernel process
+_comm_lock = threading.Lock()
+_comm_manager: t.Optional[CommManager] = None
+
+
 def _get_comm_manager(*args, **kwargs):
     """Create a new CommManager."""
-    return CommManager(*args, **kwargs)
+    global _comm_manager
+    if _comm_manager is None:
+        with _comm_lock:
+            if _comm_manager is None:
+                _comm_manager = CommManager(*args, **kwargs)
+    return _comm_manager
 
 
 comm.create_comm = _create_comm

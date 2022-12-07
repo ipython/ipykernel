@@ -25,6 +25,20 @@ jobs:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
 
+  ipywidgets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Run Test
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        with:
+          package_name: ipywidgets
+
   jupyter_client:
     runs-on: ubuntu-latest
     steps:
@@ -69,3 +83,18 @@ jobs:
           cd jupyter_kernel_test
           pip install -e ".[test]"
           python test_ipykernel.py
+
+  downstream_check: # This job does nothing and is only used for the branch protection
+    if: always()
+    needs:
+      - nbclient
+      - ipywidgets
+      - jupyter_client
+      - ipyparallel
+      - jupyter_kernel_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

@@ -18,6 +18,7 @@ from ..iostream import BackgroundSocket, IOPubThread, OutStream
 from .constants import INPROCESS_KEY
 from .socket import DummySocket
 
+
 # -----------------------------------------------------------------------------
 # Main kernel class
 # -----------------------------------------------------------------------------

@@ -5,6 +5,7 @@ import unittest
 
 from ipykernel.inprocess.manager import InProcessKernelManager
 
+
 # -----------------------------------------------------------------------------
 # Test case
 # -----------------------------------------------------------------------------

@@ -121,7 +121,7 @@ f(2, 3)"""
     assert reply["body"]["breakpoints"][0]["source"]["path"] == source
 
     r = wait_for_debug_request(kernel_with_debug, "debugInfo")
-    assert source in map(lambda b: b["source"], r["body"]["breakpoints"])
+    assert source in map(lambda b: b["source"], r["body"]["breakpoints"])  # type:ignore # noqa
 
     r = wait_for_debug_request(kernel_with_debug, "configurationDone")
     assert r["success"]
@@ -154,7 +154,7 @@ f(2, 3)"""
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
+    msg: dict = {"msg_type": "", "content": {}}
     while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
         msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
@@ -190,7 +190,7 @@ f(2, 3)"""
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
+    msg: dict = {"msg_type": "", "content": {}}
     while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
         msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
@@ -208,7 +208,7 @@ print({var_name})
     get_reply(kernel_with_debug, msg_id)
 
     r = wait_for_debug_request(kernel_with_debug, "inspectVariables")
-    assert var_name in list(map(lambda v: v["name"], r["body"]["variables"]))
+    assert var_name in list(map(lambda v: v["name"], r["body"]["variables"]))  # type:ignore  # noqa
 
     reply = wait_for_debug_request(
         kernel_with_debug,
@@ -246,7 +246,7 @@ f(2, 3)"""
     kernel_with_debug.execute(code)
 
     # Wait for stop on breakpoint
-    msg = {"msg_type": "", "content": {}}
+    msg: dict = {"msg_type": "", "content": {}}
     while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
         msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 

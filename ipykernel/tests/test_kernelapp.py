@@ -1,7 +1,7 @@
 import os
 import threading
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -33,7 +33,6 @@ def test_blackhole():
 def test_start_app():
     app = IPKernelApp()
     app.kernel = MockKernel()
-    app.kernel.shell = MagicMock()
 
     def trigger_stop():
         time.sleep(1)
@@ -52,7 +51,6 @@ def test_start_app():
 def test_trio_loop():
     app = IPKernelApp(trio_loop=True)
     app.kernel = MockKernel()
-    app.kernel.shell = MagicMock()
     app.init_sockets()
     with patch("ipykernel.trio_runner.TrioRunner.run", lambda _: None):
         app.start()

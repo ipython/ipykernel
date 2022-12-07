@@ -30,10 +30,7 @@ def init_asyncio_patch():
         import asyncio
 
         try:
-            from asyncio import (
-                WindowsProactorEventLoopPolicy,
-                WindowsSelectorEventLoopPolicy,
-            )
+            from asyncio import WindowsProactorEventLoopPolicy, WindowsSelectorEventLoopPolicy
         except ImportError:
             pass
             # not affected

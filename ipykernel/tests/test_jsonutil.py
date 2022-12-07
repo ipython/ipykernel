@@ -14,7 +14,7 @@ from jupyter_client._version import version_info as jupyter_client_version
 from .. import jsonutil
 from ..jsonutil import encode_images, json_clean
 
-JUPYTER_CLIENT_MAJOR_VERSION = jupyter_client_version[0]
+JUPYTER_CLIENT_MAJOR_VERSION: int = jupyter_client_version[0]  # type:ignore
 
 
 class MyInt:
@@ -60,7 +60,7 @@ def test():
 
     for val, jval in pairs:
         if jval is None:
-            jval = val
+            jval = val  # type:ignore
         out = json_clean(val)
         # validate our cleanup
         assert out == jval

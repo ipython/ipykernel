@@ -31,10 +31,10 @@ def _inject_cell_id(_self, *args, **kwargs):
 @contextmanager
 def patch_cell_id():
     try:
-        Session.msg = _inject_cell_id
+        Session.msg = _inject_cell_id  # type:ignore
         yield
     finally:
-        Session.msg = orig_msg
+        Session.msg = orig_msg  # type:ignore
 
 
 @pytest.fixture()
@@ -107,10 +107,10 @@ def test_capfd(kc):
 
 
 def test_getpass_stream(kc):
-    "Tests that kernel getpass accept the stream parameter"
+    """Tests that kernel getpass accept the stream parameter"""
     kernel = InProcessKernel()
     kernel._allow_stdin = True
-    kernel._input_request = lambda *args, **kwargs: None
+    kernel._input_request = lambda *args, **kwargs: None  # type:ignore
 
     kernel.getpass(stream="non empty")
 

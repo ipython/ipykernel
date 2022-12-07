@@ -15,7 +15,7 @@ import zmq
 from jupyter_client.session import Session
 from traitlets import Int
 
-from ipykernel.zmqshell import (
+from ipykernel.zmqshell import (  # type:ignore
     InteractiveShell,
     KernelMagics,
     ZMQDisplayPublisher,
@@ -111,7 +111,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         self.disp_pub.register_hook(hook)
         assert self.disp_pub._hooks == [hook]
 
-        q = Queue()
+        q: Queue = Queue()
 
         def set_thread_hooks():
             q.put(self.disp_pub._hooks)

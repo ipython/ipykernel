@@ -10,6 +10,7 @@ from IPython.utils.frame import extract_module_locals
 
 from .kernelapp import IPKernelApp
 
+
 # -----------------------------------------------------------------------------
 # Code
 # -----------------------------------------------------------------------------

@@ -110,8 +110,8 @@ def test_install_profile():
     with mock.patch("jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH", [system_jupyter_dir]):
         install(profile="Test")
 
-    spec = os.path.join(system_jupyter_dir, "kernels", KERNEL_NAME, "kernel.json")
-    with open(spec) as f:
+    spec_file = os.path.join(system_jupyter_dir, "kernels", KERNEL_NAME, "kernel.json")
+    with open(spec_file) as f:
         spec = json.load(f)
     assert spec["display_name"].endswith(" [profile=Test]")
     assert spec["argv"][-2:] == ["--profile", "Test"]
@@ -123,8 +123,8 @@ def test_install_display_name_overrides_profile():
     with mock.patch("jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH", [system_jupyter_dir]):
         install(display_name="Display", profile="Test")
 
-    spec = os.path.join(system_jupyter_dir, "kernels", KERNEL_NAME, "kernel.json")
-    with open(spec) as f:
+    spec_file = os.path.join(system_jupyter_dir, "kernels", KERNEL_NAME, "kernel.json")
+    with open(spec_file) as f:
         spec = json.load(f)
     assert spec["display_name"] == "Display"
 

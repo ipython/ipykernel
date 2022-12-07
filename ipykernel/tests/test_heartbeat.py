@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import errno
+from typing import no_type_check
 from unittest.mock import patch
 
 import pytest
@@ -28,6 +29,7 @@ def test_port_bind_success():
         assert mock_try_bind.call_count == 1
 
 
+@no_type_check
 def test_port_bind_failure_recovery():
     try:
         errno.WSAEADDRINUSE

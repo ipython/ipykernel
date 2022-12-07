@@ -24,6 +24,7 @@ import sys
 import wx
 from internal_ipkernel import InternalIPKernel
 
+
 # -----------------------------------------------------------------------------
 # Functions and classes
 # -----------------------------------------------------------------------------

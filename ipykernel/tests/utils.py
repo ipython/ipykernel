@@ -13,12 +13,13 @@ from tempfile import TemporaryDirectory
 from time import time
 
 from jupyter_client import manager
+from jupyter_client.blocking.client import BlockingKernelClient
 
 STARTUP_TIMEOUT = 60
 TIMEOUT = 100
 
-KM = None
-KC = None
+KM: manager.KernelManager = None  # type:ignore
+KC: BlockingKernelClient = None  # type:ignore
 
 
 def start_new_kernel(**kwargs):
@@ -132,11 +133,11 @@ def stop_global_kernel():
     """Stop the global shared kernel instance, if it exists"""
     global KM, KC
     KC.stop_channels()
-    KC = None
+    KC = None  # type:ignore
     if KM is None:
         return
     KM.shutdown_kernel(now=True)
-    KM = None
+    KM = None  # type:ignore
 
 
 def new_kernel(argv=None):

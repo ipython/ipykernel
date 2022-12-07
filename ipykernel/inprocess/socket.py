@@ -8,6 +8,7 @@ from queue import Queue
 import zmq
 from traitlets import HasTraits, Instance, Int
 
+
 # -----------------------------------------------------------------------------
 # Dummy socket class
 # -----------------------------------------------------------------------------

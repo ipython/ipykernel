@@ -16,6 +16,8 @@ def setup_function():
 
 
 def teardown_function():
+    assert KC is not None
+    assert KM is not None
     KC.stop_channels()
     KM.shutdown_kernel(now=True)
 
@@ -28,6 +30,8 @@ def test_async_await():
 
 @pytest.mark.parametrize("asynclib", ["asyncio", "trio", "curio"])
 def test_async_interrupt(asynclib, request):
+    assert KC is not None
+    assert KM is not None
     try:
         __import__(asynclib)
     except ImportError:

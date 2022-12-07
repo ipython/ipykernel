@@ -18,8 +18,8 @@ from jupyter_client.blocking.client import BlockingKernelClient
 STARTUP_TIMEOUT = 60
 TIMEOUT = 100
 
-KM: manager.KernelManager
-KC: BlockingKernelClient
+KM: manager.KernelManager = None  # type:ignore
+KC: BlockingKernelClient = None  # type:ignore
 
 
 def start_new_kernel(**kwargs):

@@ -9,13 +9,12 @@ import typing as t
 from contextlib import contextmanager
 from functools import partial
 
-import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, Instance, List, Type, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
-from .comm import Comm
+from .comm import CommManager
 from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
@@ -38,14 +37,6 @@ except ImportError:
 
 
 _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
-
-
-def create_comm(*args, **kwargs):
-    """Create a new Comm."""
-    return Comm(*args, **kwargs)
-
-
-comm.create_comm = create_comm
 
 
 class IPythonKernel(KernelBase):
@@ -110,7 +101,7 @@ class IPythonKernel(KernelBase):
         self.shell.display_pub.session = self.session
         self.shell.display_pub.pub_socket = self.iopub_socket
 
-        self.comm_manager = comm.get_comm_manager()
+        self.comm_manager = CommManager(parent=self, kernel=self)
 
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = ["comm_open", "comm_msg", "comm_close"]

@@ -12,11 +12,10 @@ from functools import partial
 import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
-from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
+from traitlets import Any, Bool, Instance, List, Type, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm
-from .comm.manager import CommManager
 from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
@@ -41,18 +40,12 @@ except ImportError:
 _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
 
-def _create_comm(*args, **kwargs):
+def create_comm(*args, **kwargs):
     """Create a new Comm."""
     return BaseComm(*args, **kwargs)
 
 
-def _get_comm_manager(*args, **kwargs):
-    """Create a new CommManager."""
-    return CommManager(*args, **kwargs)
-
-
-comm.create_comm = _create_comm
-comm.get_comm_manager = _get_comm_manager
+comm.create_comm = create_comm
 
 
 class IPythonKernel(KernelBase):
@@ -119,7 +112,6 @@ class IPythonKernel(KernelBase):
 
         self.comm_manager = comm.get_comm_manager()
 
-        assert isinstance(self.comm_manager, HasTraits)
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = ["comm_open", "comm_msg", "comm_close"]
         for msg_type in comm_msg_types:

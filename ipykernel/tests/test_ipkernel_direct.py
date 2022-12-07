@@ -7,7 +7,8 @@ import pytest
 import zmq
 from IPython.core.history import DummyDB
 
-from ipykernel.ipkernel import BaseComm, IPythonKernel, _create_comm
+from ipykernel.comm.comm import BaseComm
+from ipykernel.ipkernel import IPythonKernel, _create_comm
 
 from .conftest import MockIPyKernel
 
@@ -19,7 +20,7 @@ class user_mod:
     __dict__ = {}
 
 
-async def test_properities(ipkernel: IPythonKernel):
+async def test_properities(ipkernel: IPythonKernel) -> None:
     ipkernel.user_module = user_mod()
     ipkernel.user_ns = {}
 
@@ -29,7 +30,7 @@ async def test_direct_kernel_info_request(ipkernel):
     assert reply["header"]["msg_type"] == "kernel_info_reply"
 
 
-async def test_direct_execute_request(ipkernel: MockIPyKernel):
+async def test_direct_execute_request(ipkernel: MockIPyKernel) -> None:
     reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
     assert reply["header"]["msg_type"] == "execute_reply"
     reply = await ipkernel.test_shell_message(
@@ -106,7 +107,7 @@ async def test_direct_interrupt_request(ipkernel):
 #     assert reply['header']['msg_type'] == 'usage_reply'
 
 
-async def test_is_complete_request(ipkernel: MockIPyKernel):
+async def test_is_complete_request(ipkernel: MockIPyKernel) -> None:
     reply = await ipkernel.test_shell_message("is_complete_request", dict(code="hello"))
     assert reply["header"]["msg_type"] == "is_complete_reply"
     setattr(ipkernel, "shell.input_transformer_manager", None)
@@ -114,7 +115,7 @@ async def test_is_complete_request(ipkernel: MockIPyKernel):
     assert reply["header"]["msg_type"] == "is_complete_reply"
 
 
-def test_do_apply(ipkernel: MockIPyKernel):
+def test_do_apply(ipkernel: MockIPyKernel) -> None:
     from ipyparallel import pack_apply_message
 
     def hello():
@@ -134,22 +135,22 @@ async def test_direct_clear(ipkernel):
     ipkernel.do_clear()
 
 
-async def test_cancel_on_sigint(ipkernel: IPythonKernel):
-    future = asyncio.Future()
+async def test_cancel_on_sigint(ipkernel: IPythonKernel) -> None:
+    future: asyncio.Future = asyncio.Future()
     with ipkernel._cancel_on_sigint(future):
         pass
     future.set_result(None)
 
 
-def test_dispatch_debugpy(ipkernel: IPythonKernel):
+def test_dispatch_debugpy(ipkernel: IPythonKernel) -> None:
     msg = ipkernel.session.msg("debug_request", {})
     msg_list = ipkernel.session.serialize(msg)
     ipkernel.dispatch_debugpy([zmq.Message(m) for m in msg_list])
 
 
-async def test_start(ipkernel: IPythonKernel):
-    shell_future = asyncio.Future()
-    control_future = asyncio.Future()
+async def test_start(ipkernel: IPythonKernel) -> None:
+    shell_future: asyncio.Future = asyncio.Future()
+    control_future: asyncio.Future = asyncio.Future()
 
     async def fake_dispatch_queue():
         shell_future.set_result(None)
@@ -157,8 +158,8 @@ async def test_start(ipkernel: IPythonKernel):
     async def fake_poll_control_queue():
         control_future.set_result(None)
 
-    ipkernel.dispatch_queue = fake_dispatch_queue
-    ipkernel.poll_control_queue = fake_poll_control_queue
+    ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
+    ipkernel.poll_control_queue = fake_poll_control_queue  # type:ignore
     ipkernel.start()
     ipkernel.debugpy_stream = None
     ipkernel.start()
@@ -167,9 +168,9 @@ async def test_start(ipkernel: IPythonKernel):
     await control_future
 
 
-async def test_start_no_debugpy(ipkernel: IPythonKernel):
-    shell_future = asyncio.Future()
-    control_future = asyncio.Future()
+async def test_start_no_debugpy(ipkernel: IPythonKernel) -> None:
+    shell_future: asyncio.Future = asyncio.Future()
+    control_future: asyncio.Future = asyncio.Future()
 
     async def fake_dispatch_queue():
         shell_future.set_result(None)
@@ -177,8 +178,8 @@ async def test_start_no_debugpy(ipkernel: IPythonKernel):
     async def fake_poll_control_queue():
         control_future.set_result(None)
 
-    ipkernel.dispatch_queue = fake_dispatch_queue
-    ipkernel.poll_control_queue = fake_poll_control_queue
+    ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
+    ipkernel.poll_control_queue = fake_poll_control_queue  # type:ignore
     ipkernel.debugpy_stream = None
     ipkernel.start()
 
@@ -190,13 +191,13 @@ def test_create_comm():
     assert isinstance(_create_comm(), BaseComm)
 
 
-def test_finish_metadata(ipkernel: IPythonKernel):
+def test_finish_metadata(ipkernel: IPythonKernel) -> None:
     reply_content = dict(status="error", ename="UnmetDependency")
     metadata = ipkernel.finish_metadata({}, {}, reply_content)
     assert metadata["dependencies_met"] is False
 
 
-async def test_do_debug_request(ipkernel: IPythonKernel):
+async def test_do_debug_request(ipkernel: IPythonKernel) -> None:
     msg = ipkernel.session.msg("debug_request", {})
     msg_list = ipkernel.session.serialize(msg)
     await ipkernel.do_debug_request(msg)

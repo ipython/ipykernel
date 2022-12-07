@@ -7,27 +7,18 @@ import re
 import sys
 from queue import Empty
 
-import jupyter_client
 import pytest
-from packaging.version import Version as V
-from traitlets import (
-    Bool,
-    Dict,
-    Enum,
-    HasTraits,
-    Integer,
-    List,
-    TraitError,
-    Unicode,
-    observe,
-)
+from jupyter_client._version import version_info
+from jupyter_client.blocking.client import BlockingKernelClient
+from packaging.version import Version as V  # noqa
+from traitlets import Bool, Dict, Enum, HasTraits, Integer, List, TraitError, Unicode, observe
 
 from .utils import TIMEOUT, execute, flush_channels, get_reply, start_global_kernel
 
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
-KC = None
+KC: BlockingKernelClient
 
 
 def setup():
@@ -168,7 +159,7 @@ class CompleteReply(Reply):
     matches = List(Unicode())
     cursor_start = Integer()
     cursor_end = Integer()
-    status = Unicode()
+    status = Unicode()  # type:ignore
 
 
 class LanguageInfo(Reference):
@@ -224,7 +215,7 @@ class ExecuteInput(Reference):
 class Error(ExecuteReplyError):
     """Errors are the same as ExecuteReply, but without status"""
 
-    status = None  # no status field
+    status = None  # type:ignore  # no status field
 
 
 class Stream(Reference):
@@ -515,7 +506,7 @@ def test_connect_request():
 
 
 @pytest.mark.skipif(
-    jupyter_client.version_info < (5, 0),
+    version_info < (5, 0),
     reason="earlier Jupyter Client don't have comm_info",
 )
 def test_comm_info_request():

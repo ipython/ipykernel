@@ -1,3 +1,6 @@
+ci:
+  autoupdate_schedule: monthly
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -10,88 +13,27 @@ repos:
       - id: check-case-conflict
       - id: check-toml
       - id: check-yaml
-      - id: debug-statements
-        exclude: ipykernel/kernelapp.py
       - id: forbid-new-submodules
       - id: check-builtin-literals
       - id: trailing-whitespace
 
-  - repo: https://github.com/psf/black
-    rev: 22.10.0
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.19.2
     hooks:
-      - id: black
-        args: ["--line-length", "100"]
-
-  - repo: https://github.com/Carreau/velin
-    rev: 0.0.12
-    hooks:
-      - id: velin
-        args: ["ipykernel"]
-
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
-        files: \.py$
-        args: [--profile=black]
-
-  - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.10.1
-    hooks:
-      - id: validate-pyproject
-        stages: [manual]
+      - id: check-github-workflows
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.16
     hooks:
       - id: mdformat
-        additional_dependencies:
-          [mdformat-gfm, mdformat-frontmatter, mdformat-footnote]
 
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.0
+  - repo: https://github.com/psf/black
+    rev: 22.10.0
     hooks:
-      - id: pyupgrade
-        args: [--py38-plus]
+      - id: black
 
-  - repo: https://github.com/PyCQA/doc8
-    rev: v1.0.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.165
     hooks:
-      - id: doc8
-        args: [--max-line-length=200]
-        stages: [manual]
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.991
-    hooks:
-      - id: mypy
-        exclude: "ipykernel.*tests"
-        args: ["--config-file", "pyproject.toml"]
-        additional_dependencies:
-          [tornado, jupyter_client, pytest, traitlets, jupyter_core]
-        stages: [manual]
-
-  - repo: https://github.com/john-hen/Flake8-pyproject
-    rev: 1.2.2
-    hooks:
-      - id: Flake8-pyproject
-        alias: flake8
-        additional_dependencies:
-          ["flake8-bugbear==22.6.22", "flake8-implicit-str-concat==0.2.0"]
-        stages: [manual]
-
-  - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.29.0
-    hooks:
-      - id: eslint
-        stages: [manual]
-
-  - repo: https://github.com/sirosen/check-jsonschema
-    rev: 0.19.2
-    hooks:
-      - id: check-jsonschema
-        name: "Check GitHub Workflows"
-        files: ^\.github/workflows/
-        types: [yaml]
-        args: ["--schemafile", "https://json.schemastore.org/github-workflow"]
-        stages: [manual]
+      - id: ruff
+        args: ["--fix"]

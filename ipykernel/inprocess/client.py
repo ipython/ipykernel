@@ -27,6 +27,7 @@ from traitlets import Instance, Type, default
 # Local imports
 from .channels import InProcessChannel, InProcessHBChannel
 
+
 # -----------------------------------------------------------------------------
 # Main kernel Client class
 # -----------------------------------------------------------------------------

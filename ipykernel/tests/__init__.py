@@ -12,7 +12,7 @@ from ipykernel.kernelspec import install
 pjoin = os.path.join
 
 tmp = None
-patchers = []
+patchers: list = []
 
 
 def setup():
@@ -41,7 +41,7 @@ def teardown():
         p.stop()
 
     try:
-        shutil.rmtree(tmp)
+        shutil.rmtree(tmp)  # type:ignore
     except OSError:
         # no such file
         pass

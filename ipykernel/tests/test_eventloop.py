@@ -5,7 +5,6 @@ import os
 import sys
 import threading
 import time
-from unittest.mock import MagicMock
 
 import pytest
 import tornado
@@ -25,6 +24,8 @@ def setup():
 
 
 def teardown():
+    assert KM is not None
+    assert KC is not None
     KC.stop_channels()
     KM.shutdown_kernel(now=True)
 
@@ -37,6 +38,8 @@ async_func()
 
 @pytest.mark.skipif(tornado.version_info < (5,), reason="only relevant on tornado 5")
 def test_asyncio_interrupt():
+    assert KM is not None
+    assert KC is not None
     flush_channels(KC)
     msg_id, content = execute("%gui asyncio", KC)
     assert content["status"] == "ok", content
@@ -93,5 +96,4 @@ def test_enable_gui(kernel):
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="MacOS-only")
 def test_cocoa_loop(kernel):
-    kernel.shell = MagicMock()
     loop_cocoa(kernel)

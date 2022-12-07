@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import os
+from typing import no_type_check
+from unittest.mock import MagicMock
 
 import pytest
 import zmq
@@ -16,7 +18,7 @@ try:
     import resource
 except ImportError:
     # Windows
-    resource = None
+    resource = None  # type:ignore
 
 
 # Handle resource limit
@@ -36,7 +38,7 @@ if resource is not None:
 
 # Enforce selector event loop on Windows.
 if os.name == "nt":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type:ignore
 
 
 class KernelMixin:
@@ -68,12 +70,14 @@ class KernelMixin:
             socket.close()
         self.context.destroy()
 
+    @no_type_check
     async def test_shell_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
         await self.dispatch_shell(msg_list)
         self.shell_stream.flush()
         return await self._wait_for_msg()
 
+    @no_type_check
     async def test_control_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
         await self.process_control(msg_list)
@@ -85,8 +89,8 @@ class KernelMixin:
 
     def _prep_msg(self, *args, **kwargs):
         self._reply = None
-        msg = self.session.msg(*args, **kwargs)
-        msg = self.session.serialize(msg)
+        raw_msg = self.session.msg(*args, **kwargs)
+        msg = self.session.serialize(raw_msg)
         return [zmq.Message(m) for m in msg]
 
     async def _wait_for_msg(self):
@@ -100,7 +104,7 @@ class KernelMixin:
         pass
 
 
-class MockKernel(KernelMixin, Kernel):
+class MockKernel(KernelMixin, Kernel):  # type:ignore
     implementation = "test"
     implementation_version = "1.0"
     language = "no-op"
@@ -114,6 +118,7 @@ class MockKernel(KernelMixin, Kernel):
 
     def __init__(self, *args, **kwargs):
         self._initialize()
+        self.shell = MagicMock()
         super().__init__(*args, **kwargs)
 
     def do_execute(
@@ -132,7 +137,7 @@ class MockKernel(KernelMixin, Kernel):
         }
 
 
-class MockIPyKernel(KernelMixin, IPythonKernel):
+class MockIPyKernel(KernelMixin, IPythonKernel):  # type:ignore
     def __init__(self, *args, **kwargs):
         self._initialize()
         super().__init__(*args, **kwargs)

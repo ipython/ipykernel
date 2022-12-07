@@ -7,18 +7,19 @@ import errno
 import json
 import os
 from tempfile import TemporaryDirectory
+from typing import no_type_check
 from unittest.mock import patch
 
 import pytest
 import zmq
-from traitlets.config import Config
+from traitlets.config.loader import Config
 
 from ipykernel import connect
 from ipykernel.kernelapp import IPKernelApp
 
 from .utils import TemporaryWorkingDirectory
 
-sample_info = {
+sample_info: dict = {
     "ip": "1.2.3.4",
     "transport": "ipc",
     "shell_port": 1,
@@ -91,6 +92,7 @@ def test_port_bind_failure_raises(request):
             assert mock_try_bind.call_count == 1
 
 
+@no_type_check
 def test_port_bind_failure_recovery(request):
     try:
         errno.WSAEADDRINUSE

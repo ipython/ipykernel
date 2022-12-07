@@ -625,10 +625,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             import asyncio
 
             try:
-                from asyncio import (
-                    WindowsProactorEventLoopPolicy,
-                    WindowsSelectorEventLoopPolicy,
-                )
+                from asyncio import WindowsProactorEventLoopPolicy, WindowsSelectorEventLoopPolicy
             except ImportError:
                 pass
                 # not affected
@@ -644,7 +641,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         With the non-interruptible version, stopping pdb() locks up the kernel in a
         non-recoverable state.
         """
-        import pdb
+        import pdb  # noqa
 
         from IPython.core import debugger
 

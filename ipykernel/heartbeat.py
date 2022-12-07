@@ -20,13 +20,14 @@ from threading import Thread
 import zmq
 from jupyter_client.localinterfaces import localhost
 
+
 # -----------------------------------------------------------------------------
 # Code
 # -----------------------------------------------------------------------------
 
 
 class Heartbeat(Thread):
-    "A simple ping-pong style heartbeat that runs in a thread."
+    """A simple ping-pong style heartbeat that runs in a thread."""
 
     def __init__(self, context, addr=None):
         if addr is None:

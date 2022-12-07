@@ -40,7 +40,7 @@ def test_io_api():
     with pytest.raises(io.UnsupportedOperation):
         stream.tell()
     with pytest.raises(TypeError):
-        stream.write(b"")
+        stream.write(b"")  # type:ignore
 
 
 def test_io_isatty():
@@ -64,7 +64,7 @@ def test_io_thread():
     ctx1, pipe = thread._setup_pipe_out()
     pipe.close()
     thread._pipe_in.close()
-    thread._check_mp_mode = lambda: MASTER
+    thread._check_mp_mode = lambda: MASTER  # type:ignore
     thread._really_send([b"hi"])
     ctx1.destroy()
     thread.close()
@@ -105,4 +105,4 @@ def test_outstream():
     stream.flush()
     stream.write("hi")
     stream.writelines(["ab", "cd"])
-    assert stream.writable
+    assert stream.writable()

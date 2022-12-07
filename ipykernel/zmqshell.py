@@ -38,6 +38,7 @@ from ipykernel import connect_qtconsole, get_connection_file, get_connection_inf
 from ipykernel.displayhook import ZMQShellDisplayHook
 from ipykernel.jsonutil import encode_images, json_clean
 
+
 # -----------------------------------------------------------------------------
 # Functions and classes
 # -----------------------------------------------------------------------------

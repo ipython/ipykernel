@@ -21,42 +21,6 @@ def _use_appnope():
     return sys.platform == "darwin" and V(platform.mac_ver()[0]) >= V("10.9")
 
 
-def _notify_stream_qt(kernel):
-
-    from IPython.external.qt_for_kernel import QtCore
-
-    def process_stream_events():
-        """fall back to main loop when there's a socket event"""
-        # call flush to ensure that the stream doesn't lose events
-        # due to our consuming of the edge-triggered FD
-        # flush returns the number of events consumed.
-        # if there were any, wake it up
-        if kernel.shell_stream.flush(limit=1):
-            kernel._qt_notifier.setEnabled(False)
-            print('ZMQ events to process; quitting Qt event loop.')
-            kernel.app.qt_event_loop.quit()
-
-    if not hasattr(kernel, "_qt_notifier"):
-        fd = kernel.shell_stream.getsockopt(zmq.FD)
-        kernel._qt_notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
-        kernel._qt_notifier.activated.connect(process_stream_events)
-    else:
-        kernel._qt_notifier.setEnabled(True)
-
-    # there may already be unprocessed events waiting.
-    # these events will not wake zmq's edge-triggered FD
-    # since edge-triggered notification only occurs on new i/o activity.
-    # process all the waiting events immediately
-    # so we start in a clean state ensuring that any new i/o events will notify.
-    # schedule first call on the eventloop as soon as it's running,
-    # so we don't block here processing events
-    if not hasattr(kernel, "_qt_timer"):
-        kernel._qt_timer = QtCore.QTimer(kernel.app)
-        kernel._qt_timer.setSingleShot(True)
-        kernel._qt_timer.timeout.connect(process_stream_events)
-    kernel._qt_timer.start(0)
-
-
 # mapping of keys to loop functions
 loop_map = {
     "inline": None,
@@ -103,36 +67,46 @@ def register_integration(*toolkitnames):
     return decorator
 
 
-def _loop_qt(kernel):
-    """Inner-loop for running the Qt eventloop
+def _notify_stream_qt(kernel):
 
-    Pulled from guisupport.start_event_loop in IPython < 5.2,
-    since IPython 5.2 only checks `get_ipython().active_eventloop` is defined,
-    rather than if the eventloop is actually running.
-    """
-    if not hasattr(kernel, 'app'):
-        # First time through, get the `QApplication` instance, create a `QEventLoop`, and install
-        # hook to stop the event loop when there's ZMQ traffic to process. Subsequent attempts to
-        # change the version will fail at `enable_gui` below anyway.
+    from IPython.external.qt_for_kernel import QtCore
 
-        # IPython's Qt importing mechanism will use the `QT_API` environment variable to choose the
-        # version.
-        try:
-            from IPython.external.qt_for_kernel import QtGui, QtCore, QT_API
-            success = True
-        except ImportError:
-            success = False
-        if not success:
-            raise RuntimeError('boo')
-        from IPython.lib.guisupport import get_app_qt4
+    def process_stream_events():
+        """fall back to main loop when there's a socket event"""
+        # call flush to ensure that the stream doesn't lose events
+        # due to our consuming of the edge-triggered FD
+        # flush returns the number of events consumed.
+        # if there were any, wake it up
+        if kernel.shell_stream.flush(limit=1):
+            kernel._qt_notifier.setEnabled(False)
+            print('ZMQ events to process; quitting Qt event loop.')
+            kernel.app.qt_event_loop.quit()
 
-        print(f'`qt_for_kernel` says {QT_API=}')
-        kernel.app = get_app_qt4([" "])
-        if isinstance(kernel.app, QtGui.QApplication):
-            kernel.app.setQuitOnLastWindowClosed(False)
+    if not hasattr(kernel, "_qt_notifier"):
+        fd = kernel.shell_stream.getsockopt(zmq.FD)
+        kernel._qt_notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
+        kernel._qt_notifier.activated.connect(process_stream_events)
+    else:
+        kernel._qt_notifier.setEnabled(True)
 
-        kernel.app.qt_event_loop = QtCore.QEventLoop(kernel.app)
+    # there may already be unprocessed events waiting.
+    # these events will not wake zmq's edge-triggered FD
+    # since edge-triggered notification only occurs on new i/o activity.
+    # process all the waiting events immediately
+    # so we start in a clean state ensuring that any new i/o events will notify.
+    # schedule first call on the eventloop as soon as it's running,
+    # so we don't block here processing events
+    if not hasattr(kernel, "_qt_timer"):
+        kernel._qt_timer = QtCore.QTimer(kernel.app)
+        kernel._qt_timer.setSingleShot(True)
+        kernel._qt_timer.timeout.connect(process_stream_events)
+    kernel._qt_timer.start(0)
 
+
+@register_integration("qt", "qt4", "qt5", "qt6")
+def loop_qt(kernel):
+    """Event loop for all versions of Qt."""
+    print(f'Starting Qt loop with {os.environ.get("QT_API", None)=}')
     _notify_stream_qt(kernel) # install hook to stop event loop.
     # Start the event loop.
     kernel.app._in_event_loop = True
@@ -142,90 +116,9 @@ def _loop_qt(kernel):
     print('Qt loop exited.')
     kernel.app._in_event_loop = False
 
-# The user can generically request `qt` or a specific Qt version, e.g. `qt6`. For a generic Qt
-# request, we let the mechanism in IPython choose the best available version by leaving the `QT_API`
-# environment variable blank.
-#
-# For specific versions, we check to see whether the PyQt or PySide implementations are present and
-# set `QT_API` accordingly to indicate to IPython which version we want. If neither implementation
-# is present, we leave the environment variable set so IPython will generate a helpful error
-# message.
-#
-# NOTE: if the environment variable is already set, it will be used unchanged, regardless of what
-# the user requested.
-
-
-@register_integration("qt4")
-def loop_qt4(kernel):
-    print(f'Starting Qt4 loop with {os.environ.get("QT_API", None)=}')
-    """Start a kernel with PyQt4 event loop integration."""
-    if os.environ.get("QT_API", None) is None:
-        try:
-            import PyQt  # noqa
-
-            os.environ["QT_API"] = "pyqt"
-        except ImportError:
-            try:
-                import PySide  # noqa
-
-                os.environ["QT_API"] = "pyside"
-            except ImportError:
-                os.environ["QT_API"] = "pyqt" # Set it back so IPython gives an error
-    _loop_qt(kernel)
-
-
-@register_integration("qt5")
-def loop_qt5(kernel):
-    print(f'Starting Qt5 loop with {os.environ.get("QT_API", None)=}')
-    """Start a kernel with PyQt5 event loop integration."""
-    if os.environ.get("QT_API", None) is None:
-        try:
-            import PyQt5  # noqa
-
-            os.environ["QT_API"] = "pyqt5"
-        except ImportError:
-            try:
-                import PySide2  # noqa
-
-                os.environ["QT_API"] = "pyside2"
-            except ImportError:
-                os.environ["QT_API"] = "pyqt5" # Set it back so IPython gives an error
-    _loop_qt(kernel)
-
-
-@register_integration("qt6")
-def loop_qt6(kernel):
-    print(f'Starting Qt6 loop with {os.environ.get("QT_API", None)=}')
-    """Start a kernel with PyQt6 event loop integration."""
-    if os.environ.get("QT_API", None) is None:
-        try:
-            print('Trying to import PyQt6...')
-            import PyQt6  # noqa
-
-            os.environ["QT_API"] = "pyqt6"
-        except ImportError:
-            try:
-                print('Trying to import PySide6...')
-                import PySide6  # noqa
-
-                os.environ["QT_API"] = "pyside6"
-            except ImportError:
-                os.environ["QT_API"] = None
-    _loop_qt(kernel)
-
-
-@register_integration("qt")
-def loop_qt(kernel):
-    print(f'Starting Qtx loop with {os.environ.get("QT_API", None)=}')
-    """Generic request to start event loop; lets IPython mechanism choose the version."""
-    _loop_qt(kernel)
-
 
 # exit and watch are the same for qt 4 and 5
 @loop_qt.exit
-@loop_qt4.exit
-@loop_qt5.exit
-@loop_qt6.exit
 def loop_qt_exit(kernel):
     print('Request Qt app exit (will close all open windows).')
     kernel.app.exit()
@@ -520,6 +413,106 @@ def loop_asyncio_exit(kernel):
         loop.run_until_complete(close_loop)  # type:ignore[call-overload]
         loop.close()
 
+# The user can generically request `qt` or a specific Qt version, e.g. `qt6`. For a generic Qt
+# request, we let the mechanism in IPython choose the best available version by leaving the `QT_API`
+# environment variable blank.
+#
+# For specific versions, we check to see whether the PyQt or PySide implementations are present and
+# set `QT_API` accordingly to indicate to IPython which version we want. If neither implementation
+# is present, we leave the environment variable set so IPython will generate a helpful error
+# message.
+#
+# NOTE: if the environment variable is already set, it will be used unchanged, regardless of what
+# the user requested.
+def set_qt_api(gui, kernel):
+    """Sets the `QT_API` environment variable if it isn't already set."""
+    if hasattr(kernel, 'app'):
+        raise RuntimeError('Kernel already running a Qt event loop.')
+    qt_api = os.environ.get("QT_API", None)
+    if qt_api is not None and gui != 'qt':
+        env2gui = {'pyside': 'qt4',
+                   'pyqt': 'qt4',
+                   'pyside2': 'qt5',
+                   'pyqt5': 'qt5',
+                   'pyside6': 'qt6',
+                   'pyqt6': 'qt6',
+                   }
+        if env2gui[qt_api] != gui:
+            print(f'Request for "{gui}" will be ignored because `QT_API` '
+                  f'environment variable is set to "{qt_api}"')
+    else:
+        if gui == 'qt4':
+            try:
+                import PyQt  # noqa
+
+                os.environ["QT_API"] = "pyqt"
+            except ImportError:
+                try:
+                    import PySide  # noqa
+
+                    os.environ["QT_API"] = "pyside"
+                except ImportError:
+                    # Neither implementation installed; set it to something so IPython gives an error
+                    os.environ["QT_API"] = "pyqt"
+        elif gui == 'qt5':
+            try:
+                import PyQt5  # noqa
+
+                os.environ["QT_API"] = "pyqt5"
+            except ImportError:
+                try:
+                    import PySide2  # noqa
+
+                    os.environ["QT_API"] = "pyside2"
+                except ImportError:
+                    os.environ["QT_API"] = "pyqt5"
+        elif gui == 'qt6':
+            try:
+                print('Trying to import PyQt6...')
+                import PyQt6  # noqa
+
+                os.environ["QT_API"] = "pyqt6"
+            except ImportError:
+                try:
+                    print('Trying to import PySide6...')
+                    import PySide6  # noqa
+
+                    os.environ["QT_API"] = "pyside6"
+                except ImportError:
+                    os.environ["QT_API"] = "pyqt6"
+        elif gui == 'qt':
+            # Don't set QT_API; let IPython logic choose the version.
+            if 'QT_API' in os.environ.keys():
+                del os.environ['QT_API']
+        else:
+            raise ValueError(f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".')
+
+    if gui!= 'qt' and hasattr(kernel, 'last_qt_version') and 'QT_API' in os.environ.keys():
+        if kernel.last_qt_version != gui:
+            raise ValueError('Cannot switch Qt versions for this session; '
+                             f'must use {kernel.last_qt_version}.')
+
+    # Do the actual import now that the environment variable is set.
+    try:
+        from IPython.external.qt_for_kernel import QtGui, QtCore, QT_API
+    except ImportError:
+        # Clear the environment variable for the next attempt.
+        if 'QT_API' in os.environ.keys():
+            del os.environ["QT_API"]
+        raise
+
+    from IPython.lib.guisupport import get_app_qt4
+
+    print(f'`qt_for_kernel` says {QT_API=}')
+    kernel.app = get_app_qt4([" "])
+    if isinstance(kernel.app, QtGui.QApplication):
+        kernel.app.setQuitOnLastWindowClosed(False)
+
+    kernel.app.qt_event_loop = QtCore.QEventLoop(kernel.app)
+
+    # Due to the import mechanism, we can't change Qt versions once we've chosen one. So we tag the
+    # version so we can check for this and give an error.
+    kernel.last_qt_version = gui
 
 def enable_gui(gui, kernel=None):
     """Enable integration with a given GUI"""
@@ -534,6 +527,15 @@ def enable_gui(gui, kernel=None):
                 "You didn't specify a kernel,"
                 " and no IPython Application with a kernel appears to be running."
             )
+    if gui is None:
+        # User wants to turn off integration; clear any evidence if Qt was the last one.
+        if hasattr(kernel, 'app'):
+            delattr(kernel, 'app')
+    else:
+        if gui.startswith('qt'):
+            # Prepare the kernel here so any exceptions are displayed in the client.
+            set_qt_api(gui, kernel)
+
     loop = loop_map[gui]
     if loop and kernel.eventloop is not None and kernel.eventloop is not loop:
         raise RuntimeError("Cannot activate multiple GUI eventloops")

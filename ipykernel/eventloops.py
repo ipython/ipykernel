@@ -33,7 +33,7 @@ def _notify_stream_qt(kernel):
         # if there were any, wake it up
         if kernel.shell_stream.flush(limit=1):
             kernel._qt_notifier.setEnabled(False)
-            kernel.app.quit()
+            print('ZMQ events to process; quitting Qt event loop.')
 
     if not hasattr(kernel, "_qt_notifier"):
         fd = kernel.shell_stream.getsockopt(zmq.FD)
@@ -110,17 +110,19 @@ def _loop_qt(app):
     rather than if the eventloop is actually running.
     """
     app._in_event_loop = True
-    app.exec_()
+    print('Qt loop exited.')
     app._in_event_loop = False
 
 
 @register_integration("qt4")
 def loop_qt4(kernel):
     """Start a kernel with PyQt4 event loop integration."""
+    print(f'Starting Qt4 loop with {os.environ.get("QT_API", None)=}')
 
-    from IPython.external.qt_for_kernel import QtGui
+    from IPython.external.qt_for_kernel import QtGui, QtCore, QT_API
     from IPython.lib.guisupport import get_app_qt4
 
+    print(f'`qt_for_kernel` says {QT_API=}')
     kernel.app = get_app_qt4([" "])
     if isinstance(kernel.app, QtGui.QApplication):
         kernel.app.setQuitOnLastWindowClosed(False)
@@ -131,6 +133,7 @@ def loop_qt4(kernel):
 
 @register_integration("qt", "qt5")
 def loop_qt5(kernel):
+    print(f'Starting Qt5 loop with {os.environ.get("QT_API", None)=}')
     """Start a kernel with PyQt5 event loop integration."""
     if os.environ.get("QT_API", None) is None:
         try:
@@ -151,6 +154,7 @@ def loop_qt5(kernel):
 @loop_qt4.exit
 @loop_qt5.exit
 def loop_qt_exit(kernel):
+    print('Request Qt event loop exit.')
     kernel.app.exit()
 
 

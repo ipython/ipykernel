@@ -71,7 +71,8 @@ class Comm(traitlets.config.LoggingConfigurable, BaseComm):
     def __init__(self, *args, **kwargs):
         # Comm takes positional arguments, LoggingConfigurable does not, so we explicitly forward arguments
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
-        for name in self.trait_names():
+        # drop arguments not in BaseComm
+        for name in ["kernel"]:
             if name in kwargs:
                 kwargs.pop(name)
         BaseComm.__init__(self, *args, **kwargs)

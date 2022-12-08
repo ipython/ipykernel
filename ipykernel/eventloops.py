@@ -436,6 +436,12 @@ def set_qt_api(gui, kernel):
     """Sets the `QT_API` environment variable if it isn't already set."""
     if hasattr(kernel, 'app'):
         raise RuntimeError('Kernel already running a Qt event loop.')
+
+    if gui!= 'qt' and hasattr(kernel, 'last_qt_version'):
+        if kernel.last_qt_version != gui:
+            raise ValueError('Cannot switch Qt versions for this session; '
+                             f'must use {kernel.last_qt_version}.')
+
     qt_api = os.environ.get("QT_API", None)
     if qt_api is not None and gui != 'qt':
         env2gui = {'pyside': 'qt4',
@@ -492,11 +498,6 @@ def set_qt_api(gui, kernel):
                 del os.environ['QT_API']
         else:
             raise ValueError(f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".')
-
-    if gui!= 'qt' and hasattr(kernel, 'last_qt_version') and 'QT_API' in os.environ.keys():
-        if kernel.last_qt_version != gui:
-            raise ValueError('Cannot switch Qt versions for this session; '
-                             f'must use {kernel.last_qt_version}.')
 
     # Do the actual import now that the environment variable is set.
     try:

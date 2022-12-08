@@ -203,8 +203,6 @@ class KernelMagics(Magics):
     # the magics which this class needs to implement differently from the base
     # class, or that are unique to it.
 
-    _find_edit_target = CodeMagics._find_edit_target
-
     @line_magic
     def edit(self, parameter_s="", last_call=None):
         """Bring up an editor and execute the resulting code.
@@ -286,7 +284,7 @@ class KernelMagics(Magics):
         opts, args = self.parse_options(parameter_s, "prn:")
 
         try:
-            filename, lineno, _ = self._find_edit_target(self.shell, args, opts, last_call)
+            filename, lineno, _ = CodeMagics._find_edit_target(self.shell, args, opts, last_call)
         except MacroToEdit:
             # TODO: Implement macro editing over 2 processes.
             print("Macro editing not yet implemented in 2-process model.")

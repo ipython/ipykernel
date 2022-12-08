@@ -217,13 +217,9 @@ def test_magics(tmp_path):
     shell.user_ns["hi"] = 1
     magics = KernelMagics(shell)
 
-    def find_edit_target(*args):
-        return str(tmp_path), 0, 1
-
     tmp_file = tmp_path / "test.txt"
     tmp_file.write_text("hi", "utf8")
-    magics._find_edit_target = find_edit_target
-    magics.edit("hi")
+    magics.edit(str(tmp_file))
     magics.clear([])
     magics.less(str(tmp_file))
     if os.name == "posix":

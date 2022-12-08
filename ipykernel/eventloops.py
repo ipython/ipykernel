@@ -70,17 +70,16 @@ def register_integration(*toolkitnames):
 def _notify_stream_qt(kernel):
     import operator
     from functools import lru_cache
+
     from IPython.external.qt_for_kernel import QtCore
 
     try:
         from IPython.external.qt_for_kernel import enum_helper
     except ImportError:
+
         @lru_cache(None)
         def enum_helper(name):
-            return operator.attrgetter(
-                name.rpartition(".")[0]
-            )(sys.modules[QtCore.__package__])
-
+            return operator.attrgetter(name.rpartition(".")[0])(sys.modules[QtCore.__package__])
 
     def process_stream_events():
         """fall back to main loop when there's a socket event"""
@@ -95,7 +94,8 @@ def _notify_stream_qt(kernel):
     if not hasattr(kernel, "_qt_notifier"):
         fd = kernel.shell_stream.getsockopt(zmq.FD)
         kernel._qt_notifier = QtCore.QSocketNotifier(
-            fd, enum_helper('QtCore.QSocketNotifier.Type').Read, kernel.app.qt_event_loop)
+            fd, enum_helper('QtCore.QSocketNotifier.Type').Read, kernel.app.qt_event_loop
+        )
         kernel._qt_notifier.activated.connect(process_stream_events)
     else:
         kernel._qt_notifier.setEnabled(True)
@@ -117,7 +117,7 @@ def _notify_stream_qt(kernel):
 @register_integration("qt", "qt4", "qt5", "qt6")
 def loop_qt(kernel):
     """Event loop for all versions of Qt."""
-    _notify_stream_qt(kernel) # install hook to stop event loop.
+    _notify_stream_qt(kernel)  # install hook to stop event loop.
     # Start the event loop.
     kernel.app._in_event_loop = True
     # `exec` blocks until there's ZMQ activity.
@@ -421,6 +421,7 @@ def loop_asyncio_exit(kernel):
         loop.run_until_complete(close_loop)  # type:ignore[call-overload]
         loop.close()
 
+
 # The user can generically request `qt` or a specific Qt version, e.g. `qt6`. For a generic Qt
 # request, we let the mechanism in IPython choose the best available version by leaving the `QT_API`
 # environment variable blank.
@@ -437,23 +438,27 @@ def set_qt_api(gui, kernel):
     if hasattr(kernel, 'app'):
         raise RuntimeError('Kernel already running a Qt event loop.')
 
-    if gui!= 'qt' and hasattr(kernel, 'last_qt_version'):
+    if gui != 'qt' and hasattr(kernel, 'last_qt_version'):
         if kernel.last_qt_version != gui:
-            raise ValueError('Cannot switch Qt versions for this session; '
-                             f'must use {kernel.last_qt_version}.')
+            raise ValueError(
+                'Cannot switch Qt versions for this session; ' f'must use {kernel.last_qt_version}.'
+            )
 
     qt_api = os.environ.get("QT_API", None)
     if qt_api is not None and gui != 'qt':
-        env2gui = {'pyside': 'qt4',
-                   'pyqt': 'qt4',
-                   'pyside2': 'qt5',
-                   'pyqt5': 'qt5',
-                   'pyside6': 'qt6',
-                   'pyqt6': 'qt6',
-                   }
+        env2gui = {
+            'pyside': 'qt4',
+            'pyqt': 'qt4',
+            'pyside2': 'qt5',
+            'pyqt5': 'qt5',
+            'pyside6': 'qt6',
+            'pyqt6': 'qt6',
+        }
         if env2gui[qt_api] != gui:
-            print(f'Request for "{gui}" will be ignored because `QT_API` '
-                  f'environment variable is set to "{qt_api}"')
+            print(
+                f'Request for "{gui}" will be ignored because `QT_API` '
+                f'environment variable is set to "{qt_api}"'
+            )
     else:
         if gui == 'qt4':
             try:
@@ -497,11 +502,13 @@ def set_qt_api(gui, kernel):
             if 'QT_API' in os.environ.keys():
                 del os.environ['QT_API']
         else:
-            raise ValueError(f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".')
+            raise ValueError(
+                f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".'
+            )
 
     # Do the actual import now that the environment variable is set.
     try:
-        from IPython.external.qt_for_kernel import QtGui, QtCore, QT_API
+        from IPython.external.qt_for_kernel import QT_API, QtCore, QtGui
     except ImportError:
         # Clear the environment variable for the next attempt.
         if 'QT_API' in os.environ.keys():
@@ -519,6 +526,7 @@ def set_qt_api(gui, kernel):
     # Due to the import mechanism, we can't change Qt versions once we've chosen one. So we tag the
     # version so we can check for this and give an error.
     kernel.last_qt_version = gui
+
 
 def enable_gui(gui, kernel=None):
     """Enable integration with a given GUI"""

@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.19.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.0...5e1b155207c506f01df5808b1ba41f868a10f097))
+
+### Bugs fixed
+
+- fix: too many arguments dropped when passing to base comm constructor [#1051](https://github.com/ipython/ipykernel/pull/1051) ([@maartenbreddels](https://github.com/maartenbreddels))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-07&to=2022-12-08&type=c))
+
+[@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-12-07..2022-12-08&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.19.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.18.3...2c80e6c31e4912b2deaf5276b27568ba5088ad97))
@@ -19,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-11-29&to=2022-12-07&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-11-29..2022-12-07&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-11-29..2022-12-07&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-11-29..2022-12-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.18.3
 

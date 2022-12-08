@@ -6,7 +6,7 @@ def test_comm(kernel):
     manager = CommManager(kernel=kernel)
     kernel.comm_manager = manager
 
-    c = Comm(kernel=kernel)
+    c = Comm(kernel=kernel, target_name="bar")
     msgs = []
 
     def on_close(msg):
@@ -23,6 +23,7 @@ def test_comm(kernel):
     c.handle_close({})
     c.close()
     assert len(msgs) == 2
+    assert c.target_name == "bar"
 
 
 def test_comm_manager(kernel):

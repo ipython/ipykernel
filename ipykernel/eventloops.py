@@ -68,8 +68,19 @@ def register_integration(*toolkitnames):
 
 
 def _notify_stream_qt(kernel):
-
+    import operator
+    from functools import lru_cache
     from IPython.external.qt_for_kernel import QtCore
+
+    try:
+        from IPython.external.qt_for_kernel import enum_helper
+    except ImportError:
+        @lru_cache(None)
+        def enum_helper(name):
+            return operator.attrgetter(
+                name.rpartition(".")[0]
+            )(sys.modules[QtCore.__package__])
+
 
     def process_stream_events():
         """fall back to main loop when there's a socket event"""
@@ -84,7 +95,8 @@ def _notify_stream_qt(kernel):
 
     if not hasattr(kernel, "_qt_notifier"):
         fd = kernel.shell_stream.getsockopt(zmq.FD)
-        kernel._qt_notifier = QtCore.QSocketNotifier(fd, QtCore.QSocketNotifier.Read, kernel.app)
+        kernel._qt_notifier = QtCore.QSocketNotifier(
+            fd, enum_helper('QtCore.QSocketNotifier.Type').Read, kernel.app.qt_event_loop)
         kernel._qt_notifier.activated.connect(process_stream_events)
     else:
         kernel._qt_notifier.setEnabled(True)

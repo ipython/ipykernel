@@ -508,7 +508,7 @@ def set_qt_api(gui, kernel):
 
     # Do the actual import now that the environment variable is set.
     try:
-        from IPython.external.qt_for_kernel import QT_API, QtCore, QtGui
+        from IPython.external.qt_for_kernel import QtCore, QtGui
     except ImportError:
         # Clear the environment variable for the next attempt.
         if 'QT_API' in os.environ.keys():

@@ -90,7 +90,6 @@ def _notify_stream_qt(kernel):
         # if there were any, wake it up
         if kernel.shell_stream.flush(limit=1):
             kernel._qt_notifier.setEnabled(False)
-            print('ZMQ events to process; quitting Qt event loop.')
             kernel.app.qt_event_loop.quit()
 
     if not hasattr(kernel, "_qt_notifier"):
@@ -118,21 +117,18 @@ def _notify_stream_qt(kernel):
 @register_integration("qt", "qt4", "qt5", "qt6")
 def loop_qt(kernel):
     """Event loop for all versions of Qt."""
-    print(f'Starting Qt loop with {os.environ.get("QT_API", None)=}')
     _notify_stream_qt(kernel) # install hook to stop event loop.
     # Start the event loop.
     kernel.app._in_event_loop = True
     # `exec` blocks until there's ZMQ activity.
     el = kernel.app.qt_event_loop  # for brevity
     el.exec() if hasattr(el, 'exec') else el.exec_()
-    print('Qt loop exited.')
     kernel.app._in_event_loop = False
 
 
 # exit and watch are the same for qt 4 and 5
 @loop_qt.exit
 def loop_qt_exit(kernel):
-    print('Request Qt app exit (will close all open windows).')
     kernel.app.exit()
 
 
@@ -480,13 +476,11 @@ def set_qt_api(gui, kernel):
                     os.environ["QT_API"] = "pyqt5"
         elif gui == 'qt6':
             try:
-                print('Trying to import PyQt6...')
                 import PyQt6  # noqa
 
                 os.environ["QT_API"] = "pyqt6"
             except ImportError:
                 try:
-                    print('Trying to import PySide6...')
                     import PySide6  # noqa
 
                     os.environ["QT_API"] = "pyside6"
@@ -515,7 +509,6 @@ def set_qt_api(gui, kernel):
 
     from IPython.lib.guisupport import get_app_qt4
 
-    print(f'`qt_for_kernel` says {QT_API=}')
     kernel.app = get_app_qt4([" "])
     if isinstance(kernel.app, QtGui.QApplication):
         kernel.app.setQuitOnLastWindowClosed(False)

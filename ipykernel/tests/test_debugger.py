@@ -282,3 +282,104 @@ def test_convert_to_long_pathname():
         from ipykernel.compiler import _convert_to_long_pathname
 
         _convert_to_long_pathname(__file__)
+
+
+def test_copy_to_globals(kernel_with_debug):
+    local_var_name = "var"
+    global_var_name = "var_copy"
+    code = f"""from IPython.core.display import HTML
+def my_test():
+    {local_var_name} = HTML('<p>test content</p>')
+    pass
+a = 2
+my_test()"""
+
+    # Init debugger and set breakpoint
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    source = r["body"]["sourcePath"]
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 4}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
+
+    # Execute code
+    kernel_with_debug.execute(code)
+
+    # Wait for stop on breakpoint
+    msg: dict = {"msg_type": "", "content": {}}
+    while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+
+    stacks = wait_for_debug_request(
+        kernel_with_debug,
+        "stackTrace",
+        {"threadId": 1}
+    )["body"]["stackFrames"]
+
+    # Get local frame id
+    frame_id = stacks[0]["id"]
+
+    # Copy the variable
+    wait_for_debug_request(
+        kernel_with_debug,
+        "copyToGlobals",
+        {
+            "srcVariableName": local_var_name,
+            "dstVariableName": global_var_name,
+            "srcFrameId": frame_id,
+        },
+    )
+
+    # Get the scopes
+    scopes = wait_for_debug_request(
+        kernel_with_debug,
+        "scopes",
+        {"frameId": frame_id}
+    )["body"]["scopes"]
+
+    # Get the local variable
+    locals_ = wait_for_debug_request(
+        kernel_with_debug,
+        "variables",
+        {
+            "variablesReference": next(filter(lambda s: s["name"] == "Locals", scopes))[
+                "variablesReference"
+            ]
+        },
+    )["body"]["variables"]
+
+    local_var = None
+    for variable in locals_:
+        if local_var_name in variable["evaluateName"]:
+            local_var = variable
+    assert local_var is not None
+
+    # Get the global variable (copy of the local variable)
+    globals_ = wait_for_debug_request(
+        kernel_with_debug,
+        "variables",
+        {
+            "variablesReference": next(filter(lambda s: s["name"] == "Globals", scopes))[
+                "variablesReference"
+            ]
+        },
+    )["body"]["variables"]
+
+    global_var = None
+    for variable in globals_:
+        if global_var_name in variable["evaluateName"]:
+            global_var = variable
+    assert global_var is not None
+
+    # Compare local and global variable
+    assert global_var["value"] == local_var["value"] and global_var["type"] == local_var["type"]

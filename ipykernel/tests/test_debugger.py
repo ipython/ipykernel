@@ -320,11 +320,9 @@ my_test()"""
     while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
         msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
 
-    stacks = wait_for_debug_request(
-        kernel_with_debug,
-        "stackTrace",
-        {"threadId": 1}
-    )["body"]["stackFrames"]
+    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})["body"][
+        "stackFrames"
+    ]
 
     # Get local frame id
     frame_id = stacks[0]["id"]
@@ -341,11 +339,9 @@ my_test()"""
     )
 
     # Get the scopes
-    scopes = wait_for_debug_request(
-        kernel_with_debug,
-        "scopes",
-        {"frameId": frame_id}
-    )["body"]["scopes"]
+    scopes = wait_for_debug_request(kernel_with_debug, "scopes", {"frameId": frame_id})["body"][
+        "scopes"
+    ]
 
     # Get the local variable
     locals_ = wait_for_debug_request(

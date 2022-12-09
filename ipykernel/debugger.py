@@ -321,7 +321,7 @@ class Debugger:
         "inspectVariables",
         "richInspectVariables",
         "modules",
-        "copyToGlobals"
+        "copyToGlobals",
     ]
 
     def __init__(
@@ -683,7 +683,7 @@ class Debugger:
                 "arguments": {
                     "expression": expression,
                     "value": src_var_name,
-                    "frameId": src_frame_id
+                    "frameId": src_frame_id,
                 },
             }
         )

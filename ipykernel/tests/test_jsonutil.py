@@ -6,7 +6,7 @@
 import json
 import numbers
 from binascii import a2b_base64
-from datetime import datetime
+from datetime import datetime, date
 
 import pytest
 from jupyter_client._version import version_info as jupyter_client_version

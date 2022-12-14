@@ -20,7 +20,6 @@ from threading import Thread
 import zmq
 from jupyter_client.localinterfaces import localhost
 
-
 # -----------------------------------------------------------------------------
 # Code
 # -----------------------------------------------------------------------------

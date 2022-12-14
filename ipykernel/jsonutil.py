@@ -157,7 +157,6 @@ def json_clean(obj):  # pragma: no cover
         return out
     if isinstance(obj, datetime) or isinstance(obj, date):
         return obj.strftime(ISO8601)
-    
 
     # we don't understand it, it's probably an unserializable object
     raise ValueError("Can't clean for JSON: %r" % obj)

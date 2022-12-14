@@ -8,7 +8,7 @@ import numbers
 import re
 import types
 from binascii import b2a_base64
-from datetime import datetime, date
+from datetime import date, datetime
 
 from jupyter_client._version import version_info as jupyter_client_version
 

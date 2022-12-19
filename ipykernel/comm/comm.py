@@ -42,7 +42,7 @@ class BaseComm(comm.base_comm.BaseComm):
 
 
 # but for backwards compatibility, we need to inherit from LoggingConfigurable
-class Comm(traitlets.config.LoggingConfigurable, BaseComm):
+class Comm(traitlets.config.LoggingConfigurable):
     """Class for communicating between a Frontend and a Kernel"""
 
     kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)  # type:ignore[assignment]
@@ -69,11 +69,51 @@ class Comm(traitlets.config.LoggingConfigurable, BaseComm):
         return uuid.uuid4().hex
 
     def __init__(self, *args, **kwargs):
-        # Comm takes positional arguments, LoggingConfigurable does not, so we explicitly forward arguments
-        traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
-        # drop arguments not in BaseComm
+        super().__init__(*args, **kwargs)
         kwargs.pop("kernel", None)
-        BaseComm.__init__(self, *args, **kwargs)
+        self._comm = BaseComm(*args, **kwargs)
+
+    def open(self, data=None, metadata=None, buffers=None):
+        """Open the frontend-side version of this comm"""
+        self._comm.open(data=data, metadata=metadata, buffers=buffers)
+
+    def close(self, data=None, metadata=None, buffers=None, deleting=False):
+        """Close the frontend-side version of this comm"""
+        self._comm.close(data=data, metadata=metadata, buffers=buffers, deleting=deleting)
+
+    def send(self, data=None, metadata=None, buffers=None):
+        """Send a message to the frontend-side version of this comm"""
+        self._comm.publish_msg("comm_msg", data=data, metadata=metadata, buffers=buffers)
+
+    # registering callbacks
+
+    def on_close(self, callback):
+        """Register a callback for comm_close
+
+        Will be called with the `data` of the close message.
+
+        Call `on_close(None)` to disable an existing callback.
+        """
+        self._comm.on_close(callback)
+
+    def on_msg(self, callback):
+        """Register a callback for comm_msg
+
+        Will be called with the `data` of any comm_msg messages.
+
+        Call `on_msg(None)` to disable an existing callback.
+        """
+        self._comm.on_msg(callback)
+
+    # handling of incoming messages
+
+    def handle_close(self, msg):
+        """Handle a comm_close message"""
+        self._comm.handle_close(msg)
+
+    def handle_msg(self, msg):
+        """Handle a comm_msg message"""
+        self._comm.handle_close(msg)
 
 
 __all__ = ["Comm"]

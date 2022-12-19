@@ -7,7 +7,6 @@ from typing import List
 
 from jupyter_client.channelsabc import HBChannelABC
 
-
 # -----------------------------------------------------------------------------
 # Channel classes
 # -----------------------------------------------------------------------------

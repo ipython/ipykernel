@@ -6,7 +6,7 @@
 import json
 import numbers
 from binascii import a2b_base64
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 from jupyter_client._version import version_info as jupyter_client_version
@@ -54,6 +54,7 @@ def test():
         ((x for x in range(3)), [0, 1, 2]),
         (iter([1, 2]), [1, 2]),
         (datetime(1991, 7, 3, 12, 00), "1991-07-03T12:00:00.000000"),
+        (date(1991, 7, 3), "1991-07-03T00:00:00.000000"),
         (MyFloat(), 3.14),
         (MyInt(), 389),
     ]

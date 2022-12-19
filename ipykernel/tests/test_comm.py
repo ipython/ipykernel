@@ -1,3 +1,5 @@
+import unittest.mock
+
 from ipykernel.comm import Comm, CommManager
 from ipykernel.ipkernel import IPythonKernel
 
@@ -47,10 +49,12 @@ def test_comm_manager(kernel):
     manager.register_target("fizz", fizz)
 
     kernel.comm_manager = manager
-    comm = Comm()
-    comm.on_msg(on_msg)
-    comm.on_close(on_close)
-    manager.register_comm(comm)
+    with unittest.mock.patch.object(Comm, "publish_msg") as publish_msg:
+        comm = Comm()
+        comm.on_msg(on_msg)
+        comm.on_close(on_close)
+        manager.register_comm(comm)
+        assert publish_msg.call_count == 1
 
     assert manager.get_comm(comm.comm_id) == comm
     assert manager.get_comm('foo') is None

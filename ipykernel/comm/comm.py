@@ -42,7 +42,7 @@ class BaseComm(comm.base_comm.BaseComm):
 
 
 # but for backwards compatibility, we need to inherit from LoggingConfigurable
-class Comm(traitlets.config.LoggingConfigurable, BaseComm):
+class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     """Class for communicating between a Frontend and a Kernel"""
 
     kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)  # type:ignore[assignment]
@@ -68,12 +68,16 @@ class Comm(traitlets.config.LoggingConfigurable, BaseComm):
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
-    def __init__(self, *args, **kwargs):
-        # Comm takes positional arguments, LoggingConfigurable does not, so we explicitly forward arguments
+    def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
+        # Handle differing arguments between base classes.
+        kernel = kwargs.pop('kernel', None)
+        if target_name:
+            kwargs['target_name'] = target_name
+        BaseComm.__init__(
+            self, data=data, metadata=metadata, buffers=buffers, **kwargs
+        )  # type:ignore[call-arg]
+        kwargs['kernel'] = kernel
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
-        # drop arguments not in BaseComm
-        kwargs.pop("kernel", None)
-        BaseComm.__init__(self, *args, **kwargs)
 
 
 __all__ = ["Comm"]

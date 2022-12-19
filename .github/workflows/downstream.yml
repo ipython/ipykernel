@@ -84,6 +84,41 @@ jobs:
           pip install -e ".[test]"
           python test_ipykernel.py
 
+  qtconsole:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          architecture: "x64"
+
+      - name: Install System Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+      - name: Install qtconsole dependencies
+        shell: bash -l {0}
+        run: |
+          cd ${GITHUB_WORKSPACE}/..
+          git clone https://github.com/jupyter/qtconsole.git
+          cd qtconsole
+          ${pythonLocation}/bin/python -m pip install -e ".[test]"
+          ${pythonLocation}/bin/python -m pip install pyqt5
+      - name: Install Jupyter-Client changes
+        shell: bash -l {0}
+        run: ${pythonLocation}/bin/python -m pip install -e .
+
+      - name: Test qtconsole
+        shell: bash -l {0}
+        run: |
+          cd ${GITHUB_WORKSPACE}/../qtconsole
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole
+
   downstream_check: # This job does nothing and is only used for the branch protection
     if: always()
     needs:
@@ -92,6 +127,7 @@ jobs:
       - jupyter_client
       - ipyparallel
       - jupyter_kernel_test
+      - qtconsole
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed

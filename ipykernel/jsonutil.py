@@ -8,7 +8,7 @@ import numbers
 import re
 import types
 from binascii import b2a_base64
-from datetime import datetime
+from datetime import date, datetime
 
 from jupyter_client._version import version_info as jupyter_client_version
 
@@ -155,7 +155,7 @@ def json_clean(obj):  # pragma: no cover
         for k, v in obj.items():
             out[str(k)] = json_clean(v)
         return out
-    if isinstance(obj, datetime):
+    if isinstance(obj, datetime) or isinstance(obj, date):
         return obj.strftime(ISO8601)
 
     # we don't understand it, it's probably an unserializable object

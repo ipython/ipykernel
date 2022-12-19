@@ -41,7 +41,6 @@ except ImportError:
 
 from jupyter_client.session import MAX_BYTES, MAX_ITEMS
 
-
 # -----------------------------------------------------------------------------
 # Serialization Functions
 # -----------------------------------------------------------------------------

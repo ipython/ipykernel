@@ -15,7 +15,7 @@ def test_comm(kernel):
     def on_message(msg):
         msgs.append(msg)
 
-    c.publish_msg("foo")
+    c._comm.publish_msg("foo")
     c.open({})
     c.on_msg(on_message)
     c.on_close(on_close)
@@ -80,7 +80,7 @@ def test_comm_manager(kernel):
     manager.comm_close(None, None, msg)
     assert len(msgs) == 3
 
-    assert comm._closed
+    assert comm._comm._closed
 
 
 def test_comm_in_manager(ipkernel: IPythonKernel) -> None:

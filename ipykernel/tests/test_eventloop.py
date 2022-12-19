@@ -33,6 +33,8 @@ def _get_qt_vers():
                 del os.environ['QT_API']
         except ImportError:
             pass  # that version of Qt isn't available.
+        except RuntimeError:
+            pass  # the version of IPython doesn't know what to do with this Qt version.
 
 
 _get_qt_vers()

@@ -9,7 +9,7 @@ import traitlets
 import traitlets.config
 
 
-class CommManager(traitlets.config.LoggingConfigurable, comm.base_comm.CommManager):
+class CommManager(comm.base_comm.CommManager, traitlets.config.LoggingConfigurable):
 
     kernel = traitlets.Instance("ipykernel.kernelbase.Kernel")
     comms = traitlets.Dict()
@@ -17,5 +17,5 @@ class CommManager(traitlets.config.LoggingConfigurable, comm.base_comm.CommManag
 
     def __init__(self, **kwargs):
         # CommManager doesn't take arguments, so we explicitly forward arguments
-        traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
         comm.base_comm.CommManager.__init__(self)
+        traitlets.config.LoggingConfigurable.__init__(self, **kwargs)

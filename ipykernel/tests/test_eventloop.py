@@ -9,11 +9,33 @@ import time
 import pytest
 import tornado
 
-from ipykernel.eventloops import enable_gui, loop_asyncio, loop_cocoa, loop_tk
+from ipykernel.eventloops import (
+    enable_gui,
+    loop_asyncio,
+    loop_cocoa,
+    loop_tk,
+    set_qt_api_env_from_gui,
+)
 
 from .utils import execute, flush_channels, start_new_kernel
 
 KC = KM = None
+
+guis_avail = []
+
+
+def _get_qt_vers():
+    for gui in ['qt', 'qt6', 'qt5', 'qt4']:
+        try:
+            set_qt_api_env_from_gui(gui)
+            guis_avail.append(gui)
+            if 'QT_API' in os.environ.keys():
+                del os.environ['QT_API']
+        except ImportError:
+            pass  # that version of Qt isn't available.
+
+
+_get_qt_vers()
 
 
 def setup():
@@ -94,3 +116,36 @@ def test_enable_gui(kernel):
 @pytest.mark.skipif(sys.platform != "darwin", reason="MacOS-only")
 def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
+
+
+@pytest.mark.skipif(len(guis_avail) == 0, reason='No viable version of PyQt or PySide installed.')
+def test_qt_enable_gui(kernel):
+    gui = guis_avail[0]
+
+    enable_gui(gui, kernel)
+
+    # This tags the kernel with the gui that was requested:
+    assert kernel.last_qt_version == gui
+
+    # We store the `QApplication` instance in the kernel.
+    assert hasattr(kernel, 'app')
+    # And the `QEventLoop` is added to `app`:`
+    assert hasattr(kernel.app, 'qt_event_loop')
+
+    # Can't start another event loop, even if `gui` is the same.
+    with pytest.raises(RuntimeError):
+        enable_gui(gui, kernel)
+
+    # Turning off the event loop retains `last_qt_version`; now we're stuck importing that forever.
+    enable_gui(None, kernel)
+    assert kernel.last_qt_version == gui
+    assert not hasattr(kernel, 'app')
+
+    if len(guis_avail) > 1:
+        for gui2 in guis_avail[1:]:
+            # Won't work; Qt version is different than the first one.
+            with pytest.raises(ValueError):
+                enable_gui(gui2, kernel)
+
+    # A gui of 'qt' means "latest availble", or in this case, the last one that was used.
+    enable_gui('qt', kernel)

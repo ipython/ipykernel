@@ -433,17 +433,14 @@ def loop_asyncio_exit(kernel):
 #
 # NOTE: if the environment variable is already set, it will be used unchanged, regardless of what
 # the user requested.
-def set_qt_api(gui, kernel):
-    """Sets the `QT_API` environment variable if it isn't already set."""
-    if hasattr(kernel, 'app'):
-        raise RuntimeError('Kernel already running a Qt event loop.')
 
-    if gui != 'qt' and hasattr(kernel, 'last_qt_version'):
-        if kernel.last_qt_version != gui:
-            raise ValueError(
-                'Cannot switch Qt versions for this session; ' f'must use {kernel.last_qt_version}.'
-            )
 
+def set_qt_api_env_from_gui(gui):
+    """
+    Sets the QT_API environment variable by trying to import PyQtx or PySidex.
+
+    If QT_API is already set, ignore the request.
+    """
     qt_api = os.environ.get("QT_API", None)
     if qt_api is not None and gui != 'qt':
         env2gui = {
@@ -506,15 +503,30 @@ def set_qt_api(gui, kernel):
                 f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".'
             )
 
-    # Do the actual import now that the environment variable is set.
+    # Do the actual import now that the environment variable is set to make sure it works.
     try:
-        from IPython.external.qt_for_kernel import QtCore, QtGui
+        from IPython.external.qt_for_kernel import QtCore, QtGui  # noqa
     except ImportError:
         # Clear the environment variable for the next attempt.
         if 'QT_API' in os.environ.keys():
             del os.environ["QT_API"]
         raise
 
+
+def make_qt_app_for_kernel(gui, kernel):
+    """Sets the `QT_API` environment variable if it isn't already set."""
+    if hasattr(kernel, 'app'):
+        raise RuntimeError('Kernel already running a Qt event loop.')
+
+    if gui != 'qt' and hasattr(kernel, 'last_qt_version'):
+        if kernel.last_qt_version != gui:
+            raise ValueError(
+                'Cannot switch Qt versions for this session; ' f'must use {kernel.last_qt_version}.'
+            )
+
+    set_qt_api_env_from_gui(gui)
+    # This import is guaranteed to work now:
+    from IPython.external.qt_for_kernel import QtCore, QtGui
     from IPython.lib.guisupport import get_app_qt4
 
     kernel.app = get_app_qt4([" "])
@@ -548,7 +560,7 @@ def enable_gui(gui, kernel=None):
     else:
         if gui.startswith('qt'):
             # Prepare the kernel here so any exceptions are displayed in the client.
-            set_qt_api(gui, kernel)
+            make_qt_app_for_kernel(gui, kernel)
 
     loop = loop_map[gui]
     if loop and kernel.eventloop is not None and kernel.eventloop is not loop:

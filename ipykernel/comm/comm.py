@@ -49,7 +49,7 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     comm_id = Unicode()
     primary = Bool(True, help="Am I the primary or secondary Comm?")
 
-    target_name = Unicode("")
+    target_name = Unicode("comm")
     target_module = Unicode(
         None,
         allow_none=True,
@@ -71,7 +71,8 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
         # Handle differing arguments between base classes.
         kernel = kwargs.pop('kernel', None)
-        kwargs['target_name'] = target_name
+        if target_name:
+            kwargs['target_name'] = target_name
         BaseComm.__init__(self, data=data, metadata=metadata, buffers=buffers, **kwargs)
         kwargs['kernel'] = kernel
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)

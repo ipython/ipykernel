@@ -42,7 +42,7 @@ class BaseComm(comm.base_comm.BaseComm):
 
 
 # but for backwards compatibility, we need to inherit from LoggingConfigurable
-class Comm(traitlets.config.LoggingConfigurable):
+class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     """Class for communicating between a Frontend and a Kernel"""
 
     kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)
@@ -68,53 +68,15 @@ class Comm(traitlets.config.LoggingConfigurable):
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
-    def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
-        if target_name:
-            kwargs['target_name'] = target_name
-        super().__init__(**kwargs)
-        self._comm = BaseComm(data=data, metadata=metadata, buffers=buffers, **kwargs)
-
-    def open(self, data=None, metadata=None, buffers=None):
-        """Open the frontend-side version of this comm"""
-        self._comm.open(data=data, metadata=metadata, buffers=buffers)
-
-    def close(self, data=None, metadata=None, buffers=None, deleting=False):
-        """Close the frontend-side version of this comm"""
-        self._comm.close(data=data, metadata=metadata, buffers=buffers, deleting=deleting)
-
-    def send(self, data=None, metadata=None, buffers=None):
-        """Send a message to the frontend-side version of this comm"""
-        self._comm.publish_msg("comm_msg", data=data, metadata=metadata, buffers=buffers)
-
-    # registering callbacks
-
-    def on_close(self, callback):
-        """Register a callback for comm_close
-
-        Will be called with the `data` of the close message.
-
-        Call `on_close(None)` to disable an existing callback.
-        """
-        self._comm.on_close(callback)
-
-    def on_msg(self, callback):
-        """Register a callback for comm_msg
-
-        Will be called with the `data` of any comm_msg messages.
-
-        Call `on_msg(None)` to disable an existing callback.
-        """
-        self._comm.on_msg(callback)
-
-    # handling of incoming messages
-
-    def handle_close(self, msg):
-        """Handle a comm_close message"""
-        self._comm.handle_close(msg)
-
-    def handle_msg(self, msg):
-        """Handle a comm_msg message"""
-        self._comm.handle_close(msg)
+    def __init__(self, **kwargs):
+        # Handle differing arguments between base classes.
+        kernel = kwargs.pop('kernel', None)
+        BaseComm.__init__(self, **kwargs)
+        kwargs.pop('data', None)
+        kwargs.pop('metadata', None)
+        kwargs.pop('buffers', None)
+        kwargs['kernel'] = kernel
+        traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
 
 
 __all__ = ["Comm"]

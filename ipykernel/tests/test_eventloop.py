@@ -25,7 +25,10 @@ guis_avail = []
 
 
 def _get_qt_vers():
+    """If any version of Qt is available, this will populate `guis_avail` with 'qt' and 'qtx'. Due
+    to the import mechanism, we can't import multiple versions of Qt in one session."""
     for gui in ['qt', 'qt6', 'qt5', 'qt4']:
+        print(f'Trying {gui}')
         try:
             set_qt_api_env_from_gui(gui)
             guis_avail.append(gui)
@@ -126,9 +129,6 @@ def test_qt_enable_gui(kernel):
 
     enable_gui(gui, kernel)
 
-    # This tags the kernel with the gui that was requested:
-    assert kernel.last_qt_version == gui
-
     # We store the `QApplication` instance in the kernel.
     assert hasattr(kernel, 'app')
     # And the `QEventLoop` is added to `app`:`
@@ -138,16 +138,17 @@ def test_qt_enable_gui(kernel):
     with pytest.raises(RuntimeError):
         enable_gui(gui, kernel)
 
-    # Turning off the event loop retains `last_qt_version`; now we're stuck importing that forever.
+    # Event loop intergration can be turned off.
     enable_gui(None, kernel)
-    assert kernel.last_qt_version == gui
     assert not hasattr(kernel, 'app')
 
-    if len(guis_avail) > 1:
-        for gui2 in guis_avail[1:]:
-            # Won't work; Qt version is different than the first one.
-            with pytest.raises(ValueError):
-                enable_gui(gui2, kernel)
+    # But now we're stuck with this version of Qt for good; can't switch.
+    for not_gui in ['qt6', 'qt5', 'qt4']:
+        if not_gui not in guis_avail:
+            break
 
-    # A gui of 'qt' means "latest availble", or in this case, the last one that was used.
+    with pytest.raises(ImportError):
+        enable_gui(not_gui, kernel)
+
+    # A gui of 'qt' means "best available", or in this case, the last one that was used.
     enable_gui('qt', kernel)

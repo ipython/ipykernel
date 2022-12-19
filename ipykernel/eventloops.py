@@ -442,19 +442,39 @@ def set_qt_api_env_from_gui(gui):
     If QT_API is already set, ignore the request.
     """
     qt_api = os.environ.get("QT_API", None)
+
+    from IPython.external.qt_loaders import (
+        QT_API_PYQT,
+        QT_API_PYQT5,
+        QT_API_PYQT6,
+        QT_API_PYSIDE,
+        QT_API_PYSIDE2,
+        QT_API_PYSIDE6,
+        QT_API_PYQTv1,
+        loaded_api,
+    )
+
+    loaded = loaded_api()
+
+    qt_env2gui = {
+        QT_API_PYSIDE: 'qt4',
+        QT_API_PYQTv1: 'qt4',
+        QT_API_PYQT: 'qt4',
+        QT_API_PYSIDE2: 'qt5',
+        QT_API_PYQT5: 'qt5',
+        QT_API_PYSIDE6: 'qt6',
+        QT_API_PYQT6: 'qt6',
+    }
     if qt_api is not None and gui != 'qt':
-        env2gui = {
-            'pyside': 'qt4',
-            'pyqt': 'qt4',
-            'pyside2': 'qt5',
-            'pyqt5': 'qt5',
-            'pyside6': 'qt6',
-            'pyqt6': 'qt6',
-        }
-        if env2gui[qt_api] != gui:
+        if qt_env2gui[qt_api] != gui:
             print(
                 f'Request for "{gui}" will be ignored because `QT_API` '
                 f'environment variable is set to "{qt_api}"'
+            )
+    elif loaded is not None and gui != 'qt':
+        if qt_env2gui[loaded] != gui:
+            raise ImportError(
+                f'Cannot switch Qt versions for this session; must use {qt_env2gui[loaded]}.'
             )
     else:
         if gui == 'qt4':
@@ -518,12 +538,6 @@ def make_qt_app_for_kernel(gui, kernel):
     if hasattr(kernel, 'app'):
         raise RuntimeError('Kernel already running a Qt event loop.')
 
-    if gui != 'qt' and hasattr(kernel, 'last_qt_version'):
-        if kernel.last_qt_version != gui:
-            raise ValueError(
-                'Cannot switch Qt versions for this session; ' f'must use {kernel.last_qt_version}.'
-            )
-
     set_qt_api_env_from_gui(gui)
     # This import is guaranteed to work now:
     from IPython.external.qt_for_kernel import QtCore, QtGui
@@ -534,10 +548,6 @@ def make_qt_app_for_kernel(gui, kernel):
         kernel.app.setQuitOnLastWindowClosed(False)
 
     kernel.app.qt_event_loop = QtCore.QEventLoop(kernel.app)
-
-    # Due to the import mechanism, we can't change Qt versions once we've chosen one. So we tag the
-    # version so we can check for this and give an error.
-    kernel.last_qt_version = gui
 
 
 def enable_gui(gui, kernel=None):

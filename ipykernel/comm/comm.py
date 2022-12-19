@@ -45,7 +45,7 @@ class BaseComm(comm.base_comm.BaseComm):
 class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     """Class for communicating between a Frontend and a Kernel"""
 
-    kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)
+    kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)  # type:ignore[assignment]
     comm_id = Unicode()
     primary = Bool(True, help="Am I the primary or secondary Comm?")
 

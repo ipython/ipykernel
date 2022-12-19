@@ -68,9 +68,11 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         # Handle differing arguments between base classes.
         kernel = kwargs.pop('kernel', None)
+        if len(args):
+            kwargs['target_name'] = args[0]
         BaseComm.__init__(self, **kwargs)
         kwargs.pop('data', None)
         kwargs.pop('metadata', None)

@@ -73,7 +73,9 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
         kernel = kwargs.pop('kernel', None)
         if target_name:
             kwargs['target_name'] = target_name
-        BaseComm.__init__(self, data=data, metadata=metadata, buffers=buffers, **kwargs)
+        BaseComm.__init__(
+            self, data=data, metadata=metadata, buffers=buffers, **kwargs
+        )  # type:ignore[call-arg]
         kwargs['kernel'] = kernel
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
 

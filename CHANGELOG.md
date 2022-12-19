@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.19.3
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.2...0925d09075280beb23c009ca0d361f73e5402e27))
+
+### Bugs fixed
+
+- format dates as ISO8601 [#1057](https://github.com/ipython/ipykernel/pull/1057) ([@GRcharles](https://github.com/GRcharles))
+- Fix comms and add qtconsole downstream test [#1056](https://github.com/ipython/ipykernel/pull/1056) ([@blink1073](https://github.com/blink1073))
+
+### Maintenance and upkeep improvements
+
+- Fix lint [#1058](https://github.com/ipython/ipykernel/pull/1058) ([@blink1073](https://github.com/blink1073))
+- Fix comms and add qtconsole downstream test [#1056](https://github.com/ipython/ipykernel/pull/1056) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-08&to=2022-12-19&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-12-08..2022-12-19&type=Issues) | [@GRcharles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AGRcharles+updated%3A2022-12-08..2022-12-19&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-12-08..2022-12-19&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.19.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.1...3c125ad5aa27de2ff412d7690de051115f175104))
@@ -15,8 +37,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-08&to=2022-12-08&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-12-08..2022-12-08&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2022-12-08..2022-12-08&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.19.1
 

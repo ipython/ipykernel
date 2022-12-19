@@ -49,7 +49,7 @@ class Comm(traitlets.config.LoggingConfigurable):
     comm_id = Unicode()
     primary = Bool(True, help="Am I the primary or secondary Comm?")
 
-    target_name = Unicode("comm")
+    target_name = Unicode("")
     target_module = Unicode(
         None,
         allow_none=True,
@@ -68,10 +68,11 @@ class Comm(traitlets.config.LoggingConfigurable):
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        kwargs.pop("kernel", None)
-        self._comm = BaseComm(*args, **kwargs)
+    def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
+        if target_name:
+            kwargs['target_name'] = target_name
+        super().__init__(**kwargs)
+        self._comm = BaseComm(data=data, metadata=metadata, buffers=buffers, **kwargs)
 
     def open(self, data=None, metadata=None, buffers=None):
         """Open the frontend-side version of this comm"""

@@ -465,16 +465,17 @@ def set_qt_api_env_from_gui(gui):
         QT_API_PYSIDE6: 'qt6',
         QT_API_PYQT6: 'qt6',
     }
+    if loaded is not None and gui != 'qt':
+        if qt_env2gui[loaded] != gui:
+            raise ImportError(
+                f'Cannot switch Qt versions for this session; must use {qt_env2gui[loaded]}.'
+            )
+
     if qt_api is not None and gui != 'qt':
         if qt_env2gui[qt_api] != gui:
             print(
                 f'Request for "{gui}" will be ignored because `QT_API` '
                 f'environment variable is set to "{qt_api}"'
-            )
-    elif loaded is not None and gui != 'qt':
-        if qt_env2gui[loaded] != gui:
-            raise ImportError(
-                f'Cannot switch Qt versions for this session; must use {qt_env2gui[loaded]}.'
             )
     else:
         if gui == 'qt4':

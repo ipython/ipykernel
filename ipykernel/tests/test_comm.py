@@ -5,14 +5,14 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
 
 
-def test_comm(kernel: Kernel):
+def test_comm(kernel: Kernel) -> None:
     manager = CommManager(kernel=kernel)
     kernel.comm_manager = manager
 
     c = Comm(kernel=kernel, target_name="bar")
     msgs = []
 
-    assert kernel is c.kernel
+    assert kernel is c.kernel  # type:ignore
 
     def on_close(msg):
         msgs.append(msg)
@@ -31,7 +31,7 @@ def test_comm(kernel: Kernel):
     assert c.target_name == "bar"
 
 
-def test_comm_manager(kernel: Kernel):
+def test_comm_manager(kernel: Kernel) -> None:
     manager = CommManager(kernel=kernel)
     msgs = []
 
@@ -51,7 +51,7 @@ def test_comm_manager(kernel: Kernel):
     manager.register_target("foo", foo)
     manager.register_target("fizz", fizz)
 
-    kernel.comm_manager = manager
+    kernel.comm_manager = manager  # type:ignore
     with unittest.mock.patch.object(Comm, "publish_msg") as publish_msg:
         comm = Comm()
         comm.on_msg(on_msg)
@@ -61,7 +61,7 @@ def test_comm_manager(kernel: Kernel):
 
     # make sure that when we don't pass a kernel, the 'default' kernel is taken
     Kernel._instance = kernel
-    assert comm.kernel is kernel
+    assert comm.kernel is kernel  # type:ignore
     Kernel.clear_instance()
 
     assert manager.get_comm(comm.comm_id) == comm

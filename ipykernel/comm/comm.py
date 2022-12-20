@@ -76,7 +76,9 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
         BaseComm.__init__(
             self, data=data, metadata=metadata, buffers=buffers, **kwargs
         )  # type:ignore[call-arg]
-        kwargs['kernel'] = kernel
+        # avoid an explict ``None`` kernel bypassing ``_default_kernel``
+        if kernel is not None:
+            kwargs['kernel'] = kernel
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
 
 

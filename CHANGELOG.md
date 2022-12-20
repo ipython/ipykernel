@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.19.4
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.3...07da48e686b5906525c2a6b8cfc11cd7c3d96a5f))
+
+### Bugs fixed
+
+- Don't pass `None` kernels to logging configurable in `Comm` [#1061](https://github.com/ipython/ipykernel/pull/1061) ([@bollwyvl](https://github.com/bollwyvl))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-19&to=2022-12-20&type=c))
+
+[@bollwyvl](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abollwyvl+updated%3A2022-12-19..2022-12-20&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-12-19..2022-12-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.19.3
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.2...0925d09075280beb23c009ca0d361f73e5402e27))
@@ -21,8 +37,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-08&to=2022-12-19&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-12-08..2022-12-19&type=Issues) | [@GRcharles](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AGRcharles+updated%3A2022-12-08..2022-12-19&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-12-08..2022-12-19&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.19.2
 

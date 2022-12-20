@@ -5,7 +5,7 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
 
 
-def test_comm(kernel):
+def test_comm(kernel: Kernel):
     manager = CommManager(kernel=kernel)
     kernel.comm_manager = manager
 
@@ -31,7 +31,7 @@ def test_comm(kernel):
     assert c.target_name == "bar"
 
 
-def test_comm_manager(kernel):
+def test_comm_manager(kernel: Kernel):
     manager = CommManager(kernel=kernel)
     msgs = []
 

@@ -2,6 +2,7 @@ import unittest.mock
 
 from ipykernel.comm import Comm, CommManager
 from ipykernel.ipkernel import IPythonKernel
+from ipykernel.kernelbase import Kernel
 
 
 def test_comm(kernel):
@@ -10,6 +11,8 @@ def test_comm(kernel):
 
     c = Comm(kernel=kernel, target_name="bar")
     msgs = []
+
+    assert kernel is c.kernel
 
     def on_close(msg):
         msgs.append(msg)
@@ -55,6 +58,11 @@ def test_comm_manager(kernel):
         comm.on_close(on_close)
         manager.register_comm(comm)
         assert publish_msg.call_count == 1
+
+    # make sure that when we don't pass a kernel, the 'default' kernel is taken
+    Kernel._instance = kernel
+    assert comm.kernel is kernel
+    Kernel.clear_instance()
 
     assert manager.get_comm(comm.comm_id) == comm
     assert manager.get_comm('foo') is None

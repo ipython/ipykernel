@@ -70,14 +70,15 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
 
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
         # Handle differing arguments between base classes.
+        had_kernel = 'kernel' in kwargs
         kernel = kwargs.pop('kernel', None)
         if target_name:
             kwargs['target_name'] = target_name
         BaseComm.__init__(
             self, data=data, metadata=metadata, buffers=buffers, **kwargs
         )  # type:ignore[call-arg]
-        # avoid an explict ``None`` kernel bypassing ``_default_kernel``
-        if kernel is not None:
+        # only re-add kernel if explicitly provided
+        if had_kernel:
             kwargs['kernel'] = kernel
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
 

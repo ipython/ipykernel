@@ -7,7 +7,7 @@ from ipykernel.kernelbase import Kernel
 
 def test_comm(kernel: Kernel) -> None:
     manager = CommManager(kernel=kernel)
-    kernel.comm_manager = manager
+    kernel.comm_manager = manager  # type:ignore
 
     c = Comm(kernel=kernel, target_name="bar")
     msgs = []
@@ -60,7 +60,7 @@ def test_comm_manager(kernel: Kernel) -> None:
         assert publish_msg.call_count == 1
 
     # make sure that when we don't pass a kernel, the 'default' kernel is taken
-    Kernel._instance = kernel
+    Kernel._instance = kernel  # type:ignore
     assert comm.kernel is kernel  # type:ignore
     Kernel.clear_instance()
 

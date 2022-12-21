@@ -126,7 +126,9 @@ def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
 
 
-@pytest.mark.skipif(len(qt_guis_avail) == 0, reason='No viable version of PyQt or PySide installed.')
+@pytest.mark.skipif(
+    len(qt_guis_avail) == 0, reason='No viable version of PyQt or PySide installed.'
+)
 def test_qt_enable_gui(kernel):
     gui = qt_guis_avail[0]
 

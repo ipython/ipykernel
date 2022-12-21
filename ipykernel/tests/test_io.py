@@ -5,6 +5,7 @@ import warnings
 
 import pytest
 import zmq
+import zmq.asyncio
 from jupyter_client.session import Session
 
 from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
@@ -13,7 +14,7 @@ from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
 def test_io_api():
     """Test that wrapped stdout has the same API as a normal TextIO object"""
     session = Session()
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     pub = ctx.socket(zmq.PUB)
     thread = IOPubThread(pub)
     thread.start()
@@ -45,35 +46,39 @@ def test_io_api():
 
 def test_io_isatty():
     session = Session()
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     pub = ctx.socket(zmq.PUB)
     thread = IOPubThread(pub)
     thread.start()
 
     stream = OutStream(session, thread, "stdout", isatty=True)
     assert stream.isatty()
+    thread.stop()
+    thread.close()
+    ctx.term()
 
 
 def test_io_thread():
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     pub = ctx.socket(zmq.PUB)
     thread = IOPubThread(pub)
     thread._setup_pipe_in()
-    msg = [thread._pipe_uuid, b"a"]
-    thread._handle_pipe_msg(msg)
+    # msg = [thread._pipe_uuid, b"a"]
+    # thread._handle_pipe_msg(msg)
     ctx1, pipe = thread._setup_pipe_out()
     pipe.close()
-    thread._pipe_in.close()
+    thread._pipe_in1.close()
     thread._check_mp_mode = lambda: MASTER  # type:ignore
     thread._really_send([b"hi"])
     ctx1.destroy()
-    thread.close()
+    thread.stop()
     thread.close()
     thread._really_send(None)
+    ctx.term()
 
 
 def test_background_socket():
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     pub = ctx.socket(zmq.PUB)
     thread = IOPubThread(pub)
     sock = BackgroundSocket(thread)
@@ -84,11 +89,14 @@ def test_background_socket():
         assert thread.socket.linger == 101
     assert sock.io_thread == thread
     sock.send(b"hi")
+    thread.stop()
+    thread.close()
+    ctx.term()
 
 
 def test_outstream():
     session = Session()
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     pub = ctx.socket(zmq.PUB)
     thread = IOPubThread(pub)
     thread.start()
@@ -96,7 +104,9 @@ def test_outstream():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         stream = OutStream(session, pub, "stdout")
+        stream.close()
         stream = OutStream(session, thread, "stdout", pipe=object())
+        stream.close()
 
     stream = OutStream(session, thread, "stdout", isatty=True, echo=io.StringIO())
     with pytest.raises(io.UnsupportedOperation):
@@ -106,3 +116,6 @@ def test_outstream():
     stream.write("hi")
     stream.writelines(["ab", "cd"])
     assert stream.writable()
+    thread.stop()
+    thread.close()
+    # ctx.term()

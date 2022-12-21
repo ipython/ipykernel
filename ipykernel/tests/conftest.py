@@ -73,8 +73,8 @@ class KernelMixin:
     @no_type_check
     async def test_shell_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
-        await self.dispatch_shell(msg_list)
-        self.shell_stream.flush()
+        self.shell_msg_queues.setdefault(None, asyncio.Queue())
+        await self.get_shell_message(msg_list)
         return await self._wait_for_msg()
 
     @no_type_check
@@ -91,10 +91,12 @@ class KernelMixin:
         self._reply = None
         raw_msg = self.session.msg(*args, **kwargs)
         msg = self.session.serialize(raw_msg)
-        return [zmq.Message(m) for m in msg]
+        return msg
+        # return [zmq.Message(m) for m in msg]
 
     async def _wait_for_msg(self):
         while not self._reply:
+            print(f"{self._reply=}")
             await asyncio.sleep(0.1)
         _, msg = self.session.feed_identities(self._reply)
         return self.session.deserialize(msg)

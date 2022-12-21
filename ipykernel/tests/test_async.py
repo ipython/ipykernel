@@ -52,7 +52,7 @@ def test_async_interrupt(asynclib, request):
     stream = KC.get_iopub_msg(timeout=TIMEOUT)
     # wait for the stream output to be sure kernel is in the async block
     validate_message(stream, "stream")
-    assert stream["content"]["text"] == "begin\n"
+    assert stream["content"]["text"].startswith("begin")
 
     KM.interrupt_kernel()
     reply = KC.get_shell_msg()["content"]

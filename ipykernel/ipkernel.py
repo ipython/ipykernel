@@ -7,14 +7,12 @@ import signal
 import sys
 import threading
 import typing as t
-from contextlib import contextmanager
-from functools import partial
 
 import comm
+import zmq.asyncio
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
-from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm
 from .comm.manager import CommManager
@@ -22,7 +20,7 @@ from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
 from .kernelbase import Kernel as KernelBase
-from .kernelbase import _accepts_cell_id
+from .kernelbase import _accepts_arg
 from .zmqshell import ZMQInteractiveShell
 
 try:
@@ -39,6 +37,11 @@ except ImportError:
     _use_experimental_60_completion = False
 
 
+def DEBUG(msg):
+    with open("debug.log", "a") as f:
+        f.write(f"{msg}\n")
+
+
 _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
 
@@ -50,6 +53,10 @@ def _create_comm(*args, **kwargs):
 # there can only be one comm manager in a ipykernel process
 _comm_lock = threading.Lock()
 _comm_manager: t.Optional[CommManager] = None
+
+
+def _sigint_handler(*args):
+    raise KeyboardInterrupt
 
 
 def _get_comm_manager(*args, **kwargs):
@@ -77,7 +84,9 @@ class IPythonKernel(KernelBase):
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
     ).tag(config=True)
 
-    debugpy_stream = Instance(ZMQStream, allow_none=True) if _is_debugpy_available else None
+    debugpy_socket = (
+        Instance(zmq.asyncio.Socket, allow_none=True) if _is_debugpy_available else None
+    )
 
     user_module = Any()
 
@@ -109,7 +118,7 @@ class IPythonKernel(KernelBase):
         if _is_debugpy_available:
             self.debugger = Debugger(
                 self.log,
-                self.debugpy_stream,
+                self.debugpy_socket,
                 self._publish_debug_event,
                 self.debug_shell_socket,
                 self.session,
@@ -191,12 +200,18 @@ class IPythonKernel(KernelBase):
         "file_extension": ".py",
     }
 
-    def dispatch_debugpy(self, msg):
+    async def process_debugpy(self):
+        asyncio.create_task(self.dispatch_debugpy())
+        asyncio.create_task(self.poll_stopped_queue())
+
+    async def dispatch_debugpy(self):
         if _is_debugpy_available:
-            # The first frame is the socket id, we can drop it
-            frame = msg[1].bytes.decode("utf-8")
-            self.log.debug("Debugpy received: %s", frame)
-            self.debugger.tcp_client.receive_dap_frame(frame)
+            while True:
+                msg = await self.debugpy_socket.recv_multipart()
+                # The first frame is the socket id, we can drop it
+                frame = msg[1].decode("utf-8")
+                self.log.debug("Debugpy received: %s", frame)
+                self.debugger.tcp_client.receive_dap_frame(frame)
 
     @property
     def banner(self):
@@ -210,15 +225,12 @@ class IPythonKernel(KernelBase):
     def start(self):
         """Start the kernel."""
         self.shell.exit_now = False
-        if self.debugpy_stream is None:
-            self.log.warning("debugpy_stream undefined, debugging will not be enabled")
-        else:
-            self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
+        if self.debugpy_socket is None:
+            self.log.warning("debugpy_socket undefined, debugging will not be enabled")
         super().start()
-        if self.debugpy_stream:
-            asyncio.run_coroutine_threadsafe(
-                self.poll_stopped_queue(), self.control_thread.io_loop.asyncio_loop
-            )
+        if self.debugpy_socket:
+            # asyncio.run_coroutine_threadsafe(self.process_debugpy(), self.control_thread.loop)
+            self.control_thread.create_task(self.process_debugpy())
 
     def set_parent(self, ident, parent, channel="shell"):
         """Overridden from parent to tell the display hook and output streams
@@ -286,50 +298,6 @@ class IPythonKernel(KernelBase):
         # execution counter.
         pass
 
-    @contextmanager
-    def _cancel_on_sigint(self, future):
-        """ContextManager for capturing SIGINT and cancelling a future
-
-        SIGINT raises in the event loop when running async code,
-        but we want it to halt a coroutine.
-
-        Ideally, it would raise KeyboardInterrupt,
-        but this turns it into a CancelledError.
-        At least it gets a decent traceback to the user.
-        """
-        sigint_future: asyncio.Future[int] = asyncio.Future()
-
-        # whichever future finishes first,
-        # cancel the other one
-        def cancel_unless_done(f, _ignored):
-            if f.cancelled() or f.done():
-                return
-            f.cancel()
-
-        # when sigint finishes,
-        # abort the coroutine with CancelledError
-        sigint_future.add_done_callback(partial(cancel_unless_done, future))
-        # when the main future finishes,
-        # stop watching for SIGINT events
-        future.add_done_callback(partial(cancel_unless_done, sigint_future))
-
-        def handle_sigint(*args):
-            def set_sigint_result():
-                if sigint_future.cancelled() or sigint_future.done():
-                    return
-                sigint_future.set_result(1)
-
-            # use add_callback for thread safety
-            self.io_loop.add_callback(set_sigint_result)
-
-        # set the custom sigint hander during this context
-        save_sigint = signal.signal(signal.SIGINT, handle_sigint)
-        try:
-            yield
-        finally:
-            # restore the previous sigint handler
-            signal.signal(signal.SIGINT, save_sigint)
-
     async def do_execute(
         self,
         code,
@@ -339,6 +307,7 @@ class IPythonKernel(KernelBase):
         allow_stdin=False,
         *,
         cell_id=None,
+        shell_id=None,
     ):
         """Handle code execution."""
         shell = self.shell  # we'll need this a lot here
@@ -349,7 +318,7 @@ class IPythonKernel(KernelBase):
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
-            with_cell_id = _accepts_cell_id(run_cell)
+            with_cell_id = _accepts_arg(run_cell, "cell_id")
         else:
             should_run_async = lambda cell: False  # noqa
             # older IPython,
@@ -358,7 +327,8 @@ class IPythonKernel(KernelBase):
             async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
 
-            with_cell_id = _accepts_cell_id(shell.run_cell)
+            with_cell_id = _accepts_arg(shell.run_cell, "cell_id")
+
         try:
 
             # default case: runner is asyncio and asyncio is already running
@@ -371,6 +341,13 @@ class IPythonKernel(KernelBase):
                 transformed_cell = code
                 preprocessing_exc_tuple = sys.exc_info()
 
+            kwargs = dict(
+                store_history=store_history,
+                silent=silent,
+            )
+            if with_cell_id:
+                kwargs.update(cell_id=cell_id)
+
             if (
                 _asyncio_runner
                 and shell.loop_runner is _asyncio_runner
@@ -381,47 +358,54 @@ class IPythonKernel(KernelBase):
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
             ):
-                if with_cell_id:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                        cell_id=cell_id,
-                    )
+                kwargs.update(
+                    transformed_cell=transformed_cell,
+                    preprocessing_exc_tuple=preprocessing_exc_tuple,
+                )
+                coro = run_cell(code, **kwargs)
+
+                async def run():
+                    res = await coro
+                    if self.shell_msg_thread and shell_id is not None:
+                        self.shells[shell_id]["interrupt"].sync_q.put(False)
+                    else:
+                        self.shells[shell_id]["interrupt"].put_nowait(False)
+                    return res
+
+                task = asyncio.create_task(run())
+
+                sigint_prev_handler = signal.signal(signal.SIGINT, _sigint_handler)
+
+                if self.shell_msg_thread and shell_id is not None:
+                    interrupt = await self.shells[shell_id]["interrupt"].async_q.get()
                 else:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                    )
+                    interrupt = await self.shells[shell_id]["interrupt"].get()
 
-                coro_future = asyncio.ensure_future(coro)
-
-                with self._cancel_on_sigint(coro_future):
+                if interrupt:
+                    task.cancel()
                     res = None
-                    try:
-                        res = await coro_future
-                    finally:
-                        shell.events.trigger("post_execute")
-                        if not silent:
-                            shell.events.trigger("post_run_cell", res)
+                else:
+                    res = await task
+
+                signal.signal(signal.SIGINT, sigint_prev_handler)
+
+                shell.events.trigger("post_execute")
+                if not silent:
+                    shell.events.trigger("post_run_cell", res)
+
             else:
                 # runner isn't already running,
                 # make synchronous call,
                 # letting shell dispatch to loop runners
-                if with_cell_id:
-                    res = shell.run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        cell_id=cell_id,
-                    )
-                else:
-                    res = shell.run_cell(code, store_history=store_history, silent=silent)
+
+                if shell_id is None:
+                    sigint_prev_handler = signal.signal(signal.SIGINT, _sigint_handler)
+                try:
+                    res = shell.run_cell(code, **kwargs)
+                finally:
+                    if shell_id is None:
+                        signal.signal(signal.SIGINT, sigint_prev_handler)
+
         finally:
             self._restore_input()
 

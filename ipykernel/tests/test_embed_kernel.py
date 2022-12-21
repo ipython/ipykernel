@@ -195,6 +195,7 @@ def test_embed_kernel_reentrant():
             # exit from embed_kernel
             client.execute("get_ipython().exit_now = True")
             msg = client.get_shell_msg(timeout=TIMEOUT)
+            print(f"{msg=}")
             time.sleep(0.2)
 
 
@@ -206,7 +207,7 @@ def test_embed_kernel_func():
     def trigger_stop():
         time.sleep(1)
         app = IPKernelApp.instance()
-        app.io_loop.add_callback(app.io_loop.stop)
+        app.stop()
         IPKernelApp.clear_instance()
 
     thread = threading.Thread(target=trigger_stop)

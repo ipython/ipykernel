@@ -3,6 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 import atexit
 import errno
 import logging
@@ -14,7 +15,9 @@ from functools import partial
 from io import FileIO, TextIOWrapper
 from logging import StreamHandler
 
+import janus
 import zmq
+import zmq.asyncio
 from IPython.core.application import (  # type:ignore[attr-defined]
     BaseIPythonApplication,
     base_aliases,
@@ -27,7 +30,6 @@ from jupyter_client import write_connection_file
 from jupyter_client.connect import ConnectionFileMixin
 from jupyter_client.session import Session, session_aliases, session_flags
 from jupyter_core.paths import jupyter_runtime_dir
-from tornado import ioloop
 from traitlets.traitlets import (
     Any,
     Bool,
@@ -41,7 +43,6 @@ from traitlets.traitlets import (
 )
 from traitlets.utils import filefind
 from traitlets.utils.importstring import import_item
-from zmq.eventloop.zmqstream import ZMQStream
 
 from .control import ControlThread
 from .heartbeat import Heartbeat
@@ -50,7 +51,14 @@ from .heartbeat import Heartbeat
 from .iostream import IOPubThread
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
+from .shell import ShellThread
 from .zmqshell import ZMQInteractiveShell
+
+
+def DEBUG(msg):
+    with open("debug.log", "a") as f:
+        f.write(f"{msg}\n")
+
 
 # -----------------------------------------------------------------------------
 # Flags and Aliases
@@ -132,6 +140,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     heartbeat = Instance(Heartbeat, allow_none=True)
 
     context = Any()
+    acontext = Any()
     shell_socket = Any()
     control_socket = Any()
     debugpy_socket = Any()
@@ -139,6 +148,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     stdin_socket = Any()
     iopub_socket = Any()
     iopub_thread = Any()
+    shell_msg_thread = Any()
     control_thread = Any()
 
     _ports = Dict()
@@ -308,10 +318,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Create a context, a session, and the kernel sockets."""
         self.log.info("Starting the kernel at pid: %i", os.getpid())
         assert self.context is None, "init_sockets cannot be called twice!"
+        assert self.acontext is None, "init_sockets cannot be called twice!"
         self.context = context = zmq.Context()
+        self.acontext = acontext = zmq.asyncio.Context()
         atexit.register(self.close)
 
-        self.shell_socket = context.socket(zmq.ROUTER)
+        self.shell_socket = acontext.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
         self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
@@ -327,8 +339,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # see ipython/ipykernel#270 and zeromq/libzmq#2892
             self.shell_socket.router_handover = self.stdin_socket.router_handover = 1
 
-        self.init_control(context)
-        self.init_iopub(context)
+        self.init_control(acontext)
+        self.init_iopub(acontext)
 
     def init_control(self, context):
         """Initialize the control channel."""
@@ -351,11 +363,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # see ipython/ipykernel#270 and zeromq/libzmq#2892
             self.control_socket.router_handover = 1
 
-        self.control_thread = ControlThread(daemon=True)
+        self.shell_msg_thread = ShellThread("messages")
+        self.control_thread = ControlThread()
 
-    def init_iopub(self, context):
+    def init_iopub(self, acontext):
         """Initialize the iopub channel."""
-        self.iopub_socket = context.socket(zmq.PUB)
+        self.iopub_socket = acontext.socket(zmq.PUB)
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
         self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
@@ -387,6 +400,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.log.debug("Closing iopub channel")
             self.iopub_thread.stop()
             self.iopub_thread.close()
+        if self.shell_msg_thread and self.shell_msg_thread.is_alive():
+            self.log.debug("Closing shell message thread")
+            self.shell_msg_thread.stop()
+            self.shell_msg_thread.join()
         if self.control_thread and self.control_thread.is_alive():
             self.log.debug("Closing control thread")
             self.control_thread.stop()
@@ -404,6 +421,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                 socket.close()
         self.log.debug("Terminating zmq context")
         self.context.term()
+        self.acontext.term()
         self.log.debug("Terminated zmq context")
 
     def log_connection_info(self):
@@ -531,19 +549,18 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def init_kernel(self):
         """Create the Kernel object itself"""
-        shell_stream = ZMQStream(self.shell_socket)
-        control_stream = ZMQStream(self.control_socket, self.control_thread.io_loop)
-        debugpy_stream = ZMQStream(self.debugpy_socket, self.control_thread.io_loop)
+        self.shell_msg_thread.start()
         self.control_thread.start()
         kernel_factory = self.kernel_class.instance
 
         kernel = kernel_factory(
             parent=self,
             session=self.session,
-            control_stream=control_stream,
-            debugpy_stream=debugpy_stream,
+            control_socket=self.control_socket,
+            debugpy_socket=self.debugpy_socket,
             debug_shell_socket=self.debug_shell_socket,
-            shell_stream=shell_stream,
+            shell_socket=self.shell_socket,
+            shell_msg_thread=self.shell_msg_thread,
             control_thread=self.control_thread,
             iopub_thread=self.iopub_thread,
             iopub_socket=self.iopub_socket,
@@ -665,6 +682,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     @catch_config_error
     def initialize(self, argv=None):
         """Initialize the application."""
+        self._stopped = False
         self._init_asyncio_patch()
         super().initialize(argv)
         if self.subapp is not None:
@@ -704,26 +722,50 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def start(self):
         """Start the application."""
+        self.io_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.io_loop)
+        self.io_loop.run_until_complete(self._async_start())
+        while True:
+            try:
+                self.io_loop.run_until_complete(self._wait_for_stop())
+            except KeyboardInterrupt:
+                # kernel interrupt, notify whatever is being executed
+                for shell_id, v in self.kernel.shells.items():
+                    if self.kernel.shell_msg_thread and shell_id is not None:
+                        v["interrupt"].sync_q.put(True)
+                    else:
+                        v["interrupt"].put_nowait(True)
+            else:
+                # kernel shutdown
+                return
+
+    def stop(self):
+        """Stop the kernel, thread-safe."""
+        try:
+            self._stop_queue.sync_q.put(None)
+        except AttributeError:
+            self._stopped = True
+
+    async def _async_start(self):
+        self._stop_queue = janus.Queue()
+        self.kernel._stop_queue = self._stop_queue
         if self.subapp is not None:
             return self.subapp.start()
         if self.poller is not None:
             self.poller.start()
         self.kernel.start()
-        self.io_loop = ioloop.IOLoop.current()
         if self.trio_loop:
             from ipykernel.trio_runner import TrioRunner
 
             tr = TrioRunner()
-            tr.initialize(self.kernel, self.io_loop)
+            tr.initialize(self.kernel, self.io_loop)  # FIXME
             try:
                 tr.run()
             except KeyboardInterrupt:
                 pass
-        else:
-            try:
-                self.io_loop.start()
-            except KeyboardInterrupt:
-                pass
+
+    async def _wait_for_stop(self):
+        await self._stop_queue.async_q.get()
 
 
 launch_new_instance = IPKernelApp.launch_instance

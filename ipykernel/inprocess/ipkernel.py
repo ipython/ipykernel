@@ -51,7 +51,7 @@ class InProcessKernel(IPythonKernel):
     _underlying_iopub_socket = Instance(DummySocket, ())
     iopub_thread: IOPubThread = Instance(IOPubThread)  # type:ignore[assignment]
 
-    shell_stream = Instance(DummySocket, ())
+    # shell_stream = Instance(DummySocket, ())
 
     @default("iopub_thread")
     def _default_iopub_thread(self):

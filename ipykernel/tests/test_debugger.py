@@ -92,6 +92,7 @@ def test_attach_debug(kernel_with_debug):
     reply = wait_for_debug_request(
         kernel_with_debug, "evaluate", {"expression": "'a' + 'b'", "context": "repl"}
     )
+    print(reply)
     assert reply["success"]
     assert reply["body"]["result"] == ""
 

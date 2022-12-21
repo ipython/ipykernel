@@ -21,7 +21,7 @@ from .utils import execute, flush_channels, start_new_kernel
 
 KC = KM = None
 
-guis_avail = []
+qt_guis_avail = []
 
 
 def _get_qt_vers():
@@ -31,7 +31,7 @@ def _get_qt_vers():
         print(f'Trying {gui}')
         try:
             set_qt_api_env_from_gui(gui)
-            guis_avail.append(gui)
+            qt_guis_avail.append(gui)
             if 'QT_API' in os.environ.keys():
                 del os.environ['QT_API']
         except ImportError:
@@ -126,9 +126,9 @@ def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
 
 
-@pytest.mark.skipif(len(guis_avail) == 0, reason='No viable version of PyQt or PySide installed.')
+@pytest.mark.skipif(len(qt_guis_avail) == 0, reason='No viable version of PyQt or PySide installed.')
 def test_qt_enable_gui(kernel):
-    gui = guis_avail[0]
+    gui = qt_guis_avail[0]
 
     enable_gui(gui, kernel)
 
@@ -147,7 +147,7 @@ def test_qt_enable_gui(kernel):
 
     # But now we're stuck with this version of Qt for good; can't switch.
     for not_gui in ['qt6', 'qt5', 'qt4']:
-        if not_gui not in guis_avail:
+        if not_gui not in qt_guis_avail:
             break
 
     with pytest.raises(ImportError):

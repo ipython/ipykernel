@@ -19,9 +19,6 @@ from ipykernel.eventloops import (
 
 from .utils import execute, flush_channels, start_new_kernel
 
-if os.name == 'nt':
-    pytest.skip("skipping eventloop tests on Windows", allow_module_level=True)
-
 KC = KM = None
 
 guis_avail = []
@@ -88,6 +85,7 @@ def test_asyncio_interrupt():
 windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")
 
 
+@windows_skip
 @pytest.mark.skipif(sys.platform == "darwin", reason="hangs on macos")
 def test_tk_loop(kernel):
     def do_thing():
@@ -108,6 +106,7 @@ def test_tk_loop(kernel):
     t.join()
 
 
+@windows_skip
 def test_asyncio_loop(kernel):
     def do_thing():
         loop.call_soon(loop.stop)
@@ -117,6 +116,7 @@ def test_asyncio_loop(kernel):
     loop_asyncio(kernel)
 
 
+@windows_skip
 def test_enable_gui(kernel):
     enable_gui("tk", kernel)
 

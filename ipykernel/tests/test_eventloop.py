@@ -19,6 +19,9 @@ from ipykernel.eventloops import (
 
 from .utils import execute, flush_channels, start_new_kernel
 
+if os.name == 'nt':
+    pytest.skip("skipping eventloop tests on Windows", allow_module_level=True)
+
 KC = KM = None
 
 guis_avail = []

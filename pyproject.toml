@@ -45,7 +45,7 @@ docs = [
   "myst_parser",
   "pydata_sphinx_theme",
   "sphinxcontrib_github_alt",
-  "sphinxcontrib-spellcheck"
+  "sphinxcontrib-spelling"
 ]
 test = [
     "pytest>=7.0",

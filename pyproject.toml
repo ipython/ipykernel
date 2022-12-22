@@ -261,3 +261,6 @@ ignore-nested-functions=true
 ignore-nested-classes=true
 fail-under=95
 exclude = ["docs", "*/tests"]
+
+[tool.check-wheel-contents]
+toplevel = ["ipykernel/", "ipykernel_launcher.py"]

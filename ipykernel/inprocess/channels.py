@@ -18,17 +18,21 @@ class InProcessChannel:
     proxy_methods: List[object] = []
 
     def __init__(self, client=None):
+        """Initialze the channel."""
         super().__init__()
         self.client = client
         self._is_alive = False
 
     def is_alive(self):
+        """Test if the channel is alive."""
         return self._is_alive
 
     def start(self):
+        """Start the channel."""
         self._is_alive = True
 
     def stop(self):
+        """Stop the channel."""
         self._is_alive = False
 
     def call_handlers(self, msg):
@@ -39,6 +43,7 @@ class InProcessChannel:
         raise NotImplementedError("call_handlers must be defined in a subclass.")
 
     def flush(self, timeout=1.0):
+        """Flush the channel."""
         pass
 
     def call_handlers_later(self, *args, **kwds):
@@ -70,27 +75,34 @@ class InProcessHBChannel:
     time_to_dead = 3.0
 
     def __init__(self, client=None):
+        """Initialize the channel."""
         super().__init__()
         self.client = client
         self._is_alive = False
         self._pause = True
 
     def is_alive(self):
+        """Test if the channel is alive."""
         return self._is_alive
 
     def start(self):
+        """Start the channel."""
         self._is_alive = True
 
     def stop(self):
+        """Stop the channel."""
         self._is_alive = False
 
     def pause(self):
+        """Pause the channel."""
         self._pause = True
 
     def unpause(self):
+        """Unpause the channel."""
         self._pause = False
 
     def is_beating(self):
+        """Test if the channel is beating."""
         return not self._pause
 
 

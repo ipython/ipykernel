@@ -36,6 +36,7 @@ class MyFrame(wx.Frame, InternalIPKernel):
     """
 
     def __init__(self, parent, title):
+        """Initialize the frame."""
         wx.Frame.__init__(self, parent, -1, title, pos=(150, 150), size=(350, 285))
 
         # Create the menubar
@@ -99,7 +100,10 @@ class MyFrame(wx.Frame, InternalIPKernel):
 
 
 class MyApp(wx.App):
+    """A custom wx app."""
+
     def OnInit(self):
+        """Initialize app."""
         frame = MyFrame(None, "Simple wxPython App")
         self.SetTopWindow(frame)
         frame.Show(True)

@@ -1,3 +1,4 @@
+"""A parent poller for unix."""
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
@@ -22,10 +23,12 @@ class ParentPollerUnix(Thread):
     """
 
     def __init__(self):
+        """Initialize the poller."""
         super().__init__()
         self.daemon = True
 
     def run(self):
+        """Run the poller."""
         # We cannot use os.waitpid because it works only for child processes.
         from errno import EINTR
 

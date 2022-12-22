@@ -118,6 +118,8 @@ def use_cloudpickle():
 
 
 class CannedObject:
+    """A canned object."""
+
     def __init__(self, obj, keys=None, hook=None):
         """can an object for safe pickling
 
@@ -145,6 +147,7 @@ class CannedObject:
         self.buffers = []
 
     def get_object(self, g=None):
+        """Get an object."""
         if g is None:
             g = {}
         obj = self.obj
@@ -161,15 +164,18 @@ class Reference(CannedObject):
     """object for wrapping a remote reference by name."""
 
     def __init__(self, name):
+        """Initialize the reference."""
         if not isinstance(name, str):
             raise TypeError("illegal name: %r" % name)
         self.name = name
         self.buffers = []
 
     def __repr__(self):
+        """Get the string repr of the reference."""
         return "<Reference: %r>" % self.name
 
     def get_object(self, g=None):
+        """Get an object in the reference."""
         if g is None:
             g = {}
 
@@ -180,19 +186,25 @@ class CannedCell(CannedObject):
     """Can a closure cell"""
 
     def __init__(self, cell):
+        """Initialize the canned cell."""
         self.cell_contents = can(cell.cell_contents)
 
     def get_object(self, g=None):
+        """Get an object in the cell."""
         cell_contents = uncan(self.cell_contents, g)
 
         def inner():
+            """Inner function."""
             return cell_contents
 
         return inner.__closure__[0]  # type:ignore[index]
 
 
 class CannedFunction(CannedObject):
+    """Can a function."""
+
     def __init__(self, f):
+        """Initialize the can"""
         self._check_type(f)
         self.code = f.__code__
         self.defaults: typing.Optional[typing.List[typing.Any]]
@@ -216,6 +228,7 @@ class CannedFunction(CannedObject):
         assert isinstance(obj, FunctionType), "Not a function type"
 
     def get_object(self, g=None):
+        """Get an object out of the can."""
         # try to load function back into its module:
         if not self.module.startswith("__"):
             __import__(self.module)
@@ -236,7 +249,10 @@ class CannedFunction(CannedObject):
 
 
 class CannedClass(CannedObject):
+    """A canned class object."""
+
     def __init__(self, cls):
+        """Initialize the can."""
         self._check_type(cls)
         self.name = cls.__name__
         self.old_style = not isinstance(cls, type)
@@ -256,12 +272,16 @@ class CannedClass(CannedObject):
         assert isinstance(obj, class_type), "Not a class type"
 
     def get_object(self, g=None):
+        """Get an object from the can."""
         parents = tuple(uncan(p, g) for p in self.parents)
         return type(self.name, parents, uncan_dict(self._canned_dict, g=g))
 
 
 class CannedArray(CannedObject):
+    """A canned numpy array."""
+
     def __init__(self, obj):
+        """Initialize the can."""
         from numpy import ascontiguousarray
 
         self.shape = obj.shape
@@ -283,6 +303,7 @@ class CannedArray(CannedObject):
             self.buffers = [buffer(obj)]
 
     def get_object(self, g=None):
+        """Get the object."""
         from numpy import frombuffer
 
         data = self.buffers[0]
@@ -294,6 +315,8 @@ class CannedArray(CannedObject):
 
 
 class CannedBytes(CannedObject):
+    """A canned bytes object."""
+
     @staticmethod
     def wrap(buf: typing.Union[memoryview, bytes, typing.SupportsBytes]) -> bytes:
         """Cast a buffer or memoryview object to bytes"""
@@ -304,18 +327,24 @@ class CannedBytes(CannedObject):
         return buf
 
     def __init__(self, obj):
+        """Initialize the can."""
         self.buffers = [obj]
 
     def get_object(self, g=None):
+        """Get the canned object."""
         data = self.buffers[0]
         return self.wrap(data)
 
 
 class CannedBuffer(CannedBytes):
+    """A canned buffer."""
+
     wrap = buffer  # type:ignore[assignment]
 
 
 class CannedMemoryView(CannedBytes):
+    """A canned memory view."""
+
     wrap = memoryview  # type:ignore[assignment]
 
 
@@ -377,6 +406,7 @@ def can(obj):
 
 
 def can_class(obj):
+    """Can a class object."""
     if isinstance(obj, class_type) and obj.__module__ == "__main__":
         return CannedClass(obj)
     else:
@@ -427,6 +457,7 @@ def uncan(obj, g=None):
 
 
 def uncan_dict(obj, g=None):
+    """Uncan a dict object."""
     if istype(obj, dict):
         newobj = {}
         for k, v in obj.items():
@@ -437,6 +468,7 @@ def uncan_dict(obj, g=None):
 
 
 def uncan_sequence(obj, g=None):
+    """Uncan a sequence."""
     if istype(obj, sequence_types):
         t = type(obj)
         return t([uncan(i, g) for i in obj])

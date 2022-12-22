@@ -68,6 +68,7 @@ def _accepts_cell_id(meth):
 
 
 class Kernel(SingletonConfigurable):
+    """The base kernel class."""
 
     # ---------------------------------------------------------------------------
     # Kernel interface
@@ -259,6 +260,7 @@ class Kernel(SingletonConfigurable):
     ]
 
     def __init__(self, **kwargs):
+        """Initialize the kernel."""
         super().__init__(**kwargs)
         # Build dict of handlers for message types
         self.shell_handlers = {}
@@ -769,6 +771,7 @@ class Kernel(SingletonConfigurable):
         raise NotImplementedError
 
     async def complete_request(self, stream, ident, parent):
+        """Handle a completion request."""
         content = parent["content"]
         code = content["code"]
         cursor_pos = content["cursor_pos"]
@@ -791,6 +794,7 @@ class Kernel(SingletonConfigurable):
         }
 
     async def inspect_request(self, stream, ident, parent):
+        """Handle an inspect request."""
         content = parent["content"]
 
         reply_content = self.do_inspect(
@@ -812,6 +816,7 @@ class Kernel(SingletonConfigurable):
         return {"status": "ok", "data": {}, "metadata": {}, "found": False}
 
     async def history_request(self, stream, ident, parent):
+        """Handle a history request."""
         content = parent["content"]
 
         reply_content = self.do_history(**content)
@@ -838,6 +843,7 @@ class Kernel(SingletonConfigurable):
         return {"status": "ok", "history": []}
 
     async def connect_request(self, stream, ident, parent):
+        """Handle a connect request."""
         if self._recorded_ports is not None:
             content = self._recorded_ports.copy()
         else:
@@ -858,12 +864,14 @@ class Kernel(SingletonConfigurable):
         }
 
     async def kernel_info_request(self, stream, ident, parent):
+        """Handle a kernel info request."""
         content = {"status": "ok"}
         content.update(self.kernel_info)
         msg = self.session.send(stream, "kernel_info_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
     async def comm_info_request(self, stream, ident, parent):
+        """Handle a comm info request."""
         content = parent["content"]
         target_name = content.get("target_name", None)
 
@@ -900,12 +908,14 @@ class Kernel(SingletonConfigurable):
                 pass
 
     async def interrupt_request(self, stream, ident, parent):
+        """Handle an interrupt request."""
         self._send_interupt_children()
         content = parent["content"]
         self.session.send(stream, "interrupt_reply", content, parent, ident=ident)
         return
 
     async def shutdown_request(self, stream, ident, parent):
+        """Handle a shutdown request."""
         content = self.do_shutdown(parent["content"]["restart"])
         if inspect.isawaitable(content):
             content = await content
@@ -930,6 +940,7 @@ class Kernel(SingletonConfigurable):
         return {"status": "ok", "restart": restart}
 
     async def is_complete_request(self, stream, ident, parent):
+        """Handle an is_complete request."""
         content = parent["content"]
         code = content["code"]
 
@@ -945,6 +956,7 @@ class Kernel(SingletonConfigurable):
         return {"status": "unknown"}
 
     async def debug_request(self, stream, ident, parent):
+        """Handle a debug request."""
         content = parent["content"]
         reply_content = self.do_debug_request(content)
         if inspect.isawaitable(reply_content):
@@ -954,6 +966,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", reply_msg)
 
     def get_process_metric_value(self, process, name, attribute=None):
+        """Get the process metric value."""
         try:
             metric_value = getattr(process, name)()
             if attribute is not None:  # ... a named tuple
@@ -966,6 +979,7 @@ class Kernel(SingletonConfigurable):
             return None
 
     async def usage_request(self, stream, ident, parent):
+        """Handle a usage request."""
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
         current_process = psutil.Process()
         all_processes = [current_process] + current_process.children(recursive=True)
@@ -1005,6 +1019,7 @@ class Kernel(SingletonConfigurable):
     # ---------------------------------------------------------------------------
 
     async def apply_request(self, stream, ident, parent):  # pragma: no cover
+        """Handle an apply request."""
         self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
         try:
             content = parent["content"]

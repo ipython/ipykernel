@@ -36,6 +36,14 @@ extensions = [
     "sphinxcontrib_github_alt",
 ]
 
+try:
+    import enchant  # type:ignore  # noqa
+
+    extensions += ["sphinxcontrib.spelling"]
+except ImportError:
+    pass
+
+
 github_project_url = "https://github.com/ipython/ipykernel"
 
 # Add any paths that contain templates here, relative to this directory.

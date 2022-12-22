@@ -83,6 +83,7 @@ def register_integration(*toolkitnames):
     """
 
     def decorator(func):
+        """Integration registration decorator."""
         for name in toolkitnames:
             loop_map[name] = func
 
@@ -221,6 +222,7 @@ def loop_wx(kernel):
 
 @loop_wx.exit
 def loop_wx_exit(kernel):
+    """Exit the wx loop."""
     import wx
 
     wx.Exit()
@@ -298,6 +300,7 @@ def loop_tk(kernel):
 
 @loop_tk.exit
 def loop_tk_exit(kernel):
+    """Exit the tk loop."""
     try:
         kernel.app_wrapper.app.destroy()
         del kernel.app_wrapper
@@ -317,6 +320,7 @@ def loop_gtk(kernel):
 
 @loop_gtk.exit
 def loop_gtk_exit(kernel):
+    """Exit the gtk loop."""
     kernel._gtk.stop()
 
 
@@ -332,6 +336,7 @@ def loop_gtk3(kernel):
 
 @loop_gtk3.exit
 def loop_gtk3_exit(kernel):
+    """Exit the gtk3 loop."""
     kernel._gtk.stop()
 
 
@@ -376,6 +381,7 @@ def loop_cocoa(kernel):
 
 @loop_cocoa.exit
 def loop_cocoa_exit(kernel):
+    """Exit the cocoa loop."""
     from ._eventloop_macos import stop
 
     stop()

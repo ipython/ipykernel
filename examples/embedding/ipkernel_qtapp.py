@@ -26,13 +26,17 @@ from PyQt4 import Qt
 # Functions and classes
 # -----------------------------------------------------------------------------
 class SimpleWindow(Qt.QWidget, InternalIPKernel):
+    """A custom Qt widget for IPykernel."""
+
     def __init__(self, app):
+        """Initialize the widget."""
         Qt.QWidget.__init__(self)
         self.app = app
         self.add_widgets()
         self.init_ipkernel("qt")
 
     def add_widgets(self):
+        """Add the widget."""
         self.setGeometry(300, 300, 400, 70)
         self.setWindowTitle("IPython in your app")
 

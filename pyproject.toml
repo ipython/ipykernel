@@ -44,7 +44,8 @@ docs = [
   "sphinx",
   "myst_parser",
   "pydata_sphinx_theme",
-  "sphinxcontrib_github_alt"
+  "sphinxcontrib_github_alt",
+  "sphinxcontrib-spellcheck"
 ]
 test = [
     "pytest>=7.0",
@@ -99,7 +100,7 @@ dependencies = ["mypy>=0.990"]
 test = "mypy --install-types --non-interactive {args:.}"
 
 [tool.hatch.envs.lint]
-dependencies = ["black==22.10.0", "mdformat>0.7", "ruff==0.0.177"]
+dependencies = ["black==22.10.0", "mdformat>0.7", "ruff==0.0.189"]
 detached = true
 [tool.hatch.envs.lint.scripts]
 style = [
@@ -250,3 +251,13 @@ unfixable = [
 # N802 Function name `assertIn` should be lowercase
 # F841 Local variable `t` is assigned to but never used
 "ipykernel/tests/*" = ["B011", "F841", "C408", "E402", "T201", "B007", "N802", "F841"]
+
+[tool.interrogate]
+ignore-init-module=true
+ignore-private=true
+ignore-semiprivate=true
+ignore-property-decorators=true
+ignore-nested-functions=true
+ignore-nested-classes=true
+fail-under=95
+exclude = ["docs", "*/tests"]

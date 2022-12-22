@@ -76,7 +76,7 @@ jobs:
          run: |
           hatch run typing:test
           hatch run lint:style
-          pipx run 'validate-pyproject[all]' pyproject.toml
+          pipx run interrogate -vv .
           pipx run doc8 --max-line-length=200
 
   check_release:
@@ -89,7 +89,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   test_docs:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1

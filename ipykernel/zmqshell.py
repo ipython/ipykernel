@@ -194,6 +194,8 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
 @magics_class
 class KernelMagics(Magics):
+    """Kernel magics."""
+
     # ------------------------------------------------------------------------
     # Magic overrides
     # ------------------------------------------------------------------------
@@ -467,6 +469,7 @@ class ZMQInteractiveShell(InteractiveShell):
     # Over ZeroMQ, GUI control isn't done with PyOS_InputHook as there is no
     # interactive input being read; we provide event loop support in ipkernel
     def enable_gui(self, gui):
+        """Enable a given guil."""
         from .eventloops import enable_gui as real_enable_gui
 
         try:
@@ -491,6 +494,7 @@ class ZMQInteractiveShell(InteractiveShell):
         env["GIT_PAGER"] = "cat"
 
     def init_hooks(self):
+        """Initialize hooks."""
         super().init_hooks()
         self.set_hook("show_in_pager", page.as_hook(payloadpage.page), 99)
 
@@ -526,6 +530,7 @@ class ZMQInteractiveShell(InteractiveShell):
         self.payload_manager.write_payload(payload)
 
     def run_cell(self, *args, **kwargs):
+        """Run a cell."""
         self._last_traceback = None
         return super().run_cell(*args, **kwargs)
 
@@ -586,14 +591,17 @@ class ZMQInteractiveShell(InteractiveShell):
             pass
 
     def get_parent(self):
+        """Get the parent header."""
         return self.parent_header
 
     def init_magics(self):
+        """Initialize magics."""
         super().init_magics()
         self.register_magics(KernelMagics)
         self.magics_manager.register_alias("ed", "edit")
 
     def init_virtualenv(self):
+        """Initialize virtual environment."""
         # Overridden not to do virtualenv detection, because it's probably
         # not appropriate in a kernel. To use a kernel in a virtualenv, install
         # it inside the virtualenv.

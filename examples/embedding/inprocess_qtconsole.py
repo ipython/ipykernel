@@ -1,3 +1,4 @@
+"""An in-process qt console app."""
 import os
 import sys
 
@@ -8,6 +9,7 @@ from qtconsole.rich_ipython_widget import RichIPythonWidget
 
 
 def print_process_id():
+    """Print the process id."""
     print("Process ID is:", os.getpid())
 
 
@@ -42,6 +44,7 @@ def init_asyncio_patch():
 
 
 def main():
+    """The main entry point."""
     # Print the ID of the main process
     print_process_id()
 

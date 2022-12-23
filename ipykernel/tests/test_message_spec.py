@@ -252,9 +252,10 @@ references = {
     "display_data": DisplayData(),
     "header": RHeader(),
 }
-"""
-Specifications of `content` part of the reply messages.
-"""
+
+# -----------------------------------------------------------------------------
+# Specifications of `content` part of the reply messages.
+# -----------------------------------------------------------------------------
 
 
 def validate_message(msg, msg_type=None, parent=None):

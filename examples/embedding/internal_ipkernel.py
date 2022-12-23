@@ -1,3 +1,4 @@
+"""An internal ipykernel example."""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
@@ -26,8 +27,10 @@ def mpl_kernel(gui):
 
 
 class InternalIPKernel:
+    """An internal ipykernel class."""
+
     def init_ipkernel(self, backend):
-        # Start IPython kernel with GUI event loop and mpl support
+        """Start IPython kernel with GUI event loop and mpl support."""
         self.ipkernel = mpl_kernel(backend)
         # To create and track active qt consoles
         self.consoles = []
@@ -41,6 +44,7 @@ class InternalIPKernel:
         # self.namespace['ipkernel'] = self.ipkernel  # dbg
 
     def print_namespace(self, evt=None):
+        """Print the namespace."""
         print("\n***Variables in User namespace***")
         for k, v in self.namespace.items():
             if not k.startswith("_"):
@@ -52,8 +56,10 @@ class InternalIPKernel:
         return connect_qtconsole(self.ipkernel.abs_connection_file, profile=self.ipkernel.profile)
 
     def count(self, evt=None):
+        """Get the app counter value."""
         self.namespace["app_counter"] += 1
 
     def cleanup_consoles(self, evt=None):
+        """Clean up the consoles."""
         for c in self.consoles:
             c.kill()

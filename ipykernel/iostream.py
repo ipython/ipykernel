@@ -190,6 +190,7 @@ class IOPubThread:
             event_pipe.close()
 
     def close(self):
+        """Close the IOPub thread."""
         if self.closed:
             return
         self.socket.close()
@@ -244,6 +245,7 @@ class BackgroundSocket:
     io_thread = None
 
     def __init__(self, io_thread):
+        """Initialize the socket."""
         self.io_thread = io_thread
 
     def __getattr__(self, attr):
@@ -264,6 +266,7 @@ class BackgroundSocket:
         super().__getattr__(attr)  # type:ignore[misc]
 
     def __setattr__(self, attr, value):
+        """Set an attribute on the socket."""
         if attr == "io_thread" or (attr.startswith("__") and attr.endswith("__")):
             super().__setattr__(attr, value)
         else:
@@ -278,6 +281,7 @@ class BackgroundSocket:
             setattr(self.io_thread.socket, attr, value)
 
     def send(self, msg, *args, **kwargs):
+        """Send a message to the socket."""
         return self.send_multipart([msg], *args, **kwargs)
 
     def send_multipart(self, *args, **kwargs):
@@ -438,9 +442,11 @@ class OutStream(TextIOBase):
         return os.getpid() == self._master_pid
 
     def set_parent(self, parent):
+        """Set the parent header."""
         self.parent_header = extract_header(parent)
 
     def close(self):
+        """Close the stream."""
         if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
             self._should_watch = False
             self.watch_fd_thread.join()
@@ -565,6 +571,7 @@ class OutStream(TextIOBase):
         return len(string)
 
     def writelines(self, sequence):
+        """Write lines to the stream."""
         if self.pub_thread is None:
             raise ValueError("I/O operation on closed file")
         else:
@@ -572,6 +579,7 @@ class OutStream(TextIOBase):
                 self.write(string)
 
     def writable(self):
+        """Test whether the stream is writable."""
         return True
 
     def _flush_buffer(self):

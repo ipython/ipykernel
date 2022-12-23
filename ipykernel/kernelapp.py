@@ -111,6 +111,8 @@ To read more about this, see https://github.com/ipython/ipython/issues/2049
 
 
 class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMixin):
+    """The IPYKernel application class."""
+
     name = "ipython-kernel"
     aliases = Dict(kernel_aliases)
     flags = Dict(kernel_flags)
@@ -197,13 +199,16 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     ).tag(config=True)
 
     def init_crash_handler(self):
+        """Initialize the crash handler."""
         sys.excepthook = self.excepthook
 
     def excepthook(self, etype, evalue, tb):
+        """Handle an exception."""
         # write uncaught traceback to 'real' stderr, not zmq-forwarder
         traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
 
     def init_poller(self):
+        """Initialize the poller."""
         if sys.platform == "win32":
             if self.interrupt or self.parent_handle:
                 self.poller = ParentPollerWindows(self.interrupt, self.parent_handle)
@@ -268,6 +273,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         )
 
     def cleanup_connection_file(self):
+        """Clean up our connection file."""
         cf = self.abs_connection_file
         self.log.debug("Cleaning up connection file: %s", cf)
         try:
@@ -278,6 +284,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.cleanup_ipc_files()
 
     def init_connection_file(self):
+        """Initialize our connection file."""
         if not self.connection_file:
             self.connection_file = "kernel-%s.json" % os.getpid()
         try:
@@ -298,7 +305,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.exit(1)
 
     def init_sockets(self):
-        # Create a context, a session, and the kernel sockets.
+        """Create a context, a session, and the kernel sockets."""
         self.log.info("Starting the kernel at pid: %i", os.getpid())
         assert self.context is None, "init_sockets cannot be called twice!"
         self.context = context = zmq.Context()
@@ -324,6 +331,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.init_iopub(context)
 
     def init_control(self, context):
+        """Initialize the control channel."""
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
@@ -346,6 +354,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.control_thread = ControlThread(daemon=True)
 
     def init_iopub(self, context):
+        """Initialize the iopub channel."""
         self.iopub_socket = context.socket(zmq.PUB)
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
@@ -517,6 +526,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                 faulthandler.register = register
 
     def init_signal(self):
+        """Initialize the signal handler."""
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     def init_kernel(self):
@@ -580,6 +590,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             shell._showtraceback = _showtraceback
 
     def init_shell(self):
+        """Initialize the shell channel."""
         self.shell = getattr(self.kernel, "shell", None)
         if self.shell:
             self.shell.configurables.append(self)
@@ -653,6 +664,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     @catch_config_error
     def initialize(self, argv=None):
+        """Initialize the application."""
         self._init_asyncio_patch()
         super().initialize(argv)
         if self.subapp is not None:
@@ -691,6 +703,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         sys.stderr.flush()
 
     def start(self):
+        """Start the application."""
         if self.subapp is not None:
             return self.subapp.start()
         if self.poller is not None:

@@ -16,6 +16,8 @@ from ipykernel.kernelbase import Kernel
 
 # this is the class that will be created if we do comm.create_comm
 class BaseComm(comm.base_comm.BaseComm):
+    """The base class for comms."""
+
     kernel: Optional[Kernel] = None
 
     def publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys):
@@ -69,6 +71,7 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
         return uuid.uuid4().hex
 
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
+        """Initialize a comm."""
         # Handle differing arguments between base classes.
         had_kernel = 'kernel' in kwargs
         kernel = kwargs.pop('kernel', None)

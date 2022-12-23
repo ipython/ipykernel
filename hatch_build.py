@@ -1,3 +1,4 @@
+"""A custom hatch build hook for ipykernel."""
 import os
 import shutil
 import sys
@@ -6,7 +7,10 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
 
 class CustomHook(BuildHookInterface):
+    """The IPykernel build hook."""
+
     def initialize(self, version, build_data):
+        """Initialize the hook."""
         here = os.path.abspath(os.path.dirname(__file__))
         sys.path.insert(0, here)
         from ipykernel.kernelspec import make_ipkernel_cmd, write_kernel_spec

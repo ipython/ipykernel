@@ -1,3 +1,4 @@
+"""An in-process terminal example."""
 import os
 import sys
 
@@ -8,6 +9,7 @@ from ipykernel.inprocess.manager import InProcessKernelManager
 
 
 def print_process_id():
+    """Print the process id."""
     print("Process ID is:", os.getpid())
 
 
@@ -42,6 +44,7 @@ def init_asyncio_patch():
 
 
 def main():
+    """The main function."""
     print_process_id()
 
     # Create an in-process kernel

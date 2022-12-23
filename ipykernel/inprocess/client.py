@@ -62,11 +62,13 @@ class InProcessKernelClient(KernelClient):
         return BlockingInProcessKernelClient
 
     def get_connection_info(self):
+        """Get the connection info for the client."""
         d = super().get_connection_info()
         d["kernel"] = self.kernel
         return d
 
     def start_channels(self, *args, **kwargs):
+        """Start the channels on the client."""
         super().start_channels()
         self.kernel.frontends.append(self)
 
@@ -106,6 +108,7 @@ class InProcessKernelClient(KernelClient):
     def execute(
         self, code, silent=False, store_history=True, user_expressions=None, allow_stdin=None
     ):
+        """Execute code on the client."""
         if allow_stdin is None:
             allow_stdin = self.allow_stdin
         content = dict(
@@ -120,6 +123,7 @@ class InProcessKernelClient(KernelClient):
         return msg["header"]["msg_id"]
 
     def complete(self, code, cursor_pos=None):
+        """Get code completion."""
         if cursor_pos is None:
             cursor_pos = len(code)
         content = dict(code=code, cursor_pos=cursor_pos)
@@ -128,6 +132,7 @@ class InProcessKernelClient(KernelClient):
         return msg["header"]["msg_id"]
 
     def inspect(self, code, cursor_pos=None, detail_level=0):
+        """Get code inspection."""
         if cursor_pos is None:
             cursor_pos = len(code)
         content = dict(
@@ -140,12 +145,14 @@ class InProcessKernelClient(KernelClient):
         return msg["header"]["msg_id"]
 
     def history(self, raw=True, output=False, hist_access_type="range", **kwds):
+        """Get code history."""
         content = dict(raw=raw, output=output, hist_access_type=hist_access_type, **kwds)
         msg = self.session.msg("history_request", content)
         self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
     def shutdown(self, restart=False):
+        """Handle shutdown."""
         # FIXME: What to do here?
         raise NotImplementedError("Cannot shutdown in-process kernel")
 
@@ -166,11 +173,13 @@ class InProcessKernelClient(KernelClient):
         return msg["header"]["msg_id"]
 
     def input(self, string):
+        """Handle kernel input."""
         if self.kernel is None:
             raise RuntimeError("Cannot send input reply. No kernel exists.")
         self.kernel.raw_input_str = string
 
     def is_complete(self, code):
+        """Handle an is_complete request."""
         msg = self.session.msg("is_complete_request", {"code": code})
         self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
@@ -194,15 +203,19 @@ class InProcessKernelClient(KernelClient):
         self.shell_channel.call_handlers_later(reply_msg)
 
     def get_shell_msg(self, block=True, timeout=None):
+        """Get a shell message."""
         return self.shell_channel.get_msg(block, timeout)
 
     def get_iopub_msg(self, block=True, timeout=None):
+        """Get an iopub message."""
         return self.iopub_channel.get_msg(block, timeout)
 
     def get_stdin_msg(self, block=True, timeout=None):
+        """Get a stdin message."""
         return self.stdin_channel.get_msg(block, timeout)
 
     def get_control_msg(self, block=True, timeout=None):
+        """Get a control message."""
         return self.control_channel.get_msg(block, timeout)
 
 

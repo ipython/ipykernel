@@ -63,6 +63,8 @@ cov = [
   "curio",
   "trio",
 ]
+pyqt5 = ["pyqt5"]
+pyside6 = ["pyside6"]
 
 [tool.hatch.version]
 path = "ipykernel/_version.py"
@@ -92,6 +94,15 @@ features = ["test", "cov"]
 [tool.hatch.envs.cov.scripts]
 test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
+
+[[tool.hatch.envs.cov.matrix]]
+qt = ["qt5", "qt6"]
+
+[tool.hatch.envs.cov.overrides]
+matrix.qt.features = [
+  { value = "pyqt5", if = ["qt5"] },
+  { value = "pyside6", if = ["qt6"] },
+]
 
 [tool.hatch.envs.typing]
 features = ["test"]

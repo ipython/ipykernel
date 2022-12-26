@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.20.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.4...fbea757e117c1d3b0da29a40b4abcf3133a310f4))
+
+### Enhancements made
+
+- ENH: add `%gui` support for Qt6 [#1054](https://github.com/ipython/ipykernel/pull/1054) ([@shaperilio](https://github.com/shaperilio))
+
+### Maintenance and upkeep improvements
+
+- Add more ci checks [#1063](https://github.com/ipython/ipykernel/pull/1063) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-20&to=2022-12-26&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-12-20..2022-12-26&type=Issues) | [@shaperilio](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ashaperilio+updated%3A2022-12-20..2022-12-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.19.4
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.3...07da48e686b5906525c2a6b8cfc11cd7c3d96a5f))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-19&to=2022-12-20&type=c))
 
 [@bollwyvl](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abollwyvl+updated%3A2022-12-19..2022-12-20&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2022-12-19..2022-12-20&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.19.3
 

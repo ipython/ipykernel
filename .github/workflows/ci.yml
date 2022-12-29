@@ -93,6 +93,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - name: Build API docs
+        run: |
+          hatch run docs:api
+          # If this fails run `hatch run docs:api` locally
+          # and commit.
+          git status --porcelain
+          git status -s | grep "A" && exit 1
+          git status -s | grep "M" && exit 1
+          echo "API docs done"
       - run: hatch run docs:build
 
   test_without_debugpy:

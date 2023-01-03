@@ -543,7 +543,9 @@ def set_qt_api_env_from_gui(gui):
 def make_qt_app_for_kernel(gui, kernel):
     """Sets the `QT_API` environment variable if it isn't already set."""
     if hasattr(kernel, 'app'):
-        raise RuntimeError('Kernel already running a Qt event loop.')
+        # Kernel is already running a Qt event loop, so there's no need to
+        # create another app for it.
+        return
 
     set_qt_api_env_from_gui(gui)
     # This import is guaranteed to work now:

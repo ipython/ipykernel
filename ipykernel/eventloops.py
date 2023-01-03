@@ -129,6 +129,10 @@ def loop_qt(kernel):
     kernel.app._in_event_loop = False
 
 
+# NOTE: To be removed in version 7
+loop_qt5 = loop_qt
+
+
 # exit and watch are the same for qt 4 and 5
 @loop_qt.exit
 def loop_qt_exit(kernel):

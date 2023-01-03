@@ -15,7 +15,7 @@ from io import FileIO, TextIOWrapper
 from logging import StreamHandler
 
 import zmq
-from IPython.core.application import (
+from IPython.core.application import (  # type:ignore[attr-defined]
     BaseIPythonApplication,
     base_aliases,
     base_flags,
@@ -88,12 +88,12 @@ kernel_flags.update(
 )
 
 # inherit flags&aliases for any IPython shell apps
-kernel_aliases.update(shell_aliases)
+kernel_aliases.update(shell_aliases)  # type:ignore[arg-type]
 kernel_flags.update(shell_flags)
 
 # inherit flags&aliases for Sessions
-kernel_aliases.update(session_aliases)
-kernel_flags.update(session_flags)
+kernel_aliases.update(session_aliases)  # type:ignore[arg-type]
+kernel_flags.update(session_flags)  # type:ignore[arg-type]
 
 _ctrl_c_message = """\
 NOTE: When using the `ipython kernel` entry point, Ctrl-C will not work.
@@ -114,8 +114,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     """The IPYKernel application class."""
 
     name = "ipython-kernel"
-    aliases = Dict(kernel_aliases)
-    flags = Dict(kernel_flags)
+    aliases = Dict(kernel_aliases)  # type:ignore[assignment]
+    flags = Dict(kernel_flags)  # type:ignore[assignment]
     classes = [IPythonKernel, ZMQInteractiveShell, ProfileDir, Session]
     # the kernel class, as an importstring
     kernel_class = Type(
@@ -429,7 +429,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.log.info(line)
         # also raw print to the terminal if no parent_handle (`ipython kernel`)
         # unless log-level is CRITICAL (--quiet)
-        if not self.parent_handle and self.log_level < logging.CRITICAL:
+        if not self.parent_handle and int(self.log_level) < logging.CRITICAL:
             print(_ctrl_c_message, file=sys.__stdout__)
             for line in lines:
                 print(line, file=sys.__stdout__)
@@ -658,9 +658,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         if hasattr(debugger, "InterruptiblePdb"):
             # Only available in newer IPython releases:
-            debugger.Pdb = debugger.InterruptiblePdb
-            pdb.Pdb = debugger.Pdb  # type:ignore[misc]
-            pdb.set_trace = debugger.set_trace
+            debugger.Pdb = debugger.InterruptiblePdb  # type:ignore
+            pdb.Pdb = debugger.Pdb  # type:ignore
+            pdb.set_trace = debugger.set_trace  # type:ignore[assignment]
 
     @catch_config_error
     def initialize(self, argv=None):
@@ -687,7 +687,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         except Exception:
             # Catch exception when initializing signal fails, eg when running the
             # kernel on a separate thread
-            if self.log_level < logging.CRITICAL:
+            if int(self.log_level) < logging.CRITICAL:
                 self.log.error("Unable to initialize signal:", exc_info=True)
         self.init_kernel()
         # shell init steps

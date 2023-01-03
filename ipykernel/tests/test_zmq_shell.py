@@ -238,7 +238,7 @@ def test_zmq_interactive_shell(kernel):
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
-        shell.data_pub_class = MagicMock()
+        shell.data_pub_class = MagicMock()  # type:ignore
         shell.data_pub
     shell.kernel = kernel
     shell.set_next_input("hi")

@@ -473,9 +473,7 @@ def set_qt_api_env_from_gui(gui):
     }
     if loaded is not None and gui != 'qt':
         if qt_env2gui[loaded] != gui:
-            print(
-                f'Cannot switch Qt versions for this session; you must use {qt_env2gui[loaded]}.'
-            )
+            print(f'Cannot switch Qt versions for this session; you must use {qt_env2gui[loaded]}.')
 
     if qt_api is not None and gui != 'qt':
         if qt_env2gui[qt_api] != gui:
@@ -487,20 +485,24 @@ def set_qt_api_env_from_gui(gui):
         if gui == 'qt5':
             try:
                 import PyQt5  # noqa
+
                 os.environ["QT_API"] = "pyqt5"
             except ImportError:
                 try:
                     import PySide2  # noqa
+
                     os.environ["QT_API"] = "pyside2"
                 except ImportError:
                     os.environ["QT_API"] = "pyqt5"
         elif gui == 'qt6':
             try:
                 import PyQt6  # noqa
+
                 os.environ["QT_API"] = "pyqt6"
             except ImportError:
                 try:
                     import PySide6  # noqa
+
                     os.environ["QT_API"] = "pyside6"
                 except ImportError:
                     os.environ["QT_API"] = "pyqt6"
@@ -509,9 +511,7 @@ def set_qt_api_env_from_gui(gui):
             if 'QT_API' in os.environ.keys():
                 del os.environ['QT_API']
         else:
-            print(
-                f'Unrecognized Qt version: {gui}. Should be "qt5", "qt6", or "qt".'
-            )
+            print(f'Unrecognized Qt version: {gui}. Should be "qt5", "qt6", or "qt".')
 
     # Do the actual import now that the environment variable is set to make sure it works.
     try:

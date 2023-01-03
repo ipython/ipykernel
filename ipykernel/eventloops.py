@@ -117,10 +117,12 @@ def _notify_stream_qt(kernel):
 
 @register_integration("qt", "qt5", "qt6")
 def loop_qt(kernel):
-    """Event loop for all versions of Qt."""
+    """Event loop for all supported versions of Qt."""
     _notify_stream_qt(kernel)  # install hook to stop event loop.
+
     # Start the event loop.
     kernel.app._in_event_loop = True
+
     # `exec` blocks until there's ZMQ activity.
     el = kernel.app.qt_event_loop  # for brevity
     el.exec() if hasattr(el, 'exec') else el.exec_()
@@ -428,24 +430,24 @@ def loop_asyncio_exit(kernel):
         loop.close()
 
 
-# The user can generically request `qt` or a specific Qt version, e.g. `qt6`. For a generic Qt
-# request, we let the mechanism in IPython choose the best available version by leaving the `QT_API`
-# environment variable blank.
-#
-# For specific versions, we check to see whether the PyQt or PySide implementations are present and
-# set `QT_API` accordingly to indicate to IPython which version we want. If neither implementation
-# is present, we leave the environment variable set so IPython will generate a helpful error
-# message.
-#
-# NOTE: if the environment variable is already set, it will be used unchanged, regardless of what
-# the user requested.
-
-
 def set_qt_api_env_from_gui(gui):
     """
     Sets the QT_API environment variable by trying to import PyQtx or PySidex.
 
-    If QT_API is already set, ignore the request.
+    The user can generically request `qt` or a specific Qt version, e.g. `qt6`.
+    For a generic Qt request, we let the mechanism in IPython choose the best
+    available version by leaving the `QT_API` environment variable blank.
+
+    For specific versions, we check to see whether the PyQt or PySide
+    implementations are present and set `QT_API` accordingly to indicate to
+    IPython which version we want. If neither implementation is present, we
+    leave the environment variable set so IPython will generate a helpful error
+    message.
+
+    Notes
+    -----
+    - If the environment variable is already set, it will be used unchanged,
+      regardless of what the user requested.
     """
     qt_api = os.environ.get("QT_API", None)
 

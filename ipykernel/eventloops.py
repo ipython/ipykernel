@@ -115,7 +115,7 @@ def _notify_stream_qt(kernel):
     kernel._qt_timer.start(0)
 
 
-@register_integration("qt", "qt4", "qt5", "qt6")
+@register_integration("qt", "qt5", "qt6")
 def loop_qt(kernel):
     """Event loop for all versions of Qt."""
     _notify_stream_qt(kernel)  # install hook to stop event loop.
@@ -450,22 +450,16 @@ def set_qt_api_env_from_gui(gui):
     qt_api = os.environ.get("QT_API", None)
 
     from IPython.external.qt_loaders import (
-        QT_API_PYQT,
         QT_API_PYQT5,
         QT_API_PYQT6,
-        QT_API_PYSIDE,
         QT_API_PYSIDE2,
         QT_API_PYSIDE6,
-        QT_API_PYQTv1,
         loaded_api,
     )
 
     loaded = loaded_api()
 
     qt_env2gui = {
-        QT_API_PYSIDE: 'qt4',
-        QT_API_PYQTv1: 'qt4',
-        QT_API_PYQT: 'qt4',
         QT_API_PYSIDE2: 'qt5',
         QT_API_PYQT5: 'qt5',
         QT_API_PYSIDE6: 'qt6',
@@ -484,20 +478,7 @@ def set_qt_api_env_from_gui(gui):
                 f'environment variable is set to "{qt_api}"'
             )
     else:
-        if gui == 'qt4':
-            try:
-                import PyQt  # noqa
-
-                os.environ["QT_API"] = "pyqt"
-            except ImportError:
-                try:
-                    import PySide  # noqa
-
-                    os.environ["QT_API"] = "pyside"
-                except ImportError:
-                    # Neither implementation installed; set it to something so IPython gives an error
-                    os.environ["QT_API"] = "pyqt"
-        elif gui == 'qt5':
+        if gui == 'qt5':
             try:
                 import PyQt5  # noqa
 
@@ -527,7 +508,7 @@ def set_qt_api_env_from_gui(gui):
                 del os.environ['QT_API']
         else:
             raise ValueError(
-                f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".'
+                f'Unrecognized Qt version: {gui}. Should be "qt5", "qt6", or "qt".'
             )
 
     # Do the actual import now that the environment variable is set to make sure it works.

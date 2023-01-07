@@ -14,7 +14,6 @@ from ipykernel.eventloops import (
     loop_asyncio,
     loop_cocoa,
     loop_tk,
-    set_qt_api_env_from_gui,
 )
 
 from .utils import execute, flush_channels, start_new_kernel
@@ -23,21 +22,21 @@ KC = KM = None
 
 qt_guis_avail = []
 
+gui_to_module = {'qt6': 'PySide6', 'qt5': 'PyQt5'}
+
 
 def _get_qt_vers():
     """If any version of Qt is available, this will populate `guis_avail` with 'qt' and 'qtx'. Due
     to the import mechanism, we can't import multiple versions of Qt in one session."""
-    for gui in ['qt', 'qt6', 'qt5', 'qt4']:
+    for gui in ['qt6', 'qt5']:
         print(f'Trying {gui}')
         try:
-            set_qt_api_env_from_gui(gui)
+            __import__(gui_to_module[gui])
             qt_guis_avail.append(gui)
             if 'QT_API' in os.environ.keys():
                 del os.environ['QT_API']
         except ImportError:
             pass  # that version of Qt isn't available.
-        except RuntimeError:
-            pass  # the version of IPython doesn't know what to do with this Qt version.
 
 
 _get_qt_vers()
@@ -129,31 +128,36 @@ def test_cocoa_loop(kernel):
 @pytest.mark.skipif(
     len(qt_guis_avail) == 0, reason='No viable version of PyQt or PySide installed.'
 )
-def test_qt_enable_gui(kernel):
+def test_qt_enable_gui(kernel, capsys):
     gui = qt_guis_avail[0]
 
     enable_gui(gui, kernel)
 
     # We store the `QApplication` instance in the kernel.
     assert hasattr(kernel, 'app')
+
     # And the `QEventLoop` is added to `app`:`
     assert hasattr(kernel.app, 'qt_event_loop')
 
-    # Can't start another event loop, even if `gui` is the same.
-    with pytest.raises(RuntimeError):
-        enable_gui(gui, kernel)
+    # Don't create another app even if `gui` is the same.
+    app = kernel.app
+    enable_gui(gui, kernel)
+    assert app == kernel.app
 
     # Event loop intergration can be turned off.
     enable_gui(None, kernel)
     assert not hasattr(kernel, 'app')
 
     # But now we're stuck with this version of Qt for good; can't switch.
-    for not_gui in ['qt6', 'qt5', 'qt4']:
+    for not_gui in ['qt6', 'qt5']:
         if not_gui not in qt_guis_avail:
             break
 
-    with pytest.raises(ImportError):
-        enable_gui(not_gui, kernel)
+    enable_gui(not_gui, kernel)
+    captured = capsys.readouterr()
+    assert captured.out == f'Cannot switch Qt versions for this session; you must use {gui}.\n'
 
-    # A gui of 'qt' means "best available", or in this case, the last one that was used.
+    # Check 'qt' gui, which means "the best available"
+    enable_gui(None, kernel)
     enable_gui('qt', kernel)
+    assert gui_to_module[gui] in str(kernel.app)

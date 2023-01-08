@@ -473,9 +473,8 @@ def set_qt_api_env_from_gui(gui):
     }
     if loaded is not None and gui != 'qt':
         if qt_env2gui[loaded] != gui:
-            raise ImportError(
-                f'Cannot switch Qt versions for this session; must use {qt_env2gui[loaded]}.'
-            )
+            msg = f'Cannot switch Qt versions for this session; must use {qt_env2gui[loaded]}.'
+            raise ImportError(msg)
 
     if qt_api is not None and gui != 'qt':
         if qt_env2gui[qt_api] != gui:
@@ -526,9 +525,8 @@ def set_qt_api_env_from_gui(gui):
             if 'QT_API' in os.environ.keys():
                 del os.environ['QT_API']
         else:
-            raise ValueError(
-                f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".'
-            )
+            msg = f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".'
+            raise ValueError(msg)
 
     # Do the actual import now that the environment variable is set to make sure it works.
     try:
@@ -543,7 +541,8 @@ def set_qt_api_env_from_gui(gui):
 def make_qt_app_for_kernel(gui, kernel):
     """Sets the `QT_API` environment variable if it isn't already set."""
     if hasattr(kernel, 'app'):
-        raise RuntimeError('Kernel already running a Qt event loop.')
+        msg = 'Kernel already running a Qt event loop.'
+        raise RuntimeError(msg)
 
     set_qt_api_env_from_gui(gui)
     # This import is guaranteed to work now:
@@ -566,10 +565,11 @@ def enable_gui(gui, kernel=None):
         if Application.initialized():
             kernel = getattr(Application.instance(), "kernel", None)
         if kernel is None:
-            raise RuntimeError(
+            msg = (
                 "You didn't specify a kernel,"
                 " and no IPython Application with a kernel appears to be running."
             )
+            raise RuntimeError(msg)
     if gui is None:
         # User wants to turn off integration; clear any evidence if Qt was the last one.
         if hasattr(kernel, 'app'):
@@ -581,7 +581,8 @@ def enable_gui(gui, kernel=None):
 
     loop = loop_map[gui]
     if loop and kernel.eventloop is not None and kernel.eventloop is not loop:
-        raise RuntimeError("Cannot activate multiple GUI eventloops")
+        msg = "Cannot activate multiple GUI eventloops"
+        raise RuntimeError(msg)
     kernel.eventloop = loop
     # We set `eventloop`; the function the user chose is executed in `Kernel.enter_eventloop`, thus
     # any exceptions raised during the event loop will not be shown in the client.

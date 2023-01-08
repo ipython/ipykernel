@@ -40,7 +40,8 @@ class InProcessChannel:
 
         Subclasses should override this method to handle incoming messages.
         """
-        raise NotImplementedError("call_handlers must be defined in a subclass.")
+        msg = "call_handlers must be defined in a subclass."
+        raise NotImplementedError(msg)
 
     def flush(self, timeout=1.0):
         """Flush the channel."""

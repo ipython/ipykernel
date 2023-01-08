@@ -312,7 +312,8 @@ class OutStream(TextIOBase):
         if getattr(self, "_original_stdstream_copy", None) is not None:
             return self._original_stdstream_copy
         else:
-            raise io.UnsupportedOperation("fileno")
+            msg = "fileno"
+            raise io.UnsupportedOperation(msg)
 
     def _watch_pipe_fd(self):
         """
@@ -415,7 +416,8 @@ class OutStream(TextIOBase):
             if hasattr(echo, "read") and hasattr(echo, "write"):
                 self.echo = echo
             else:
-                raise ValueError("echo argument must be a file like object")
+                msg = "echo argument must be a file like object"
+                raise ValueError(msg)
 
     def isatty(self):
         """Return a bool indicating whether this is an 'interactive' stream.
@@ -540,7 +542,8 @@ class OutStream(TextIOBase):
         """
 
         if not isinstance(string, str):
-            raise TypeError(f"write() argument must be str, not {type(string)}")
+            msg = f"write() argument must be str, not {type(string)}"
+            raise TypeError(msg)
 
         if self.echo is not None:
             try:
@@ -550,7 +553,8 @@ class OutStream(TextIOBase):
                     print(f"Write failed: {e}", file=sys.__stderr__)
 
         if self.pub_thread is None:
-            raise ValueError("I/O operation on closed file")
+            msg = "I/O operation on closed file"
+            raise ValueError(msg)
         else:
 
             is_child = not self._is_master_process()
@@ -573,7 +577,8 @@ class OutStream(TextIOBase):
     def writelines(self, sequence):
         """Write lines to the stream."""
         if self.pub_thread is None:
-            raise ValueError("I/O operation on closed file")
+            msg = "I/O operation on closed file"
+            raise ValueError(msg)
         else:
             for string in sequence:
                 self.write(string)

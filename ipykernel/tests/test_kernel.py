@@ -517,7 +517,7 @@ def _child():
 
 
 def _start_children():
-    ip = IPython.get_ipython()
+    ip = IPython.get_ipython()  # type:ignore[attr-defined]
     ns = ip.user_ns
 
     cmd = [sys.executable, "-c", f"from {__name__} import _child; _child()"]

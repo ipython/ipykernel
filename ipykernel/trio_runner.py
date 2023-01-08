@@ -33,7 +33,8 @@ class TrioRunner:
         if self._cell_cancel_scope:
             self._cell_cancel_scope.cancel()
         else:
-            raise Exception("Kernel interrupted but no cell is running")
+            msg = "Kernel interrupted but no cell is running"
+            raise Exception(msg)
 
     def run(self):
         """Run the loop."""

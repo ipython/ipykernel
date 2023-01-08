@@ -556,10 +556,11 @@ def enable_gui(gui, kernel=None):
         if Application.initialized():
             kernel = getattr(Application.instance(), "kernel", None)
         if kernel is None:
-            raise RuntimeError(
+            msg = (
                 "You didn't specify a kernel,"
                 " and no IPython Application with a kernel appears to be running."
             )
+            raise RuntimeError(msg)
     if gui is None:
         # User wants to turn off integration; clear any evidence if Qt was the last one.
         if hasattr(kernel, 'app'):
@@ -571,7 +572,8 @@ def enable_gui(gui, kernel=None):
 
     loop = loop_map[gui]
     if loop and kernel.eventloop is not None and kernel.eventloop is not loop:
-        raise RuntimeError("Cannot activate multiple GUI eventloops")
+        msg = "Cannot activate multiple GUI eventloops"
+        raise RuntimeError(msg)
     kernel.eventloop = loop
     # We set `eventloop`; the function the user chose is executed in `Kernel.enter_eventloop`, thus
     # any exceptions raised during the event loop will not be shown in the client.

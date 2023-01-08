@@ -154,7 +154,8 @@ class InProcessKernelClient(KernelClient):
     def shutdown(self, restart=False):
         """Handle shutdown."""
         # FIXME: What to do here?
-        raise NotImplementedError("Cannot shutdown in-process kernel")
+        msg = "Cannot shutdown in-process kernel"
+        raise NotImplementedError(msg)
 
     def kernel_info(self):
         """Request kernel info."""
@@ -175,7 +176,8 @@ class InProcessKernelClient(KernelClient):
     def input(self, string):
         """Handle kernel input."""
         if self.kernel is None:
-            raise RuntimeError("Cannot send input reply. No kernel exists.")
+            msg = "Cannot send input reply. No kernel exists."
+            raise RuntimeError(msg)
         self.kernel.raw_input_str = string
 
     def is_complete(self, code):
@@ -188,7 +190,8 @@ class InProcessKernelClient(KernelClient):
         """Send a message to the kernel and handle a reply."""
         kernel = self.kernel
         if kernel is None:
-            raise RuntimeError("Cannot send request. No kernel exists.")
+            msg = "Cannot send request. No kernel exists."
+            raise RuntimeError(msg)
 
         stream = kernel.shell_stream
         self.session.send(stream, msg)

@@ -66,7 +66,8 @@ class ParentPollerWindows(Thread):
         assert interrupt_handle or parent_handle
         super().__init__()
         if ctypes is None:
-            raise ImportError("ParentPollerWindows requires ctypes")
+            msg = "ParentPollerWindows requires ctypes"
+            raise ImportError(msg)
         self.daemon = True
         self.interrupt_handle = interrupt_handle
         self.parent_handle = parent_handle

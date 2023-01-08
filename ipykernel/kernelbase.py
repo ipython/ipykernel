@@ -1146,9 +1146,8 @@ class Kernel(SingletonConfigurable):
     def _no_raw_input(self):
         """Raise StdinNotImplementedError if active frontend doesn't support
         stdin."""
-        raise StdinNotImplementedError(
-            "raw_input was called, but this frontend does not support stdin."
-        )
+        msg = "raw_input was called, but this frontend does not support stdin."
+        raise StdinNotImplementedError(msg)
 
     def getpass(self, prompt="", stream=None):
         """Forward getpass to frontends
@@ -1158,9 +1157,8 @@ class Kernel(SingletonConfigurable):
         StdinNotImplementedError if active frontend doesn't support stdin.
         """
         if not self._allow_stdin:
-            raise StdinNotImplementedError(
-                "getpass was called, but this frontend does not support input requests."
-            )
+            msg = "getpass was called, but this frontend does not support input requests."
+            raise StdinNotImplementedError(msg)
         if stream is not None:
             import warnings
 
@@ -1184,9 +1182,8 @@ class Kernel(SingletonConfigurable):
         StdinNotImplementedError if active frontend doesn't support stdin.
         """
         if not self._allow_stdin:
-            raise StdinNotImplementedError(
-                "raw_input was called, but this frontend does not support input requests."
-            )
+            msg = "raw_input was called, but this frontend does not support input requests."
+            raise StdinNotImplementedError(msg)
         return self._input_request(
             str(prompt),
             self._parent_ident["shell"],
@@ -1229,7 +1226,8 @@ class Kernel(SingletonConfigurable):
                         break
             except KeyboardInterrupt:
                 # re-raise KeyboardInterrupt, to truncate traceback
-                raise KeyboardInterrupt("Interrupted by user") from None
+                msg = "Interrupted by user"
+                raise KeyboardInterrupt(msg) from None
             except Exception:
                 self.log.warning("Invalid Message:", exc_info=True)
 

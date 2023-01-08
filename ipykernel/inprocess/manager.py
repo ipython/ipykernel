@@ -66,11 +66,13 @@ class InProcessKernelManager(KernelManager):
 
     def interrupt_kernel(self):
         """Interrupt the kernel."""
-        raise NotImplementedError("Cannot interrupt in-process kernel.")
+        msg = "Cannot interrupt in-process kernel."
+        raise NotImplementedError(msg)
 
     def signal_kernel(self, signum):
         """Send a signal to the kernel."""
-        raise NotImplementedError("Cannot signal in-process kernel.")
+        msg = "Cannot signal in-process kernel."
+        raise NotImplementedError(msg)
 
     def is_alive(self):
         """Test if the kernel is alive."""

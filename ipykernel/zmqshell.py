@@ -323,7 +323,8 @@ class KernelMagics(Magics):
 
         Files ending in .py are syntax-highlighted."""
         if not arg_s:
-            raise UsageError("Missing filename.")
+            msg = "Missing filename."
+            raise UsageError(msg)
 
         if arg_s.endswith(".py"):
             assert self.shell is not None
@@ -628,7 +629,8 @@ class ZMQInteractiveShell(InteractiveShell):
             # pexpect or pipes to read from.  Users can always just call
             # os.system() or use ip.system=ip.system_raw
             # if they really want a background process.
-            raise OSError("Background processes not supported.")
+            msg = "Background processes not supported."
+            raise OSError(msg)
 
         # we explicitly do NOT return the subprocess status code, because
         # a non-None value would trigger :func:`sys.displayhook` calls.

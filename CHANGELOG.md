@@ -2,6 +2,31 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.20.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.20.0...5f07abc22a1c75672f7bee129505f19c954a7c36))
+
+### Bugs fixed
+
+- Don't raise error when trying to create another Qt app for Qt eventloop [#1071](https://github.com/ipython/ipykernel/pull/1071) ([@ccordoba12](https://github.com/ccordoba12))
+
+### Maintenance and upkeep improvements
+
+- Update CI [#1073](https://github.com/ipython/ipykernel/pull/1073) ([@blink1073](https://github.com/blink1073))
+- Fix types and sync lint deps [#1070](https://github.com/ipython/ipykernel/pull/1070) ([@blink1073](https://github.com/blink1073))
+
+### Documentation improvements
+
+- Add api docs [#1067](https://github.com/ipython/ipykernel/pull/1067) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-26&to=2023-01-09&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-12-26..2023-01-09&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2022-12-26..2023-01-09&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-12-26..2023-01-09&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.20.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.19.4...fbea757e117c1d3b0da29a40b4abcf3133a310f4))
@@ -19,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-20&to=2022-12-26&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-12-20..2022-12-26&type=Issues) | [@shaperilio](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ashaperilio+updated%3A2022-12-20..2022-12-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.19.4
 

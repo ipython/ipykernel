@@ -45,7 +45,9 @@ docs = [
   "myst_parser",
   "pydata_sphinx_theme",
   "sphinxcontrib_github_alt",
-  "sphinxcontrib-spelling"
+  "sphinxcontrib-spelling",
+  "sphinx-autodoc-typehints",
+  "trio"
 ]
 test = [
     "pytest>=7.0",
@@ -82,6 +84,7 @@ path = "ipykernel/_version.py"
 features = ["docs"]
 [tool.hatch.envs.docs.scripts]
 build = "make -C docs html SPHINXOPTS='-W'"
+api = "sphinx-apidoc -o docs/api -f -E ipykernel ipykernel/tests ipykernel/inprocess/tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab"
 
 [tool.hatch.envs.test]
 features = ["test"]

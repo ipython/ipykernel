@@ -115,16 +115,22 @@ def _notify_stream_qt(kernel):
     kernel._qt_timer.start(0)
 
 
-@register_integration("qt", "qt4", "qt5", "qt6")
+@register_integration("qt", "qt5", "qt6")
 def loop_qt(kernel):
-    """Event loop for all versions of Qt."""
+    """Event loop for all supported versions of Qt."""
     _notify_stream_qt(kernel)  # install hook to stop event loop.
+
     # Start the event loop.
     kernel.app._in_event_loop = True
+
     # `exec` blocks until there's ZMQ activity.
     el = kernel.app.qt_event_loop  # for brevity
     el.exec() if hasattr(el, 'exec') else el.exec_()
     kernel.app._in_event_loop = False
+
+
+# NOTE: To be removed in version 7
+loop_qt5 = loop_qt
 
 
 # exit and watch are the same for qt 4 and 5
@@ -428,44 +434,38 @@ def loop_asyncio_exit(kernel):
         loop.close()
 
 
-# The user can generically request `qt` or a specific Qt version, e.g. `qt6`. For a generic Qt
-# request, we let the mechanism in IPython choose the best available version by leaving the `QT_API`
-# environment variable blank.
-#
-# For specific versions, we check to see whether the PyQt or PySide implementations are present and
-# set `QT_API` accordingly to indicate to IPython which version we want. If neither implementation
-# is present, we leave the environment variable set so IPython will generate a helpful error
-# message.
-#
-# NOTE: if the environment variable is already set, it will be used unchanged, regardless of what
-# the user requested.
-
-
 def set_qt_api_env_from_gui(gui):
     """
     Sets the QT_API environment variable by trying to import PyQtx or PySidex.
 
-    If QT_API is already set, ignore the request.
+    The user can generically request `qt` or a specific Qt version, e.g. `qt6`.
+    For a generic Qt request, we let the mechanism in IPython choose the best
+    available version by leaving the `QT_API` environment variable blank.
+
+    For specific versions, we check to see whether the PyQt or PySide
+    implementations are present and set `QT_API` accordingly to indicate to
+    IPython which version we want. If neither implementation is present, we
+    leave the environment variable set so IPython will generate a helpful error
+    message.
+
+    Notes
+    -----
+    - If the environment variable is already set, it will be used unchanged,
+      regardless of what the user requested.
     """
     qt_api = os.environ.get("QT_API", None)
 
     from IPython.external.qt_loaders import (
-        QT_API_PYQT,
         QT_API_PYQT5,
         QT_API_PYQT6,
-        QT_API_PYSIDE,
         QT_API_PYSIDE2,
         QT_API_PYSIDE6,
-        QT_API_PYQTv1,
         loaded_api,
     )
 
     loaded = loaded_api()
 
     qt_env2gui = {
-        QT_API_PYSIDE: 'qt4',
-        QT_API_PYQTv1: 'qt4',
-        QT_API_PYQT: 'qt4',
         QT_API_PYSIDE2: 'qt5',
         QT_API_PYQT5: 'qt5',
         QT_API_PYSIDE6: 'qt6',
@@ -473,8 +473,8 @@ def set_qt_api_env_from_gui(gui):
     }
     if loaded is not None and gui != 'qt':
         if qt_env2gui[loaded] != gui:
-            msg = f'Cannot switch Qt versions for this session; must use {qt_env2gui[loaded]}.'
-            raise ImportError(msg)
+            print(f'Cannot switch Qt versions for this session; you must use {qt_env2gui[loaded]}.')
+            return
 
     if qt_api is not None and gui != 'qt':
         if qt_env2gui[qt_api] != gui:
@@ -482,21 +482,9 @@ def set_qt_api_env_from_gui(gui):
                 f'Request for "{gui}" will be ignored because `QT_API` '
                 f'environment variable is set to "{qt_api}"'
             )
+            return
     else:
-        if gui == 'qt4':
-            try:
-                import PyQt  # noqa
-
-                os.environ["QT_API"] = "pyqt"
-            except ImportError:
-                try:
-                    import PySide  # noqa
-
-                    os.environ["QT_API"] = "pyside"
-                except ImportError:
-                    # Neither implementation installed; set it to something so IPython gives an error
-                    os.environ["QT_API"] = "pyqt"
-        elif gui == 'qt5':
+        if gui == 'qt5':
             try:
                 import PyQt5  # noqa
 
@@ -525,26 +513,29 @@ def set_qt_api_env_from_gui(gui):
             if 'QT_API' in os.environ.keys():
                 del os.environ['QT_API']
         else:
-            msg = f'Unrecognized Qt version: {gui}. Should be "qt4", "qt5", "qt6", or "qt".'
-            raise ValueError(msg)
+            print(f'Unrecognized Qt version: {gui}. Should be "qt5", "qt6", or "qt".')
+            return
 
     # Do the actual import now that the environment variable is set to make sure it works.
     try:
         from IPython.external.qt_for_kernel import QtCore, QtGui  # noqa
-    except ImportError:
+    except Exception as e:
         # Clear the environment variable for the next attempt.
         if 'QT_API' in os.environ.keys():
             del os.environ["QT_API"]
-        raise
+            print(f"QT_API couldn't be set due to error {e}")
+        return
 
 
 def make_qt_app_for_kernel(gui, kernel):
     """Sets the `QT_API` environment variable if it isn't already set."""
     if hasattr(kernel, 'app'):
-        msg = 'Kernel already running a Qt event loop.'
-        raise RuntimeError(msg)
+        # Kernel is already running a Qt event loop, so there's no need to
+        # create another app for it.
+        return
 
     set_qt_api_env_from_gui(gui)
+
     # This import is guaranteed to work now:
     from IPython.external.qt_for_kernel import QtCore, QtGui
     from IPython.lib.guisupport import get_app_qt4

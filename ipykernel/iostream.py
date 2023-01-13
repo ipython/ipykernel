@@ -401,6 +401,7 @@ class OutStream(TextIOBase):
         self._buffer = StringIO()
         self.echo = None
         self._isatty = bool(isatty)
+        self._should_watch = False
 
         if (
             watchfd
@@ -449,7 +450,7 @@ class OutStream(TextIOBase):
 
     def close(self):
         """Close the stream."""
-        if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
+        if self._should_watch:
             self._should_watch = False
             self.watch_fd_thread.join()
         if self._exc:

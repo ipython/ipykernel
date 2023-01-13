@@ -98,6 +98,9 @@ def test_outstream():
         stream = OutStream(session, pub, "stdout")
         stream = OutStream(session, thread, "stdout", pipe=object())
 
+        stream = OutStream(session, thread, "stdout", watchfd=False)
+        stream.close()
+
     stream = OutStream(session, thread, "stdout", isatty=True, echo=io.StringIO())
     with pytest.raises(io.UnsupportedOperation):
         stream.fileno()

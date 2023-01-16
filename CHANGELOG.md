@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.20.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.20.1...203ee2bce0b506257bd561d082e983330d1ebd14))
+
+### Bugs fixed
+
+- Fix Exception in OutStream.close() [#1076](https://github.com/ipython/ipykernel/pull/1076) ([@ilyasher](https://github.com/ilyasher))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-01-09&to=2023-01-16&type=c))
+
+[@ilyasher](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ailyasher+updated%3A2023-01-09..2023-01-16&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.20.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.20.0...5f07abc22a1c75672f7bee129505f19c954a7c36))
@@ -24,8 +40,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2022-12-26&to=2023-01-09&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2022-12-26..2023-01-09&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2022-12-26..2023-01-09&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2022-12-26..2023-01-09&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.20.0
 

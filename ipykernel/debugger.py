@@ -316,7 +316,13 @@ class Debugger:
     ]
 
     # Requests that can be handled even if the debugger is not running
-    static_debug_msg_types = ["debugInfo", "inspectVariables", "richInspectVariables", "modules"]
+    static_debug_msg_types = [
+        "debugInfo",
+        "inspectVariables",
+        "richInspectVariables",
+        "modules",
+        "copyToGlobals",
+    ]
 
     def __init__(
         self, log, debugpy_stream, event_callback, shell_socket, session, just_my_code=True
@@ -661,6 +667,26 @@ class Debugger:
         reply["body"] = body
         reply["success"] = True
         return reply
+
+    async def copyToGlobals(self, message):
+        dst_var_name = message["arguments"]["dstVariableName"]
+        src_var_name = message["arguments"]["srcVariableName"]
+        src_frame_id = message["arguments"]["srcFrameId"]
+
+        expression = f"globals()['{dst_var_name}']"
+        seq = message["seq"]
+        return await self._forward_message(
+            {
+                "type": "request",
+                "command": "setExpression",
+                "seq": seq + 1,
+                "arguments": {
+                    "expression": expression,
+                    "value": src_var_name,
+                    "frameId": src_frame_id,
+                },
+            }
+        )
 
     async def modules(self, message):
         """Handle a modules message."""

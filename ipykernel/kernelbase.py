@@ -4,12 +4,11 @@
 # Distributed under the terms of the Modified BSD License.
 
 import asyncio
-import concurrent.futures
 import inspect
 import itertools
 import logging
 import os
-import socket
+import queue
 import sys
 import threading
 import time
@@ -17,8 +16,7 @@ import typing as t
 import uuid
 import warnings
 from datetime import datetime
-from functools import partial
-from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
+from signal import SIGINT, SIGTERM, Signals
 
 from .control import CONTROL_THREAD_NAME
 
@@ -37,10 +35,10 @@ except ImportError:
 
 import psutil
 import zmq
+from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
+from anyio.abc import TaskStatus
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
-from tornado import ioloop
-from tornado.queues import Queue, QueueEmpty
 from traitlets.config.configurable import SingletonConfigurable
 from traitlets.traitlets import (
     Any,
@@ -53,9 +51,7 @@ from traitlets.traitlets import (
     Set,
     Unicode,
     default,
-    observe,
 )
-from zmq.eventloop.zmqstream import ZMQStream
 
 from ipykernel.jsonutil import json_clean
 
@@ -73,6 +69,8 @@ def _accepts_cell_id(meth):
 class Kernel(SingletonConfigurable):
     """The base kernel class."""
 
+    _aborted_time: float
+
     # ---------------------------------------------------------------------------
     # Kernel interface
     # ---------------------------------------------------------------------------
@@ -82,58 +80,18 @@ class Kernel(SingletonConfigurable):
 
     processes: t.Dict[str, psutil.Process] = {}
 
-    @observe("eventloop")
-    def _update_eventloop(self, change):
-        """schedule call to eventloop from IOLoop"""
-        loop = ioloop.IOLoop.current()
-        if change.new is not None:
-            loop.add_callback(self.enter_eventloop)
-
     session = Instance(Session, allow_none=True)
     profile_dir = Instance("IPython.core.profiledir.ProfileDir", allow_none=True)
-    shell_stream = Instance(ZMQStream, allow_none=True)
-
-    shell_streams = List(
-        help="""Deprecated shell_streams alias. Use shell_stream
-
-        .. versionchanged:: 6.0
-            shell_streams is deprecated. Use shell_stream.
-        """
-    )
+    shell_socket = Instance(zmq.asyncio.Socket, allow_none=True)
 
     implementation: str
     implementation_version: str
     banner: str
 
-    @default("shell_streams")
-    def _shell_streams_default(self):  # pragma: no cover
-        warnings.warn(
-            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if self.shell_stream is not None:
-            return [self.shell_stream]
-        else:
-            return []
+    _is_test = Bool(False)
 
-    @observe("shell_streams")
-    def _shell_streams_changed(self, change):  # pragma: no cover
-        warnings.warn(
-            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if len(change.new) > 1:
-            warnings.warn(
-                "Kernel only supports one shell stream. Additional streams will be ignored.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-        if change.new:
-            self.shell_stream = change.new[0]
-
-    control_stream = Instance(ZMQStream, allow_none=True)
+    control_socket = Instance(zmq.asyncio.Socket, allow_none=True)
+    control_tasks = List()
 
     debug_shell_socket = Any()
 
@@ -275,51 +233,181 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.control_queue: Queue[t.Any] = Queue()
+    async def should_handle(self, socket, msg, idents):
+        """Check whether a shell-channel message should be handled
 
-    def dispatch_control(self, msg):
-        self.control_queue.put_nowait(msg)
+        Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
+        """
+        msg_id = msg["header"]["msg_id"]
+        if msg_id in self.aborted:
+            # is it safe to assume a msg_id will not be resubmitted?
+            self.aborted.remove(msg_id)
+            await self._send_abort_reply(socket, msg, idents)
+            return False
+        return True
 
-    async def poll_control_queue(self):
-        while True:
-            msg = await self.control_queue.get()
-            # handle tracers from _flush_control_queue
-            if isinstance(msg, (concurrent.futures.Future, asyncio.Future)):
-                msg.set_result(None)
-                continue
-            await self.process_control(msg)
+    def pre_handler_hook(self):
+        """Hook to execute before calling message handler"""
+        # ensure default_int_handler during handler call
 
-    async def _flush_control_queue(self):
-        """Flush the control queue, wait for processing of any pending messages"""
-        tracer_future: t.Union[concurrent.futures.Future[object], asyncio.Future[object]]
-        if self.control_thread:
-            control_loop = self.control_thread.io_loop
-            # concurrent.futures.Futures are threadsafe
-            # and can be used to await across threads
-            tracer_future = concurrent.futures.Future()
-            awaitable_future = asyncio.wrap_future(tracer_future)
-        else:
-            control_loop = self.io_loop
-            tracer_future = awaitable_future = asyncio.Future()
+    def post_handler_hook(self):
+        """Hook to execute after calling message handler"""
 
-        def _flush():
-            # control_stream.flush puts messages on the queue
-            if self.control_stream:
-                self.control_stream.flush()
-            # put Future on the queue after all of those,
-            # so we can wait for all queued messages to be processed
-            self.control_queue.put(tracer_future)
-
-        control_loop.add_callback(_flush)
-        return awaitable_future
-
-    async def process_control(self, msg):
-        """dispatch control requests"""
-        if not self.session:
+    async def enter_eventloop(self):
+        """enter eventloop"""
+        self.log.info("Entering eventloop %s", self.eventloop)
+        # record handle, so we can check when this changes
+        eventloop = self.eventloop
+        if eventloop is None:
+            self.log.info("Exiting as there is no eventloop")
             return
-        idents, msg = self.session.feed_identities(msg, copy=False)
+
+        async def advance_eventloop():
+            # check if eventloop changed:
+            if self.eventloop is not eventloop:
+                self.log.info("exiting eventloop %s", eventloop)
+                return
+            self.log.debug("Advancing eventloop %s", eventloop)
+            try:
+                eventloop(self)
+            except KeyboardInterrupt:
+                # Ctrl-C shouldn't crash the kernel
+                self.log.error("KeyboardInterrupt caught in kernel")
+                pass
+            if self.eventloop is eventloop:
+                # schedule advance again
+                await schedule_next()
+
+        async def schedule_next():
+            """Schedule the next advance of the eventloop"""
+            # flush the eventloop every so often,
+            # giving us a chance to handle messages in the meantime
+            self.log.debug("Scheduling eventloop advance")
+            await sleep(0.001)
+            await advance_eventloop()
+
+        # begin polling the eventloop
+        await schedule_next()
+
+    _message_counter = Any(
+        help="""Monotonic counter of messages
+        """,
+    )
+
+    @default("_message_counter")
+    def _message_counter_default(self):
+        return itertools.count()
+
+    async def shell_main(self):
+        async with create_task_group() as tg:
+            tg.start_soon(self.process_shell)
+            await to_thread.run_sync(self.shell_stop.wait)
+            tg.cancel_scope.cancel()
+
+    async def process_shell(self):
         try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
+            while True:
+                await self.process_shell_message()
+        except BaseException as e:
+            if self.shell_stop.is_set():
+                return
+            raise e
+
+    async def process_shell_message(self, msg=None):
+        assert self.shell_socket is not None
+        assert self.session is not None
+
+        no_msg = msg is None if self._is_test else not await self.shell_socket.poll(0)
+
+        msg = msg or await self.shell_socket.recv_multipart()
+        received_time = time.monotonic()
+        idents, msg = self.session.feed_identities(msg, copy=True)
+        try:
+            msg = self.session.deserialize(msg, content=True, copy=True)
+        except BaseException:
+            self.log.error("Invalid Message", exc_info=True)
+            return
+
+        # Set the parent message for side effects.
+        self.set_parent(idents, msg, channel="shell")
+        self._publish_status("busy", "shell")
+
+        msg_type = msg["header"]["msg_type"]
+
+        # Only abort execute requests
+        if self._aborting and msg_type == "execute_request":
+            if not self.stop_on_error_timeout:
+                if no_msg:
+                    self._aborting = False
+            elif received_time - self._aborted_time > self.stop_on_error_timeout:
+                self._aborting = False
+            if self._aborting:
+                await self._send_abort_reply(self.shell_socket, msg, idents)
+                self._publish_status("idle", "shell")
+                return
+
+        # Print some info about this message and leave a '--->' marker, so it's
+        # easier to trace visually the message chain when debugging.  Each
+        # handler prints its message at the end.
+        self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
+        self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
+
+        if not await self.should_handle(self.shell_socket, msg, idents):
+            return
+
+        handler = self.shell_handlers.get(msg_type)
+        if handler is None:
+            self.log.warning("Unknown message type: %r", msg_type)
+        else:
+            self.log.debug("%s: %s", msg_type, msg)
+            try:
+                self.pre_handler_hook()
+            except Exception:
+                self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
+            try:
+                result = handler(self.shell_socket, idents, msg)
+                if inspect.isawaitable(result):
+                    await result
+            except Exception:
+                self.log.error("Exception in message handler:", exc_info=True)
+            except KeyboardInterrupt:
+                # Ctrl-c shouldn't crash the kernel here.
+                self.log.error("KeyboardInterrupt caught in kernel.")
+            finally:
+                try:
+                    self.post_handler_hook()
+                except Exception:
+                    self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+        self._publish_status("idle", "shell")
+
+    async def control_main(self):
+        async with create_task_group() as tg:
+            for task in self.control_tasks:
+                tg.start_soon(task)
+            tg.start_soon(self.process_control)
+            await to_thread.run_sync(self.control_stop.wait)
+            tg.cancel_scope.cancel()
+
+    async def process_control(self):
+        try:
+            while True:
+                await self.process_control_message()
+        except BaseException as e:
+            if self.control_stop.is_set():
+                return
+            raise e
+
+    async def process_control_message(self, msg=None):
+        assert self.control_socket is not None
+        assert self.session is not None
+
+        msg = msg or await self.control_socket.recv_multipart()
+        idents, msg = self.session.feed_identities(msg, copy=True)
+        try:
+            msg = self.session.deserialize(msg, content=True, copy=True)
         except Exception:
             self.log.error("Invalid Control Message", exc_info=True)
             return
@@ -338,7 +426,7 @@ class Kernel(SingletonConfigurable):
             self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
         else:
             try:
-                result = handler(self.control_stream, idents, msg)
+                result = handler(self.control_socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
             except Exception:
@@ -347,230 +435,33 @@ class Kernel(SingletonConfigurable):
         sys.stdout.flush()
         sys.stderr.flush()
         self._publish_status("idle", "control")
-        # flush to ensure reply is sent
-        if self.control_stream:
-            self.control_stream.flush(zmq.POLLOUT)
 
-    def should_handle(self, stream, msg, idents):
-        """Check whether a shell-channel message should be handled
+    async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
+        """Process messages on shell and control channels"""
+        async with create_task_group() as tg:
+            self.control_stop = threading.Event()
+            if not self._is_test and self.control_socket is not None:
+                if self.control_thread:
+                    self.control_thread.set_task(self.control_main)
+                    self.control_thread.start()
+                else:
+                    tg.start_soon(self.control_main)
 
-        Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
-        """
-        msg_id = msg["header"]["msg_id"]
-        if msg_id in self.aborted:
-            # is it safe to assume a msg_id will not be resubmitted?
-            self.aborted.remove(msg_id)
-            self._send_abort_reply(stream, msg, idents)
-            return False
-        return True
+            self.shell_interrupt: queue.Queue[bool] = queue.Queue()
+            self.shell_is_awaiting = False
+            self.shell_is_blocking = False
+            self.shell_stop = threading.Event()
+            if not self._is_test and self.shell_socket is not None:
+                tg.start_soon(self.shell_main)
 
-    async def dispatch_shell(self, msg):
-        """dispatch shell requests"""
-        if not self.session:
-            return
-        # flush control queue before handling shell requests
-        await self._flush_control_queue()
+            # publish idle status
+            self._publish_status("starting", "shell")
 
-        idents, msg = self.session.feed_identities(msg, copy=False)
-        try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
-        except Exception:
-            self.log.error("Invalid Message", exc_info=True)
-            return
+            task_status.started()
 
-        # Set the parent message for side effects.
-        self.set_parent(idents, msg, channel="shell")
-        self._publish_status("busy", "shell")
-
-        msg_type = msg["header"]["msg_type"]
-
-        # Only abort execute requests
-        if self._aborting and msg_type == "execute_request":
-            self._send_abort_reply(self.shell_stream, msg, idents)
-            self._publish_status("idle", "shell")
-            # flush to ensure reply is sent before
-            # handling the next request
-            if self.shell_stream:
-                self.shell_stream.flush(zmq.POLLOUT)
-            return
-
-        # Print some info about this message and leave a '--->' marker, so it's
-        # easier to trace visually the message chain when debugging.  Each
-        # handler prints its message at the end.
-        self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
-        self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
-
-        if not self.should_handle(self.shell_stream, msg, idents):
-            return
-
-        handler = self.shell_handlers.get(msg_type, None)
-        if handler is None:
-            self.log.warning("Unknown message type: %r", msg_type)
-        else:
-            self.log.debug("%s: %s", msg_type, msg)
-            try:
-                self.pre_handler_hook()
-            except Exception:
-                self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
-            try:
-                result = handler(self.shell_stream, idents, msg)
-                if inspect.isawaitable(result):
-                    await result
-            except Exception:
-                self.log.error("Exception in message handler:", exc_info=True)
-            except KeyboardInterrupt:
-                # Ctrl-c shouldn't crash the kernel here.
-                self.log.error("KeyboardInterrupt caught in kernel.")
-            finally:
-                try:
-                    self.post_handler_hook()
-                except Exception:
-                    self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-        self._publish_status("idle", "shell")
-        # flush to ensure reply is sent before
-        # handling the next request
-        if self.shell_stream:
-            self.shell_stream.flush(zmq.POLLOUT)
-
-    def pre_handler_hook(self):
-        """Hook to execute before calling message handler"""
-        # ensure default_int_handler during handler call
-        self.saved_sigint_handler = signal(SIGINT, default_int_handler)
-
-    def post_handler_hook(self):
-        """Hook to execute after calling message handler"""
-        signal(SIGINT, self.saved_sigint_handler)
-
-    def enter_eventloop(self):
-        """enter eventloop"""
-        self.log.info("Entering eventloop %s", self.eventloop)
-        # record handle, so we can check when this changes
-        eventloop = self.eventloop
-        if eventloop is None:
-            self.log.info("Exiting as there is no eventloop")
-            return
-
-        def advance_eventloop():
-            # check if eventloop changed:
-            if self.eventloop is not eventloop:
-                self.log.info("exiting eventloop %s", eventloop)
-                return
-            if self.msg_queue.qsize():
-                self.log.debug("Delaying eventloop due to waiting messages")
-                # still messages to process, make the eventloop wait
-                schedule_next()
-                return
-            self.log.debug("Advancing eventloop %s", eventloop)
-            try:
-                eventloop(self)
-            except KeyboardInterrupt:
-                # Ctrl-C shouldn't crash the kernel
-                self.log.error("KeyboardInterrupt caught in kernel")
-                pass
-            if self.eventloop is eventloop:
-                # schedule advance again
-                schedule_next()
-
-        def schedule_next():
-            """Schedule the next advance of the eventloop"""
-            # flush the eventloop every so often,
-            # giving us a chance to handle messages in the meantime
-            self.log.debug("Scheduling eventloop advance")
-            self.io_loop.call_later(0.001, advance_eventloop)
-
-        # begin polling the eventloop
-        schedule_next()
-
-    async def do_one_iteration(self):
-        """Process a single shell message
-
-        Any pending control messages will be flushed as well
-
-        .. versionchanged:: 5
-            This is now a coroutine
-        """
-        # flush messages off of shell stream into the message queue
-        if self.shell_stream:
-            self.shell_stream.flush()
-        # process at most one shell message per iteration
-        await self.process_one(wait=False)
-
-    async def process_one(self, wait=True):
-        """Process one request
-
-        Returns None if no message was handled.
-        """
-        if wait:
-            t, dispatch, args = await self.msg_queue.get()
-        else:
-            try:
-                t, dispatch, args = self.msg_queue.get_nowait()
-            except (asyncio.QueueEmpty, QueueEmpty):
-                return None
-        await dispatch(*args)
-
-    async def dispatch_queue(self):
-        """Coroutine to preserve order of message handling
-
-        Ensures that only one message is processing at a time,
-        even when the handler is async
-        """
-
-        while True:
-            try:
-                await self.process_one()
-            except Exception:
-                self.log.exception("Error in message handler")
-
-    _message_counter = Any(
-        help="""Monotonic counter of messages
-        """,
-    )
-
-    @default("_message_counter")
-    def _message_counter_default(self):
-        return itertools.count()
-
-    def schedule_dispatch(self, dispatch, *args):
-        """schedule a message for dispatch"""
-        idx = next(self._message_counter)
-
-        self.msg_queue.put_nowait(
-            (
-                idx,
-                dispatch,
-                args,
-            )
-        )
-        # ensure the eventloop wakes up
-        self.io_loop.add_callback(lambda: None)
-
-    def start(self):
-        """register dispatchers for streams"""
-        self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue: Queue[t.Any] = Queue()
-        self.io_loop.add_callback(self.dispatch_queue)
-
-        if self.control_stream:
-            self.control_stream.on_recv(self.dispatch_control, copy=False)
-
-        control_loop = self.control_thread.io_loop if self.control_thread else self.io_loop
-
-        asyncio.run_coroutine_threadsafe(self.poll_control_queue(), control_loop.asyncio_loop)
-        if self.shell_stream:
-            self.shell_stream.on_recv(
-                partial(
-                    self.schedule_dispatch,
-                    self.dispatch_shell,
-                ),
-                copy=False,
-            )
-
-        # publish idle status
-        self._publish_status("starting", "shell")
+    def stop(self):
+        self.shell_stop.set()
+        self.control_stop.set()
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.
@@ -658,7 +549,7 @@ class Kernel(SingletonConfigurable):
 
     def send_response(
         self,
-        stream,
+        socket,
         msg_or_type,
         content=None,
         ident=None,
@@ -679,7 +570,7 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         return self.session.send(
-            stream,
+            socket,
             msg_or_type,
             content,
             self.get_parent(channel),
@@ -708,7 +599,7 @@ class Kernel(SingletonConfigurable):
         """
         return metadata
 
-    async def execute_request(self, stream, ident, parent):
+    async def execute_request(self, socket, ident, parent):
         """handle an execute_request"""
         if not self.session:
             return
@@ -770,8 +661,8 @@ class Kernel(SingletonConfigurable):
         reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
-        reply_msg: dict[str, t.Any] = self.session.send(  # type:ignore[assignment]
-            stream,
+        reply_msg = self.session.send(
+            socket,
             "execute_reply",
             reply_content,
             parent,
@@ -781,8 +672,13 @@ class Kernel(SingletonConfigurable):
 
         self.log.debug("%s", reply_msg)
 
+        assert reply_msg is not None
         if not silent and reply_msg["content"]["status"] == "error" and stop_on_error:
-            self._abort_queues()
+            # while this flag is true,
+            # execute requests will be aborted
+            self._aborting = True
+            self._aborted_time = time.monotonic()
+            self.log.info("Aborting queue")
 
     def do_execute(
         self,
@@ -797,7 +693,7 @@ class Kernel(SingletonConfigurable):
         """Execute user code. Must be overridden by subclasses."""
         raise NotImplementedError
 
-    async def complete_request(self, stream, ident, parent):
+    async def complete_request(self, socket, ident, parent):
         """Handle a completion request."""
         if not self.session:
             return
@@ -810,7 +706,7 @@ class Kernel(SingletonConfigurable):
             matches = await matches
 
         matches = json_clean(matches)
-        self.session.send(stream, "complete_reply", matches, parent, ident)
+        self.session.send(socket, "complete_reply", matches, parent, ident)
 
     def do_complete(self, code, cursor_pos):
         """Override in subclasses to find completions."""
@@ -822,7 +718,7 @@ class Kernel(SingletonConfigurable):
             "status": "ok",
         }
 
-    async def inspect_request(self, stream, ident, parent):
+    async def inspect_request(self, socket, ident, parent):
         """Handle an inspect request."""
         if not self.session:
             return
@@ -839,14 +735,14 @@ class Kernel(SingletonConfigurable):
 
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
-        msg = self.session.send(stream, "inspect_reply", reply_content, parent, ident)
+        msg = self.session.send(socket, "inspect_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
     def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
         """Override in subclasses to allow introspection."""
         return {"status": "ok", "data": {}, "metadata": {}, "found": False}
 
-    async def history_request(self, stream, ident, parent):
+    async def history_request(self, socket, ident, parent):
         """Handle a history request."""
         if not self.session:
             return
@@ -857,7 +753,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
 
         reply_content = json_clean(reply_content)
-        msg = self.session.send(stream, "history_reply", reply_content, parent, ident)
+        msg = self.session.send(socket, "history_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
     def do_history(
@@ -875,13 +771,13 @@ class Kernel(SingletonConfigurable):
         """Override in subclasses to access history."""
         return {"status": "ok", "history": []}
 
-    async def connect_request(self, stream, ident, parent):
+    async def connect_request(self, socket, ident, parent):
         """Handle a connect request."""
         if not self.session:
             return
         content = self._recorded_ports.copy() if self._recorded_ports else {}
         content["status"] = "ok"
-        msg = self.session.send(stream, "connect_reply", content, parent, ident)
+        msg = self.session.send(socket, "connect_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
     @property
@@ -895,16 +791,16 @@ class Kernel(SingletonConfigurable):
             "help_links": self.help_links,
         }
 
-    async def kernel_info_request(self, stream, ident, parent):
+    async def kernel_info_request(self, socket, ident, parent):
         """Handle a kernel info request."""
         if not self.session:
             return
         content = {"status": "ok"}
         content.update(self.kernel_info)
-        msg = self.session.send(stream, "kernel_info_reply", content, parent, ident)
+        msg = self.session.send(socket, "kernel_info_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
-    async def comm_info_request(self, stream, ident, parent):
+    async def comm_info_request(self, socket, ident, parent):
         """Handle a comm info request."""
         if not self.session:
             return
@@ -921,7 +817,7 @@ class Kernel(SingletonConfigurable):
         else:
             comms = {}
         reply_content = dict(comms=comms, status="ok")
-        msg = self.session.send(stream, "comm_info_reply", reply_content, parent, ident)
+        msg = self.session.send(socket, "comm_info_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
     def _send_interrupt_children(self):
@@ -941,7 +837,7 @@ class Kernel(SingletonConfigurable):
             else:
                 os.kill(pid, SIGINT)
 
-    async def interrupt_request(self, stream, ident, parent):
+    async def interrupt_request(self, socket, ident, parent):
         """Handle an interrupt request."""
         if not self.session:
             return
@@ -958,31 +854,23 @@ class Kernel(SingletonConfigurable):
                 "evalue": str(err),
             }
 
-        self.session.send(stream, "interrupt_reply", content, parent, ident=ident)
+        self.session.send(socket, "interrupt_reply", content, parent, ident=ident)
         return
 
-    async def shutdown_request(self, stream, ident, parent):
+    async def shutdown_request(self, socket, ident, parent):
         """Handle a shutdown request."""
         if not self.session:
             return
         content = self.do_shutdown(parent["content"]["restart"])
         if inspect.isawaitable(content):
             content = await content
-        self.session.send(stream, "shutdown_reply", content, parent, ident=ident)
+        self.session.send(socket, "shutdown_reply", content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg("shutdown_reply", content, parent)
 
         await self._at_shutdown()
 
-        self.log.debug("Stopping control ioloop")
-        if self.control_stream:
-            control_io_loop = self.control_stream.io_loop
-            control_io_loop.add_callback(control_io_loop.stop)
-
-        self.log.debug("Stopping shell ioloop")
-        if self.shell_stream:
-            shell_io_loop = self.shell_stream.io_loop
-            shell_io_loop.add_callback(shell_io_loop.stop)
+        self.stop()
 
     def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the
@@ -990,7 +878,7 @@ class Kernel(SingletonConfigurable):
         """
         return {"status": "ok", "restart": restart}
 
-    async def is_complete_request(self, stream, ident, parent):
+    async def is_complete_request(self, socket, ident, parent):
         """Handle an is_complete request."""
         if not self.session:
             return
@@ -1001,14 +889,14 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
-        reply_msg = self.session.send(stream, "is_complete_reply", reply_content, parent, ident)
+        reply_msg = self.session.send(socket, "is_complete_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
     def do_is_complete(self, code):
         """Override in subclasses to find completions."""
         return {"status": "unknown"}
 
-    async def debug_request(self, stream, ident, parent):
+    async def debug_request(self, socket, ident, parent):
         """Handle a debug request."""
         if not self.session:
             return
@@ -1017,7 +905,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
-        reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
+        reply_msg = self.session.send(socket, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
     def get_process_metric_value(self, process, name, attribute=None):
@@ -1033,7 +921,7 @@ class Kernel(SingletonConfigurable):
         except BaseException:
             return None
 
-    async def usage_request(self, stream, ident, parent):
+    async def usage_request(self, socket, ident, parent):
         """Handle a usage request."""
         if not self.session:
             return
@@ -1065,7 +953,7 @@ class Kernel(SingletonConfigurable):
             reply_content["host_cpu_percent"] = cpu_percent
         reply_content["cpu_count"] = psutil.cpu_count(logical=True)
         reply_content["host_virtual_memory"] = dict(psutil.virtual_memory()._asdict())
-        reply_msg = self.session.send(stream, "usage_reply", reply_content, parent, ident)
+        reply_msg = self.session.send(socket, "usage_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
     async def do_debug_request(self, msg):
@@ -1075,7 +963,7 @@ class Kernel(SingletonConfigurable):
     # Engine methods (DEPRECATED)
     # ---------------------------------------------------------------------------
 
-    async def apply_request(self, stream, ident, parent):  # pragma: no cover
+    async def apply_request(self, socket, ident, parent):  # pragma: no cover
         """Handle an apply request."""
         self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
         try:
@@ -1098,7 +986,7 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         self.session.send(
-            stream,
+            socket,
             "apply_reply",
             reply_content,
             parent=parent,
@@ -1115,7 +1003,7 @@ class Kernel(SingletonConfigurable):
     # Control messages (DEPRECATED)
     # ---------------------------------------------------------------------------
 
-    async def abort_request(self, stream, ident, parent):  # pragma: no cover
+    async def abort_request(self, socket, ident, parent):  # pragma: no cover
         """abort a specific msg by id"""
         self.log.warning(
             "abort_request is deprecated in kernel_base. It is only part of IPython parallel"
@@ -1123,8 +1011,6 @@ class Kernel(SingletonConfigurable):
         msg_ids = parent["content"].get("msg_ids", None)
         if isinstance(msg_ids, str):
             msg_ids = [msg_ids]
-        if not msg_ids:
-            self._abort_queues()
         for mid in msg_ids:
             self.aborted.add(str(mid))
 
@@ -1132,18 +1018,18 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         reply_msg = self.session.send(
-            stream, "abort_reply", content=content, parent=parent, ident=ident
+            socket, "abort_reply", content=content, parent=parent, ident=ident
         )
         self.log.debug("%s", reply_msg)
 
-    async def clear_request(self, stream, idents, parent):  # pragma: no cover
+    async def clear_request(self, socket, idents, parent):  # pragma: no cover
         """Clear our namespace."""
         self.log.warning(
             "clear_request is deprecated in kernel_base. It is only part of IPython parallel"
         )
         content = self.do_clear()
         if self.session:
-            self.session.send(stream, "clear_reply", ident=idents, parent=parent, content=content)
+            self.session.send(socket, "clear_reply", ident=idents, parent=parent, content=content)
 
     def do_clear(self):
         """DEPRECATED since 4.0.3"""
@@ -1161,36 +1047,8 @@ class Kernel(SingletonConfigurable):
 
     _aborting = Bool(False)
 
-    def _abort_queues(self):
-        # while this flag is true,
-        # execute requests will be aborted
-        self._aborting = True
-        self.log.info("Aborting queue")
-
-        # flush streams, so all currently waiting messages
-        # are added to the queue
-        if self.shell_stream:
-            self.shell_stream.flush()
-
-        # Callback to signal that we are done aborting
-        # dispatch functions _must_ be async
-        async def stop_aborting():
-            self.log.info("Finishing abort")
-            self._aborting = False
-
-        # put the stop-aborting event on the message queue
-        # so that all messages already waiting in the queue are aborted
-        # before we reset the flag
-        schedule_stop_aborting = partial(self.schedule_dispatch, stop_aborting)
-
-        # if we have a delay, give messages this long to arrive on the queue
-        # before we stop aborting requests
-        asyncio.get_event_loop().call_later(self.stop_on_error_timeout, schedule_stop_aborting)
-
-    def _send_abort_reply(self, stream, msg, idents):
+    async def _send_abort_reply(self, socket, msg, idents):
         """Send a reply to an aborted request"""
-        if not self.session:
-            return
         self.log.info(f"Aborting {msg['header']['msg_id']}: {msg['header']['msg_type']}")
         reply_type = msg["header"]["msg_type"].rsplit("_", 1)[0] + "_reply"
         status = {"status": "aborted"}
@@ -1198,8 +1056,9 @@ class Kernel(SingletonConfigurable):
         md = self.finish_metadata(msg, md, status)
         md.update(status)
 
+        assert self.session is not None
         self.session.send(
-            stream,
+            socket,
             reply_type,
             metadata=md,
             content=status,
@@ -1382,5 +1241,3 @@ class Kernel(SingletonConfigurable):
                     ident=self._topic("shutdown"),
                 )
                 self.log.debug("%s", self._shutdown_message)
-            if self.control_stream:
-                self.control_stream.flush(zmq.POLLOUT)

@@ -80,10 +80,10 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
     iopub_channel_class = Type(BlockingInProcessChannel)  # type:ignore[arg-type]
     stdin_channel_class = Type(BlockingInProcessStdInChannel)  # type:ignore[arg-type]
 
-    def wait_for_ready(self):
+    async def wait_for_ready(self):
         """Wait for kernel info reply on shell channel."""
         while True:
-            self.kernel_info()
+            await self.kernel_info()
             try:
                 msg = self.shell_channel.get_msg(block=True, timeout=1)
             except Empty:
@@ -103,6 +103,5 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
         while True:
             try:
                 msg = self.iopub_channel.get_msg(block=True, timeout=0.2)
-                print(msg["msg_type"])
             except Empty:
                 break

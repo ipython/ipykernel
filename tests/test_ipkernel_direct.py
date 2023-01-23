@@ -4,7 +4,6 @@ import asyncio
 import os
 
 import pytest
-import zmq
 from IPython.core.history import DummyDB
 
 from ipykernel.comm.comm import BaseComm
@@ -149,19 +148,21 @@ async def test_direct_clear(ipkernel):
     ipkernel.do_clear()
 
 
+@pytest.mark.skip("ipykernel._cancel_on_sigint doesn't exist anymore")
 async def test_cancel_on_sigint(ipkernel: IPythonKernel) -> None:
     future: asyncio.Future = asyncio.Future()
-    with ipkernel._cancel_on_sigint(future):
-        pass
+    # with ipkernel._cancel_on_sigint(future):
+    #     pass
     future.set_result(None)
 
 
-def test_dispatch_debugpy(ipkernel: IPythonKernel) -> None:
+async def test_dispatch_debugpy(ipkernel: IPythonKernel) -> None:
     msg = ipkernel.session.msg("debug_request", {})
     msg_list = ipkernel.session.serialize(msg)
-    ipkernel.dispatch_debugpy([zmq.Message(m) for m in msg_list])
+    await ipkernel.receive_debugpy_message(msg_list)
 
 
+@pytest.mark.skip("Queues don't exist anymore")
 async def test_start(ipkernel: IPythonKernel) -> None:
     shell_future: asyncio.Future = asyncio.Future()
     control_future: asyncio.Future = asyncio.Future()
@@ -174,14 +175,15 @@ async def test_start(ipkernel: IPythonKernel) -> None:
 
     ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
     ipkernel.poll_control_queue = fake_poll_control_queue  # type:ignore
-    ipkernel.start()
-    ipkernel.debugpy_stream = None
-    ipkernel.start()
-    await ipkernel.process_one(False)
+    await ipkernel.start()
+    ipkernel.debugpy_socket = None
+    await ipkernel.start()
+    # await ipkernel.process_one(False)
     await shell_future
     await control_future
 
 
+@pytest.mark.skip("Queues don't exist anymore")
 async def test_start_no_debugpy(ipkernel: IPythonKernel) -> None:
     shell_future: asyncio.Future = asyncio.Future()
     control_future: asyncio.Future = asyncio.Future()
@@ -194,8 +196,8 @@ async def test_start_no_debugpy(ipkernel: IPythonKernel) -> None:
 
     ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
     ipkernel.poll_control_queue = fake_poll_control_queue  # type:ignore
-    ipkernel.debugpy_stream = None
-    ipkernel.start()
+    ipkernel.debugpy_socket = None
+    await ipkernel.start()
 
     await shell_future
     await control_future

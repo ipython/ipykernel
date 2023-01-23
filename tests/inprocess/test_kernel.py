@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 import pytest
+from anyio import create_task_group
 from IPython.utils.io import capture_output  # type:ignore[attr-defined]
 from jupyter_client.session import Session
 
@@ -38,53 +39,58 @@ def patch_cell_id():
         Session.msg = orig_msg  # type:ignore
 
 
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+
 @pytest.fixture()
-def kc():
-    km = InProcessKernelManager()
-    km.start_kernel()
-    kc = km.client()
-    kc.start_channels()
-    kc.wait_for_ready()
-    yield kc
+async def kc(anyio_backend):
+    async with create_task_group() as tg:
+        km = InProcessKernelManager()
+        await tg.start(km.start_kernel)
+        kc = km.client()
+        kc.start_channels()
+        await kc.wait_for_ready()
+        yield kc
+        km.shutdown_kernel()
 
 
-def test_with_cell_id(kc):
+async def test_with_cell_id(kc):
     with patch_cell_id():
-        kc.execute("1+1")
+        await kc.execute("1+1")
 
 
-def test_pylab(kc):
+async def test_pylab(kc):
     """Does %pylab work in the in-process kernel?"""
     _ = pytest.importorskip("matplotlib", reason="This test requires matplotlib")
-    kc.execute("%pylab")
+    await kc.execute("%pylab")
     out, err = assemble_output(kc.get_iopub_msg)
     assert "matplotlib" in out
 
 
-def test_raw_input(kc):
+async def test_raw_input(kc):
     """Does the in-process kernel handle raw_input correctly?"""
     io = StringIO("foobar\n")
     sys_stdin = sys.stdin
     sys.stdin = io
     try:
-        kc.execute("x = input()")
+        await kc.execute("x = input()")
     finally:
         sys.stdin = sys_stdin
     assert kc.kernel.shell.user_ns.get("x") == "foobar"
 
 
 @pytest.mark.skipif("__pypy__" in sys.builtin_module_names, reason="fails on pypy")
-def test_stdout(kc):
+async def test_stdout(kc):
     """Does the in-process kernel correctly capture IO?"""
-    kernel = InProcessKernel()
+    kernel = kc.kernel
 
     with capture_output() as io:
         kernel.shell.run_cell('print("foo")')
     assert io.stdout == "foo\n"
 
-    kc = BlockingInProcessKernelClient(kernel=kernel, session=kernel.session)
-    kernel.frontends.append(kc)
-    kc.execute('print("bar")')
+    await kc.execute('print("bar")')
     out, err = assemble_output(kc.get_iopub_msg)
     assert out == "bar\n"
 
@@ -102,7 +108,7 @@ def test_capfd(kc):
     kernel.frontends.append(kc)
     kc.execute("import os")
     kc.execute('os.system("echo capfd")')
-    out, err = assemble_output(kc.iopub_channel)
+    out, err = assemble_output(kc.get_iopub_msg)
     assert out == "capfd\n"
 
 

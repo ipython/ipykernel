@@ -7,6 +7,8 @@ import logging
 import sys
 from contextlib import contextmanager
 
+from anyio import TASK_STATUS_IGNORED
+from anyio.abc import TaskStatus
 from IPython.core.interactiveshell import InteractiveShellABC
 from traitlets import Any, Enum, Instance, List, Type, default
 
@@ -48,10 +50,10 @@ class InProcessKernel(IPythonKernel):
     # -------------------------------------------------------------------------
 
     shell_class = Type(allow_none=True)  # type:ignore[assignment]
-    _underlying_iopub_socket = Instance(DummySocket, ())
+    _underlying_iopub_socket = Instance(DummySocket, (False,))
     iopub_thread: IOPubThread = Instance(IOPubThread)  # type:ignore[assignment]
 
-    shell_stream = Instance(DummySocket, ())  # type:ignore[arg-type]
+    shell_socket = Instance(DummySocket, (True,))  # type:ignore[arg-type]
 
     @default("iopub_thread")
     def _default_iopub_thread(self):
@@ -65,13 +67,13 @@ class InProcessKernel(IPythonKernel):
     def _default_iopub_socket(self):
         return self.iopub_thread.background_socket
 
-    stdin_socket = Instance(DummySocket, ())  # type:ignore[assignment]
+    stdin_socket = Instance(DummySocket, (False,))  # type:ignore[assignment]
 
     def __init__(self, **traits):
         """Initialize the kernel."""
         super().__init__(**traits)
 
-        self._underlying_iopub_socket.observe(self._io_dispatch, names=["message_sent"])
+        self._io_dispatch()
         if self.shell:
             self.shell.kernel = self
 
@@ -80,10 +82,14 @@ class InProcessKernel(IPythonKernel):
         with self._redirected_io():
             await super().execute_request(stream, ident, parent)
 
-    def start(self):
+    async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Override registration of dispatchers for streams."""
         if self.shell:
             self.shell.exit_now = False
+        await super().start(task_status=task_status)
+
+    def stop(self):
+        super().stop()
 
     def _abort_queues(self):
         """The in-process kernel doesn't abort requests."""
@@ -132,13 +138,16 @@ class InProcessKernel(IPythonKernel):
 
     # ------ Trait change handlers --------------------------------------------
 
-    def _io_dispatch(self, change):
+    def _io_dispatch(self):
         """Called when a message is sent to the IO socket."""
         assert self.iopub_socket.io_thread is not None
         assert self.session is not None
-        ident, msg = self.session.recv(self.iopub_socket.io_thread.socket, copy=False)
-        for frontend in self.frontends:
-            frontend.iopub_channel.call_handlers(msg)
+
+        def callback(msg):
+            for frontend in self.frontends:
+                frontend.iopub_channel.call_handlers(msg)
+
+        self.iopub_thread.socket.on_recv = callback
 
     # ------ Trait initializers -----------------------------------------------
 
@@ -148,7 +157,7 @@ class InProcessKernel(IPythonKernel):
 
     @default("session")
     def _default_session(self):
-        from jupyter_client.session import Session
+        from .session import Session
 
         return Session(parent=self, key=INPROCESS_KEY)
 

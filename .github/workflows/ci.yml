@@ -85,7 +85,7 @@ jobs:
         run: |
           hatch run typing:test
           hatch run lint:style
-          pipx run interrogate -vv .
+          pipx run interrogate -vv . --fail-under 90
           pipx run doc8 --max-line-length=200
 
   check_release:

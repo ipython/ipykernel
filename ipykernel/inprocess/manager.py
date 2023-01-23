@@ -3,12 +3,16 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from typing import Any
+
+from anyio import TASK_STATUS_IGNORED
+from anyio.abc import TaskStatus
 from jupyter_client.manager import KernelManager
 from jupyter_client.managerabc import KernelManagerABC
-from jupyter_client.session import Session
 from traitlets import DottedObjectName, Instance, default
 
 from .constants import INPROCESS_KEY
+from .session import Session
 
 
 class InProcessKernelManager(KernelManager):
@@ -41,11 +45,12 @@ class InProcessKernelManager(KernelManager):
     # Kernel management methods
     # --------------------------------------------------------------------------
 
-    def start_kernel(self, **kwds):
+    async def start_kernel(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED, **kwds: Any) -> None:  # type: ignore[explicit-override, override]
         """Start the kernel."""
         from ipykernel.inprocess.ipkernel import InProcessKernel
 
         self.kernel = InProcessKernel(parent=self, session=self.session)
+        await self.kernel.start(task_status=task_status)
 
     def shutdown_kernel(self):
         """Shutdown the kernel."""
@@ -53,17 +58,26 @@ class InProcessKernelManager(KernelManager):
             self.kernel.iopub_thread.stop()
             self._kill_kernel()
 
-    def restart_kernel(self, now=False, **kwds):
+    async def restart_kernel(  # type: ignore[explicit-override, override]
+        self,
+        now: bool = False,
+        newports: bool = False,
+        *,
+        task_status: TaskStatus = TASK_STATUS_IGNORED,
+        **kw: Any,
+    ) -> None:
         """Restart the kernel."""
         self.shutdown_kernel()
-        self.start_kernel(**kwds)
+        await self.start_kernel(task_status=task_status, **kw)
 
     @property
     def has_kernel(self):
         return self.kernel is not None
 
     def _kill_kernel(self):
-        self.kernel = None
+        if self.kernel:
+            self.kernel.stop()
+            self.kernel = None
 
     def interrupt_kernel(self):
         """Interrupt the kernel."""

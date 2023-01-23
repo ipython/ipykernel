@@ -1,21 +1,20 @@
 """The IPython kernel implementation"""
 
-import asyncio
 import builtins
 import getpass
 import os
-import signal
 import sys
 import threading
 import typing as t
-from contextlib import contextmanager
-from functools import partial
+from dataclasses import dataclass
 
 import comm
+import zmq.asyncio
+from anyio import TASK_STATUS_IGNORED, create_task_group, to_thread
+from anyio.abc import TaskStatus
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
-from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm
 from .comm.manager import CommManager
@@ -25,11 +24,6 @@ from .eventloops import _use_appnope
 from .kernelbase import Kernel as KernelBase
 from .kernelbase import _accepts_cell_id
 from .zmqshell import ZMQInteractiveShell
-
-try:
-    from IPython.core.interactiveshell import _asyncio_runner  # type:ignore[attr-defined]
-except ImportError:
-    _asyncio_runner = None  # type:ignore[assignment]
 
 try:
     from IPython.core.completer import provisionalcompleter as _provisionalcompleter
@@ -78,7 +72,9 @@ class IPythonKernel(KernelBase):
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
     ).tag(config=True)
 
-    debugpy_stream = Instance(ZMQStream, allow_none=True) if _is_debugpy_available else None
+    debugpy_socket = (
+        Instance(zmq.asyncio.Socket, allow_none=True) if _is_debugpy_available else None
+    )
 
     user_module = Any()
 
@@ -106,11 +102,13 @@ class IPythonKernel(KernelBase):
         """Initialize the kernel."""
         super().__init__(**kwargs)
 
+        self.executing_blocking_code_in_main_shell = False
+
         # Initialize the Debugger
         if _is_debugpy_available:
             self.debugger = Debugger(
                 self.log,
-                self.debugpy_stream,
+                self.debugpy_socket,
                 self._publish_debug_event,
                 self.debug_shell_socket,
                 self.session,
@@ -197,12 +195,31 @@ class IPythonKernel(KernelBase):
         "file_extension": ".py",
     }
 
-    def dispatch_debugpy(self, msg):
-        if _is_debugpy_available:
-            # The first frame is the socket id, we can drop it
-            frame = msg[1].bytes.decode("utf-8")
-            self.log.debug("Debugpy received: %s", frame)
-            self.debugger.tcp_client.receive_dap_frame(frame)
+    async def process_debugpy(self):
+        async with create_task_group() as tg:
+            tg.start_soon(self.receive_debugpy_messages)
+            tg.start_soon(self.poll_stopped_queue)
+            await to_thread.run_sync(self.debugpy_stop.wait)
+            tg.cancel_scope.cancel()
+
+    async def receive_debugpy_messages(self):
+        if not _is_debugpy_available:
+            return
+
+        while True:
+            await self.receive_debugpy_message()
+
+    async def receive_debugpy_message(self, msg=None):
+        if not _is_debugpy_available:
+            return
+
+        if msg is None:
+            assert self.debugpy_socket is not None
+            msg = await self.debugpy_socket.recv_multipart()
+        # The first frame is the socket id, we can drop it
+        frame = msg[1].decode("utf-8")
+        self.log.debug("Debugpy received: %s", frame)
+        self.debugger.tcp_client.receive_dap_frame(frame)
 
     @property
     def banner(self):
@@ -214,19 +231,21 @@ class IPythonKernel(KernelBase):
         while True:
             await self.debugger.handle_stopped_event()
 
-    def start(self):
+    async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Start the kernel."""
         if self.shell:
             self.shell.exit_now = False
-        if self.debugpy_stream is None:
-            self.log.warning("debugpy_stream undefined, debugging will not be enabled")
+        if self.debugpy_socket is None:
+            self.log.warning("debugpy_socket undefined, debugging will not be enabled")
         else:
-            self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
-        super().start()
-        if self.debugpy_stream:
-            asyncio.run_coroutine_threadsafe(
-                self.poll_stopped_queue(), self.control_thread.io_loop.asyncio_loop
-            )
+            self.debugpy_stop = threading.Event()
+            self.control_tasks.append(self.process_debugpy)
+        await super().start(task_status=task_status)
+
+    def stop(self):
+        super().stop()
+        if self.debugpy_socket is not None:
+            self.debugpy_stop.set()
 
     def set_parent(self, ident, parent, channel="shell"):
         """Overridden from parent to tell the display hook and output streams
@@ -295,50 +314,6 @@ class IPythonKernel(KernelBase):
         # execution counter.
         pass
 
-    @contextmanager
-    def _cancel_on_sigint(self, future):
-        """ContextManager for capturing SIGINT and cancelling a future
-
-        SIGINT raises in the event loop when running async code,
-        but we want it to halt a coroutine.
-
-        Ideally, it would raise KeyboardInterrupt,
-        but this turns it into a CancelledError.
-        At least it gets a decent traceback to the user.
-        """
-        sigint_future: asyncio.Future[int] = asyncio.Future()
-
-        # whichever future finishes first,
-        # cancel the other one
-        def cancel_unless_done(f, _ignored):
-            if f.cancelled() or f.done():
-                return
-            f.cancel()
-
-        # when sigint finishes,
-        # abort the coroutine with CancelledError
-        sigint_future.add_done_callback(partial(cancel_unless_done, future))
-        # when the main future finishes,
-        # stop watching for SIGINT events
-        future.add_done_callback(partial(cancel_unless_done, sigint_future))
-
-        def handle_sigint(*args):
-            def set_sigint_result():
-                if sigint_future.cancelled() or sigint_future.done():
-                    return
-                sigint_future.set_result(1)
-
-            # use add_callback for thread safety
-            self.io_loop.add_callback(set_sigint_result)
-
-        # set the custom sigint handler during this context
-        save_sigint = signal.signal(signal.SIGINT, handle_sigint)
-        try:
-            yield
-        finally:
-            # restore the previous sigint handler
-            signal.signal(signal.SIGINT, save_sigint)
-
     async def do_execute(
         self,
         code,
@@ -380,63 +355,69 @@ class IPythonKernel(KernelBase):
                 transformed_cell = code
                 preprocessing_exc_tuple = sys.exc_info()
 
-            if (
-                _asyncio_runner  # type:ignore[truthy-bool]
-                and shell.loop_runner is _asyncio_runner
-                and asyncio.get_event_loop().is_running()
-                and should_run_async(
-                    code,
+            kwargs = dict(
+                store_history=store_history,
+                silent=silent,
+            )
+            if with_cell_id:
+                kwargs.update(cell_id=cell_id)
+
+            if should_run_async(
+                code,
+                transformed_cell=transformed_cell,
+                preprocessing_exc_tuple=preprocessing_exc_tuple,
+            ):
+                kwargs.update(
                     transformed_cell=transformed_cell,
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
-            ):
-                if with_cell_id:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                        cell_id=cell_id,
-                    )
-                else:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                    )
+                coro = run_cell(code, **kwargs)
 
-                coro_future = asyncio.ensure_future(coro)
+                @dataclass
+                class Execution:
+                    interrupt: bool = False
+                    result: t.Any = None
 
-                with self._cancel_on_sigint(coro_future):
-                    res = None
-                    try:
-                        res = await coro_future
-                    finally:
-                        shell.events.trigger("post_execute")
-                        if not silent:
-                            shell.events.trigger("post_run_cell", res)
+                async def run(execution: Execution) -> None:
+                    execution.result = await coro
+                    if not execution.interrupt:
+                        self.shell_interrupt.put(False)
+
+                res = None
+                try:
+                    async with create_task_group() as tg:
+                        execution = Execution()
+                        self.shell_is_awaiting = True
+                        tg.start_soon(run, execution)
+                        execution.interrupt = await to_thread.run_sync(self.shell_interrupt.get)
+                        self.shell_is_awaiting = False
+                        if execution.interrupt:
+                            tg.cancel_scope.cancel()
+
+                        res = execution.result
+                finally:
+                    shell.events.trigger("post_execute")
+                    if not silent:
+                        shell.events.trigger("post_run_cell", res)
+
             else:
                 # runner isn't already running,
                 # make synchronous call,
                 # letting shell dispatch to loop runners
-                if with_cell_id:
-                    res = shell.run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        cell_id=cell_id,
-                    )
-                else:
-                    res = shell.run_cell(code, store_history=store_history, silent=silent)
+                self.shell_is_blocking = True
+                try:
+                    res = shell.run_cell(code, **kwargs)
+                finally:
+                    self.shell_is_blocking = False
         finally:
             self._restore_input()
 
-        err = res.error_before_exec if res.error_before_exec is not None else res.error_in_exec
+        if res is not None:
+            err = res.error_before_exec if res.error_before_exec is not None else res.error_in_exec
+        else:
+            err = KeyboardInterrupt()
 
-        if res.success:
+        if res is not None and res.success:
             reply_content["status"] = "ok"
         else:
             reply_content["status"] = "error"

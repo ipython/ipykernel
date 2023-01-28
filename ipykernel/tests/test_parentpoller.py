@@ -33,7 +33,7 @@ def test_parent_poller_windows():
     def mock_wait(*args, **kwargs):
         return -1
 
-    with mock.patch("ctypes.windll.kernel32.WaitForMultipleObjects", mock_wait):
+    with mock.patch("ctypes.windll.kernel32.WaitForMultipleObjects", mock_wait):  # noqa
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             poller.run()

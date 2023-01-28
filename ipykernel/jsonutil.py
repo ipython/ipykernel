@@ -26,7 +26,7 @@ ISO8601_PAT = re.compile(
 
 # holy crap, strptime is not threadsafe.
 # Calling it once at import seems to help.
-datetime.strptime("1", "%d")
+datetime.strptime("1", "%d")  # noqa
 
 # -----------------------------------------------------------------------------
 # Classes and functions
@@ -98,7 +98,7 @@ def json_clean(obj):  # pragma: no cover
         it simply sanitizes it so that there will be no encoding errors later.
 
     """
-    if int(JUPYTER_CLIENT_MAJOR_VERSION) >= 7:
+    if int(JUPYTER_CLIENT_MAJOR_VERSION) >= 7:  # noqa
         return obj
 
     # types that are 'atomic' and ok in json as-is.
@@ -156,7 +156,7 @@ def json_clean(obj):  # pragma: no cover
         for k, v in obj.items():
             out[str(k)] = json_clean(v)
         return out
-    if isinstance(obj, datetime) or isinstance(obj, date):
+    if isinstance(obj, (datetime, date)):
         return obj.strftime(ISO8601)
 
     # we don't understand it, it's probably an unserializable object

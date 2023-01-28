@@ -234,7 +234,7 @@ class IOPubThread:
             # new context/socket for every pipe-out
             # since forks don't teardown politely, use ctx.term to ensure send has completed
             ctx, pipe_out = self._setup_pipe_out()
-            pipe_out.send_multipart([self._pipe_uuid] + msg, *args, **kwargs)
+            pipe_out.send_multipart([self._pipe_uuid, *msg], *args, **kwargs)
             pipe_out.close()
             ctx.term()
 

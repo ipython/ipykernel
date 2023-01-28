@@ -445,7 +445,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     def init_blackhole(self):
         """redirects stdout/stderr to devnull if necessary"""
         if self.no_stdout or self.no_stderr:
-            blackhole = open(os.devnull, "w")
+            blackhole = open(os.devnull, "w")  # noqa
             if self.no_stdout:
                 sys.stdout = sys.__stdout__ = blackhole
             if self.no_stderr:
@@ -471,7 +471,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             if hasattr(sys.stderr, "_original_stdstream_copy"):
 
                 for handler in self.log.handlers:
-                    if isinstance(handler, StreamHandler) and (handler.stream.buffer.fileno() == 2):
+                    if isinstance(handler, StreamHandler) and (
+                        handler.stream.buffer.fileno() == 2  # noqa
+                    ):
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
 
                         handler.stream = TextIOWrapper(

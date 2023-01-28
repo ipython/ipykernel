@@ -236,14 +236,8 @@ class CannedFunction(CannedObject):
 
         if g is None:
             g = {}
-        if self.defaults:
-            defaults = tuple(uncan(cfd, g) for cfd in self.defaults)
-        else:
-            defaults = None
-        if self.closure:
-            closure = tuple(uncan(cell, g) for cell in self.closure)
-        else:
-            closure = None
+        defaults = tuple(uncan(cfd, g) for cfd in self.defaults) if self.defaults else None
+        closure = tuple(uncan(cell, g) for cell in self.closure) if self.closure else None
         newFunc = FunctionType(self.code, g, self.__name__, defaults, closure)
         return newFunc
 
@@ -260,10 +254,7 @@ class CannedClass(CannedObject):
         for k, v in cls.__dict__.items():
             if k not in ("__weakref__", "__dict__"):
                 self._canned_dict[k] = can(v)
-        if self.old_style:
-            mro = []
-        else:
-            mro = cls.mro()
+        mro = [] if self.old_style else cls.mro()
 
         self.parents = [can(c) for c in mro[1:]]
         self.buffers = []
@@ -376,10 +367,7 @@ def istype(obj, check):
     This won't catch subclasses.
     """
     if isinstance(check, tuple):
-        for cls in check:
-            if type(obj) is cls:
-                return True
-        return False
+        return any(type(obj) is cls for cls in check)
     else:
         return type(obj) is check
 

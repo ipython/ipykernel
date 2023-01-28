@@ -431,10 +431,7 @@ class IPythonKernel(KernelBase):
         finally:
             self._restore_input()
 
-        if res.error_before_exec is not None:
-            err = res.error_before_exec
-        else:
-            err = res.error_in_exec
+        err = res.error_before_exec if res.error_before_exec is not None else res.error_in_exec
 
         if res.success:
             reply_content["status"] = "ok"

@@ -471,10 +471,9 @@ def set_qt_api_env_from_gui(gui):
         QT_API_PYSIDE6: 'qt6',
         QT_API_PYQT6: 'qt6',
     }
-    if loaded is not None and gui != 'qt':
-        if qt_env2gui[loaded] != gui:
-            print(f'Cannot switch Qt versions for this session; you must use {qt_env2gui[loaded]}.')
-            return
+    if loaded is not None and gui != 'qt' and qt_env2gui[loaded] != gui:
+        print(f'Cannot switch Qt versions for this session; you must use {qt_env2gui[loaded]}.')
+        return
 
     if qt_api is not None and gui != 'qt':
         if qt_env2gui[qt_api] != gui:
@@ -510,7 +509,7 @@ def set_qt_api_env_from_gui(gui):
                     os.environ["QT_API"] = "pyqt6"
         elif gui == 'qt':
             # Don't set QT_API; let IPython logic choose the version.
-            if 'QT_API' in os.environ.keys():
+            if 'QT_API' in os.environ:
                 del os.environ['QT_API']
         else:
             print(f'Unrecognized Qt version: {gui}. Should be "qt5", "qt6", or "qt".')
@@ -521,7 +520,7 @@ def set_qt_api_env_from_gui(gui):
         from IPython.external.qt_for_kernel import QtCore, QtGui  # noqa
     except Exception as e:
         # Clear the environment variable for the next attempt.
-        if 'QT_API' in os.environ.keys():
+        if 'QT_API' in os.environ:
             del os.environ["QT_API"]
             print(f"QT_API couldn't be set due to error {e}")
         return

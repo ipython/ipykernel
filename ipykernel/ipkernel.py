@@ -27,7 +27,7 @@ from .kernelbase import _accepts_cell_id
 from .zmqshell import ZMQInteractiveShell
 
 try:
-    from IPython.core.interactiveshell import _asyncio_runner  # type:ignore[attr-defined]
+    from IPython.core.interactiveshell import _asyncio_runner
 except ImportError:
     _asyncio_runner = None
 

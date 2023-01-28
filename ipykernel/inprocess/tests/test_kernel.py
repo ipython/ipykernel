@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from io import StringIO
 
 import pytest
-from IPython.utils.io import capture_output  # type:ignore[attr-defined]
+from IPython.utils.io import capture_output
 from jupyter_client.session import Session
 
 from ipykernel.inprocess.blocking import BlockingInProcessKernelClient

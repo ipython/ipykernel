@@ -25,11 +25,11 @@ from IPython.core.displaypub import DisplayPublisher
 from IPython.core.error import UsageError
 from IPython.core.interactiveshell import InteractiveShell, InteractiveShellABC
 from IPython.core.magic import Magics, line_magic, magics_class
-from IPython.core.magics import CodeMagics, MacroToEdit  # type:ignore[attr-defined]
+from IPython.core.magics import CodeMagics, MacroToEdit
 from IPython.core.usage import default_banner
-from IPython.display import Javascript, display  # type:ignore[attr-defined]
+from IPython.display import Javascript, display
 from IPython.utils import openpy
-from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
+from IPython.utils.process import arg_split, system
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
 from traitlets import Any, CBool, CBytes, Dict, Instance, Type, default, observe
@@ -435,7 +435,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
-    data_pub_class = Any()  # type:ignore[assignment]
+    data_pub_class = Any()
     kernel = Any()
     parent_header = Any()
 
@@ -516,7 +516,7 @@ class ZMQInteractiveShell(InteractiveShell):
                 stacklevel=2,
             )
 
-            self._data_pub = self.data_pub_class(parent=self)  # type:ignore[has-type]
+            self._data_pub = self.data_pub_class(parent=self)
             self._data_pub.session = self.display_pub.session
             self._data_pub.pub_socket = self.display_pub.pub_socket
         return self._data_pub

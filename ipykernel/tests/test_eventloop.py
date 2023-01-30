@@ -33,7 +33,7 @@ def _get_qt_vers():
         try:
             __import__(gui_to_module[gui])
             qt_guis_avail.append(gui)
-            if 'QT_API' in os.environ.keys():
+            if 'QT_API' in os.environ:
                 del os.environ['QT_API']
         except ImportError:
             pass  # that version of Qt isn't available.

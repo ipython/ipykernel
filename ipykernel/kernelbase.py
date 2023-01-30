@@ -252,7 +252,8 @@ class Kernel(SingletonConfigurable):
         "apply_request",
     ]
     # add deprecated ipyparallel control messages
-    control_msg_types = msg_types + [
+    control_msg_types = [
+        *msg_types,
         "clear_request",
         "abort_request",
         "debug_request",
@@ -544,10 +545,7 @@ class Kernel(SingletonConfigurable):
 
         self.control_stream.on_recv(self.dispatch_control, copy=False)
 
-        if self.control_thread:
-            control_loop = self.control_thread.io_loop
-        else:
-            control_loop = self.io_loop
+        control_loop = self.control_thread.io_loop if self.control_thread else self.io_loop
 
         asyncio.run_coroutine_threadsafe(self.poll_control_queue(), control_loop.asyncio_loop)
 
@@ -844,10 +842,7 @@ class Kernel(SingletonConfigurable):
 
     async def connect_request(self, stream, ident, parent):
         """Handle a connect request."""
-        if self._recorded_ports is not None:
-            content = self._recorded_ports.copy()
-        else:
-            content = {}
+        content = self._recorded_ports.copy() if self._recorded_ports is not None else {}
         content["status"] = "ok"
         msg = self.session.send(stream, "connect_reply", content, parent, ident)
         self.log.debug("%s", msg)
@@ -982,7 +977,7 @@ class Kernel(SingletonConfigurable):
         """Handle a usage request."""
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
         current_process = psutil.Process()
-        all_processes = [current_process] + current_process.children(recursive=True)
+        all_processes = [current_process, *current_process.children(recursive=True)]
         # Ensure 1) self.processes is updated to only current subprocesses
         # and 2) we reuse processes when possible (needed for accurate CPU)
         self.processes = {
@@ -1004,7 +999,7 @@ class Kernel(SingletonConfigurable):
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
-        if cpu_percent is not None and cpu_percent != 0.0:
+        if cpu_percent is not None and cpu_percent != 0.0:  # noqa
             reply_content["host_cpu_percent"] = cpu_percent
         reply_content["cpu_count"] = psutil.cpu_count(logical=True)
         reply_content["host_virtual_memory"] = dict(psutil.virtual_memory()._asdict())

@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.21.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.20.2...dde698850d865dec89bba2305d1f3dc3134f8413))
+
+### Enhancements made
+
+- Expose session start file in __file__. [#1078](https://github.com/ipython/ipykernel/pull/1078) ([@Carreau](https://github.com/Carreau))
+- Add copy_to_globals debug request handling [#1055](https://github.com/ipython/ipykernel/pull/1055) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Adopt more lint rules [#1082](https://github.com/ipython/ipykernel/pull/1082) ([@blink1073](https://github.com/blink1073))
+- Maintenance updates [#1081](https://github.com/ipython/ipykernel/pull/1081) ([@blink1073](https://github.com/blink1073))
+- Test spyder kernels [#1080](https://github.com/ipython/ipykernel/pull/1080) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-01-16&to=2023-01-30&type=c))
+
+[@agronholm](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aagronholm+updated%3A2023-01-16..2023-01-30&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-01-16..2023-01-30&type=Issues) | [@brichet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abrichet+updated%3A2023-01-16..2023-01-30&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2023-01-16..2023-01-30&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2023-01-16..2023-01-30&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-01-16..2023-01-30&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.20.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.20.1...203ee2bce0b506257bd561d082e983330d1ebd14))
@@ -15,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-01-09&to=2023-01-16&type=c))
 
 [@ilyasher](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ailyasher+updated%3A2023-01-09..2023-01-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.20.1
 

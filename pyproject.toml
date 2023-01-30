@@ -30,12 +30,12 @@ dependencies = [
     "comm>=0.1.1",
     "traitlets>=5.4.0",
     "jupyter_client>=6.1.12",
+    "jupyter_core>=4.12,!=5.0.*",
     "tornado>=6.1",
     "matplotlib-inline>=0.1",
     'appnope;platform_system=="Darwin"',
     "pyzmq>=17",
     "psutil",
-    "nest_asyncio",
     "packaging",
 ]
 

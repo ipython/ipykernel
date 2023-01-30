@@ -13,6 +13,7 @@ import traceback
 from functools import partial
 from io import FileIO, TextIOWrapper
 from logging import StreamHandler
+from typing import Optional
 
 import zmq
 from IPython.core.application import (  # type:ignore[attr-defined]
@@ -131,7 +132,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     poller = Any()  # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
 
-    context = Any()
+    context: Optional[zmq.Context] = Any()  # type:ignore[assignment]
     shell_socket = Any()
     control_socket = Any()
     debugpy_socket = Any()
@@ -403,7 +404,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             if socket and not socket.closed:
                 socket.close()
         self.log.debug("Terminating zmq context")
-        self.context.term()
+        if self.context:
+            self.context.term()
         self.log.debug("Terminated zmq context")
 
     def log_connection_info(self):

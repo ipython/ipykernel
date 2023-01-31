@@ -131,7 +131,7 @@ jobs:
 
       - name: Run the tests
         timeout-minutes: 10
-        run: pytest -W default -vv || pytest --vv -W default --lf
+        run: pytest -k test_enter_eventloop -W default -vv || pytest -k test_enter_eventloop --vv -W default --lf
 
   test_miniumum_versions:
     name: Test Minimum Versions

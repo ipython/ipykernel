@@ -455,6 +455,7 @@ class Kernel(SingletonConfigurable):
                 return
             self.log.debug("Advancing eventloop %s", eventloop)
             try:
+                foo
                 eventloop(self)
             except KeyboardInterrupt:
                 # Ctrl-C shouldn't crash the kernel

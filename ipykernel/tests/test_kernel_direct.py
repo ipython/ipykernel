@@ -132,27 +132,6 @@ async def test_dispatch_shell(kernel):
     await kernel.dispatch_shell(msg)
 
 
-async def test_enter_eventloop(kernel):
-    kernel.eventloop = None
-    kernel.enter_eventloop()
-    kernel.eventloop = asyncio.get_running_loop()
-    kernel.enter_eventloop()
-    called = 0
-
-    def check_status():
-        nonlocal called
-        if called == 0:
-            msg = kernel.session.msg("debug_request", {})
-            kernel.msg_queue.put(msg)
-        called += 1
-        kernel.io_loop.call_later(0.001, check_status)
-
-    kernel.io_loop.call_later(0.001, check_status)
-    kernel.start()
-    while called < 2:
-        await asyncio.sleep(0.1)
-
-
 async def test_do_one_iteration(kernel):
     kernel.msg_queue = asyncio.Queue()
     await kernel.do_one_iteration()

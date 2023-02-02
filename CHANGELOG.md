@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.21.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.0...ac7776dfd68861ae005e1f142ec87cd6703847ea))
+
+### Maintenance and upkeep improvements
+
+- Restore nest-asyncio for tk loop [#1086](https://github.com/ipython/ipykernel/pull/1086) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-01-30&to=2023-02-02&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-01-30..2023-02-02&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.21.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.20.2...dde698850d865dec89bba2305d1f3dc3134f8413))
@@ -22,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-01-16&to=2023-01-30&type=c))
 
 [@agronholm](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aagronholm+updated%3A2023-01-16..2023-01-30&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-01-16..2023-01-30&type=Issues) | [@brichet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abrichet+updated%3A2023-01-16..2023-01-30&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2023-01-16..2023-01-30&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2023-01-16..2023-01-30&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-01-16..2023-01-30&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.20.2
 

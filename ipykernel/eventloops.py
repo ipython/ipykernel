@@ -9,7 +9,6 @@ import sys
 from functools import partial
 
 import zmq
-from jupyter_core.utils import run_sync
 from packaging.version import Version as V  # noqa
 from traitlets.config.application import Application
 
@@ -251,6 +250,12 @@ def loop_tk(kernel):
         app.mainloop()
 
     else:
+        import asyncio
+
+        import nest_asyncio
+
+        nest_asyncio.apply()
+
         doi = kernel.do_one_iteration
         # Tk uses milliseconds
         poll_interval = int(1000 * kernel._poll_interval)
@@ -262,8 +267,9 @@ def loop_tk(kernel):
                 self.func = func
 
             def on_timer(self):
+                loop = asyncio.get_event_loop()
                 try:
-                    run_sync(self.func)()
+                    loop.run_until_complete(self.func())
                 except Exception:
                     kernel.log.exception("Error in message handler")
                 self.app.after(poll_interval, self.on_timer)

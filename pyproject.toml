@@ -31,6 +31,8 @@ dependencies = [
     "traitlets>=5.4.0",
     "jupyter_client>=6.1.12",
     "jupyter_core>=4.12,!=5.0.*",
+    # For tk event loop support only.
+    "nest_asyncio",
     "tornado>=6.1",
     "matplotlib-inline>=0.1",
     'appnope;platform_system=="Darwin"',

@@ -29,7 +29,7 @@ from .zmqshell import ZMQInteractiveShell
 try:
     from IPython.core.interactiveshell import _asyncio_runner  # type:ignore[attr-defined]
 except ImportError:
-    _asyncio_runner = None
+    _asyncio_runner = None  # type:ignore
 
 try:
     from IPython.core.completer import provisionalcompleter as _provisionalcompleter

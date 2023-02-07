@@ -36,7 +36,7 @@ dependencies = [
     "tornado>=6.1",
     "matplotlib-inline>=0.1",
     'appnope;platform_system=="Darwin"',
-    "pyzmq>=17",
+    "pyzmq>=20",
     "psutil",
     "packaging",
 ]

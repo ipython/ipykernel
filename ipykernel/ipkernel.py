@@ -625,7 +625,7 @@ class IPythonKernel(KernelBase):
         try:
             from ipyparallel.serialize import serialize_object, unpack_apply_message
         except ImportError:
-            from .serialize import serialize_object, unpack_apply_message  # type:ignore
+            from .serialize import serialize_object, unpack_apply_message
 
         shell = self.shell
         try:

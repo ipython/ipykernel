@@ -471,7 +471,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                 sys.stderr.flush()
             sys.stderr = outstream_factory(self.session, self.iopub_thread, "stderr", echo=e_stderr)
             if hasattr(sys.stderr, "_original_stdstream_copy"):
-
                 for handler in self.log.handlers:
                     if isinstance(handler, StreamHandler) and (
                         handler.stream.buffer.fileno() == 2  # noqa

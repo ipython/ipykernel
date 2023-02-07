@@ -48,7 +48,6 @@ def kc():
 
 
 def test_with_cell_id(kc):
-
     with patch_cell_id():
         kc.execute("1+1")
 

@@ -76,7 +76,6 @@ def test_write_kernel_spec_path():
 
 
 def test_install_kernelspec():
-
     path = tempfile.mkdtemp()
     try:
         InstallIPythonKernelSpecApp.launch_instance(argv=["--prefix", path])

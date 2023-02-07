@@ -473,7 +473,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             if hasattr(sys.stderr, "_original_stdstream_copy"):
                 for handler in self.log.handlers:
                     if isinstance(handler, StreamHandler) and (
-                        handler.stream.buffer.fileno() == 2  # noqa
+                        handler.stream.buffer.fileno() == 2
                     ):
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
 

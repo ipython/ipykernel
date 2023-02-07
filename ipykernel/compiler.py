@@ -29,7 +29,7 @@ def murmur2_x86(data, seed):
 
     val = length & 0x03
     k = 0
-    if val == 3:  # noqa
+    if val == 3:
         k = (ord(data[rounded_end + 2]) & 0xFF) << 16
     if val in [2, 3]:
         k |= (ord(data[rounded_end + 1]) & 0xFF) << 8

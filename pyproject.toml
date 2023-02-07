@@ -116,7 +116,7 @@ dependencies = ["mypy>=0.990"]
 test = "mypy --install-types --non-interactive {args:.}"
 
 [tool.hatch.envs.lint]
-dependencies = ["black==22.12.0", "mdformat>0.7", "ruff==0.0.236"]
+dependencies = ["black==23.1.0", "mdformat>0.7", "ruff==0.0.243"]
 detached = true
 [tool.hatch.envs.lint.scripts]
 style = [
@@ -227,7 +227,6 @@ select = [
   "N",
   "PLC",
   "PLE",
-  "PLR",
   "PLW",
   "Q",
   "RUF",
@@ -274,6 +273,8 @@ ignore = [
   "N801",
   # SIM105 Use `contextlib.suppress(ValueError)` instead of try-except-pass
   "SIM105",
+  # S110 `try`-`except`-`pass` detected
+  "S110",
 ]
 unfixable = [
   # Don't touch print statements

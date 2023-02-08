@@ -557,7 +557,6 @@ class OutStream(TextIOBase):
             msg = "I/O operation on closed file"
             raise ValueError(msg)
         else:
-
             is_child = not self._is_master_process()
             # only touch the buffer in the IO thread to avoid races
             with self._buffer_lock:

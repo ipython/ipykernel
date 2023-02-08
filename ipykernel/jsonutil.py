@@ -98,7 +98,7 @@ def json_clean(obj):  # pragma: no cover
         it simply sanitizes it so that there will be no encoding errors later.
 
     """
-    if int(JUPYTER_CLIENT_MAJOR_VERSION) >= 7:  # noqa
+    if int(JUPYTER_CLIENT_MAJOR_VERSION) >= 7:
         return obj
 
     # types that are 'atomic' and ok in json as-is.

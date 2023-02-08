@@ -117,7 +117,6 @@ def test_sys_path_profile_dir():
 def test_subprocess_print():
     """printing from forked mp.Process"""
     with new_kernel() as kc:
-
         _check_master(kc, expected=True)
         flush_channels(kc)
         np = 5
@@ -146,7 +145,6 @@ def test_subprocess_print():
 def test_subprocess_noprint():
     """mp.Process without print doesn't trigger iostream mp_mode"""
     with kernel() as kc:
-
         np = 5
         code = "\n".join(
             [
@@ -174,7 +172,6 @@ def test_subprocess_noprint():
 def test_subprocess_error():
     """error in mp.Process doesn't crash"""
     with new_kernel() as kc:
-
         code = "\n".join(
             [
                 "import multiprocessing as mp",
@@ -459,7 +456,6 @@ def test_interrupt_during_pdb_set_trace():
 
 
 def test_control_thread_priority():
-
     N = 5
     with new_kernel() as kc:
         msg_id = kc.execute("pass")

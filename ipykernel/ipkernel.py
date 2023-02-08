@@ -366,7 +366,6 @@ class IPythonKernel(KernelBase):
 
             with_cell_id = _accepts_cell_id(shell.run_cell)
         try:
-
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
             # not just asyncio

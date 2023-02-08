@@ -17,7 +17,7 @@ from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
-from .comm.comm import BaseComm
+from .comm.comm import Comm
 from .comm.manager import CommManager
 from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
@@ -45,7 +45,7 @@ _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
 def _create_comm(*args, **kwargs):
     """Create a new Comm."""
-    return BaseComm(*args, **kwargs)
+    return Comm(*args, **kwargs)
 
 
 # there can only be one comm manager in a ipykernel process

@@ -49,6 +49,12 @@ async def test_direct_execute_request_aborting(ipkernel):
     assert reply["content"]["status"] == "aborted"
 
 
+async def test_direct_execute_request_multiprocessing(ipkernel):
+    code = 'import multiprocessing as mp;p = mp.get_context("spawn").Process(target=print, args=("hi",));p.start()'
+    reply = await ipkernel.test_shell_message("execute_request", dict(code=code, silent=False))
+    assert reply["header"]["msg_type"] == "execute_reply"
+
+
 async def test_complete_request(ipkernel):
     reply = await ipkernel.test_shell_message("complete_request", dict(code="hello", cursor_pos=0))
     assert reply["header"]["msg_type"] == "complete_reply"

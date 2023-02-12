@@ -65,3 +65,19 @@ def test_ipython_start_kernel_no_userns():
         assert content["found"]
         text = content["data"]["text/plain"]
         assert "DummyMod" not in text
+
+
+@flaky(max_runs=3)
+async def test_ipython_kernel_multiprocessing():
+    cmd = dedent(
+        """
+        from ipykernel.kernelapp import launch_new_instance
+        launch_new_instance()
+        """
+    )
+    code = 'import multiprocessing as mp;p = mp.get_context("spawn").Process(target=print, args=("hi",));p.start()'
+    with setup_kernel(cmd) as client:
+        client.execute(code)
+        msg = client.get_shell_msg(timeout=TIMEOUT)
+        content = msg["content"]
+        assert content["status"] == "ok"

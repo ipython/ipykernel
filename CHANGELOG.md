@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.21.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.1...1a486e06155a4d8e58e716fd40468cb5738ed6bb))
+
+### Bugs fixed
+
+- Un-expose __file__ and expose __session__ instead. [#1095](https://github.com/ipython/ipykernel/pull/1095) ([@Carreau](https://github.com/Carreau))
+
+### Maintenance and upkeep improvements
+
+- Remove test_enter_eventloop [#1084](https://github.com/ipython/ipykernel/pull/1084) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-02-02&to=2023-02-13&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-02-02..2023-02-13&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2023-02-02..2023-02-13&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2023-02-02..2023-02-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-02-02..2023-02-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.21.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.0...ac7776dfd68861ae005e1f142ec87cd6703847ea))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-01-30&to=2023-02-02&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-01-30..2023-02-02&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.21.0
 

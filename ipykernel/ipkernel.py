@@ -130,7 +130,7 @@ class IPythonKernel(KernelBase):
 
         jupyter_session_name = os.environ.get('JPY_SESSION_NAME')
         if jupyter_session_name:
-            self.shell.user_ns['__file__'] = jupyter_session_name
+            self.shell.user_ns['__session__'] = jupyter_session_name
 
         self.shell.displayhook.pub_socket = self.iopub_socket
         self.shell.displayhook.topic = self._topic("execute_result")

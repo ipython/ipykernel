@@ -8,7 +8,7 @@
 
 ### Bugs fixed
 
-- Un-expose __file__ and expose __session__ instead. [#1095](https://github.com/ipython/ipykernel/pull/1095) ([@Carreau](https://github.com/Carreau))
+- Un-expose `__file__` and expose `__session__` instead. [#1095](https://github.com/ipython/ipykernel/pull/1095) ([@Carreau](https://github.com/Carreau))
 
 ### Maintenance and upkeep improvements
 
@@ -42,7 +42,7 @@
 
 ### Enhancements made
 
-- Expose session start file in __file__. [#1078](https://github.com/ipython/ipykernel/pull/1078) ([@Carreau](https://github.com/Carreau))
+- Expose session start file in `__file__`. [#1078](https://github.com/ipython/ipykernel/pull/1078) ([@Carreau](https://github.com/Carreau))
 - Add copy_to_globals debug request handling [#1055](https://github.com/ipython/ipykernel/pull/1055) ([@brichet](https://github.com/brichet))
 
 ### Maintenance and upkeep improvements

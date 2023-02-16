@@ -3,8 +3,9 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import uuid
 from typing import Optional
+import uuid
+from warnings import warn
 
 import comm.base_comm
 import traitlets.config
@@ -72,6 +73,12 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
 
     def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
         """Initialize a comm."""
+        warn(
+            "The `ipykernel.comm.Comm` class has been deprecated. Please use the `comm` module instead."
+            "For creating comms, use the function `from comm import create_comm`.",
+            DeprecationWarning,
+        )
+
         # Handle differing arguments between base classes.
         had_kernel = 'kernel' in kwargs
         kernel = kwargs.pop('kernel', None)

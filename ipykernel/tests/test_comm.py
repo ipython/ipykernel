@@ -1,6 +1,6 @@
-import pytest
-
 import unittest.mock
+
+import pytest
 
 from ipykernel.comm import Comm, CommManager
 from ipykernel.ipkernel import IPythonKernel

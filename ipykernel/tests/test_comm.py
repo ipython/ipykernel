@@ -1,3 +1,5 @@
+import pytest
+
 import unittest.mock
 
 from ipykernel.comm import Comm, CommManager
@@ -9,7 +11,8 @@ def test_comm(kernel: Kernel) -> None:
     manager = CommManager(kernel=kernel)
     kernel.comm_manager = manager  # type:ignore
 
-    c = Comm(kernel=kernel, target_name="bar")
+    with pytest.deprecated_call():
+        c = Comm(kernel=kernel, target_name="bar")
     msgs = []
 
     assert kernel is c.kernel  # type:ignore
@@ -53,7 +56,8 @@ def test_comm_manager(kernel: Kernel) -> None:
 
     kernel.comm_manager = manager  # type:ignore
     with unittest.mock.patch.object(Comm, "publish_msg") as publish_msg:
-        comm = Comm()
+        with pytest.deprecated_call():
+            comm = Comm()
         comm.on_msg(on_msg)
         comm.on_close(on_close)
         manager.register_comm(comm)
@@ -96,5 +100,7 @@ def test_comm_manager(kernel: Kernel) -> None:
 
 
 def test_comm_in_manager(ipkernel: IPythonKernel) -> None:
-    comm = Comm()
+    with pytest.deprecated_call():
+        comm = Comm()
+
     assert comm.comm_id in ipkernel.comm_manager.comms

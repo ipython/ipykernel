@@ -3,8 +3,8 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from typing import Optional
 import uuid
+from typing import Optional
 from warnings import warn
 
 import comm.base_comm

@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "ipykernel"
 dynamic = ["version"]
 authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
-license = {file = "COPYING.md"}
+license = {file = "LICENSE"}
 readme = "README.md"
 description = "IPython Kernel for Jupyter"
 keywords = ["Interactive", "Interpreter", "Shell", "Web"]

@@ -99,7 +99,7 @@ class KernelMixin:
         _, msg = self.session.feed_identities(self._reply)
         return self.session.deserialize(msg)
 
-    def _send_interupt_children(self):
+    def _send_interrupt_children(self):
         # override to prevent deadlock
         pass
 

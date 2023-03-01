@@ -71,11 +71,12 @@ async def test_comm_info_request(kernel):
 async def test_direct_interrupt_request(kernel):
     reply = await kernel.test_control_message("interrupt_request", {})
     assert reply["header"]["msg_type"] == "interrupt_reply"
-    assert reply["content"] == { "status": "ok" }
+    assert reply["content"] == {"status": "ok"}
 
     # test failure on interrupt request
     def raiseOSError():
         raise OSError("evalue")
+
     kernel._send_interrupt_children = raiseOSError
     reply = await kernel.test_control_message("interrupt_request", {})
     assert reply["header"]["msg_type"] == "interrupt_reply"

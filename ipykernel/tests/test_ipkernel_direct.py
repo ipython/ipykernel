@@ -92,11 +92,12 @@ async def test_comm_info_request(ipkernel):
 async def test_direct_interrupt_request(ipkernel):
     reply = await ipkernel.test_control_message("interrupt_request", {})
     assert reply["header"]["msg_type"] == "interrupt_reply"
-    assert reply["content"] == { "status": "ok" }
+    assert reply["content"] == {"status": "ok"}
 
     # test failure on interrupt request
     def raiseOSError():
         raise OSError("evalue")
+
     ipkernel._send_interrupt_children = raiseOSError
     reply = await ipkernel.test_control_message("interrupt_request", {})
     assert reply["header"]["msg_type"] == "interrupt_reply"
@@ -104,6 +105,7 @@ async def test_direct_interrupt_request(ipkernel):
     assert reply["content"]["ename"] == "OSError"
     assert reply["content"]["evalue"] == "evalue"
     assert len(reply["content"]["traceback"]) > 0
+
 
 # TODO: this causes deadlock
 # async def test_direct_shutdown_request(ipkernel):

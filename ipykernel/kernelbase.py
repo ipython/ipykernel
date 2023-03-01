@@ -900,9 +900,10 @@ class Kernel(SingletonConfigurable):
         """Handle an interrupt request."""
         try:
             self._send_interrupt_children()
-            content = { "status": "ok" }
+            content = {"status": "ok"}
         except OSError as err:
             import traceback
+
             content = {
                 "status": "error",
                 "traceback": traceback.format_stack(),

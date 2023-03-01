@@ -898,13 +898,13 @@ class Kernel(SingletonConfigurable):
 
     async def interrupt_request(self, stream, ident, parent):
         """Handle an interrupt request."""
+        content: t.Dict[str, t.Any] = {"status": "ok"}
         try:
             self._send_interrupt_children()
-            content = {"status": "ok"}
         except OSError as err:
             import traceback
 
-            content: t.Dict[str, t.Any] = {
+            content = {
                 "status": "error",
                 "traceback": traceback.format_stack(),
                 "ename": str(type(err).__name__),

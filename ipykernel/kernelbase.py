@@ -904,7 +904,7 @@ class Kernel(SingletonConfigurable):
         except OSError as err:
             import traceback
 
-            content = {
+            content: t.Dict[str, t.Any] = {
                 "status": "error",
                 "traceback": traceback.format_stack(),
                 "ename": str(type(err).__name__),

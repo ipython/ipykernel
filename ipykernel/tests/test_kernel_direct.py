@@ -69,8 +69,21 @@ async def test_comm_info_request(kernel):
 
 
 async def test_direct_interrupt_request(kernel):
-    reply = await kernel.test_shell_message("interrupt_request", {})
+    reply = await kernel.test_control_message("interrupt_request", {})
     assert reply["header"]["msg_type"] == "interrupt_reply"
+    assert reply["content"] == {"status": "ok"}
+
+    # test failure on interrupt request
+    def raiseOSError():
+        raise OSError("evalue")
+
+    kernel._send_interrupt_children = raiseOSError
+    reply = await kernel.test_control_message("interrupt_request", {})
+    assert reply["header"]["msg_type"] == "interrupt_reply"
+    assert reply["content"]["status"] == "error"
+    assert reply["content"]["ename"] == "OSError"
+    assert reply["content"]["evalue"] == "evalue"
+    assert len(reply["content"]["traceback"]) > 0
 
 
 async def test_direct_shutdown_request(kernel):
@@ -145,8 +158,8 @@ async def test_connect_request(kernel):
     await kernel.connect_request(kernel.shell_stream, "foo", {})
 
 
-async def test_send_interupt_children(kernel):
-    kernel._send_interupt_children()
+async def test_send_interrupt_children(kernel):
+    kernel._send_interrupt_children()
 
 
 # TODO: this causes deadlock

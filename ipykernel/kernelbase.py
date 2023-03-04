@@ -883,7 +883,7 @@ class Kernel(SingletonConfigurable):
         msg = self.session.send(stream, "comm_info_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    def _send_interupt_children(self):
+    def _send_interrupt_children(self):
         if os.name == "nt":
             self.log.error("Interrupt message not supported on Windows")
         else:
@@ -894,18 +894,27 @@ class Kernel(SingletonConfigurable):
             if pgid and pgid == pid and hasattr(os, "killpg"):
                 try:
                     os.killpg(pgid, SIGINT)
-                    return
                 except OSError:
-                    pass
-            try:
+                    os.kill(pid, SIGINT)
+                    raise
+            else:
                 os.kill(pid, SIGINT)
-            except OSError:
-                pass
 
     async def interrupt_request(self, stream, ident, parent):
         """Handle an interrupt request."""
-        self._send_interupt_children()
-        content = parent["content"]
+        content: t.Dict[str, t.Any] = {"status": "ok"}
+        try:
+            self._send_interrupt_children()
+        except OSError as err:
+            import traceback
+
+            content = {
+                "status": "error",
+                "traceback": traceback.format_stack(),
+                "ename": str(type(err).__name__),
+                "evalue": str(err),
+            }
+
         self.session.send(stream, "interrupt_reply", content, parent, ident=ident)
         return
 

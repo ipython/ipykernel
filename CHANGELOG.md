@@ -2,6 +2,31 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.21.3
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.2...e46f75b93c388886f4b6ba32182e29c3cc486984))
+
+### Bugs fixed
+
+- Fix interrupt reply [#1101](https://github.com/ipython/ipykernel/pull/1101) ([@garlandz-db](https://github.com/garlandz-db))
+
+### Maintenance and upkeep improvements
+
+- Update docs link [#1103](https://github.com/ipython/ipykernel/pull/1103) ([@blink1073](https://github.com/blink1073))
+- Add license [#1098](https://github.com/ipython/ipykernel/pull/1098) ([@dcsaba89](https://github.com/dcsaba89))
+
+### Documentation improvements
+
+- Update changelog for markdown typo [#1096](https://github.com/ipython/ipykernel/pull/1096) ([@mlucool](https://github.com/mlucool))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-02-13&to=2023-03-06&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-02-13..2023-03-06&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2023-02-13..2023-03-06&type=Issues) | [@dcsaba89](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adcsaba89+updated%3A2023-02-13..2023-03-06&type=Issues) | [@garlandz-db](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Agarlandz-db+updated%3A2023-02-13..2023-03-06&type=Issues) | [@mlucool](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amlucool+updated%3A2023-02-13..2023-03-06&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.21.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.1...1a486e06155a4d8e58e716fd40468cb5738ed6bb))
@@ -19,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-02-02&to=2023-02-13&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-02-02..2023-02-13&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2023-02-02..2023-02-13&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2023-02-02..2023-02-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-02-02..2023-02-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.21.1
 

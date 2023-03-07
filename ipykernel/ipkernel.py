@@ -55,7 +55,7 @@ _comm_manager: t.Optional[CommManager] = None
 
 def _get_comm_manager(*args, **kwargs):
     """Create a new CommManager."""
-    global _comm_manager
+    global _comm_manager  # noqa
     if _comm_manager is None:
         with _comm_lock:
             if _comm_manager is None:

@@ -77,7 +77,7 @@ def use_dill():
     # dill doesn't work with cPickle,
     # tell the two relevant modules to use plain pickle
 
-    global pickle  # noq
+    global pickle  # noqa
     pickle = dill
 
     try:

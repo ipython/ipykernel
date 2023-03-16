@@ -71,7 +71,9 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
-    def __init__(self, target_name='', data=None, metadata=None, buffers=None, show_warning=True, **kwargs):
+    def __init__(
+        self, target_name='', data=None, metadata=None, buffers=None, show_warning=True, **kwargs
+    ):
         """Initialize a comm."""
         if show_warning:
             warn(

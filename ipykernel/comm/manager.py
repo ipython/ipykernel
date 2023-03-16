@@ -6,7 +6,6 @@
 import logging
 
 import comm.base_comm
-
 import traitlets
 import traitlets.config
 

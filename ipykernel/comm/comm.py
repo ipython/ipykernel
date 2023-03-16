@@ -71,13 +71,14 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     def _default_comm_id(self):
         return uuid.uuid4().hex
 
-    def __init__(self, target_name='', data=None, metadata=None, buffers=None, **kwargs):
+    def __init__(self, target_name='', data=None, metadata=None, buffers=None, show_warning=True, **kwargs):
         """Initialize a comm."""
-        warn(
-            "The `ipykernel.comm.Comm` class has been deprecated. Please use the `comm` module instead."
-            "For creating comms, use the function `from comm import create_comm`.",
-            DeprecationWarning,
-        )
+        if show_warning:
+            warn(
+                "The `ipykernel.comm.Comm` class has been deprecated. Please use the `comm` module instead."
+                "For creating comms, use the function `from comm import create_comm`.",
+                DeprecationWarning,
+            )
 
         # Handle differing arguments between base classes.
         had_kernel = 'kernel' in kwargs

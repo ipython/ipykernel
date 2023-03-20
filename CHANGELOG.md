@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.22.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.3...e2972d763b5357d4e1cb9b5355593583ca6d5657))
+
+### Bugs fixed
+
+- Deprecate Comm class + Fix incompatibility with ipywidgets [#1097](https://github.com/ipython/ipykernel/pull/1097) ([@martinRenou](https://github.com/martinRenou))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-03-06&to=2023-03-20&type=c))
+
+[@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2023-03-06..2023-03-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-03-06..2023-03-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.21.3
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.2...e46f75b93c388886f4b6ba32182e29c3cc486984))
@@ -24,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-02-13&to=2023-03-06&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-02-13..2023-03-06&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2023-02-13..2023-03-06&type=Issues) | [@dcsaba89](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adcsaba89+updated%3A2023-02-13..2023-03-06&type=Issues) | [@garlandz-db](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Agarlandz-db+updated%3A2023-02-13..2023-03-06&type=Issues) | [@mlucool](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amlucool+updated%3A2023-02-13..2023-03-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.21.2
 

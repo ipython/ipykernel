@@ -27,6 +27,7 @@ from .channels import InProcessChannel, InProcessHBChannel
 # Main kernel Client class
 # -----------------------------------------------------------------------------
 
+
 def in_running_loop() -> bool:
     try:
         return asyncio.get_running_loop() is not None

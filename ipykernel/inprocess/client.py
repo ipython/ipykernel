@@ -27,6 +27,12 @@ from .channels import InProcessChannel, InProcessHBChannel
 # Main kernel Client class
 # -----------------------------------------------------------------------------
 
+def in_running_loop() -> bool:
+    try:
+        return asyncio.get_running_loop() is not None
+    except RuntimeError:
+        return False
+
 
 class InProcessKernelClient(KernelClient):
     """A client for an in-process kernel.
@@ -189,7 +195,7 @@ class InProcessKernelClient(KernelClient):
         stream = kernel.shell_stream
         self.session.send(stream, msg)
         msg_parts = stream.recv_multipart()
-        if run_sync is not None:
+        if not in_running_loop() and run_sync is not None:
             dispatch_shell = run_sync(kernel.dispatch_shell)
             dispatch_shell(msg_parts)
         else:

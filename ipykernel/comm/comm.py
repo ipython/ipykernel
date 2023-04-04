@@ -80,6 +80,7 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
                 "The `ipykernel.comm.Comm` class has been deprecated. Please use the `comm` module instead."
                 "For creating comms, use the function `from comm import create_comm`.",
                 DeprecationWarning,
+                stacklevel=2,
             )
 
         # Handle differing arguments between base classes.

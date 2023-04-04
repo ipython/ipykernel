@@ -300,7 +300,7 @@ class CannedArray(CannedObject):
         data = self.buffers[0]
         if self.pickled:
             # we just pickled it
-            return pickle.loads(data)
+            return pickle.loads(data)  # noqa
         else:
             return frombuffer(data, dtype=self.dtype).reshape(self.shape)
 

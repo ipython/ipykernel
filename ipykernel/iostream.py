@@ -134,7 +134,7 @@ class IOPubThread:
         except zmq.ZMQError as e:
             warnings.warn(
                 "Couldn't bind IOPub Pipe to 127.0.0.1: %s" % e
-                + "\nsubprocess output will be unavailable."
+                + "\nsubprocess output will be unavailable.", stacklevel=2
             )
             self._pipe_flag = False
             pipe_in.close()

@@ -703,6 +703,6 @@ class Kernel(IPythonKernel):
 
         warnings.warn(
             "Kernel is a deprecated alias of ipykernel.ipkernel.IPythonKernel",
-            DeprecationWarning,
+            DeprecationWarning, stacklevel=2
         )
         super().__init__(*args, **kwargs)

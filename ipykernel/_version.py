@@ -17,4 +17,4 @@ if match["rest"]:
 version_info = tuple(parts)
 
 kernel_protocol_version_info = (5, 3)
-kernel_protocol_version = "%s.%s" % kernel_protocol_version_info
+kernel_protocol_version = "{}.{}".format(*kernel_protocol_version_info)

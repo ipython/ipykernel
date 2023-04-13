@@ -57,16 +57,23 @@ jobs:
         run: |
           hatch run cov:nowarn || hatch run test:nowarn --lf
 
-      - name: Coverage
-        run: |
-          pip install codecov coverage[toml]
-          codecov
-
       - name: Check Launcher
         run: |
           pip install .
           cd $HOME
           python -m ipykernel_launcher --help
+
+      - uses: jupyterlab/maintainer-tools/.github/actions/upload-coverage@v1
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v3
+      - uses: jupyterlab/maintainer-tools/.github/actions/report-coverage@v1
+        with:
+          fail_under: 80
 
   test_lint:
     name: Test Lint
@@ -190,7 +197,7 @@ jobs:
   tests_check: # This job does nothing and is only used for the branch protection
     if: always()
     needs:
-      - build
+      - coverage
       - test_docs
       - test_without_debugpy
       - test_miniumum_versions

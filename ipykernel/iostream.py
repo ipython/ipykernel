@@ -15,6 +15,7 @@ from collections import deque
 from io import StringIO, TextIOBase
 from typing import Any, Callable, Deque, Optional
 from weakref import WeakSet
+from threading import local
 
 import zmq
 from jupyter_client.session import extract_header
@@ -403,6 +404,7 @@ class OutStream(TextIOBase):
         self.echo = None
         self._isatty = bool(isatty)
         self._should_watch = False
+        self._local = local()
 
         if (
             watchfd
@@ -525,11 +527,19 @@ class OutStream(TextIOBase):
             # There should be a better way to do this.
             self.session.pid = os.getpid()
             content = {"name": self.name, "text": data}
+            msg = self.session.msg("stream", content, parent=self.parent_header)
+
+            # Each transform either returns a new
+            # message or None. If None is returned,
+            # the message has been 'used' and we return.
+            for hook in self._hooks:
+                msg = hook(msg)
+                if msg is None:
+                    return
+
             self.session.send(
                 self.pub_thread,
-                "stream",
-                content=content,
-                parent=self.parent_header,
+                msg,
                 ident=self.topic,
             )
 
@@ -601,3 +611,50 @@ class OutStream(TextIOBase):
             old_buffer = self._buffer
             self._buffer = StringIO()
         return old_buffer
+
+    @property
+    def _hooks(self):
+        if not hasattr(self._local, "hooks"):
+            # create new list for a new thread
+            self._local.hooks = []
+        return self._local.hooks
+
+
+    def register_hook(self, hook):
+        """
+        Registers a hook with the thread-local storage.
+
+        Parameters
+        ----------
+        hook : Any callable object
+
+        Returns
+        -------
+        Either a publishable message, or `None`.
+        The hook callable must return a message from
+        the __call__ method if they still require the
+        `session.send` method to be called after transformation.
+        Returning `None` will halt that execution path, and
+        session.send will not be called.
+        """
+        self._hooks.append(hook)
+
+    def unregister_hook(self, hook):
+        """
+        Un-registers a hook with the thread-local storage.
+
+        Parameters
+        ----------
+        hook : Any callable object which has previously been
+            registered as a hook.
+
+        Returns
+        -------
+        bool - `True` if the hook was removed, `False` if it wasn't
+            found.
+        """
+        try:
+            self._hooks.remove(hook)
+            return True
+        except ValueError:
+            return False

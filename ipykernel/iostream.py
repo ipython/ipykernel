@@ -13,9 +13,9 @@ import warnings
 from binascii import b2a_hex
 from collections import deque
 from io import StringIO, TextIOBase
+from threading import local
 from typing import Any, Callable, Deque, Optional
 from weakref import WeakSet
-from threading import local
 
 import zmq
 from jupyter_client.session import extract_header
@@ -618,7 +618,6 @@ class OutStream(TextIOBase):
             # create new list for a new thread
             self._local.hooks = []
         return self._local.hooks
-
 
     def register_hook(self, hook):
         """

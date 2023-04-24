@@ -1,6 +1,7 @@
 """Test IO capturing functionality"""
 
 import io
+import sys
 import warnings
 
 import pytest
@@ -10,20 +11,29 @@ from jupyter_client.session import Session
 from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
 
 
-def test_io_api():
+@pytest.fixture
+def ctx():
+    ctx = zmq.Context()
+    return ctx
+    # yield ctx
+    ctx.destroy()
+
+
+@pytest.fixture
+def iopub_thread(ctx):
+    with ctx.socket(zmq.PUB) as pub:
+        thread = IOPubThread(pub)
+        thread.start()
+
+        yield thread
+        thread.stop()
+        thread.close()
+
+
+def test_io_api(iopub_thread):
     """Test that wrapped stdout has the same API as a normal TextIO object"""
     session = Session()
-    ctx = zmq.Context()
-    pub = ctx.socket(zmq.PUB)
-    thread = IOPubThread(pub)
-    thread.start()
-
-    stream = OutStream(session, thread, "stdout")
-
-    # cleanup unused zmq objects before we start testing
-    thread.stop()
-    thread.close()
-    ctx.term()
+    stream = OutStream(session, iopub_thread, "stdout")
 
     assert stream.errors is None
     assert not stream.isatty()
@@ -43,21 +53,14 @@ def test_io_api():
         stream.write(b"")  # type:ignore
 
 
-def test_io_isatty():
+def test_io_isatty(iopub_thread):
     session = Session()
-    ctx = zmq.Context()
-    pub = ctx.socket(zmq.PUB)
-    thread = IOPubThread(pub)
-    thread.start()
-
-    stream = OutStream(session, thread, "stdout", isatty=True)
+    stream = OutStream(session, iopub_thread, "stdout", isatty=True)
     assert stream.isatty()
 
 
-def test_io_thread():
-    ctx = zmq.Context()
-    pub = ctx.socket(zmq.PUB)
-    thread = IOPubThread(pub)
+def test_io_thread(iopub_thread):
+    thread = iopub_thread
     thread._setup_pipe_in()
     msg = [thread._pipe_uuid, b"a"]
     thread._handle_pipe_msg(msg)
@@ -72,40 +75,70 @@ def test_io_thread():
     thread._really_send(None)
 
 
-def test_background_socket():
-    ctx = zmq.Context()
-    pub = ctx.socket(zmq.PUB)
-    thread = IOPubThread(pub)
-    sock = BackgroundSocket(thread)
+def test_background_socket(iopub_thread):
+    sock = BackgroundSocket(iopub_thread)
     assert sock.__class__ == BackgroundSocket
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         sock.linger = 101
-        assert thread.socket.linger == 101
-    assert sock.io_thread == thread
+        assert iopub_thread.socket.linger == 101
+    assert sock.io_thread == iopub_thread
     sock.send(b"hi")
 
 
-def test_outstream():
+def test_outstream(iopub_thread):
     session = Session()
-    ctx = zmq.Context()
-    pub = ctx.socket(zmq.PUB)
-    thread = IOPubThread(pub)
-    thread.start()
-
+    pub = iopub_thread.socket
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         stream = OutStream(session, pub, "stdout")
-        stream = OutStream(session, thread, "stdout", pipe=object())
-
-        stream = OutStream(session, thread, "stdout", watchfd=False)
+        stream.close()
+        stream = OutStream(session, iopub_thread, "stdout", pipe=object())
         stream.close()
 
-    stream = OutStream(session, thread, "stdout", isatty=True, echo=io.StringIO())
-    with pytest.raises(io.UnsupportedOperation):
-        stream.fileno()
-    stream._watch_pipe_fd()
-    stream.flush()
-    stream.write("hi")
-    stream.writelines(["ab", "cd"])
-    assert stream.writable()
+        stream = OutStream(session, iopub_thread, "stdout", watchfd=False)
+        stream.close()
+
+    stream = OutStream(session, iopub_thread, "stdout", isatty=True, echo=io.StringIO())
+
+    with stream:
+        with pytest.raises(io.UnsupportedOperation):
+            stream.fileno()
+        stream._watch_pipe_fd()
+        stream.flush()
+        stream.write("hi")
+        stream.writelines(["ab", "cd"])
+        assert stream.writable()
+
+
+def test_echo_watch(capfd, iopub_thread):
+    """Test echo on underlying FD while capturing the same FD
+
+    If not careful, this
+    """
+    session = Session()
+    import os
+
+    fd_stdout = os.fdopen(sys.stdout.fileno(), "wb")
+    stream = OutStream(
+        session,
+        iopub_thread,
+        "stdout",
+        isatty=True,
+        echo=sys.stdout,
+    )
+    # fd_stdout.close()
+    save_stdout = sys.stdout
+    with stream:
+        fd_stdout.write(b"fd\n")
+        fd_stdout.flush()
+        sys.stdout = stream
+        sys.__stdout__.write("__stdout__\n")
+        sys.__stdout__.flush()
+        sys.stdout.write("stdout")
+        sys.stdout.flush()
+    sys.stdout = save_stdout
+
+    out, err = capfd.readouterr()
+    print(out, err)
+    assert out.strip() == "fd\n__stdout__\nstdout"

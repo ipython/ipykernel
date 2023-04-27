@@ -475,6 +475,9 @@ class OutStream(TextIOBase):
         """Close the stream."""
         if self._should_watch:
             self._should_watch = False
+            # thread won't wake unless there's something to read
+            # writing something after _should_watch will not be echoed
+            os.write(self._original_stdstream_fd, b'\0')
             self.watch_fd_thread.join()
             # restore original FDs
             os.dup2(self._original_stdstream_copy, self._original_stdstream_fd)

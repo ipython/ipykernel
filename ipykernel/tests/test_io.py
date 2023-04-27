@@ -1,8 +1,10 @@
 """Test IO capturing functionality"""
 
 import io
+import os
 import sys
 import warnings
+from unittest import mock
 
 import pytest
 import zmq
@@ -111,15 +113,15 @@ def test_outstream(iopub_thread):
         assert stream.writable()
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
 def test_echo_watch(capfd, iopub_thread):
     """Test echo on underlying FD while capturing the same FD
 
     If not careful, this
     """
     session = Session()
-    import os
 
-    fd_stdout = os.fdopen(sys.stdout.fileno(), "wb")
+    stdout_fd = sys.stdout.fileno()
     stream = OutStream(
         session,
         iopub_thread,
@@ -127,18 +129,21 @@ def test_echo_watch(capfd, iopub_thread):
         isatty=True,
         echo=sys.stdout,
     )
-    # fd_stdout.close()
     save_stdout = sys.stdout
-    with stream:
-        fd_stdout.write(b"fd\n")
-        fd_stdout.flush()
-        sys.stdout = stream
+    with stream, mock.patch.object(sys, "stdout", stream):
+        # write to low-level FD
+        os.write(stdout_fd, b"fd\n")
+        os.fsync(stdout_fd)
+        # write to unwrapped __stdout__ (should also go to original FD)
         sys.__stdout__.write("__stdout__\n")
         sys.__stdout__.flush()
-        sys.stdout.write("stdout")
+        # write to original sys.stdout (should be the same as __stdout__)
+        save_stdout.write("stdout\n")
+        save_stdout.flush()
+        # print (writes to stream)
+        print("print")
         sys.stdout.flush()
-    sys.stdout = save_stdout
 
     out, err = capfd.readouterr()
     print(out, err)
-    assert out.strip() == "fd\n__stdout__\nstdout"
+    assert out.strip() == "fd\n__stdout__\nstdout\nprint"

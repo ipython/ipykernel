@@ -479,7 +479,6 @@ class OutStream(TextIOBase):
             # restore original FDs
             os.dup2(self._original_stdstream_copy, self._original_stdstream_fd)
             os.close(self._original_stdstream_copy)
-            print("closing", self)
         if self._exc:
             etype, value, tb = self._exc
             traceback.print_exception(etype, value, tb)

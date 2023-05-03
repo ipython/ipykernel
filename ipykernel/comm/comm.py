@@ -14,7 +14,7 @@ from traitlets import Bool, Bytes, Instance, Unicode, default
 
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
-from ipykernel.control import CONTORL_THREAD_NAME
+from ipykernel.control import CONTROL_THREAD_NAME
 
 
 # this is the class that will be created if we do comm.create_comm
@@ -32,7 +32,7 @@ class BaseComm(comm.base_comm.BaseComm):
         metadata = {} if metadata is None else metadata
         content = json_clean(dict(data=data, comm_id=self.comm_id, **keys))
 
-        if threading.current_thread().name == CONTORL_THREAD_NAME:
+        if threading.current_thread().name == CONTROL_THREAD_NAME:
             channel_from_which_to_get_parent_header = "control"
         else:
             channel_from_which_to_get_parent_header = "shell"
@@ -40,10 +40,6 @@ class BaseComm(comm.base_comm.BaseComm):
         if self.kernel is None:
             self.kernel = Kernel.instance()
 
-        import logging
-        logger = logging.getLogger("ipykernel.comm")
-        logger.error(f"TEST")
-        
         self.kernel.session.send(
             self.kernel.iopub_socket,
             msg_type,

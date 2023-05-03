@@ -12,9 +12,9 @@ import comm.base_comm
 import traitlets.config
 from traitlets import Bool, Bytes, Instance, Unicode, default
 
+from ipykernel.control import CONTORL_THREAD_NAME
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
-from ipykernel.control import CONTORL_THREAD_NAME
 
 
 # this is the class that will be created if we do comm.create_comm
@@ -36,14 +36,15 @@ class BaseComm(comm.base_comm.BaseComm):
             channel_from_which_to_get_parent_header = "control"
         else:
             channel_from_which_to_get_parent_header = "shell"
-        
+
         if self.kernel is None:
             self.kernel = Kernel.instance()
 
         import logging
+
         logger = logging.getLogger("ipykernel.comm")
-        logger.error(f"TEST")
-        
+        logger.error("TEST")
+
         self.kernel.session.send(
             self.kernel.iopub_socket,
             msg_type,

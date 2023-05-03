@@ -5,6 +5,7 @@ from tornado.ioloop import IOLoop
 
 CONTROL_THREAD_NAME = "Control"
 
+
 class ControlThread(Thread):
     """A thread for a control channel."""
 

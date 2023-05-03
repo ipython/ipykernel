@@ -36,7 +36,7 @@ class BaseComm(comm.base_comm.BaseComm):
             channel_from_which_to_get_parent_header = "control"
         else:
             channel_from_which_to_get_parent_header = "shell"
-        
+
         if self.kernel is None:
             self.kernel = Kernel.instance()
 

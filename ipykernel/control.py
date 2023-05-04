@@ -3,7 +3,6 @@ from threading import Thread
 
 from tornado.ioloop import IOLoop
 
-
 CONTROL_THREAD_NAME = "Control"
 
 

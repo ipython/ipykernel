@@ -12,9 +12,9 @@ import comm.base_comm
 import traitlets.config
 from traitlets import Bool, Bytes, Instance, Unicode, default
 
+from ipykernel.control import CONTROL_THREAD_NAME
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
-from ipykernel.control import CONTROL_THREAD_NAME
 
 
 # this is the class that will be created if we do comm.create_comm

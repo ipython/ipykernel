@@ -3,6 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import threading
 import uuid
 from typing import Optional
 from warnings import warn
@@ -13,6 +14,7 @@ from traitlets import Bool, Bytes, Instance, Unicode, default
 
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
+from ipykernel.control import CONTROL_THREAD_NAME
 
 
 # this is the class that will be created if we do comm.create_comm
@@ -30,6 +32,11 @@ class BaseComm(comm.base_comm.BaseComm):
         metadata = {} if metadata is None else metadata
         content = json_clean(dict(data=data, comm_id=self.comm_id, **keys))
 
+        if threading.current_thread().name == CONTROL_THREAD_NAME:
+            channel_from_which_to_get_parent_header = "control"
+        else:
+            channel_from_which_to_get_parent_header = "shell"
+
         if self.kernel is None:
             self.kernel = Kernel.instance()
 
@@ -38,7 +45,7 @@ class BaseComm(comm.base_comm.BaseComm):
             msg_type,
             content,
             metadata=json_clean(metadata),
-            parent=self.kernel.get_parent("shell"),
+            parent=self.kernel.get_parent(channel_from_which_to_get_parent_header),
             ident=self.topic,
             buffers=buffers,
         )

@@ -146,9 +146,12 @@ def subprocess_test_echo_watch():
             # write to original sys.stdout (should be the same as __stdout__)
             save_stdout.write("stdout\n")
             save_stdout.flush()
-            stream.flush()
+            # is there another way to flush on the FD?
+            fd_file = os.fdopen(stdout_fd, "w")
+            fd_file.flush()
             # we don't have a sync flush on _reading_ from the watched pipe
-            time.sleep(0.5)
+            time.sleep(1)
+            stream.flush()
         iopub_thread.stop()
         iopub_thread.close()
 
@@ -198,10 +201,8 @@ def test_echo_watch(ctx):
     assert set(zmq_stdout.strip().splitlines()) == {
         "fd",
         "print",
-        # original stdout streams don't get captured,
-        # they write directly to the terminal
-        # "stdout",
-        # "__stdout__",
+        "stdout",
+        "__stdout__",
     }
 
     # Check what was written to the process stdout (kernel terminal)

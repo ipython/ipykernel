@@ -91,6 +91,7 @@ api = "sphinx-apidoc -o docs/api -f -E ipykernel ipykernel/tests ipykernel/inpro
 [tool.hatch.envs.test]
 features = ["test"]
 [tool.hatch.envs.test.scripts]
+list = "python -m pip freeze"
 test = "python -m pytest -vv {args}"
 nowarn = "test -W default {args}"
 

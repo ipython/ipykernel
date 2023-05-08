@@ -150,6 +150,11 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: minimum
+
+      - name: List installed packages
+        run: |
+          hatch run test:list
+
       - name: Run the unit tests
         run: |
           hatch run test:nowarn || hatch run test:nowarn --lf

@@ -71,7 +71,7 @@ def test_io_thread(iopub_thread):
     ctx1, pipe = thread._setup_pipe_out()
     pipe.close()
     thread._pipe_in.close()
-    thread._check_mp_mode = lambda: MASTER  # type:ignore
+    thread._check_mp_mode = lambda: MASTER
     thread._really_send([b"hi"])
     ctx1.destroy()
     thread.close()

@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.23.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.22.0...3dd6dc9712ff6eb0a53cf79969dcefa0ba1b086e))
+
+### Enhancements made
+
+- Support control\<>iopub messages to e.g. unblock comm_msg from command execution  [#1114](https://github.com/ipython/ipykernel/pull/1114) ([@tkrabel-db](https://github.com/tkrabel-db))
+- Add outstream hook similar to display publisher [#1110](https://github.com/ipython/ipykernel/pull/1110) ([@maartenbreddels](https://github.com/maartenbreddels))
+
+### Maintenance and upkeep improvements
+
+- Use local coverage [#1109](https://github.com/ipython/ipykernel/pull/1109) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-03-20&to=2023-05-08&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-03-20..2023-05-08&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2023-03-20..2023-05-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-03-20..2023-05-08&type=Issues) | [@tkrabel-db](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Atkrabel-db+updated%3A2023-03-20..2023-05-08&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.22.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.21.3...e2972d763b5357d4e1cb9b5355593583ca6d5657))
@@ -17,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-03-06&to=2023-03-20&type=c))
 
 [@martinRenou](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AmartinRenou+updated%3A2023-03-06..2023-03-20&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-03-06..2023-03-20&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.21.3
 

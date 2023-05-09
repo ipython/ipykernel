@@ -139,7 +139,7 @@ def subprocess_test_echo_watch():
             # write to low-level FD
             os.write(stdout_fd, b"fd\n")
             # print (writes to stream)
-            print("print")
+            print("print\n", end="")
             sys.stdout.flush()
             # write to unwrapped __stdout__ (should also go to original FD)
             sys.__stdout__.write("__stdout__\n")

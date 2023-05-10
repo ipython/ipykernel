@@ -364,7 +364,7 @@ class OutStream(TextIOBase):
         echo : bool
             whether to echo output
         watchfd : bool (default, True)
-            Watch the file descripttor corresponding to the replaced stream.
+            Watch the file descriptor corresponding to the replaced stream.
             This is useful if you know some underlying code will write directly
             the file descriptor by its number. It will spawn a watching thread,
             that will swap the give file descriptor for a pipe, read from the
@@ -408,19 +408,39 @@ class OutStream(TextIOBase):
 
         if (
             watchfd
-            and (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
-            and ("PYTEST_CURRENT_TEST" not in os.environ)
+            and (
+                (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
+                # Pytest set its own capture. Don't redirect from within pytest.
+                and ("PYTEST_CURRENT_TEST" not in os.environ)
+            )
+            # allow forcing watchfd (mainly for tests)
+            or watchfd == "force"
         ):
-            # Pytest set its own capture. Dont redirect from within pytest.
-
             self._should_watch = True
             self._setup_stream_redirects(name)
 
         if echo:
             if hasattr(echo, "read") and hasattr(echo, "write"):
+                # make sure we aren't trying to echo on the FD we're watching!
+                # that would cause an infinite loop, always echoing on itself
+                if self._should_watch:
+                    try:
+                        echo_fd = echo.fileno()
+                    except Exception:
+                        echo_fd = None
+
+                    if echo_fd is not None and echo_fd == self._original_stdstream_fd:
+                        # echo on the _copy_ we made during
+                        # this is the actual terminal FD now
+                        echo = io.TextIOWrapper(
+                            io.FileIO(
+                                self._original_stdstream_copy,
+                                "w",
+                            )
+                        )
                 self.echo = echo
             else:
-                msg = "echo argument must be a file like object"
+                msg = "echo argument must be a file-like object"
                 raise ValueError(msg)
 
     def isatty(self):
@@ -433,7 +453,7 @@ class OutStream(TextIOBase):
 
     def _setup_stream_redirects(self, name):
         pr, pw = os.pipe()
-        fno = getattr(sys, name).fileno()
+        fno = self._original_stdstream_fd = getattr(sys, name).fileno()
         self._original_stdstream_copy = os.dup(fno)
         os.dup2(pw, fno)
 
@@ -455,7 +475,13 @@ class OutStream(TextIOBase):
         """Close the stream."""
         if self._should_watch:
             self._should_watch = False
+            # thread won't wake unless there's something to read
+            # writing something after _should_watch will not be echoed
+            os.write(self._original_stdstream_fd, b'\0')
             self.watch_fd_thread.join()
+            # restore original FDs
+            os.dup2(self._original_stdstream_copy, self._original_stdstream_fd)
+            os.close(self._original_stdstream_copy)
         if self._exc:
             etype, value, tb = self._exc
             traceback.print_exception(etype, value, tb)

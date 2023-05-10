@@ -18,8 +18,7 @@ from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
 @pytest.fixture
 def ctx():
     ctx = zmq.Context()
-    return ctx
-    # yield ctx
+    yield ctx
     ctx.destroy()
 
 

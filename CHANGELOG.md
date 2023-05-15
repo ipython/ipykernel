@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.23.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.0...d63c33afb9872f2781997b2428d7e9e0c1d23d41))
+
+### Bugs fixed
+
+- Avoid echoing onto a captured FD [#1111](https://github.com/ipython/ipykernel/pull/1111) ([@minrk](https://github.com/minrk))
+
+### Maintenance and upkeep improvements
+
+- update readthedocs env to 3.11 [#1117](https://github.com/ipython/ipykernel/pull/1117) ([@minrk](https://github.com/minrk))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-05-08&to=2023-05-15&type=c))
+
+[@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-05-08..2023-05-15&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.23.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.22.0...3dd6dc9712ff6eb0a53cf79969dcefa0ba1b086e))
@@ -20,8 +40,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-03-20&to=2023-05-08&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-03-20..2023-05-08&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2023-03-20..2023-05-08&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-03-20..2023-05-08&type=Issues) | [@tkrabel-db](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Atkrabel-db+updated%3A2023-03-20..2023-05-08&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.22.0
 

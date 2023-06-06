@@ -419,10 +419,9 @@ def loop_asyncio_exit(kernel):
 
     loop = asyncio.get_event_loop()
 
-    @asyncio.coroutine
-    def close_loop():
+    async def close_loop():
         if hasattr(loop, "shutdown_asyncgens"):
-            yield from loop.shutdown_asyncgens()
+            yield loop.shutdown_asyncgens()
         loop._should_close = True  # type:ignore[attr-defined]
         loop.stop()
 

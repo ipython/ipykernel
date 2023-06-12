@@ -4,8 +4,10 @@ import io
 import os
 import subprocess
 import sys
+import threading
 import time
 import warnings
+from concurrent.futures import Future, ThreadPoolExecutor
 from unittest import mock
 
 import pytest
@@ -112,6 +114,39 @@ def test_outstream(iopub_thread):
         stream.write("hi")
         stream.writelines(["ab", "cd"])
         assert stream.writable()
+
+
+async def test_event_pipe_gc(iopub_thread):
+    session = Session(key=b'abc')
+    stream = OutStream(
+        session,
+        iopub_thread,
+        "stdout",
+        isatty=True,
+        watchfd=False,
+    )
+    save_stdout = sys.stdout
+    assert iopub_thread._event_pipes == {}
+    with stream, mock.patch.object(sys, "stdout", stream), ThreadPoolExecutor(1) as pool:
+        pool.submit(print, "x").result()
+        pool_thread = pool.submit(threading.current_thread).result()
+        assert list(iopub_thread._event_pipes) == [pool_thread]
+
+    # run gc once in the iopub thread
+    f: Future = Future()
+
+    async def run_gc():
+        try:
+            await iopub_thread._event_pipe_gc()
+        except Exception as e:
+            f.set_exception(e)
+        else:
+            f.set_result(None)
+
+    iopub_thread.io_loop.add_callback(run_gc)
+    # wait for call to finish in iopub thread
+    f.result()
+    assert iopub_thread._event_pipes == {}
 
 
 def subprocess_test_echo_watch():

@@ -133,7 +133,7 @@ async def test_event_pipe_gc(iopub_thread):
         assert list(iopub_thread._event_pipes) == [pool_thread]
 
     # run gc once in the iopub thread
-    f: Future = Future()  
+    f: Future = Future()
 
     async def run_gc():
         try:

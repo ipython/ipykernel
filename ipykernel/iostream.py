@@ -85,7 +85,7 @@ class IOPubThread:
         if self._event_pipe_gc_task is not None:
             # cancel gc task to avoid pending task warnings
             async def _cancel():
-                self._event_pipe_gc_task.cancel()
+                self._event_pipe_gc_task.cancel()  # type:ignore
 
             self.io_loop.run_sync(_cancel)
         self.io_loop.close(all_fds=True)

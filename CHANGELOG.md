@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.23.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.1...112ca66da0ee8156b983094b2c8e2926ed63cfcb))
+
+### Bugs fixed
+
+- Avoid ResourceWarning on implicitly closed event pipe sockets [#1125](https://github.com/ipython/ipykernel/pull/1125) ([@minrk](https://github.com/minrk))
+- fix: protect stdout/stderr restoration in `InProcessKernel._redirected_io` [#1122](https://github.com/ipython/ipykernel/pull/1122) ([@charles-cooper](https://github.com/charles-cooper))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-05-15&to=2023-06-12&type=c))
+
+[@charles-cooper](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Acharles-cooper+updated%3A2023-05-15..2023-06-12&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-05-15..2023-06-12&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-05-15..2023-06-12&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.23.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.0...d63c33afb9872f2781997b2428d7e9e0c1d23d41))
@@ -19,8 +38,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-05-08&to=2023-05-15&type=c))
 
 [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-05-08..2023-05-15&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.23.0
 

@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.23.3
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.2...ea3e6479aca70f87282ec0b60412f2cfba59eb35))
+
+### Bugs fixed
+
+- Check existence of connection_file before writing [#1127](https://github.com/ipython/ipykernel/pull/1127) ([@fecet](https://github.com/fecet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-06-12&to=2023-06-23&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-06-12..2023-06-23&type=Issues) | [@fecet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afecet+updated%3A2023-06-12..2023-06-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.23.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.1...112ca66da0ee8156b983094b2c8e2926ed63cfcb))
@@ -18,8 +34,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-05-15&to=2023-06-12&type=c))
 
 [@charles-cooper](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Acharles-cooper+updated%3A2023-05-15..2023-06-12&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-05-15..2023-06-12&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-05-15..2023-06-12&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.23.1
 

@@ -429,7 +429,7 @@ def loop_asyncio_exit(kernel):
         close_loop()
 
     elif not loop.is_closed():
-        loop.run_until_complete(close_loop)  # type:ignore[call-overload]
+        loop.run_until_complete(close_loop)  # type:ignore
         loop.close()
 
 

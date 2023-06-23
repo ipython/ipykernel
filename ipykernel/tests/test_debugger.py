@@ -208,7 +208,7 @@ print({var_name})
     get_reply(kernel_with_debug, msg_id)
 
     r = wait_for_debug_request(kernel_with_debug, "inspectVariables")
-    assert var_name in list(map(lambda v: v["name"], r["body"]["variables"]))  # type:ignore  # noqa
+    assert var_name in list(map(lambda v: v["name"], r["body"]["variables"]))  # noqa
 
     reply = wait_for_debug_request(
         kernel_with_debug,

@@ -260,9 +260,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     def write_connection_file(self):
         """write connection info to JSON file"""
         cf = self.abs_connection_file
-        self.log.debug("Writing connection file: %s", cf)
         if os.path.exists(cf):
+            self.log.debug("connection file %s alreasy exist", cf)
             return
+        self.log.debug("Writing connection file: %s", cf)
         write_connection_file(
             cf,
             ip=self.ip,

@@ -16,10 +16,11 @@ import time
 import typing as t
 import uuid
 import warnings
-from .control import CONTROL_THREAD_NAME
 from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
+
+from .control import CONTROL_THREAD_NAME
 
 if sys.platform != "win32":
     from signal import SIGKILL
@@ -638,7 +639,7 @@ class Kernel(SingletonConfigurable):
                 channel = "control"
             else:
                 channel = "shell"
-        
+
         return self._parents.get(channel, {})
 
     def send_response(

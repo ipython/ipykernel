@@ -3,7 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import threading
 import uuid
 from typing import Optional
 from warnings import warn
@@ -12,7 +11,6 @@ import comm.base_comm
 import traitlets.config
 from traitlets import Bool, Bytes, Instance, Unicode, default
 
-from ipykernel.control import CONTROL_THREAD_NAME
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
 

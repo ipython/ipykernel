@@ -121,7 +121,7 @@ f(2, 3)"""
     assert reply["body"]["breakpoints"][0]["source"]["path"] == source
 
     r = wait_for_debug_request(kernel_with_debug, "debugInfo")
-    assert source in map(lambda b: b["source"], r["body"]["breakpoints"])  # type:ignore # noqa
+    assert source in map(lambda b: b["source"], r["body"]["breakpoints"])  # noqa
 
     r = wait_for_debug_request(kernel_with_debug, "configurationDone")
     assert r["success"]

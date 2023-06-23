@@ -11,10 +11,12 @@ import logging
 import os
 import socket
 import sys
+import threading
 import time
 import typing as t
 import uuid
 import warnings
+from .control import CONTROL_THREAD_NAME
 from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
@@ -187,7 +189,7 @@ class Kernel(SingletonConfigurable):
             DeprecationWarning,
             stacklevel=2,
         )
-        return self.get_parent(channel="shell")
+        return self.get_parent()
 
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the
@@ -598,7 +600,7 @@ class Kernel(SingletonConfigurable):
             self.iopub_socket,
             "debug_event",
             event,
-            parent=self.get_parent("control"),
+            parent=self.get_parent(),
             ident=self._topic("debug_event"),
         )
 
@@ -614,7 +616,7 @@ class Kernel(SingletonConfigurable):
         self._parent_ident[channel] = ident
         self._parents[channel] = parent
 
-    def get_parent(self, channel="shell"):
+    def get_parent(self, channel=None):
         """Get the parent request associated with a channel.
 
         .. versionadded:: 6
@@ -629,6 +631,14 @@ class Kernel(SingletonConfigurable):
         message : dict
             the parent message for the most recent request on the channel.
         """
+
+        if channel is None:
+            # If a channel is not specified, get information from current thread
+            if threading.current_thread().name == CONTROL_THREAD_NAME:
+                channel = "control"
+            else:
+                channel = "shell"
+        
         return self._parents.get(channel, {})
 
     def send_response(
@@ -641,7 +651,7 @@ class Kernel(SingletonConfigurable):
         track=False,
         header=None,
         metadata=None,
-        channel="shell",
+        channel=None,
     ):
         """Send a response to the message we're currently processing.
 

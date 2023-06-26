@@ -29,6 +29,8 @@ from zmq.eventloop.zmqstream import ZMQStream
 MASTER = 0
 CHILD = 1
 
+PIPE_BUFFER_SIZE = 1000
+
 # -----------------------------------------------------------------------------
 # IO classes
 # -----------------------------------------------------------------------------
@@ -367,11 +369,11 @@ class OutStream(TextIOBase):
         """
 
         try:
-            bts = os.read(self._fid, 1000)
+            bts = os.read(self._fid, PIPE_BUFFER_SIZE)
             while bts and self._should_watch:
-                self.write(bts.decode())
+                self.write(bts.decode(errors='replace'))
                 os.write(self._original_stdstream_copy, bts)
-                bts = os.read(self._fid, 1000)
+                bts = os.read(self._fid, PIPE_BUFFER_SIZE)
         except Exception:
             self._exc = sys.exc_info()
 

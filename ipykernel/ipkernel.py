@@ -675,7 +675,6 @@ class IPythonKernel(KernelBase):
                 "error",
                 reply_content,
                 ident=self._topic("error"),
-                channel="shell",
             )
             self.log.info("Exception in apply request:\n%s", "\n".join(reply_content["traceback"]))
             result_buf = []

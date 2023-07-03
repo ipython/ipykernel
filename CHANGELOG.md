@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.24.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.3...0c1db099a32c4cb28bfb4b3508bb808d8b4092e7))
+
+### New features added
+
+- Let get_parent decide the channel to get parent header [#1128](https://github.com/ipython/ipykernel/pull/1128) ([@dby-tmwctw](https://github.com/dby-tmwctw))
+
+### Bugs fixed
+
+- Bugfix: binary stdout/stderr handling [#1129](https://github.com/ipython/ipykernel/pull/1129) ([@arieleiz](https://github.com/arieleiz))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-06-23&to=2023-07-03&type=c))
+
+[@arieleiz](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aarieleiz+updated%3A2023-06-23..2023-07-03&type=Issues) | [@dby-tmwctw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adby-tmwctw+updated%3A2023-06-23..2023-07-03&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-06-23..2023-07-03&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.23.3
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.2...ea3e6479aca70f87282ec0b60412f2cfba59eb35))
@@ -15,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-06-12&to=2023-06-23&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-06-12..2023-06-23&type=Issues) | [@fecet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afecet+updated%3A2023-06-12..2023-06-23&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.23.2
 

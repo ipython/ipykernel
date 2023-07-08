@@ -278,6 +278,8 @@ ignore = [
   "SIM105",
   # S110 `try`-`except`-`pass` detected
   "S110",
+  # RUF012 Mutable class attributes should be annotated with `typing.ClassVar`
+  "RUF012",
 ]
 unfixable = [
   # Don't touch print statements

@@ -56,6 +56,8 @@ test = [
     "pytest-cov",
     "flaky",
     "ipyparallel",
+    "trio",
+    "curio",
     "pre-commit",
     "pytest-asyncio",
     "pytest-timeout"

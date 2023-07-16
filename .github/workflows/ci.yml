@@ -137,7 +137,7 @@ jobs:
           pip freeze
 
       - name: Run the tests
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: pytest -W default -vv || pytest --vv -W default --lf
 
   test_miniumum_versions:

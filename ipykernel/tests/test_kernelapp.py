@@ -50,7 +50,7 @@ def test_start_app():
     app.kernel.destroy()
     app.close()
 
-
+@pytest.mark.skipif(os.name == "nt", reason="permission errors on windows")
 def test_merge_connection_file():
     cfg = Config()
     with TemporaryWorkingDirectory() as d:

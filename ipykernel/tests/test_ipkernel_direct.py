@@ -20,7 +20,7 @@ class user_mod:
     __dict__ = {}
 
 
-async def test_properities(ipkernel: IPythonKernel) -> None:
+async def test_properties(ipkernel: IPythonKernel) -> None:
     ipkernel.user_module = user_mod()
     ipkernel.user_ns = {}
 

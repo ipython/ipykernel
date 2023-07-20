@@ -78,7 +78,8 @@ def test_merge_connection_file():
         app = IPKernelApp(config=cfg, connection_file=cf)
 
         # Calling app.initialize() does not work in the test, so we call the relevant functions that initialize() calls
-        super(IPKernelApp, app).initialize(argv=None)
+        # We must pass in an empty argv, otherwise the default is to try to parse the test runner's argv
+        super(IPKernelApp, app).initialize(argv=[""])
         app.init_connection_file()
         app.init_sockets()
         app.init_heartbeat()
@@ -105,7 +106,7 @@ def test_merge_connection_file():
             del initial_connection_info[key]
 
         # The wildcard ip address was also replaced
-        assert(new_connection_info["ip"] != "*")
+        assert new_connection_info["ip"] != "*"
         del new_connection_info["ip"]
         del initial_connection_info["ip"]
 

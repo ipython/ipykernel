@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.25.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.24.0...09c3c359addf60e26078207990ad2ca932cf2613))
+
+### Enhancements made
+
+- feat: let display hook handle clear_output [#1135](https://github.com/ipython/ipykernel/pull/1135) ([@maartenbreddels](https://github.com/maartenbreddels))
+
+### Bugs fixed
+
+- Merge connection info into existing connection file if it already exists [#1133](https://github.com/ipython/ipykernel/pull/1133) ([@jasongrout](https://github.com/jasongrout))
+
+### Maintenance and upkeep improvements
+
+- Clean up lint [#1134](https://github.com/ipython/ipykernel/pull/1134) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-07-03&to=2023-07-25&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-07-03..2023-07-25&type=Issues) | [@fecet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afecet+updated%3A2023-07-03..2023-07-25&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2023-07-03..2023-07-25&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2023-07-03..2023-07-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-07-03..2023-07-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.24.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.23.3...0c1db099a32c4cb28bfb4b3508bb808d8b4092e7))
@@ -19,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-06-23&to=2023-07-03&type=c))
 
 [@arieleiz](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aarieleiz+updated%3A2023-06-23..2023-07-03&type=Issues) | [@dby-tmwctw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adby-tmwctw+updated%3A2023-06-23..2023-07-03&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-06-23..2023-07-03&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.23.3
 

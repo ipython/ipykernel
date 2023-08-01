@@ -657,7 +657,7 @@ class Debugger:
                 }
             )
             if reply["success"]:
-                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})  # noqa[S307]
+                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})  # noqa: S307
 
         body = {
             "data": repr_data,

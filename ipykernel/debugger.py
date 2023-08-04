@@ -477,11 +477,11 @@ class Debugger:
         # debugpy can set breakpoints on different lines than the ones requested,
         # so we want to record the breakpoints that were actually added
         if "success" in message_response and message_response["success"]:
-            self.breakpoint_list[source] = [{
-                "line": breakpoint["line"]
-            } for breakpoint in message_response["body"]["breakpoints"]]
+            self.breakpoint_list[source] = [
+                {"line": breakpoint["line"]}
+                for breakpoint in message_response["body"]["breakpoints"]
+            ]
         return message_response
-    
 
     async def source(self, message):
         """Handle a source message."""

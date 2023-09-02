@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.25.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.25.0...18e54f31725d6645dd71a8749c9e1eb28281f804))
+
+### Bugs fixed
+
+- Modifying debugger to return the same breakpoints in 'debugInfo' response as 'setBreakpoints' [#1140](https://github.com/ipython/ipykernel/pull/1140) ([@vaishnavi17](https://github.com/vaishnavi17))
+
+### Maintenance and upkeep improvements
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-07-25&to=2023-08-07&type=c))
+
+[@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-07-25..2023-08-07&type=Issues) | [@vaishnavi17](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Avaishnavi17+updated%3A2023-07-25..2023-08-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.25.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.24.0...09c3c359addf60e26078207990ad2ca932cf2613))
@@ -23,8 +41,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-07-03&to=2023-07-25&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-07-03..2023-07-25&type=Issues) | [@fecet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afecet+updated%3A2023-07-03..2023-07-25&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2023-07-03..2023-07-25&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2023-07-03..2023-07-25&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-07-03..2023-07-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.24.0
 

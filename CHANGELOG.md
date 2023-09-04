@@ -2,6 +2,24 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.25.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.25.1...9d3f7aecc4fe68f14ebcc4dad4b65b19676e820e))
+
+### Bugs fixed
+
+- Make iostream shutdown more robust [#1143](https://github.com/ipython/ipykernel/pull/1143) ([@blink1073](https://github.com/blink1073))
+- Don't call QApplication.setQuitOnLastWindowClosed(False). [#1142](https://github.com/ipython/ipykernel/pull/1142) ([@anntzer](https://github.com/anntzer))
+- Avoid starting IOPub background thread after it's been stopped [#1137](https://github.com/ipython/ipykernel/pull/1137) ([@minrk](https://github.com/minrk))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-08-07&to=2023-09-04&type=c))
+
+[@anntzer](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aanntzer+updated%3A2023-08-07..2023-09-04&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-08-07..2023-09-04&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2023-08-07..2023-09-04&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-08-07..2023-09-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.25.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.25.0...18e54f31725d6645dd71a8749c9e1eb28281f804))
@@ -17,8 +35,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-07-25&to=2023-08-07&type=c))
 
 [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-07-25..2023-08-07&type=Issues) | [@vaishnavi17](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Avaishnavi17+updated%3A2023-07-25..2023-08-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.25.0
 

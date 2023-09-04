@@ -97,7 +97,7 @@ class IOPubThread:
 
             try:
                 self.io_loop.run_sync(_cancel)
-            except TimeoutError:
+            except (TimeoutError, asyncio.exceptions.TimeoutError):
                 pass
         self.io_loop.close(all_fds=True)
 

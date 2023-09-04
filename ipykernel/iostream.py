@@ -95,10 +95,7 @@ class IOPubThread:
             async def _cancel():
                 self._event_pipe_gc_task.cancel()  # type:ignore
 
-            try:
-                self.io_loop.run_sync(_cancel)
-            except (TimeoutError, asyncio.exceptions.TimeoutError):
-                pass
+            self.io_loop.run_sync(_cancel)
         self.io_loop.close(all_fds=True)
 
     def _setup_event_pipe(self):

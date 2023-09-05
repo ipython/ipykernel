@@ -216,6 +216,7 @@ def test_echo_watch(ctx):
             ],
             env=env,
             capture_output=True,
+            check=True,
             text=True,
             timeout=10,
         )

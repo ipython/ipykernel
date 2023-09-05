@@ -252,7 +252,7 @@ def test_smoke_faulthandler():
 def test_help_output():
     """ipython kernel --help-all works"""
     cmd = [sys.executable, "-m", "IPython", "kernel", "--help-all"]
-    proc = subprocess.run(cmd, timeout=30, capture_output=True)
+    proc = subprocess.run(cmd, timeout=30, capture_output=True, check=True)
     assert proc.returncode == 0, proc.stderr
     assert b"Traceback" not in proc.stderr
     assert b"Options" in proc.stdout

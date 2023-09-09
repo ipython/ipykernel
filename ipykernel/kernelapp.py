@@ -634,7 +634,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         but it is still preferable to run the Selector in the main thread
         instead of the background.
 
-        do this as early as possible to make it a low priority and overrideable
+        do this as early as possible to make it a low priority and overridable
 
         ref: https://github.com/tornadoweb/tornado/issues/2608
 

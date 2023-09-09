@@ -373,7 +373,7 @@ class OutStream(TextIOBase):
 
     def _watch_pipe_fd(self):
         """
-        We've redirected standards steams 0 and 1 into a pipe.
+        We've redirected standards streams 0 and 1 into a pipe.
 
         We need to watch in a thread and redirect them to the right places.
 
@@ -424,7 +424,7 @@ class OutStream(TextIOBase):
             that will swap the give file descriptor for a pipe, read from the
             pipe, and insert this into the current Stream.
         isatty : bool (default, False)
-            Indication of whether this stream has termimal capabilities (e.g. can handle colors)
+            Indication of whether this stream has terminal capabilities (e.g. can handle colors)
 
         """
         if pipe is not None:

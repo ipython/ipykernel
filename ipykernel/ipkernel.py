@@ -328,7 +328,7 @@ class IPythonKernel(KernelBase):
             # use add_callback for thread safety
             self.io_loop.add_callback(set_sigint_result)
 
-        # set the custom sigint hander during this context
+        # set the custom sigint handler during this context
         save_sigint = signal.signal(signal.SIGINT, handle_sigint)
         try:
             yield

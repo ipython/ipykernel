@@ -469,7 +469,7 @@ def test_oinfo_detail():
 def test_oinfo_not_found():
     flush_channels()
 
-    msg_id = KC.inspect("dne")
+    msg_id = KC.inspect("does_not_exist")
     reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, "inspect_reply", msg_id)
     content = reply["content"]

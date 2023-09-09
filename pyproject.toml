@@ -135,6 +135,7 @@ fmt = [
 check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 follow_imports = "normal"
 ignore_missing_imports = true
 no_implicit_optional = true
@@ -147,10 +148,26 @@ strict_optional = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_return_any = true
+warn_unreachable = true
 warn_unused_ignores = true
 
 [tool.pytest.ini_options]
-addopts = "-raXs --durations 10 --color=yes --doctest-modules --ignore=ipykernel/pylab/backend_inline.py --ignore=ipykernel/pylab/config.py --ignore=ipykernel/gui/gtk3embed.py --ignore=ipykernel/gui/gtkembed.py --ignore=ipykernel/datapub.py --ignore=ipykernel/log.py --ignore=ipykernel/pickleutil.py --ignore=ipykernel/serialize.py --ignore=ipykernel/_eventloop_macos.py"
+minversion = "6.0"
+xfail_strict = true
+log_cli_level = "info"
+addopts = [
+  "-raXs", "--durations=10", "--color=yes", "--doctest-modules",
+   "--showlocals", "--strict-markers", "--strict-config",
+   "--ignore=ipykernel/pylab/backend_inline.py",
+   "--ignore=ipykernel/pylab/config.py",
+   "--ignore=ipykernel/gui/gtk3embed.py",
+   "--ignore=ipykernel/gui/gtkembed.py",
+   "--ignore=ipykernel/datapub.py",
+   "--ignore=ipykernel/log.py",
+   "--ignore=ipykernel/pickleutil.py",
+   "--ignore=ipykernel/serialize.py",
+   "--ignore=ipykernel/_eventloop_macos.py"
+]
 testpaths = [
     "ipykernel/tests",
     "ipykernel/inprocess/tests"
@@ -320,3 +337,6 @@ exclude = ["docs", "*/tests"]
 [tool.check-wheel-contents]
 toplevel = ["ipykernel/", "ipykernel_launcher.py"]
 ignore = ["W002"]
+
+[tool.repo-review]
+ignore = ["PY007", "PP308", "GH102", "PC140", "MY101"]

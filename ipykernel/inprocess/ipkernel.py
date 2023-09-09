@@ -111,7 +111,7 @@ class InProcessKernel(IPythonKernel):
         # Await a response.
         while self.raw_input_str is None:
             frontend.stdin_channel.process_events()
-        return self.raw_input_str
+        return self.raw_input_str  # type:ignore[unreachable]
 
     # -------------------------------------------------------------------------
     # Protected interface

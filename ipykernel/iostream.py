@@ -93,7 +93,7 @@ class IOPubThread:
         if self._event_pipe_gc_task is not None:
             # cancel gc task to avoid pending task warnings
             async def _cancel():
-                self._event_pipe_gc_task.cancel()  # type:ignore
+                self._event_pipe_gc_task.cancel()  # type:ignore[union-attr]
 
             if not self._stopped:
                 self.io_loop.run_sync(_cancel)
@@ -634,7 +634,7 @@ class OutStream(TextIOBase):
         """
 
         if not isinstance(string, str):
-            msg = f"write() argument must be str, not {type(string)}"
+            msg = f"write() argument must be str, not {type(string)}"  # type:ignore[unreachable]
             raise TypeError(msg)
 
         if self.echo is not None:

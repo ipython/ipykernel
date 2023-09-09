@@ -86,7 +86,7 @@ path = "ipykernel/_version.py"
 features = ["docs"]
 [tool.hatch.envs.docs.scripts]
 build = "make -C docs html SPHINXOPTS='-W'"
-api = "sphinx-apidoc -o docs/api -f -E ipykernel ipykernel/tests ipykernel/inprocess/tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab"
+api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab"
 
 [tool.hatch.envs.test]
 features = ["test"]
@@ -150,6 +150,11 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unreachable = true
 warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disable_error_code = ["ignore-without-code"]
+warn_unreachable = false
 
 [tool.pytest.ini_options]
 minversion = "6.0"

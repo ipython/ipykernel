@@ -429,7 +429,7 @@ def loop_asyncio_exit(kernel):
         close_loop()
 
     elif not loop.is_closed():
-        loop.run_until_complete(close_loop)  # type:ignore[call-overload]
+        loop.run_until_complete(close_loop)  # type:ignore[arg-type]
         loop.close()
 
 
@@ -567,8 +567,10 @@ def enable_gui(gui, kernel=None):
 
     loop = loop_map[gui]
     if (
-        loop and kernel.eventloop is not None and kernel.eventloop is not loop
-    ):  # type:ignore[unreachable]
+        loop
+        and kernel.eventloop is not None
+        and kernel.eventloop is not loop  # type:ignore[unreachable]
+    ):
         msg = "Cannot activate multiple GUI eventloops"  # type:ignore[unreachable]
         raise RuntimeError(msg)
     kernel.eventloop = loop

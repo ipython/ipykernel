@@ -29,7 +29,7 @@ from .zmqshell import ZMQInteractiveShell
 try:
     from IPython.core.interactiveshell import _asyncio_runner  # type:ignore[attr-defined]
 except ImportError:
-    _asyncio_runner = None
+    _asyncio_runner = None  # type:ignore[assignment]
 
 try:
     from IPython.core.completer import provisionalcompleter as _provisionalcompleter
@@ -377,7 +377,7 @@ class IPythonKernel(KernelBase):
                 preprocessing_exc_tuple = sys.exc_info()
 
             if (
-                _asyncio_runner
+                _asyncio_runner  # type:ignore[truthy-bool]
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
                 and should_run_async(
@@ -625,7 +625,7 @@ class IPythonKernel(KernelBase):
         try:
             from ipyparallel.serialize import serialize_object, unpack_apply_message
         except ImportError:
-            from .serialize import serialize_object, unpack_apply_message  # type:ignore[no-redef]
+            from .serialize import serialize_object, unpack_apply_message
 
         shell = self.shell
         try:

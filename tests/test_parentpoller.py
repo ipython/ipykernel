@@ -20,7 +20,8 @@ def test_parent_poller_unix():
             poller.run()
 
     def mock_getppid():
-        raise ValueError("hi")
+        msg = "hi"
+        raise ValueError(msg)
 
     with mock.patch("os.getppid", mock_getppid), pytest.raises(ValueError):
         poller.run()

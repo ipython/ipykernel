@@ -53,7 +53,7 @@ class Reference(HasTraits):
             try:
                 setattr(self, key, d[key])
             except TraitError as e:
-                assert False, str(e)
+                raise AssertionError(str(e)) from None
 
 
 class Version(Unicode):
@@ -65,9 +65,11 @@ class Version(Unicode):
 
     def validate(self, obj, value):
         if self.min and V(value) < V(self.min):
-            raise TraitError(f"bad version: {value} < {self.min}")
+            msg = f"bad version: {value} < {self.min}"
+            raise TraitError(msg)
         if self.max and (V(value) > V(self.max)):
-            raise TraitError(f"bad version: {value} > {self.max}")
+            msg = f"bad version: {value} > {self.max}"
+            raise TraitError(msg)
 
 
 class RMessage(Reference):

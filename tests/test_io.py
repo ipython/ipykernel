@@ -125,7 +125,6 @@ async def test_event_pipe_gc(iopub_thread):
         isatty=True,
         watchfd=False,
     )
-    save_stdout = sys.stdout
     assert iopub_thread._event_pipes == {}
     with stream, mock.patch.object(sys, "stdout", stream), ThreadPoolExecutor(1) as pool:
         pool.submit(print, "x").result()
@@ -201,7 +200,6 @@ def test_echo_watch(ctx):
     port = s.bind_to_random_port("tcp://127.0.0.1")
     url = f"tcp://127.0.0.1:{port}"
     session = Session(key=b'abc')
-    messages = []
     stdout_chunks = []
     with s:
         env = dict(os.environ)

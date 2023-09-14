@@ -86,7 +86,7 @@ path = "ipykernel/_version.py"
 features = ["docs"]
 [tool.hatch.envs.docs.scripts]
 build = "make -C docs html SPHINXOPTS='-W'"
-api = "sphinx-apidoc -o docs/api -f -E ipykernel ipykernel/tests ipykernel/inprocess/tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab"
+api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab"
 
 [tool.hatch.envs.test]
 features = ["test"]
@@ -112,7 +112,7 @@ matrix.qt.features = [
 
 [tool.hatch.envs.typing]
 features = ["test"]
-dependencies = ["mypy>=0.990"]
+dependencies = ["mypy>=1.5.1"]
 [tool.hatch.envs.typing.scripts]
 test = "mypy --install-types --non-interactive {args:.}"
 
@@ -135,6 +135,7 @@ fmt = [
 check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 follow_imports = "normal"
 ignore_missing_imports = true
 no_implicit_optional = true
@@ -147,13 +148,34 @@ strict_optional = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_return_any = true
+warn_unreachable = true
 warn_unused_ignores = true
 
+[[tool.mypy.overrides]]
+module = "tests.*"
+disable_error_code = ["ignore-without-code"]
+warn_unreachable = false
+
 [tool.pytest.ini_options]
-addopts = "-raXs --durations 10 --color=yes --doctest-modules --ignore=ipykernel/pylab/backend_inline.py --ignore=ipykernel/pylab/config.py --ignore=ipykernel/gui/gtk3embed.py --ignore=ipykernel/gui/gtkembed.py --ignore=ipykernel/datapub.py --ignore=ipykernel/log.py --ignore=ipykernel/pickleutil.py --ignore=ipykernel/serialize.py --ignore=ipykernel/_eventloop_macos.py"
+minversion = "6.0"
+xfail_strict = true
+log_cli_level = "info"
+addopts = [
+  "-raXs", "--durations=10", "--color=yes", "--doctest-modules",
+   "--showlocals", "--strict-markers", "--strict-config",
+   "--ignore=ipykernel/pylab/backend_inline.py",
+   "--ignore=ipykernel/pylab/config.py",
+   "--ignore=ipykernel/gui/gtk3embed.py",
+   "--ignore=ipykernel/gui/gtkembed.py",
+   "--ignore=ipykernel/datapub.py",
+   "--ignore=ipykernel/log.py",
+   "--ignore=ipykernel/pickleutil.py",
+   "--ignore=ipykernel/serialize.py",
+   "--ignore=ipykernel/_eventloop_macos.py"
+]
 testpaths = [
-    "ipykernel/tests",
-    "ipykernel/inprocess/tests"
+    "tests",
+    "tests/inprocess"
 ]
 asyncio_mode = "auto"
 timeout = 300
@@ -195,14 +217,13 @@ exclude_lines = [
 relative_files = true
 source = ["ipykernel"]
 omit = [
-  "ipykernel/tests/*",
+  "tests/*",
   "ipykernel/datapub.py",
   "ipykernel/debugger.py",
   "ipykernel/eventloops.py",
   "ipykernel/log.py",
   "ipykernel/pickleutil.py",
   "ipykernel/serialize.py",
-  "ipykernel/inprocess/tests/*",
   "ipykernel/gui/*",
   "ipykernel/pylab/*",
 ]
@@ -304,7 +325,7 @@ unfixable = [
 # PLC1901 `stderr == ""` can be simplified to `not stderr` as an empty string is falsey
 # B018 Found useless expression. Either assign it to a variable or remove it.
 # S603 `subprocess` call: check for execution of untrusted input
-"ipykernel/tests/*" = ["B011", "F841", "C408", "E402", "T201", "B007", "N802", "F841", "EM101",
+"tests/*" = ["B011", "F841", "C408", "E402", "T201", "B007", "N802", "F841", "EM101",
     "EM102", "EM103", "PLR2004", "PLW0603", "PLW2901", "PLC1901", "B018", "S603"]
 
 [tool.interrogate]
@@ -315,8 +336,11 @@ ignore-property-decorators=true
 ignore-nested-functions=true
 ignore-nested-classes=true
 fail-under=95
-exclude = ["docs", "*/tests"]
+exclude = ["docs", "tests"]
 
 [tool.check-wheel-contents]
 toplevel = ["ipykernel/", "ipykernel_launcher.py"]
 ignore = ["W002"]
+
+[tool.repo-review]
+ignore = ["PY007", "PP308", "GH102", "PC140", "MY101"]

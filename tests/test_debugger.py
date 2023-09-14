@@ -121,7 +121,11 @@ f(2, 3)"""
     assert reply["body"]["breakpoints"][0]["source"]["path"] == source
 
     r = wait_for_debug_request(kernel_with_debug, "debugInfo")
-    assert source in map(lambda b: b["source"], r["body"]["breakpoints"])  # noqa
+
+    def func(b):
+        return b["source"]
+
+    assert source in map(func, r["body"]["breakpoints"])
 
     r = wait_for_debug_request(kernel_with_debug, "configurationDone")
     assert r["success"]
@@ -208,7 +212,11 @@ print({var_name})
     get_reply(kernel_with_debug, msg_id)
 
     r = wait_for_debug_request(kernel_with_debug, "inspectVariables")
-    assert var_name in list(map(lambda v: v["name"], r["body"]["variables"]))  # noqa
+
+    def func(v):
+        return v["name"]
+
+    assert var_name in list(map(func, r["body"]["variables"]))
 
     reply = wait_for_debug_request(
         kernel_with_debug,

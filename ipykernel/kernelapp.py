@@ -460,9 +460,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.no_stdout or self.no_stderr:
             blackhole = open(os.devnull, "w")  # noqa
             if self.no_stdout:
-                sys.stdout = sys.__stdout__ = blackhole  # type:ignore
+                sys.stdout = sys.__stdout__ = blackhole  # type:ignore[misc]
             if self.no_stderr:
-                sys.stderr = sys.__stderr__ = blackhole  # type:ignore
+                sys.stderr = sys.__stderr__ = blackhole  # type:ignore[misc]
 
     def init_io(self):
         """Redirect input streams and set a display hook."""
@@ -634,7 +634,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         but it is still preferable to run the Selector in the main thread
         instead of the background.
 
-        do this as early as possible to make it a low priority and overrideable
+        do this as early as possible to make it a low priority and overridable
 
         ref: https://github.com/tornadoweb/tornado/issues/2608
 
@@ -670,8 +670,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         if hasattr(debugger, "InterruptiblePdb"):
             # Only available in newer IPython releases:
-            debugger.Pdb = debugger.InterruptiblePdb  # type:ignore
-            pdb.Pdb = debugger.Pdb  # type:ignore
+            debugger.Pdb = debugger.InterruptiblePdb  # type:ignore[misc]
+            pdb.Pdb = debugger.Pdb  # type:ignore[assignment,misc]
             pdb.set_trace = debugger.set_trace  # type:ignore[assignment]
 
     @catch_config_error

@@ -17,13 +17,13 @@ def test_ipython_start_kernel_userns():
     cmd = dedent(
         """
         from ipykernel.kernelapp import launch_new_instance
-        ns = {"tre": 123}
+        ns = {"custom": 123}
         launch_new_instance(user_ns=ns)
         """
     )
 
     with setup_kernel(cmd) as client:
-        client.inspect("tre")
+        client.inspect("custom")
         msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg["content"]
         assert content["found"]

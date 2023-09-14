@@ -75,7 +75,8 @@ async def test_direct_interrupt_request(kernel):
 
     # test failure on interrupt request
     def raiseOSError():
-        raise OSError("evalue")
+        msg = "evalue"
+        raise OSError(msg)
 
     kernel._send_interrupt_children = raiseOSError
     reply = await kernel.test_control_message("interrupt_request", {})

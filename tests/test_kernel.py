@@ -42,7 +42,7 @@ def _check_master(kc, expected=True, stream="stdout"):
 def _check_status(content):
     """If status=error, show the traceback"""
     if content["status"] == "error":
-        assert False, "".join(["\n"] + content["traceback"])
+        raise AssertionError("".join(["\n"] + content["traceback"]))
 
 
 # printing tests
@@ -196,12 +196,10 @@ def test_subprocess_error():
 def test_raw_input():
     """test input"""
     with kernel() as kc:
-        iopub = kc.iopub_channel
-
         input_f = "input"
         theprompt = "prompt> "
         code = f'print({input_f}("{theprompt}"))'
-        msg_id = kc.execute(code, allow_stdin=True)
+        kc.execute(code, allow_stdin=True)
         msg = kc.get_stdin_msg(timeout=TIMEOUT)
         assert msg["header"]["msg_type"] == "input_request"
         content = msg["content"]
@@ -232,7 +230,7 @@ def test_save_history():
 
 
 def test_smoke_faulthandler():
-    faulthadler = pytest.importorskip("faulthandler", reason="this test needs faulthandler")
+    pytest.importorskip("faulthandler", reason="this test needs faulthandler")
     with kernel() as kc:
         # Note: faulthandler.register is not available on windows.
         code = "\n".join(

@@ -11,8 +11,8 @@ from datetime import date, datetime
 import pytest
 from jupyter_client._version import version_info as jupyter_client_version
 
-from .. import jsonutil
-from ..jsonutil import encode_images, json_clean
+from ipykernel import jsonutil
+from ipykernel.jsonutil import encode_images, json_clean
 
 JUPYTER_CLIENT_MAJOR_VERSION: int = jupyter_client_version[0]  # type:ignore
 

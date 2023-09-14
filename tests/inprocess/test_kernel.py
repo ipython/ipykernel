@@ -12,7 +12,8 @@ from jupyter_client.session import Session
 from ipykernel.inprocess.blocking import BlockingInProcessKernelClient
 from ipykernel.inprocess.ipkernel import InProcessKernel
 from ipykernel.inprocess.manager import InProcessKernelManager
-from ipykernel.tests.utils import assemble_output
+
+from ..utils import assemble_output
 
 orig_msg = Session.msg
 

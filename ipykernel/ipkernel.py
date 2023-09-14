@@ -29,7 +29,7 @@ from .zmqshell import ZMQInteractiveShell
 try:
     from IPython.core.interactiveshell import _asyncio_runner  # type:ignore[attr-defined]
 except ImportError:
-    _asyncio_runner = None  # type:ignore
+    _asyncio_runner = None  # type:ignore[assignment]
 
 try:
     from IPython.core.completer import provisionalcompleter as _provisionalcompleter
@@ -328,7 +328,7 @@ class IPythonKernel(KernelBase):
             # use add_callback for thread safety
             self.io_loop.add_callback(set_sigint_result)
 
-        # set the custom sigint hander during this context
+        # set the custom sigint handler during this context
         save_sigint = signal.signal(signal.SIGINT, handle_sigint)
         try:
             yield
@@ -377,7 +377,7 @@ class IPythonKernel(KernelBase):
                 preprocessing_exc_tuple = sys.exc_info()
 
             if (
-                _asyncio_runner
+                _asyncio_runner  # type:ignore[truthy-bool]
                 and shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
                 and should_run_async(

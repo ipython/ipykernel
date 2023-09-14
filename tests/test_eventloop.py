@@ -57,7 +57,7 @@ def teardown():
 
 
 async_code = """
-from ipykernel.tests._asyncio_utils import async_func
+from tests._asyncio_utils import async_func
 async_func()
 """
 
@@ -144,7 +144,7 @@ def test_qt_enable_gui(kernel, capsys):
     enable_gui(gui, kernel)
     assert app == kernel.app
 
-    # Event loop intergration can be turned off.
+    # Event loop integration can be turned off.
     enable_gui(None, kernel)
     assert not hasattr(kernel, 'app')
 

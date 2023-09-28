@@ -112,9 +112,9 @@ matrix.qt.features = [
 
 [tool.hatch.envs.typing]
 features = ["test"]
-dependencies = ["mypy>=1.5.1"]
+dependencies = ["mypy>=1.5.1", "traitlets>=5.10.1"]
 [tool.hatch.envs.typing.scripts]
-test = "mypy --install-types --non-interactive {args:.}"
+test = "mypy --install-types --non-interactive {args}"
 
 [tool.hatch.envs.lint]
 dependencies = ["black==23.3.0", "mdformat>0.7", "ruff==0.0.287"]
@@ -132,6 +132,7 @@ fmt = [
 ]
 
 [tool.mypy]
+files = "ipykernel"
 check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true

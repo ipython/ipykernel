@@ -115,6 +115,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         # Use 2-stage process to send a message,
         # in order to put it through the transform
         # hooks before potentially sending.
+        assert self.session is not None
         msg = self.session.msg(msg_type, json_clean(content), parent=self.parent_header)
 
         # Each transform either returns a new
@@ -123,7 +124,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         for hook in self._hooks:
             msg = hook(msg)
             if msg is None:
-                return
+                return  # type:ignore[unreachable]
 
         self.session.send(
             self.pub_socket,
@@ -144,13 +145,14 @@ class ZMQDisplayPublisher(DisplayPublisher):
         """
         content = dict(wait=wait)
         self._flush_streams()
+        assert self.session is not None
         msg = self.session.msg("clear_output", json_clean(content), parent=self.parent_header)
 
         # see publish() for details on how this works
         for hook in self._hooks:
             msg = hook(msg)
             if msg is None:
-                return
+                return  # type:ignore[unreachable]
 
         self.session.send(
             self.pub_socket,
@@ -538,7 +540,7 @@ class ZMQInteractiveShell(InteractiveShell):
             source="ask_exit",
             keepkernel=self.keepkernel_on_exit,
         )
-        self.payload_manager.write_payload(payload)
+        self.payload_manager.write_payload(payload)  # type:ignore[union-attr]
 
     def run_cell(self, *args, **kwargs):
         """Run a cell."""
@@ -583,7 +585,7 @@ class ZMQInteractiveShell(InteractiveShell):
             text=text,
             replace=replace,
         )
-        self.payload_manager.write_payload(payload)
+        self.payload_manager.write_payload(payload)  # type:ignore[union-attr]
 
     def set_parent(self, parent):
         """Set the parent header for associating output with its triggering input"""
@@ -609,7 +611,7 @@ class ZMQInteractiveShell(InteractiveShell):
         """Initialize magics."""
         super().init_magics()
         self.register_magics(KernelMagics)
-        self.magics_manager.register_alias("ed", "edit")
+        self.magics_manager.register_alias("ed", "edit")  # type:ignore[union-attr]
 
     def init_virtualenv(self):
         """Initialize virtual environment."""

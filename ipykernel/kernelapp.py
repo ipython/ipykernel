@@ -547,7 +547,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         control_stream = ZMQStream(self.control_socket, self.control_thread.io_loop)
         debugpy_stream = ZMQStream(self.debugpy_socket, self.control_thread.io_loop)
         self.control_thread.start()
-        kernel_factory = self.kernel_class.instance
+        kernel_factory = self.kernel_class.instance  # type:ignore[attr-defined]
 
         kernel = kernel_factory(
             parent=self,

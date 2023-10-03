@@ -27,7 +27,7 @@ from IPython.core.interactiveshell import InteractiveShell, InteractiveShellABC
 from IPython.core.magic import Magics, line_magic, magics_class
 from IPython.core.magics import CodeMagics, MacroToEdit  # type:ignore[attr-defined]
 from IPython.core.usage import default_banner
-from IPython.display import Javascript, display  # type:ignore[attr-defined]
+from IPython.display import Javascript, display 
 from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header

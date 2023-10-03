@@ -124,7 +124,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         klass="ipykernel.kernelbase.Kernel",
         help="""The Kernel subclass to be used.
 
-    This should allow easy re-use of the IPKernelApp entry point
+    This should allow easy reuse of the IPKernelApp entry point
     to configure and launch kernels other than IPython's own.
     """,
     ).tag(config=True)

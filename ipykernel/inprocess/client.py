@@ -39,11 +39,11 @@ class InProcessKernelClient(KernelClient):
     """
 
     # The classes to use for the various channels.
-    shell_channel_class = Type(InProcessChannel)
-    iopub_channel_class = Type(InProcessChannel)
-    stdin_channel_class = Type(InProcessChannel)
-    control_channel_class = Type(InProcessChannel)
-    hb_channel_class = Type(InProcessHBChannel)
+    shell_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
+    iopub_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
+    stdin_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
+    control_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
+    hb_channel_class = Type(InProcessHBChannel)  # type:ignore[arg-type]
 
     kernel = Instance("ipykernel.inprocess.ipkernel.InProcessKernel", allow_none=True)
 
@@ -72,31 +72,33 @@ class InProcessKernelClient(KernelClient):
     @property
     def shell_channel(self):
         if self._shell_channel is None:
-            self._shell_channel = self.shell_channel_class(self)  # type:ignore[operator]
+            self._shell_channel = self.shell_channel_class(self)  # type:ignore[abstract,call-arg]
         return self._shell_channel
 
     @property
     def iopub_channel(self):
         if self._iopub_channel is None:
-            self._iopub_channel = self.iopub_channel_class(self)  # type:ignore[operator]
+            self._iopub_channel = self.iopub_channel_class(self)  # type:ignore[abstract,call-arg]
         return self._iopub_channel
 
     @property
     def stdin_channel(self):
         if self._stdin_channel is None:
-            self._stdin_channel = self.stdin_channel_class(self)  # type:ignore[operator]
+            self._stdin_channel = self.stdin_channel_class(self)  # type:ignore[abstract,call-arg]
         return self._stdin_channel
 
     @property
     def control_channel(self):
         if self._control_channel is None:
-            self._control_channel = self.control_channel_class(self)  # type:ignore[operator]
+            self._control_channel = self.control_channel_class(
+                self
+            )  # type:ignore[abstract,call-arg]
         return self._control_channel
 
     @property
     def hb_channel(self):
         if self._hb_channel is None:
-            self._hb_channel = self.hb_channel_class(self)  # type:ignore[operator]
+            self._hb_channel = self.hb_channel_class(self)  # type:ignore[abstract,call-arg]
         return self._hb_channel
 
     # Methods for sending specific messages

@@ -525,8 +525,8 @@ class ZMQInteractiveShell(InteractiveShell):
             )
 
             self._data_pub = self.data_pub_class(parent=self)  # type:ignore[has-type]
-            self._data_pub.session = self.display_pub.session
-            self._data_pub.pub_socket = self.display_pub.pub_socket
+            self._data_pub.session = self.display_pub.session  # type:ignore[attr-defined]
+            self._data_pub.pub_socket = self.display_pub.pub_socket  # type:ignore[attr-defined]
         return self._data_pub
 
     @data_pub.setter
@@ -562,14 +562,14 @@ class ZMQInteractiveShell(InteractiveShell):
         # Send exception info over pub socket for other clients than the caller
         # to pick up
         topic = None
-        if dh.topic:
-            topic = dh.topic.replace(b"execute_result", b"error")
+        if dh.topic:  # type:ignore[attr-defined]
+            topic = dh.topic.replace(b"execute_result", b"error")  # type:ignore[attr-defined]
 
-        dh.session.send(
-            dh.pub_socket,
+        dh.session.send(  # type:ignore[attr-defined]
+            dh.pub_socket,  # type:ignore[attr-defined]
             "error",
             json_clean(exc_content),
-            dh.parent_header,
+            dh.parent_header,  # type:ignore[attr-defined]
             ident=topic,
         )
 
@@ -590,8 +590,8 @@ class ZMQInteractiveShell(InteractiveShell):
     def set_parent(self, parent):
         """Set the parent header for associating output with its triggering input"""
         self.parent_header = parent
-        self.displayhook.set_parent(parent)
-        self.display_pub.set_parent(parent)
+        self.displayhook.set_parent(parent)  # type:ignore[attr-defined]
+        self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
         if hasattr(self, "_data_pub"):
             self.data_pub.set_parent(parent)
         try:

@@ -89,12 +89,12 @@ kernel_flags.update(
 )
 
 # inherit flags&aliases for any IPython shell apps
-kernel_aliases.update(shell_aliases)  # type:ignore[arg-type]
+kernel_aliases.update(shell_aliases)
 kernel_flags.update(shell_flags)
 
 # inherit flags&aliases for Sessions
-kernel_aliases.update(session_aliases)  # type:ignore[arg-type]
-kernel_flags.update(session_flags)  # type:ignore[arg-type]
+kernel_aliases.update(session_aliases)
+kernel_flags.update(session_flags)
 
 _ctrl_c_message = """\
 NOTE: When using the `ipython kernel` entry point, Ctrl-C will not work.

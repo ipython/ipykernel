@@ -118,7 +118,7 @@ class IPythonKernel(KernelBase):
             )
 
         # Initialize the InteractiveShell subclass
-        self.shell = self.shell_class.instance(  # type:ignore[attr-defined]
+        self.shell = self.shell_class.instance(
             parent=self,
             profile_dir=self.profile_dir,
             user_module=self.user_module,
@@ -126,21 +126,21 @@ class IPythonKernel(KernelBase):
             kernel=self,
             compiler_class=XCachingCompiler,
         )
-        self.shell.displayhook.session = self.session
+        self.shell.displayhook.session = self.session  # type:ignore[attr-defined]
 
         jupyter_session_name = os.environ.get('JPY_SESSION_NAME')
         if jupyter_session_name:
             self.shell.user_ns['__session__'] = jupyter_session_name
 
-        self.shell.displayhook.pub_socket = self.iopub_socket
-        self.shell.displayhook.topic = self._topic("execute_result")
-        self.shell.display_pub.session = self.session
-        self.shell.display_pub.pub_socket = self.iopub_socket
+        self.shell.displayhook.pub_socket = self.iopub_socket  # type:ignore[attr-defined]
+        self.shell.displayhook.topic = self._topic("execute_result")  # type:ignore[attr-defined]
+        self.shell.display_pub.session = self.session  # type:ignore[attr-defined]
+        self.shell.display_pub.pub_socket = self.iopub_socket  # type:ignore[attr-defined]
 
         self.comm_manager = comm.get_comm_manager()
 
         assert isinstance(self.comm_manager, HasTraits)
-        self.shell.configurables.append(self.comm_manager)
+        self.shell.configurables.append(self.comm_manager)  # type:ignore[arg-type]
         comm_msg_types = ["comm_open", "comm_msg", "comm_close"]
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)

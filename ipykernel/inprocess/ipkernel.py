@@ -47,7 +47,7 @@ class InProcessKernel(IPythonKernel):
     # Kernel interface
     # -------------------------------------------------------------------------
 
-    shell_class = Type(allow_none=True)
+    shell_class = Type(allow_none=True)  # type:ignore[assignment]
     _underlying_iopub_socket = Instance(DummySocket, ())
     iopub_thread: IOPubThread = Instance(IOPubThread)  # type:ignore[assignment]
 

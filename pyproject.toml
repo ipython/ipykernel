@@ -23,10 +23,11 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 urls = {Homepage = "https://ipython.org"}
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 dependencies = [
     "debugpy>=1.6.5",
-    "ipython>=7.23.1",
+    "ipython>=7.23.1<=8.12;python_version=='3.8'",
+    "ipython>=7.23.1;python_version>='3.9'",
     "comm>=0.1.1",
     "traitlets>=5.4.0",
     "jupyter_client>=6.1.12",

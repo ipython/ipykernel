@@ -50,7 +50,9 @@ def _find_connection_file(connection_file):
         return jupyter_client.find_connection_file(connection_file)
 
 
-def get_connection_info(connection_file: str | None = None, unpack: bool = False) -> str:
+def get_connection_info(
+    connection_file: str | None = None, unpack: bool = False
+) -> str | dict[str, Any]:
     """Return the connection information for the current Kernel.
 
     Parameters
@@ -81,7 +83,7 @@ def get_connection_info(connection_file: str | None = None, unpack: bool = False
         info = json.loads(info_str)
         # ensure key is bytes:
         info["key"] = info.get("key", "").encode()
-        return info
+        return info  # type:ignore[no-any-return]
 
     return info_str
 

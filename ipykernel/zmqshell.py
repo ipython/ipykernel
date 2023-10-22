@@ -378,6 +378,7 @@ class KernelMagics(Magics):
         if jupyter_runtime_dir() == os.path.dirname(connection_file):
             connection_file = os.path.basename(connection_file)
 
+        assert isinstance(info, str)
         print(info + "\n")
         print(
             f"Paste the above JSON into a file, and connect with:\n"

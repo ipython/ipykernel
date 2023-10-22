@@ -111,7 +111,7 @@ def install(
     prefix: str | None = None,
     profile: str | None = None,
     env: dict[str, str] | None = None,
-):
+) -> str:
     """Install the IPython kernelspec for Jupyter
 
     Parameters
@@ -147,7 +147,7 @@ def install(
         # kernel_name is specified and display_name is not
         # default display_name to kernel_name
         display_name = kernel_name
-    overrides = {}
+    overrides: dict[str, Any] = {}
     if display_name:
         overrides["display_name"] = display_name
     if profile:
@@ -165,7 +165,7 @@ def install(
     )
     # cleanup afterward
     shutil.rmtree(path)
-    return dest
+    return dest  # type:ignore[no-any-return]
 
 
 # Entrypoint

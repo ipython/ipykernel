@@ -275,6 +275,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # original file had port number 0, we update with the actual port
             # used.
             existing_connection_info = get_connection_info(cf, unpack=True)
+            assert isinstance(existing_connection_info, dict)
             connection_info = dict(existing_connection_info, **connection_info)
             if connection_info == existing_connection_info:
                 self.log.debug("Connection file %s with current information already exists", cf)

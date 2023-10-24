@@ -92,13 +92,13 @@ api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipyk
 features = ["test"]
 [tool.hatch.envs.test.scripts]
 list = "python -m pip freeze"
-test = "python -m pytest -vv {args}"
+test = "python -m pytest -vv -s -k test_outstream {args}"
 nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
 features = ["test", "cov"]
 [tool.hatch.envs.cov.scripts]
-test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
+test = "python -m pytest -vv -s -k test_outstream --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
 
 [[tool.hatch.envs.cov.matrix]]

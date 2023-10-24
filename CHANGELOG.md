@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.26.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.25.2...966e0a41fc61e7850378ae672e28202eb29b10b0))
+
+### Maintenance and upkeep improvements
+
+- Update lint deps and add more typing [#1156](https://github.com/ipython/ipykernel/pull/1156) ([@blink1073](https://github.com/blink1073))
+- Update typing for traitlets 5.11 [#1154](https://github.com/ipython/ipykernel/pull/1154) ([@blink1073](https://github.com/blink1073))
+- chore: update pre-commit hooks [#1153](https://github.com/ipython/ipykernel/pull/1153) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Update IPython Typing Usage [#1152](https://github.com/ipython/ipykernel/pull/1152) ([@blink1073](https://github.com/blink1073))
+- Update typing [#1150](https://github.com/ipython/ipykernel/pull/1150) ([@blink1073](https://github.com/blink1073))
+- Use sp-repo-review [#1146](https://github.com/ipython/ipykernel/pull/1146) ([@blink1073](https://github.com/blink1073))
+- Bump actions/checkout from 3 to 4 [#1144](https://github.com/ipython/ipykernel/pull/1144) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-09-04&to=2023-10-24&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-09-04..2023-10-24&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2023-09-04..2023-10-24&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-09-04..2023-10-24&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.25.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.25.1...9d3f7aecc4fe68f14ebcc4dad4b65b19676e820e))
@@ -17,8 +39,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-08-07&to=2023-09-04&type=c))
 
 [@anntzer](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aanntzer+updated%3A2023-08-07..2023-09-04&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-08-07..2023-09-04&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2023-08-07..2023-09-04&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2023-08-07..2023-09-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.25.1
 

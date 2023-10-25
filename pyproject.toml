@@ -112,7 +112,7 @@ matrix.qt.features = [
 
 [tool.hatch.envs.typing]
 features = ["test"]
-dependencies = ["mypy>=1.6.0", "traitlets>=5.11.2", "ipython>=8.16.1"]
+dependencies = ["mypy>=1.6.0", "traitlets>=5.12.0", "ipython>=8.16.1", "jupyter_client>=8.5"]
 [tool.hatch.envs.typing.scripts]
 test = "mypy --install-types --non-interactive {args}"
 

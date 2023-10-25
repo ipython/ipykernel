@@ -165,7 +165,7 @@ def install(
     )
     # cleanup afterward
     shutil.rmtree(path)
-    return dest  # type:ignore[no-any-return]
+    return dest
 
 
 # Entrypoint

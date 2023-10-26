@@ -4,7 +4,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 from math import inf
-from typing import Any
 
 import zmq
 from anyio import create_memory_object_stream
@@ -32,12 +31,12 @@ class DummySocket(HasTraits):
         self.is_shell = is_shell
         self.on_recv = None
         if is_shell:
-            self.in_send_stream, self.in_receive_stream = create_memory_object_stream[
-                dict
-            ](max_buffer_size=inf)
-            self.out_send_stream, self.out_receive_stream = create_memory_object_stream[
-                dict
-            ](max_buffer_size=inf)
+            self.in_send_stream, self.in_receive_stream = create_memory_object_stream[dict](
+                max_buffer_size=inf
+            )
+            self.out_send_stream, self.out_receive_stream = create_memory_object_stream[dict](
+                max_buffer_size=inf
+            )
 
     def put(self, msg):
         self.in_send_stream.send_nowait(msg)

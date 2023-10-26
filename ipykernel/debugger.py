@@ -4,7 +4,6 @@ import re
 import sys
 import typing as t
 from math import inf
-from typing import Any
 
 import zmq
 from anyio import Event, create_memory_object_stream
@@ -117,9 +116,9 @@ class DebugpyMessageQueue:
         self.tcp_buffer = ""
         self._reset_tcp_pos()
         self.event_callback = event_callback
-        self.message_send_stream, self.message_receive_stream = create_memory_object_stream[
-            dict
-        ](max_buffer_size=inf)
+        self.message_send_stream, self.message_receive_stream = create_memory_object_stream[dict](
+            max_buffer_size=inf
+        )
         self.log = log
 
     def _reset_tcp_pos(self):
@@ -343,9 +342,9 @@ class Debugger:
         self.is_started = False
         self.event_callback = event_callback
         self.just_my_code = just_my_code
-        self.stopped_send_stream, self.stopped_receive_stream = create_memory_object_stream[
-            dict
-        ](max_buffer_size=inf)
+        self.stopped_send_stream, self.stopped_receive_stream = create_memory_object_stream[dict](
+            max_buffer_size=inf
+        )
 
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:

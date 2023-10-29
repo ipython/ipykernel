@@ -73,7 +73,7 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
         return uuid.uuid4().hex
 
     def __init__(
-        self, target_name='', data=None, metadata=None, buffers=None, show_warning=True, **kwargs
+        self, target_name="", data=None, metadata=None, buffers=None, show_warning=True, **kwargs
     ):
         """Initialize a comm."""
         if show_warning:
@@ -85,16 +85,14 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
             )
 
         # Handle differing arguments between base classes.
-        had_kernel = 'kernel' in kwargs
-        kernel = kwargs.pop('kernel', None)
+        had_kernel = "kernel" in kwargs
+        kernel = kwargs.pop("kernel", None)
         if target_name:
-            kwargs['target_name'] = target_name
-        BaseComm.__init__(
-            self, data=data, metadata=metadata, buffers=buffers, **kwargs
-        )  # type:ignore[call-arg]
+            kwargs["target_name"] = target_name
+        BaseComm.__init__(self, data=data, metadata=metadata, buffers=buffers, **kwargs)  # type:ignore[call-arg]
         # only re-add kernel if explicitly provided
         if had_kernel:
-            kwargs['kernel'] = kernel
+            kwargs["kernel"] = kernel
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
 
 

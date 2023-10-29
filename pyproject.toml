@@ -127,7 +127,7 @@ style = [
 ]
 fmt = [
   "ruff --fix {args:.}",
-  "ruff format {args.}",
+  "ruff format {args:.}",
   "mdformat {args:docs *.md}"
 ]
 

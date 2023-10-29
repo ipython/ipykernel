@@ -128,9 +128,9 @@ class IPythonKernel(KernelBase):
         )
         self.shell.displayhook.session = self.session  # type:ignore[attr-defined]
 
-        jupyter_session_name = os.environ.get('JPY_SESSION_NAME')
+        jupyter_session_name = os.environ.get("JPY_SESSION_NAME")
         if jupyter_session_name:
-            self.shell.user_ns['__session__'] = jupyter_session_name
+            self.shell.user_ns["__session__"] = jupyter_session_name
 
         self.shell.displayhook.pub_socket = self.iopub_socket  # type:ignore[attr-defined]
         self.shell.displayhook.topic = self._topic("execute_result")  # type:ignore[attr-defined]

@@ -387,7 +387,7 @@ class OutStream(TextIOBase):
         try:
             bts = os.read(self._fid, PIPE_BUFFER_SIZE)
             while bts and self._should_watch:
-                self.write(bts.decode(errors='replace'))
+                self.write(bts.decode(errors="replace"))
                 os.write(self._original_stdstream_copy, bts)
                 bts = os.read(self._fid, PIPE_BUFFER_SIZE)
         except Exception:
@@ -531,7 +531,7 @@ class OutStream(TextIOBase):
             self._should_watch = False
             # thread won't wake unless there's something to read
             # writing something after _should_watch will not be echoed
-            os.write(self._original_stdstream_fd, b'\0')
+            os.write(self._original_stdstream_fd, b"\0")
             self.watch_fd_thread.join()
             # restore original FDs
             os.dup2(self._original_stdstream_copy, self._original_stdstream_fd)

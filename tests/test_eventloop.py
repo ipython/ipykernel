@@ -22,19 +22,19 @@ KC = KM = None
 
 qt_guis_avail = []
 
-gui_to_module = {'qt6': 'PySide6', 'qt5': 'PyQt5'}
+gui_to_module = {"qt6": "PySide6", "qt5": "PyQt5"}
 
 
 def _get_qt_vers():
     """If any version of Qt is available, this will populate `guis_avail` with 'qt' and 'qtx'. Due
     to the import mechanism, we can't import multiple versions of Qt in one session."""
-    for gui in ['qt6', 'qt5']:
-        print(f'Trying {gui}')
+    for gui in ["qt6", "qt5"]:
+        print(f"Trying {gui}")
         try:
             __import__(gui_to_module[gui])
             qt_guis_avail.append(gui)
-            if 'QT_API' in os.environ:
-                del os.environ['QT_API']
+            if "QT_API" in os.environ:
+                del os.environ["QT_API"]
         except ImportError:
             pass  # that version of Qt isn't available.
 
@@ -126,7 +126,7 @@ def test_cocoa_loop(kernel):
 
 
 @pytest.mark.skipif(
-    len(qt_guis_avail) == 0, reason='No viable version of PyQt or PySide installed.'
+    len(qt_guis_avail) == 0, reason="No viable version of PyQt or PySide installed."
 )
 def test_qt_enable_gui(kernel, capsys):
     gui = qt_guis_avail[0]
@@ -134,10 +134,10 @@ def test_qt_enable_gui(kernel, capsys):
     enable_gui(gui, kernel)
 
     # We store the `QApplication` instance in the kernel.
-    assert hasattr(kernel, 'app')
+    assert hasattr(kernel, "app")
 
     # And the `QEventLoop` is added to `app`:`
-    assert hasattr(kernel.app, 'qt_event_loop')
+    assert hasattr(kernel.app, "qt_event_loop")
 
     # Don't create another app even if `gui` is the same.
     app = kernel.app
@@ -146,18 +146,18 @@ def test_qt_enable_gui(kernel, capsys):
 
     # Event loop integration can be turned off.
     enable_gui(None, kernel)
-    assert not hasattr(kernel, 'app')
+    assert not hasattr(kernel, "app")
 
     # But now we're stuck with this version of Qt for good; can't switch.
-    for not_gui in ['qt6', 'qt5']:
+    for not_gui in ["qt6", "qt5"]:
         if not_gui not in qt_guis_avail:
             break
 
     enable_gui(not_gui, kernel)
     captured = capsys.readouterr()
-    assert captured.out == f'Cannot switch Qt versions for this session; you must use {gui}.\n'
+    assert captured.out == f"Cannot switch Qt versions for this session; you must use {gui}.\n"
 
     # Check 'qt' gui, which means "the best available"
     enable_gui(None, kernel)
-    enable_gui('qt', kernel)
+    enable_gui("qt", kernel)
     assert gui_to_module[gui] in str(kernel.app)

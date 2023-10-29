@@ -95,7 +95,7 @@ def _notify_stream_qt(kernel):
     if not hasattr(kernel, "_qt_notifier"):
         fd = kernel.shell_stream.getsockopt(zmq.FD)
         kernel._qt_notifier = QtCore.QSocketNotifier(
-            fd, enum_helper('QtCore.QSocketNotifier.Type').Read, kernel.app.qt_event_loop
+            fd, enum_helper("QtCore.QSocketNotifier.Type").Read, kernel.app.qt_event_loop
         )
         kernel._qt_notifier.activated.connect(process_stream_events)
     else:
@@ -125,7 +125,7 @@ def loop_qt(kernel):
 
     # `exec` blocks until there's ZMQ activity.
     el = kernel.app.qt_event_loop  # for brevity
-    el.exec() if hasattr(el, 'exec') else el.exec_()
+    el.exec() if hasattr(el, "exec") else el.exec_()
     kernel.app._in_event_loop = False
 
 
@@ -465,16 +465,16 @@ def set_qt_api_env_from_gui(gui):
     loaded = loaded_api()
 
     qt_env2gui = {
-        QT_API_PYSIDE2: 'qt5',
-        QT_API_PYQT5: 'qt5',
-        QT_API_PYSIDE6: 'qt6',
-        QT_API_PYQT6: 'qt6',
+        QT_API_PYSIDE2: "qt5",
+        QT_API_PYQT5: "qt5",
+        QT_API_PYSIDE6: "qt6",
+        QT_API_PYQT6: "qt6",
     }
-    if loaded is not None and gui != 'qt' and qt_env2gui[loaded] != gui:
-        print(f'Cannot switch Qt versions for this session; you must use {qt_env2gui[loaded]}.')
+    if loaded is not None and gui != "qt" and qt_env2gui[loaded] != gui:
+        print(f"Cannot switch Qt versions for this session; you must use {qt_env2gui[loaded]}.")
         return
 
-    if qt_api is not None and gui != 'qt':
+    if qt_api is not None and gui != "qt":
         if qt_env2gui[qt_api] != gui:
             print(
                 f'Request for "{gui}" will be ignored because `QT_API` '
@@ -482,7 +482,7 @@ def set_qt_api_env_from_gui(gui):
             )
             return
     else:
-        if gui == 'qt5':
+        if gui == "qt5":
             try:
                 import PyQt5  # noqa
 
@@ -494,7 +494,7 @@ def set_qt_api_env_from_gui(gui):
                     os.environ["QT_API"] = "pyside2"
                 except ImportError:
                     os.environ["QT_API"] = "pyqt5"
-        elif gui == 'qt6':
+        elif gui == "qt6":
             try:
                 import PyQt6  # noqa
 
@@ -506,10 +506,10 @@ def set_qt_api_env_from_gui(gui):
                     os.environ["QT_API"] = "pyside6"
                 except ImportError:
                     os.environ["QT_API"] = "pyqt6"
-        elif gui == 'qt':
+        elif gui == "qt":
             # Don't set QT_API; let IPython logic choose the version.
-            if 'QT_API' in os.environ:
-                del os.environ['QT_API']
+            if "QT_API" in os.environ:
+                del os.environ["QT_API"]
         else:
             print(f'Unrecognized Qt version: {gui}. Should be "qt5", "qt6", or "qt".')
             return
@@ -519,7 +519,7 @@ def set_qt_api_env_from_gui(gui):
         from IPython.external.qt_for_kernel import QtCore, QtGui  # noqa
     except Exception as e:
         # Clear the environment variable for the next attempt.
-        if 'QT_API' in os.environ:
+        if "QT_API" in os.environ:
             del os.environ["QT_API"]
             print(f"QT_API couldn't be set due to error {e}")
         return
@@ -527,7 +527,7 @@ def set_qt_api_env_from_gui(gui):
 
 def make_qt_app_for_kernel(gui, kernel):
     """Sets the `QT_API` environment variable if it isn't already set."""
-    if hasattr(kernel, 'app'):
+    if hasattr(kernel, "app"):
         # Kernel is already running a Qt event loop, so there's no need to
         # create another app for it.
         return
@@ -558,18 +558,16 @@ def enable_gui(gui, kernel=None):
             raise RuntimeError(msg)
     if gui is None:
         # User wants to turn off integration; clear any evidence if Qt was the last one.
-        if hasattr(kernel, 'app'):
-            delattr(kernel, 'app')
+        if hasattr(kernel, "app"):
+            delattr(kernel, "app")
     else:
-        if gui.startswith('qt'):
+        if gui.startswith("qt"):
             # Prepare the kernel here so any exceptions are displayed in the client.
             make_qt_app_for_kernel(gui, kernel)
 
     loop = loop_map[gui]
     if (
-        loop
-        and kernel.eventloop is not None
-        and kernel.eventloop is not loop  # type:ignore[unreachable]
+        loop and kernel.eventloop is not None and kernel.eventloop is not loop  # type:ignore[unreachable]
     ):
         msg = "Cannot activate multiple GUI eventloops"  # type:ignore[unreachable]
         raise RuntimeError(msg)

@@ -43,7 +43,7 @@ def test_comm_manager(kernel: Kernel) -> None:
         comm.close()
 
     def fizz(comm, msg):
-        raise RuntimeError('hi')
+        raise RuntimeError("hi")
 
     def on_close(msg):
         msgs.append(msg)
@@ -69,15 +69,15 @@ def test_comm_manager(kernel: Kernel) -> None:
     Kernel.clear_instance()
 
     assert manager.get_comm(comm.comm_id) == comm
-    assert manager.get_comm('foo') is None
+    assert manager.get_comm("foo") is None
 
-    msg = dict(content=dict(comm_id=comm.comm_id, target_name='foo'))
+    msg = dict(content=dict(comm_id=comm.comm_id, target_name="foo"))
     manager.comm_open(None, None, msg)
     assert len(msgs) == 1
-    msg['content']['target_name'] = 'bar'
+    msg["content"]["target_name"] = "bar"
     manager.comm_open(None, None, msg)
     assert len(msgs) == 1
-    msg = dict(content=dict(comm_id=comm.comm_id, target_name='fizz'))
+    msg = dict(content=dict(comm_id=comm.comm_id, target_name="fizz"))
     manager.comm_open(None, None, msg)
     assert len(msgs) == 1
 
@@ -86,7 +86,7 @@ def test_comm_manager(kernel: Kernel) -> None:
     msg = dict(content=dict(comm_id=comm.comm_id))
     manager.comm_msg(None, None, msg)
     assert len(msgs) == 2
-    msg['content']['comm_id'] = 'foo'
+    msg["content"]["comm_id"] = "foo"
     manager.comm_msg(None, None, msg)
     assert len(msgs) == 2
 

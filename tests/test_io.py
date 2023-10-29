@@ -117,7 +117,7 @@ def test_outstream(iopub_thread):
 
 
 async def test_event_pipe_gc(iopub_thread):
-    session = Session(key=b'abc')
+    session = Session(key=b"abc")
     stream = OutStream(
         session,
         iopub_thread,
@@ -150,7 +150,7 @@ async def test_event_pipe_gc(iopub_thread):
 
 def subprocess_test_echo_watch():
     # handshake Pub subscription
-    session = Session(key=b'abc')
+    session = Session(key=b"abc")
 
     # use PUSH socket to avoid subscription issues
     with zmq.Context() as ctx, ctx.socket(zmq.PUSH) as pub:
@@ -199,7 +199,7 @@ def test_echo_watch(ctx):
     s = ctx.socket(zmq.PULL)
     port = s.bind_to_random_port("tcp://127.0.0.1")
     url = f"tcp://127.0.0.1:{port}"
-    session = Session(key=b'abc')
+    session = Session(key=b"abc")
     stdout_chunks = []
     with s:
         env = dict(os.environ)

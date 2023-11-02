@@ -443,7 +443,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.log.info(line)
         # also raw print to the terminal if no parent_handle (`ipython kernel`)
         # unless log-level is CRITICAL (--quiet)
-        if not self.parent_handle and int(self.log_level) < logging.CRITICAL:
+        if not self.parent_handle and int(self.log_level) < logging.CRITICAL:  # type:ignore[call-overload]
             print(_ctrl_c_message, file=sys.__stdout__)
             for line in lines:
                 print(line, file=sys.__stdout__)
@@ -700,7 +700,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         except Exception:
             # Catch exception when initializing signal fails, eg when running the
             # kernel on a separate thread
-            if int(self.log_level) < logging.CRITICAL:
+            if int(self.log_level) < logging.CRITICAL:  # type:ignore[call-overload]
                 self.log.error("Unable to initialize signal:", exc_info=True)
         self.init_kernel()
         # shell init steps

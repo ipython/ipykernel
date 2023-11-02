@@ -2,6 +2,7 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
 
 import asyncio
 import concurrent.futures
@@ -80,7 +81,7 @@ class Kernel(SingletonConfigurable):
     # attribute to override with a GUI
     eventloop = Any(None)
 
-    processes: t.Dict[str, psutil.Process] = {}
+    processes: dict[str, psutil.Process] = {}
 
     @observe("eventloop")
     def _update_eventloop(self, change):
@@ -93,7 +94,7 @@ class Kernel(SingletonConfigurable):
     profile_dir = Instance("IPython.core.profiledir.ProfileDir", allow_none=True)
     shell_stream = Instance(ZMQStream, allow_none=True)
 
-    shell_streams = List(
+    shell_streams: List[t.Any] = List(
         help="""Deprecated shell_streams alias. Use shell_stream
 
         .. versionchanged:: 6.0
@@ -153,10 +154,10 @@ class Kernel(SingletonConfigurable):
 
     # This should be overridden by wrapper kernels that implement any real
     # language.
-    language_info: t.Dict[str, object] = {}
+    language_info: dict[str, object] = {}
 
     # any links that should go in the help menu
-    help_links = List()
+    help_links: List[dict[str, str]] = List()
 
     # Experimental option to break in non-user code.
     # The ipykernel source is in the call stack, so the user
@@ -180,7 +181,7 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parents = Dict({"shell": {}, "control": {}})
+    _parents: Dict[str, t.Any] = Dict({"shell": {}, "control": {}})
     _parent_ident = Dict({"shell": b"", "control": b""})
 
     @property
@@ -291,7 +292,7 @@ class Kernel(SingletonConfigurable):
 
     async def _flush_control_queue(self):
         """Flush the control queue, wait for processing of any pending messages"""
-        tracer_future: t.Union[concurrent.futures.Future[object], asyncio.Future[object]]
+        tracer_future: concurrent.futures.Future[object] | asyncio.Future[object]
         if self.control_thread:
             control_loop = self.control_thread.io_loop
             # concurrent.futures.Futures are threadsafe
@@ -945,7 +946,7 @@ class Kernel(SingletonConfigurable):
         """Handle an interrupt request."""
         if not self.session:
             return
-        content: t.Dict[str, t.Any] = {"status": "ok"}
+        content: dict[str, t.Any] = {"status": "ok"}
         try:
             self._send_interrupt_children()
         except OSError as err:

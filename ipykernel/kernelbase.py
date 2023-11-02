@@ -93,7 +93,7 @@ class Kernel(SingletonConfigurable):
     profile_dir = Instance("IPython.core.profiledir.ProfileDir", allow_none=True)
     shell_stream = Instance(ZMQStream, allow_none=True)
 
-    shell_streams = List(
+    shell_streams: List[t.Any] = List(
         help="""Deprecated shell_streams alias. Use shell_stream
 
         .. versionchanged:: 6.0
@@ -156,7 +156,7 @@ class Kernel(SingletonConfigurable):
     language_info: t.Dict[str, object] = {}
 
     # any links that should go in the help menu
-    help_links = List()
+    help_links: List[t.Dict[str, str]] = List()
 
     # Experimental option to break in non-user code.
     # The ipykernel source is in the call stack, so the user
@@ -180,7 +180,7 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parents = Dict({"shell": {}, "control": {}})
+    _parents: Dict[str, t.Any] = Dict({"shell": {}, "control": {}})
     _parent_ident = Dict({"shell": b"", "control": b""})
 
     @property

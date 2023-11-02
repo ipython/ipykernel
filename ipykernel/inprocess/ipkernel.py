@@ -104,6 +104,7 @@ class InProcessKernel(IPythonKernel):
         assert self.session is not None
         msg = self.session.msg("input_request", content, parent)
         for frontend in self.frontends:
+            assert frontend is not None
             if frontend.session.session == parent["header"]["session"]:
                 frontend.stdin_channel.call_handlers(msg)
                 break
@@ -138,6 +139,7 @@ class InProcessKernel(IPythonKernel):
         assert self.session is not None
         ident, msg = self.session.recv(self.iopub_socket.io_thread.socket, copy=False)
         for frontend in self.frontends:
+            assert frontend is not None
             frontend.iopub_channel.call_handlers(msg)
 
     # ------ Trait initializers -----------------------------------------------

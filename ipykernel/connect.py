@@ -88,7 +88,9 @@ def get_connection_info(
     return info_str
 
 
-def connect_qtconsole(connection_file: str | None = None, argv: list[str] | None = None) -> Popen:
+def connect_qtconsole(
+    connection_file: str | None = None, argv: list[str] | None = None
+) -> Popen[Any]:
     """Connect a qtconsole to the current kernel.
 
     This is useful for connecting a second qtconsole to a kernel, or to a

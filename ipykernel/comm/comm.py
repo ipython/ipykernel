@@ -16,7 +16,7 @@ from ipykernel.kernelbase import Kernel
 
 
 # this is the class that will be created if we do comm.create_comm
-class BaseComm(comm.base_comm.BaseComm):
+class BaseComm(comm.base_comm.BaseComm):  # type:ignore[misc]
     """The base class for comms."""
 
     kernel: Optional["Kernel"] = None

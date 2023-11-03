@@ -14,7 +14,7 @@ from .comm import Comm
 logger = logging.getLogger("ipykernel.comm")
 
 
-class CommManager(comm.base_comm.CommManager, traitlets.config.LoggingConfigurable):
+class CommManager(comm.base_comm.CommManager, traitlets.config.LoggingConfigurable):  # type:ignore[misc]
     """A comm manager."""
 
     kernel = traitlets.Instance("ipykernel.kernelbase.Kernel")

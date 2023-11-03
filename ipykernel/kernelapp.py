@@ -2,6 +2,7 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
 
 import atexit
 import errno
@@ -132,7 +133,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     poller = Any()  # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
 
-    context: t.Optional[zmq.Context[t.Any]] = Any()  # type:ignore[assignment]
+    context: zmq.Context[t.Any] | None = Any()  # type:ignore[assignment]
     shell_socket = Any()
     control_socket = Any()
     debugpy_socket = Any()

@@ -1044,8 +1044,8 @@ class Kernel(SingletonConfigurable):
         # Ensure 1) self.processes is updated to only current subprocesses
         # and 2) we reuse processes when possible (needed for accurate CPU)
         self.processes = {
-            process.pid: self.processes.get(process.pid, process)
-            for process in all_processes  # type:ignore[call-overload,misc]
+            process.pid: self.processes.get(process.pid, process)  # type:ignore[misc,call-overload]
+            for process in all_processes
         }
         reply_content["kernel_cpu"] = sum(
             [

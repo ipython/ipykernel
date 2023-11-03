@@ -47,7 +47,12 @@ repos:
         stages: [manual]
         args: ["--install-types", "--non-interactive"]
         additional_dependencies:
-          ["traitlets>=5.13", "ipython>=8.16.1", "jupyter_client>=8.5"]
+          [
+            "traitlets>=5.13",
+            "ipython>=8.16.1",
+            "jupyter_client>=8.5",
+            "appnope",
+          ]
 
   - repo: https://github.com/adamchainz/blacken-docs
     rev: "1.16.0"

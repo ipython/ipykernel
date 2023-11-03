@@ -10,10 +10,10 @@ import os
 import signal
 import sys
 import traceback
+import typing as t
 from functools import partial
 from io import FileIO, TextIOWrapper
 from logging import StreamHandler
-from typing import Optional
 
 import zmq
 from IPython.core.application import (  # type:ignore[attr-defined]
@@ -132,7 +132,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     poller = Any()  # don't restrict this even though current pollers are all Threads
     heartbeat = Instance(Heartbeat, allow_none=True)
 
-    context: Optional[zmq.Context] = Any()  # type:ignore[assignment]
+    context: t.Optional[zmq.Context[t.Any]] = Any()  # type:ignore[assignment]
     shell_socket = Any()
     control_socket = Any()
     debugpy_socket = Any()

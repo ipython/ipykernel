@@ -1044,7 +1044,8 @@ class Kernel(SingletonConfigurable):
         # Ensure 1) self.processes is updated to only current subprocesses
         # and 2) we reuse processes when possible (needed for accurate CPU)
         self.processes = {
-            process.pid: self.processes.get(process.pid, process) for process in all_processes
+            process.pid: self.processes.get(process.pid, process)
+            for process in all_processes  # type:ignore[call-overload,misc]
         }
         reply_content["kernel_cpu"] = sum(
             [
@@ -1062,7 +1063,7 @@ class Kernel(SingletonConfigurable):
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
-        if cpu_percent is not None and cpu_percent != 0.0:
+        if cpu_percent is not None and cpu_percent != 0.0:  # type:ignore[redundant-expr]
             reply_content["host_cpu_percent"] = cpu_percent
         reply_content["cpu_count"] = psutil.cpu_count(logical=True)
         reply_content["host_virtual_memory"] = dict(psutil.virtual_memory()._asdict())

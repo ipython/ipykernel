@@ -168,7 +168,7 @@ def loop_wx(kernel):
 
     # We have to put the wx.Timer in a wx.Frame for it to fire properly.
     # We make the Frame hidden when we create it in the main app below.
-    class TimerFrame(wx.Frame):
+    class TimerFrame(wx.Frame):  # type:ignore[misc]
         def __init__(self, func):
             wx.Frame.__init__(self, None, -1)
             self.timer = wx.Timer(self)
@@ -182,7 +182,7 @@ def loop_wx(kernel):
 
     # We need a custom wx.App to create our Frame subclass that has the
     # wx.Timer to defer back to the tornado event loop.
-    class IPWxApp(wx.App):
+    class IPWxApp(wx.App):  # type:ignore[misc]
         def OnInit(self):
             self.frame = TimerFrame(wake)
             self.frame.Show(False)

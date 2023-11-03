@@ -147,7 +147,7 @@ class IPythonKernel(KernelBase):
 
         if _use_appnope() and self._darwin_app_nap:
             # Disable app-nap as the kernel is not a gui but can have guis
-            import appnope
+            import appnope  # type:ignore[import-untyped]
 
             appnope.nope()
 

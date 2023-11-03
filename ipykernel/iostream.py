@@ -69,7 +69,7 @@ class IOPubThread:
         self._event_pipes: Dict[threading.Thread, Any] = {}
         self._event_pipe_gc_lock: threading.Lock = threading.Lock()
         self._event_pipe_gc_seconds: float = 10
-        self._event_pipe_gc_task: Optional[asyncio.Task] = None
+        self._event_pipe_gc_task: Optional[asyncio.Task[Any]] = None
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main, name="IOPub")
         self.thread.daemon = True

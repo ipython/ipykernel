@@ -39,7 +39,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
 
         old_kernel = km.kernel
         km.restart_kernel()
-        assert km.kernel is None
+        assert km.kernel is not None
         assert km.kernel != old_kernel
 
         km.shutdown_kernel()

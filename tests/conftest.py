@@ -144,7 +144,7 @@ class MockIPyKernel(KernelMixin, IPythonKernel):  # type:ignore
 
 
 @pytest.fixture()
-async def kernel():
+def kernel():
     kernel = MockKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
@@ -152,7 +152,7 @@ async def kernel():
 
 
 @pytest.fixture()
-async def ipkernel():
+def ipkernel():
     kernel = MockIPyKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel

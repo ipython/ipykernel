@@ -3,6 +3,7 @@
 
 import unittest
 
+import pytest
 from flaky import flaky
 
 from ipykernel.inprocess.manager import InProcessKernelManager
@@ -38,14 +39,17 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
 
         old_kernel = km.kernel
         km.restart_kernel()
-        self.assertIsNotNone(km.kernel)
+        assert km.kernel is None
         assert km.kernel != old_kernel
 
         km.shutdown_kernel()
         assert not km.has_kernel
 
-        self.assertRaises(NotImplementedError, km.interrupt_kernel)
-        self.assertRaises(NotImplementedError, km.signal_kernel, 9)
+        with pytest.raises(NotImplementedError):
+            km.interrupt_kernel()
+
+        with pytest.raises(NotImplementedError):
+            km.signal_kernel(9)
 
         kc.stop_channels()
         assert not kc.channels_running
@@ -71,7 +75,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
         kc.complete("my_ba", 5)
         msg = kc.get_shell_msg()
         assert msg["header"]["msg_type"] == "complete_reply"
-        self.assertEqual(sorted(msg["content"]["matches"]), ["my_bar", "my_baz"])
+        assert sorted(msg["content"]["matches"]) == ["my_bar", "my_baz"]
 
     def test_inspect(self):
         """Does requesting object information from an in-process kernel work?"""
@@ -87,7 +91,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
         content = msg["content"]
         assert content["found"]
         text = content["data"]["text/plain"]
-        self.assertIn("int", text)
+        assert "int" in text
 
     def test_history(self):
         """Does requesting history from an in-process kernel work?"""

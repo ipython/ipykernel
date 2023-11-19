@@ -10,7 +10,7 @@ from queue import Empty
 import pytest
 from jupyter_client._version import version_info
 from jupyter_client.blocking.client import BlockingKernelClient
-from packaging.version import Version as V  # noqa
+from packaging.version import Version as V
 from traitlets import Bool, Dict, Enum, HasTraits, Integer, List, TraitError, Unicode, observe
 
 from .utils import TIMEOUT, execute, flush_channels, get_reply, start_global_kernel

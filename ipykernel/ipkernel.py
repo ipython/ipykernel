@@ -55,7 +55,7 @@ _comm_manager: t.Optional[CommManager] = None
 
 def _get_comm_manager(*args, **kwargs):
     """Create a new CommManager."""
-    global _comm_manager  # noqa
+    global _comm_manager  # noqa: PLW0603
     if _comm_manager is None:
         with _comm_lock:
             if _comm_manager is None:
@@ -208,6 +208,7 @@ class IPythonKernel(KernelBase):
     def banner(self):
         if self.shell:
             return self.shell.banner
+        return None
 
     async def poll_stopped_queue(self):
         """Poll the stopped queue."""
@@ -288,6 +289,7 @@ class IPythonKernel(KernelBase):
     def execution_count(self):
         if self.shell:
             return self.shell.execution_count
+        return None
 
     @execution_count.setter
     def execution_count(self, value):
@@ -361,7 +363,7 @@ class IPythonKernel(KernelBase):
             should_run_async = shell.should_run_async
             with_cell_id = _accepts_cell_id(run_cell)
         else:
-            should_run_async = lambda cell: False  # noqa
+            should_run_async = lambda cell: False  # noqa: ARG005
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
 
@@ -506,6 +508,7 @@ class IPythonKernel(KernelBase):
         """Handle a debug request."""
         if _is_debugpy_available:
             return await self.debugger.process_request(msg)
+        return None
 
     def _experimental_do_complete(self, code, cursor_pos):
         """
@@ -657,7 +660,7 @@ class IPythonKernel(KernelBase):
             working.update(ns)
             code = f"{resultname} = {fname}(*{argname},**{kwargname})"
             try:
-                exec(code, shell.user_global_ns, shell.user_ns)  # noqa
+                exec(code, shell.user_global_ns, shell.user_ns)
                 result = working.get(resultname)
             finally:
                 for key in ns:

@@ -9,7 +9,7 @@ import sys
 from functools import partial
 
 import zmq
-from packaging.version import Version as V  # noqa
+from packaging.version import Version as V
 from traitlets.config.application import Application
 
 
@@ -52,7 +52,7 @@ def register_integration(*toolkitnames):
         for name in toolkitnames:
             loop_map[name] = func
 
-        func.exit_hook = lambda kernel: None
+        func.exit_hook = lambda kernel: None  # noqa: ARG005
 
         def exit_decorator(exit_func):
             """@func.exit is now a decorator
@@ -484,24 +484,24 @@ def set_qt_api_env_from_gui(gui):
     else:
         if gui == "qt5":
             try:
-                import PyQt5  # noqa
+                import PyQt5
 
                 os.environ["QT_API"] = "pyqt5"
             except ImportError:
                 try:
-                    import PySide2  # noqa
+                    import PySide2
 
                     os.environ["QT_API"] = "pyside2"
                 except ImportError:
                     os.environ["QT_API"] = "pyqt5"
         elif gui == "qt6":
             try:
-                import PyQt6  # noqa
+                import PyQt6
 
                 os.environ["QT_API"] = "pyqt6"
             except ImportError:
                 try:
-                    import PySide6  # noqa
+                    import PySide6
 
                     os.environ["QT_API"] = "pyside6"
                 except ImportError:
@@ -516,7 +516,7 @@ def set_qt_api_env_from_gui(gui):
 
     # Do the actual import now that the environment variable is set to make sure it works.
     try:
-        from IPython.external.qt_for_kernel import QtCore, QtGui  # noqa
+        from IPython.external.qt_for_kernel import QtCore, QtGui
     except Exception as e:
         # Clear the environment variable for the next attempt.
         if "QT_API" in os.environ:

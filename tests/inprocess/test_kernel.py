@@ -45,7 +45,7 @@ def kc():
     kc = km.client()
     kc.start_channels()
     kc.wait_for_ready()
-    yield kc
+    return kc
 
 
 def test_with_cell_id(kc):

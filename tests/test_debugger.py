@@ -32,13 +32,13 @@ def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
     return reply if full_reply else reply["content"]
 
 
-@pytest.fixture
+@pytest.fixture()
 def kernel():
     with new_kernel() as kc:
         yield kc
 
 
-@pytest.fixture
+@pytest.fixture()
 def kernel_with_debug(kernel):
     # Initialize
     wait_for_debug_request(
@@ -386,4 +386,4 @@ my_test()"""
     assert global_var is not None
 
     # Compare local and global variable
-    assert global_var["value"] == local_var["value"] and global_var["type"] == local_var["type"]
+    assert global_var["value"] == local_var["value"] and global_var["type"] == local_var["type"]  # noqa: PT018

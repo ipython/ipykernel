@@ -376,7 +376,7 @@ class KernelMagics(Magics):
             return
 
         # if it's in the default dir, truncate to basename
-        if jupyter_runtime_dir() == Path(connection_file).parent:
+        if jupyter_runtime_dir() == str(Path(connection_file).parent):
             connection_file = Path(connection_file).name
 
         assert isinstance(info, str)

@@ -427,7 +427,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         basename = Path(self.connection_file).name
         if (
             basename == self.connection_file
-            or Path(self.connection_file).parent == self.connection_dir
+            or str(Path(self.connection_file).parent) == self.connection_dir
         ):
             # use shortname
             tail = basename

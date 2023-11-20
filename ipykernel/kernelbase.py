@@ -63,12 +63,18 @@ from ipykernel.jsonutil import json_clean
 from ._version import kernel_protocol_version
 
 
-def _accepts_cell_id(meth):
+def _accepts_parameters(meth, param_names):
     parameters = inspect.signature(meth).parameters
-    cid_param = parameters.get("cell_id")
-    return (cid_param and cid_param.kind == cid_param.KEYWORD_ONLY) or any(
-        p.kind == p.VAR_KEYWORD for p in parameters.values()
-    )
+    accepts = {param: False for param in param_names}
+
+    for param in param_names:
+        param_spec = parameters.get(param)
+        accepts[param] = (
+            param_spec
+            and param_spec.kind in [param_spec.KEYWORD_ONLY, param_spec.POSITIONAL_OR_KEYWORD]
+        ) or any(p.kind == p.VAR_KEYWORD for p in parameters.values())
+
+    return accepts
 
 
 class Kernel(SingletonConfigurable):
@@ -735,25 +741,28 @@ class Kernel(SingletonConfigurable):
             self.execution_count += 1
             self._publish_execute_input(code, parent, self.execution_count)
 
-        cell_id = (parent.get("metadata") or {}).get("cellId")
+        cell_meta = parent.get("metadata", {})
+        cell_id = metadata.get("cellId")
 
-        if _accepts_cell_id(self.do_execute):
-            reply_content = self.do_execute(
-                code,
-                silent,
-                store_history,
-                user_expressions,
-                allow_stdin,
-                cell_id=cell_id,
-            )
-        else:
-            reply_content = self.do_execute(
-                code,
-                silent,
-                store_history,
-                user_expressions,
-                allow_stdin,
-            )
+        # Check which parameters do_execute can accept
+        accepts_params = _accepts_parameters(self.do_execute, ["metadata", "cell_id"])
+
+        # Arguments based on the do_execute signature
+        do_execute_args = {
+            "code": code,
+            "silent": silent,
+            "store_history": store_history,
+            "user_expressions": user_expressions,
+            "allow_stdin": allow_stdin,
+        }
+
+        if accepts_params["metadata"]:
+            do_execute_args["metadata"] = cell_meta
+        if accepts_params["cell_id"]:
+            do_execute_args["cell_id"] = cell_id
+
+        # Call do_execute with the appropriate arguments
+        reply_content = self.do_execute(**do_execute_args)
 
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
@@ -793,6 +802,7 @@ class Kernel(SingletonConfigurable):
         user_expressions=None,
         allow_stdin=False,
         *,
+        cell_meta=None,
         cell_id=None,
     ):
         """Execute user code. Must be overridden by subclasses."""

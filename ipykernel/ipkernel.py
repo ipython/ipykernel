@@ -23,7 +23,7 @@ from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
 from .kernelbase import Kernel as KernelBase
-from .kernelbase import _accepts_cell_id
+from .kernelbase import _accepts_parameters
 from .zmqshell import ZMQInteractiveShell
 
 try:
@@ -347,6 +347,7 @@ class IPythonKernel(KernelBase):
         user_expressions=None,
         allow_stdin=False,
         *,
+        cell_meta=None,
         cell_id=None,
     ):
         """Handle code execution."""
@@ -359,7 +360,7 @@ class IPythonKernel(KernelBase):
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
-            with_cell_id = _accepts_cell_id(run_cell)
+            accepts_params = _accepts_parameters(run_cell, ["cell_id"])
         else:
             should_run_async = lambda cell: False  # noqa
             # older IPython,
@@ -368,7 +369,7 @@ class IPythonKernel(KernelBase):
             async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
 
-            with_cell_id = _accepts_cell_id(shell.run_cell)
+            accepts_params = _accepts_parameters(shell.run_cell, ["cell_id"])
         try:
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
@@ -390,7 +391,7 @@ class IPythonKernel(KernelBase):
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
             ):
-                if with_cell_id:
+                if accepts_params["cell_id"]:
                     coro = run_cell(
                         code,
                         store_history=store_history,
@@ -422,7 +423,7 @@ class IPythonKernel(KernelBase):
                 # runner isn't already running,
                 # make synchronous call,
                 # letting shell dispatch to loop runners
-                if with_cell_id:
+                if accepts_params["cell_id"]:
                     res = shell.run_cell(
                         code,
                         store_history=store_history,

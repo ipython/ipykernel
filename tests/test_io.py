@@ -17,14 +17,14 @@ from jupyter_client.session import Session
 from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
 
 
-@pytest.fixture
+@pytest.fixture()
 def ctx():
     ctx = zmq.Context()
     yield ctx
     ctx.destroy()
 
 
-@pytest.fixture
+@pytest.fixture()
 def iopub_thread(ctx):
     with ctx.socket(zmq.PUB) as pub:
         thread = IOPubThread(pub)

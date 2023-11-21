@@ -2,6 +2,7 @@
 import os
 import shutil
 import sys
+from pathlib import Path
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
@@ -11,8 +12,8 @@ class CustomHook(BuildHookInterface):
 
     def initialize(self, version, build_data):
         """Initialize the hook."""
-        here = os.path.abspath(os.path.dirname(__file__))
-        sys.path.insert(0, here)
+        here = Path(__file__).parent.resolve()
+        sys.path.insert(0, str(here))
         from ipykernel.kernelspec import make_ipkernel_cmd, write_kernel_spec
 
         overrides = {}
@@ -28,8 +29,8 @@ class CustomHook(BuildHookInterface):
 
         overrides["argv"] = argv
 
-        dest = os.path.join(here, "data_kernelspec")
-        if os.path.exists(dest):
+        dest = Path(here) / "data_kernelspec"
+        if Path(dest).exists():
             shutil.rmtree(dest)
 
         write_kernel_spec(dest, overrides=overrides)

@@ -67,6 +67,7 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     def _default_kernel(self):
         if Kernel.initialized():
             return Kernel.instance()
+        return None
 
     @default("comm_id")
     def _default_comm_id(self):

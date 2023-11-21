@@ -53,7 +53,7 @@ def test():
         # More exotic objects
         ((x for x in range(3)), [0, 1, 2]),
         (iter([1, 2]), [1, 2]),
-        (datetime(1991, 7, 3, 12, 00), "1991-07-03T12:00:00.000000"),  # noqa
+        (datetime(1991, 7, 3, 12, 00), "1991-07-03T12:00:00.000000"),
         (date(1991, 7, 3), "1991-07-03T00:00:00.000000"),
         (MyFloat(), 3.14),
         (MyInt(), 389),
@@ -98,7 +98,7 @@ def test_encode_images():
 
 @pytest.mark.skipif(JUPYTER_CLIENT_MAJOR_VERSION >= 7, reason="json_clean is a no-op")
 def test_lambda():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError):  # noqa: PT011
         json_clean(lambda: 1)
 
 
@@ -109,7 +109,7 @@ def test_exception():
         {True: "bool", "True": "string"},
     ]
     for d in bad_dicts:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError):  # noqa: PT011
             json_clean(d)
 
 

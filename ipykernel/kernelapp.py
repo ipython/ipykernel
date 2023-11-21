@@ -15,6 +15,7 @@ import typing as t
 from functools import partial
 from io import FileIO, TextIOWrapper
 from logging import StreamHandler
+from pathlib import Path
 
 import zmq
 from IPython.core.application import (  # type:ignore[attr-defined]
@@ -161,10 +162,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     @property
     def abs_connection_file(self):
-        if os.path.basename(self.connection_file) == self.connection_file:
-            return os.path.join(self.connection_dir, self.connection_file)
-        else:
-            return self.connection_file
+        if Path(self.connection_file).name == self.connection_file and self.connection_dir:
+            return str(Path(str(self.connection_dir)) / self.connection_file)
+        return self.connection_file
 
     # streams, etc.
     no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
@@ -231,7 +231,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             if port <= 0:
                 port = 1
                 path = "%s-%i" % (self.ip, port)
-                while os.path.exists(path):
+                while Path(path).exists():
                     port = port + 1
                     path = "%s-%i" % (self.ip, port)
             else:
@@ -257,6 +257,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                     raise
                 if attempt == max_attempts - 1:
                     raise
+        return None
 
     def write_connection_file(self):
         """write connection info to JSON file"""
@@ -271,7 +272,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             iopub_port=self.iopub_port,
             control_port=self.control_port,
         )
-        if os.path.exists(cf):
+        if Path(cf).exists():
             # If the file exists, merge our info into it. For example, if the
             # original file had port number 0, we update with the actual port
             # used.
@@ -291,7 +292,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         cf = self.abs_connection_file
         self.log.debug("Cleaning up connection file: %s", cf)
         try:
-            os.remove(cf)
+            Path(cf).unlink()
         except OSError:
             pass
 
@@ -306,14 +307,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         except OSError:
             self.log.debug("Connection file not found: %s", self.connection_file)
             # This means I own it, and I'll create it in this directory:
-            os.makedirs(os.path.dirname(self.abs_connection_file), mode=0o700, exist_ok=True)
+            Path(self.abs_connection_file).parent.mkdir(mode=0o700, exist_ok=True, parents=True)
             # Also, I will clean it up:
             atexit.register(self.cleanup_connection_file)
             return
         try:
             self.load_connection_file()
         except Exception:
-            self.log.error(
+            self.log.error(  # noqa: G201
                 "Failed to load connection file: %r", self.connection_file, exc_info=True
             )
             self.exit(1)
@@ -423,10 +424,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def log_connection_info(self):
         """display connection info, and store ports"""
-        basename = os.path.basename(self.connection_file)
+        basename = Path(self.connection_file).name
         if (
             basename == self.connection_file
-            or os.path.dirname(self.connection_file) == self.connection_dir
+            or str(Path(self.connection_file).parent) == self.connection_dir
         ):
             # use shortname
             tail = basename
@@ -460,7 +461,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     def init_blackhole(self):
         """redirects stdout/stderr to devnull if necessary"""
         if self.no_stdout or self.no_stderr:
-            blackhole = open(os.devnull, "w")  # noqa
+            blackhole = open(os.devnull, "w")  # noqa: SIM115
             if self.no_stdout:
                 sys.stdout = sys.__stdout__ = blackhole  # type:ignore[misc]
             if self.no_stderr:
@@ -666,7 +667,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         With the non-interruptible version, stopping pdb() locks up the kernel in a
         non-recoverable state.
         """
-        import pdb  # noqa
+        import pdb
 
         from IPython.core import debugger
 
@@ -702,7 +703,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # Catch exception when initializing signal fails, eg when running the
             # kernel on a separate thread
             if int(self.log_level) < logging.CRITICAL:  # type:ignore[call-overload]
-                self.log.error("Unable to initialize signal:", exc_info=True)
+                self.log.error("Unable to initialize signal:", exc_info=True)  # noqa: G201
         self.init_kernel()
         # shell init steps
         self.init_path()

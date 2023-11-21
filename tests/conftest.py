@@ -143,16 +143,16 @@ class MockIPyKernel(KernelMixin, IPythonKernel):  # type:ignore
         super().__init__(*args, **kwargs)
 
 
-@pytest.fixture
-async def kernel():
+@pytest.fixture()
+def kernel():
     kernel = MockKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel
     kernel.destroy()
 
 
-@pytest.fixture
-async def ipkernel():
+@pytest.fixture()
+def ipkernel():
     kernel = MockIPyKernel()
     kernel.io_loop = IOLoop.current()
     yield kernel

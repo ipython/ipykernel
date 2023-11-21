@@ -121,8 +121,7 @@ class Kernel(SingletonConfigurable):
         )
         if self.shell_stream is not None:
             return [self.shell_stream]
-        else:
-            return []
+        return []
 
     @observe("shell_streams")
     def _shell_streams_changed(self, change):  # pragma: no cover
@@ -328,7 +327,7 @@ class Kernel(SingletonConfigurable):
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
         except Exception:
-            self.log.error("Invalid Control Message", exc_info=True)
+            self.log.error("Invalid Control Message", exc_info=True)  # noqa: G201
             return
 
         self.log.debug("Control received: %s", msg)
@@ -349,7 +348,7 @@ class Kernel(SingletonConfigurable):
                 if inspect.isawaitable(result):
                     await result
             except Exception:
-                self.log.error("Exception in control handler:", exc_info=True)
+                self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -382,7 +381,7 @@ class Kernel(SingletonConfigurable):
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
         except Exception:
-            self.log.error("Invalid Message", exc_info=True)
+            self.log.error("Invalid Message", exc_info=True)  # noqa: G201
             return
 
         # Set the parent message for side effects.
@@ -424,7 +423,7 @@ class Kernel(SingletonConfigurable):
                 if inspect.isawaitable(result):
                     await result
             except Exception:
-                self.log.error("Exception in message handler:", exc_info=True)
+                self.log.error("Exception in message handler:", exc_info=True)  # noqa: G201
             except KeyboardInterrupt:
                 # Ctrl-c shouldn't crash the kernel here.
                 self.log.error("KeyboardInterrupt caught in kernel.")
@@ -476,7 +475,6 @@ class Kernel(SingletonConfigurable):
             except KeyboardInterrupt:
                 # Ctrl-C shouldn't crash the kernel
                 self.log.error("KeyboardInterrupt caught in kernel")
-                pass
             if self.eventloop is eventloop:
                 # schedule advance again
                 schedule_next()
@@ -516,7 +514,7 @@ class Kernel(SingletonConfigurable):
             try:
                 t, dispatch, args = self.msg_queue.get_nowait()
             except (asyncio.QueueEmpty, QueueEmpty):
-                return None
+                return
         await dispatch(*args)
 
     async def dispatch_queue(self):
@@ -684,7 +682,7 @@ class Kernel(SingletonConfigurable):
         message.
         """
         if not self.session:
-            return
+            return None
         return self.session.send(
             stream,
             msg_or_type,
@@ -1037,8 +1035,8 @@ class Kernel(SingletonConfigurable):
             metric_value = getattr(process, name)()
             if attribute is not None:  # ... a named tuple
                 return getattr(metric_value, attribute)
-            else:  # ... or a number
-                return metric_value
+            # ... or a number
+            return metric_value
         # Avoid littering logs with stack traces
         # complaining about dead processes
         except BaseException:
@@ -1095,7 +1093,7 @@ class Kernel(SingletonConfigurable):
             bufs = parent["buffers"]
             msg_id = parent["header"]["msg_id"]
         except Exception:
-            self.log.error("Got bad msg: %s", parent, exc_info=True)
+            self.log.error("Got bad msg: %s", parent, exc_info=True)  # noqa: G201
             return
 
         md = self.init_metadata(parent)
@@ -1203,7 +1201,7 @@ class Kernel(SingletonConfigurable):
         """Send a reply to an aborted request"""
         if not self.session:
             return
-        self.log.info(f"Aborting {msg['header']['msg_id']}: {msg['header']['msg_type']}")
+        self.log.info("Aborting %s: %s", msg["header"]["msg_id"], msg["header"]["msg_type"])
         reply_type = msg["header"]["msg_type"].rsplit("_", 1)[0] + "_reply"
         status = {"status": "aborted"}
         md = self.init_metadata(msg)
@@ -1279,8 +1277,7 @@ class Kernel(SingletonConfigurable):
             except zmq.ZMQError as e:
                 if e.errno == zmq.EAGAIN:
                     break
-                else:
-                    raise
+                raise
 
         # Send the input request.
         assert self.session is not None
@@ -1325,8 +1322,9 @@ class Kernel(SingletonConfigurable):
         Like `killpg`, but does not include the current process
         (or possible parents).
         """
+        sig_rep = f"{Signals(signum)!r}"
         for p in self._process_children():
-            self.log.debug(f"Sending {Signals(signum)!r} to subprocess {p}")
+            self.log.debug("Sending %s to subprocess %s", sig_rep, p)
             try:
                 if signum == SIGTERM:
                     p.terminate()
@@ -1375,7 +1373,9 @@ class Kernel(SingletonConfigurable):
                 # signals only children, not current process
                 self._signal_children(signum)
                 self.log.debug(
-                    f"Will sleep {delay}s before checking for children and retrying. {children}"
+                    "Will sleep %s sec before checking for children and retrying. %s",
+                    delay,
+                    children,
                 )
                 await asyncio.sleep(delay)
 

@@ -46,8 +46,7 @@ def _find_connection_file(connection_file):
     if connection_file is None:
         # get connection file from current kernel
         return get_connection_file()
-    else:
-        return jupyter_client.find_connection_file(connection_file)
+    return jupyter_client.find_connection_file(connection_file)
 
 
 def get_connection_info(
@@ -125,7 +124,7 @@ def connect_qtconsole(
     kwargs["start_new_session"] = True
 
     return Popen(
-        [sys.executable, "-c", cmd, "--existing", cf, *argv],  # noqa: S603
+        [sys.executable, "-c", cmd, "--existing", cf, *argv],
         stdout=PIPE,
         stderr=PIPE,
         close_fds=(sys.platform != "win32"),

@@ -198,7 +198,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         first = self.disp_pub.unregister_hook(hook)
         self.disp_pub.publish(data)
 
-        self.assertTrue(first)
+        assert bool(first)
         assert hook.call_count == 1
         assert self.session.send_count == 1
 
@@ -207,7 +207,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         # should return false.
         #
         second = self.disp_pub.unregister_hook(hook)
-        self.assertFalse(second)
+        assert not bool(second)
 
 
 def test_magics(tmp_path):

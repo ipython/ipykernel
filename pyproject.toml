@@ -132,7 +132,6 @@ disable_error_code = ["no-untyped-def", "no-untyped-call", "import-not-found"]
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 follow_imports = "normal"
 pretty = true
-show_error_codes = true
 warn_unreachable = true
 
 [tool.pytest.ini_options]
@@ -212,69 +211,55 @@ line-length = 100
 
 [tool.ruff.lint]
 select = [
-  "A",
-  "B",
-  "C",
-  "DTZ",
-  "E",
-  "EM",
-  "F",
-  "FBT",
-  "I",
-  "ICN",
-  "N",
-  "PLC",
-  "PLE",
-  "PLW",
-  "Q",
-  "RUF",
-  "S",
-  "SIM",
-  "T",
-  "TID",
-  "UP",
-  "W",
-  "YTT",
+  "B",           # flake8-bugbear
+  "I",           # isort
+  "ARG",         # flake8-unused-arguments
+  "C4",          # flake8-comprehensions
+  "EM",          # flake8-errmsg
+  "ICN",         # flake8-import-conventions
+  "G",           # flake8-logging-format
+  "PGH",         # pygrep-hooks
+  "PIE",         # flake8-pie
+  "PL",          # pylint
+  "PT",          # flake8-pytest-style
+  "PTH",         # flake8-use-pathlib
+  "RET",         # flake8-return
+  "RUF",         # Ruff-specific
+  "SIM",         # flake8-simplify
+  "T20",         # flake8-print
+  "UP",          # pyupgrade
+  "YTT",         # flake8-2020
+  "EXE",         # flake8-executable
+  "NPY",         # NumPy specific rules
+  "PD",          # pandas-vet
+  "PYI",         # flake8-pyi
 ]
 ignore = [
+  "PLR",    # Design related pylint codes
   # Allow non-abstract empty methods in abstract base classes
   "B027",
-  # Ignore McCabe complexity
-  "C901",
-  # Allow boolean positional values in function calls, like `dict.get(... True)`
-  "FBT003",
   # Use of `assert` detected
   "S101",
-  # Line too long
-  "E501",
-  # Relative imports are banned
-  "TID252",
-  # Boolean ... in function definition
-  "FBT001", "FBT002",
-  # Module level import not at top of file
-  "E402",
-  # A001/A002/A003 .. is shadowing a python builtin
-  "A001", "A002", "A003",
   # Possible hardcoded password
   "S105", "S106",
-  # Q000 Single quotes found but double quotes preferred
-  "Q000",
-  # N806 Variable `B` in function should be lowercase
-  "N806",
-  # T201 `print` found
+  # `print` found
   "T201",
-  # N802 Function name `CreateWellKnownSid` should be lowercase
-  "N802", "N803",
-  # C408 Unnecessary `dict` call (rewrite as a literal)
+  # Unnecessary `dict` call (rewrite as a literal)
   "C408",
-  # N801 Class name `directional_link` should use CapWords convention
-  "N801",
-  # SIM105 Use `contextlib.suppress(ValueError)` instead of try-except-pass
+  # Use `contextlib.suppress(ValueError)` instead of try-except-pass
   "SIM105",
-  # S110 `try`-`except`-`pass` detected
+  # `try`-`except`-`pass` detected
   "S110",
-  # RUF012 Mutable class attributes should be annotated with `typing.ClassVar`
+  # Mutable class attributes should be annotated with `typing.ClassVar`
   "RUF012",
+  # Unused function argument:
+  "ARG001",
+  # Unused method argument:
+  "ARG002",
+  # Logging statement uses `%`
+  "G002",
+  # `open()` should be replaced by `Path.open()`
+  "PTH123",
 ]
 unfixable = [
   # Don't touch print statements
@@ -285,22 +270,14 @@ unfixable = [
 
 [tool.ruff.lint.per-file-ignores]
 # B011 Do not call assert False since python -O removes these calls
-# F841 local variable 'foo' is assigned to but never used
 # C408 Unnecessary `dict` call
-# E402 Module level import not at top of file
 # T201 `print` found
 # B007 Loop control variable `i` not used within the loop body.
-# N802 Function name `assertIn` should be lowercase
-# F841 Local variable `t` is assigned to but never used
-# EM101 Exception must not use a string literal, assign to variable first
-# PLR2004 Magic value used in comparison
 # PLW0603 Using the global statement to update ...
-# PLW2901 `for` loop variable ...
 # PLC1901 `stderr == ""` can be simplified to `not stderr` as an empty string is falsey
 # B018 Found useless expression. Either assign it to a variable or remove it.
 # S603 `subprocess` call: check for execution of untrusted input
-"tests/*" = ["B011", "F841", "C408", "E402", "T201", "B007", "N802", "F841", "EM101",
-    "EM102", "EM103", "PLR2004", "PLW0603", "PLW2901", "PLC1901", "B018", "S603"]
+"tests/*" = ["B011", "C408", "T201", "B007", "EM", "PTH", "PLW", "PLC1901", "B018", "S603", "ARG", "RET", "PGH"]
 
 [tool.interrogate]
 ignore-init-module=true

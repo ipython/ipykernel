@@ -11,7 +11,7 @@ from ipykernel.parentpoller import ParentPollerUnix, ParentPollerWindows
 @pytest.mark.skipif(os.name == "nt", reason="only works on posix")
 def test_parent_poller_unix():
     poller = ParentPollerUnix()
-    with mock.patch("os.getppid", lambda: 1):
+    with mock.patch("os.getppid", lambda: 1):  # noqa: PT008
 
         def exit_mock(*args):
             sys.exit(1)
@@ -23,7 +23,7 @@ def test_parent_poller_unix():
         msg = "hi"
         raise ValueError(msg)
 
-    with mock.patch("os.getppid", mock_getppid), pytest.raises(ValueError):
+    with mock.patch("os.getppid", mock_getppid), pytest.raises(ValueError):  # noqa: PT011
         poller.run()
 
 

@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.27.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.26.0...465d34483103d23f471a4795fe5fabb9cf7ac3f5))
+
+### Enhancements made
+
+- Extend argument handling of do_execute with cell metadata [#1169](https://github.com/ipython/ipykernel/pull/1169) ([@jjvraw](https://github.com/jjvraw))
+
+### Maintenance and upkeep improvements
+
+- Update ruff and typings [#1167](https://github.com/ipython/ipykernel/pull/1167) ([@blink1073](https://github.com/blink1073))
+- Clean up ruff config [#1165](https://github.com/ipython/ipykernel/pull/1165) ([@blink1073](https://github.com/blink1073))
+- chore: update pre-commit hooks [#1164](https://github.com/ipython/ipykernel/pull/1164) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Clean up typing config [#1163](https://github.com/ipython/ipykernel/pull/1163) ([@blink1073](https://github.com/blink1073))
+- Update typing for traitlets 5.13 [#1162](https://github.com/ipython/ipykernel/pull/1162) ([@blink1073](https://github.com/blink1073))
+- Adopt ruff format [#1161](https://github.com/ipython/ipykernel/pull/1161) ([@blink1073](https://github.com/blink1073))
+- Update typing for jupyter_client 8.5 [#1160](https://github.com/ipython/ipykernel/pull/1160) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-10-24&to=2023-11-21&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-10-24..2023-11-21&type=Issues) | [@jjvraw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajjvraw+updated%3A2023-10-24..2023-11-21&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-10-24..2023-11-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.26.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.25.2...966e0a41fc61e7850378ae672e28202eb29b10b0))
@@ -21,8 +47,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-09-04&to=2023-10-24&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-09-04..2023-10-24&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2023-09-04..2023-10-24&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-09-04..2023-10-24&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.25.2
 

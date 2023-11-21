@@ -742,7 +742,7 @@ class Kernel(SingletonConfigurable):
             self._publish_execute_input(code, parent, self.execution_count)
 
         cell_meta = parent.get("metadata", {})
-        cell_id = metadata.get("cellId")
+        cell_id = cell_meta.get("cellId") or {}
 
         # Check which parameters do_execute can accept
         accepts_params = _accepts_parameters(self.do_execute, ["cell_meta", "cell_id"])
@@ -756,8 +756,8 @@ class Kernel(SingletonConfigurable):
             "allow_stdin": allow_stdin,
         }
 
-        if accepts_params["metadata"]:
-            do_execute_args["metadata"] = cell_meta
+        if accepts_params["cell_meta"]:
+            do_execute_args["cell_meta"] = cell_meta
         if accepts_params["cell_id"]:
             do_execute_args["cell_id"] = cell_id
 

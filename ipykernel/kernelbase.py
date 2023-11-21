@@ -742,7 +742,7 @@ class Kernel(SingletonConfigurable):
             self._publish_execute_input(code, parent, self.execution_count)
 
         cell_meta = parent.get("metadata", {})
-        cell_id = cell_meta.get("cellId") or {}
+        cell_id = cell_meta.get("cellId")
 
         # Check which parameters do_execute can accept
         accepts_params = _accepts_parameters(self.do_execute, ["cell_meta", "cell_id"])

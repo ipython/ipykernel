@@ -745,7 +745,7 @@ class Kernel(SingletonConfigurable):
         cell_id = metadata.get("cellId")
 
         # Check which parameters do_execute can accept
-        accepts_params = _accepts_parameters(self.do_execute, ["metadata", "cell_id"])
+        accepts_params = _accepts_parameters(self.do_execute, ["cell_meta", "cell_id"])
 
         # Arguments based on the do_execute signature
         do_execute_args = {

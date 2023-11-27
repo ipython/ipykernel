@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.27.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.27.0...f9c517e868462d05d6854204c2ad0a244db1cd19))
+
+### Bugs fixed
+
+- Fix edit magic payload type [#1171](https://github.com/ipython/ipykernel/pull/1171) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-11-21&to=2023-11-27&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-11-21..2023-11-27&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.27.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.26.0...465d34483103d23f471a4795fe5fabb9cf7ac3f5))
@@ -25,8 +41,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-10-24&to=2023-11-21&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-10-24..2023-11-21&type=Issues) | [@jjvraw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajjvraw+updated%3A2023-10-24..2023-11-21&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-10-24..2023-11-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.26.0
 

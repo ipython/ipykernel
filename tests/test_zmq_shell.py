@@ -220,6 +220,9 @@ def test_magics(tmp_path):
     tmp_file = tmp_path / "test.txt"
     tmp_file.write_text("hi", "utf8")
     magics.edit(str(tmp_file))
+    payload = shell.payload_manager.read_payload()[0]
+    assert payload["filename"] == str(tmp_file)
+
     magics.clear([])
     magics.less(str(tmp_file))
     if os.name == "posix":

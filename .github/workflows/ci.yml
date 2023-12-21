@@ -153,11 +153,11 @@ jobs:
 
       - name: List installed packages
         run: |
-          hatch run test:list
+          hatch -v run test:list
 
       - name: Run the unit tests
         run: |
-          hatch run test:nowarn || hatch run test:nowarn --lf
+          hatch -v run test:nowarn || hatch run test:nowarn --lf
 
   test_prereleases:
     name: Test Prereleases

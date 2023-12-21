@@ -2,6 +2,7 @@
 
 import asyncio
 import builtins
+import gc
 import getpass
 import os
 import signal
@@ -14,6 +15,7 @@ from functools import partial
 import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
+from jupyter_client.session import extract_header
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
@@ -22,6 +24,7 @@ from .comm.manager import CommManager
 from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
+from .iostream import OutStream
 from .kernelbase import Kernel as KernelBase
 from .kernelbase import _accepts_parameters
 from .zmqshell import ZMQInteractiveShell
@@ -65,6 +68,10 @@ def _get_comm_manager(*args, **kwargs):
 
 comm.create_comm = _create_comm
 comm.get_comm_manager = _get_comm_manager
+
+import threading
+
+threading_start = threading.Thread.start
 
 
 class IPythonKernel(KernelBase):
@@ -150,6 +157,11 @@ class IPythonKernel(KernelBase):
             import appnope  # type:ignore[import-untyped]
 
             appnope.nope()
+
+        if hasattr(gc, "callbacks"):
+            # while `gc.callbacks` exists since Python 3.3, pypy does not
+            # implement it even as of 3.9.
+            gc.callbacks.append(self._clean_thread_parent_frames)
 
     help_links = List(
         [
@@ -340,6 +352,12 @@ class IPythonKernel(KernelBase):
         finally:
             # restore the previous sigint handler
             signal.signal(signal.SIGINT, save_sigint)
+
+    async def execute_request(self, stream, ident, parent):
+        """Override for cell output - cell reconciliation."""
+        parent_header = extract_header(parent)
+        self._associate_identity_of_new_threads_with(parent_header)
+        await super().execute_request(stream, ident, parent)
 
     async def do_execute(
         self,
@@ -705,6 +723,58 @@ class IPythonKernel(KernelBase):
         if self.shell:
             self.shell.reset(False)
         return dict(status="ok")
+
+    def _associate_identity_of_new_threads_with(self, parent_header):
+        """Intercept the identity of any thread started after this method finished,
+
+        and associate the thread's output with the parent header frame, which allows
+        to direct the outputs to the cell which started the thread.
+
+        This is a no-op if the `self._stdout` and `self._stderr` are not
+        sub-classes of `OutStream`.
+        """
+        stdout = self._stdout
+        stderr = self._stderr
+
+        def start_closure(self: threading.Thread):
+            """Wrap the `threading.Thread.start` to intercept thread identity.
+
+            This is needed because there is no "start" hook yet, but there
+            might be one in the future: https://bugs.python.org/issue14073
+            """
+
+            threading_start(self)
+            for stream in [stdout, stderr]:
+                if isinstance(stream, OutStream):
+                    stream._thread_parents[self.ident] = parent_header
+
+        threading.Thread.start = start_closure  # type:ignore[method-assign]
+
+    def _clean_thread_parent_frames(
+        self, phase: t.Literal["start", "stop"], info: t.Dict[str, t.Any]
+    ):
+        """Clean parent frames of threads which are no longer running.
+        This is meant to be invoked by garbage collector callback hook.
+
+        The implementation enumerates the threads because there is no "exit" hook yet,
+        but there might be one in the future: https://bugs.python.org/issue14073
+
+        This is a no-op if the `self._stdout` and `self._stderr` are not
+        sub-classes of `OutStream`.
+        """
+        # Only run before the garbage collector starts
+        if phase != "start":
+            return
+        active_threads = {thread.ident for thread in threading.enumerate()}
+        for stream in [self._stdout, self._stderr]:
+            if isinstance(stream, OutStream):
+                thread_parents = stream._thread_parents
+                for identity in list(thread_parents.keys()):
+                    if identity not in active_threads:
+                        try:
+                            del thread_parents[identity]
+                        except KeyError:
+                            pass
 
 
 # This exists only for backwards compatibility - use IPythonKernel instead

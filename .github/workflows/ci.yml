@@ -151,6 +151,10 @@ jobs:
         with:
           dependency_type: minimum
 
+      - name: List installed packages
+        run: |
+          hatch -v run test:list
+
       - name: Run the unit tests
         run: |
           hatch -v run test:nowarn || hatch run test:nowarn --lf

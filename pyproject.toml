@@ -32,7 +32,7 @@ dependencies = [
     "tornado>=6.1",
     "matplotlib-inline>=0.1",
     'appnope;platform_system=="Darwin"',
-    "pyzmq>=20",
+    "pyzmq>=24",
     "psutil",
     "packaging",
 ]
@@ -87,6 +87,7 @@ api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipyk
 [tool.hatch.envs.test]
 features = ["test"]
 [tool.hatch.envs.test.scripts]
+list = "python -m pip freeze"
 test = "python -m pytest -vv {args}"
 nowarn = "test -W default {args}"
 

@@ -43,7 +43,7 @@ jobs:
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
-          python -m hatch run cov:test --cov-fail-under 50 || python -m hatch run test:test --lf
+          hatch run cov:test --cov-fail-under 50 || hatch run test:test --lf
 
       - name: Run the tests on pypy
         timeout-minutes: 15

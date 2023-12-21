@@ -17,10 +17,6 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
 ]
 urls = {Homepage = "https://ipython.org"}
 requires-python = ">=3.8"
@@ -36,7 +32,7 @@ dependencies = [
     "tornado>=6.1",
     "matplotlib-inline>=0.1",
     'appnope;platform_system=="Darwin"',
-    "pyzmq>=20",
+    "pyzmq>=24",
     "psutil",
     "packaging",
 ]
@@ -175,6 +171,9 @@ filterwarnings= [
   "ignore:unclosed event loop:ResourceWarning",
   "ignore:There is no current event loop:DeprecationWarning",
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
+
+  # Ignore datetime warning.
+  "ignore:datetime.datetime.utc:DeprecationWarning",
 ]
 
 [tool.coverage.report]

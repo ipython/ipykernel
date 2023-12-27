@@ -69,11 +69,6 @@ def _get_comm_manager(*args, **kwargs):
 comm.create_comm = _create_comm
 comm.get_comm_manager = _get_comm_manager
 
-import threading
-
-_threading_Thread_run = threading.Thread.run
-_threading_Thread__init__ = threading.Thread.__init__
-
 
 class IPythonKernel(KernelBase):
     """The IPython Kernel class."""
@@ -738,6 +733,8 @@ class IPythonKernel(KernelBase):
         stderr = self._stderr
         kernel_thread_ident = threading.get_ident()
         kernel = self
+        _threading_Thread_run = threading.Thread.run
+        _threading_Thread__init__ = threading.Thread.__init__
 
         def run_closure(self: threading.Thread):
             """Wrap the `threading.Thread.start` to intercept thread identity.

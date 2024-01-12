@@ -6,8 +6,13 @@ from .utils import TIMEOUT, get_reply, new_kernel
 
 seq = 0
 
-# Skip if debugpy is not available
-pytest.importorskip("debugpy")
+# Tests support debugpy not being installed, in which case the tests don't do anything useful
+# functionally as the debug message replies are usually empty dictionaries, but they confirm that
+# ipykernel doesn't block, or segfault, or raise an exception.
+try:
+    import debugpy
+except ImportError:
+    debugpy = None
 
 
 def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
@@ -85,15 +90,21 @@ def test_debug_initialize(kernel):
             "locale": "en",
         },
     )
-    assert reply["success"]
+    if debugpy:
+        assert reply["success"]
+    else:
+        assert reply == {}
 
 
 def test_attach_debug(kernel_with_debug):
     reply = wait_for_debug_request(
         kernel_with_debug, "evaluate", {"expression": "'a' + 'b'", "context": "repl"}
     )
-    assert reply["success"]
-    assert reply["body"]["result"] == ""
+    if debugpy:
+        assert reply["success"]
+        assert reply["body"]["result"] == ""
+    else:
+        assert reply == {}
 
 
 def test_set_breakpoints(kernel_with_debug):
@@ -104,7 +115,11 @@ def test_set_breakpoints(kernel_with_debug):
 f(2, 3)"""
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
-    source = r["body"]["sourcePath"]
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "non-existent path"
 
     reply = wait_for_debug_request(
         kernel_with_debug,
@@ -115,20 +130,29 @@ f(2, 3)"""
             "sourceModified": False,
         },
     )
-    assert reply["success"]
-    assert len(reply["body"]["breakpoints"]) == 1
-    assert reply["body"]["breakpoints"][0]["verified"]
-    assert reply["body"]["breakpoints"][0]["source"]["path"] == source
+    if debugpy:
+        assert reply["success"]
+        assert len(reply["body"]["breakpoints"]) == 1
+        assert reply["body"]["breakpoints"][0]["verified"]
+        assert reply["body"]["breakpoints"][0]["source"]["path"] == source
+    else:
+        assert reply == {}
 
     r = wait_for_debug_request(kernel_with_debug, "debugInfo")
 
     def func(b):
         return b["source"]
 
-    assert source in map(func, r["body"]["breakpoints"])
+    if debugpy:
+        assert source in map(func, r["body"]["breakpoints"])
+    else:
+        assert r == {}
 
     r = wait_for_debug_request(kernel_with_debug, "configurationDone")
-    assert r["success"]
+    if debugpy:
+        assert r["success"]
+    else:
+        assert r == {}
 
 
 def test_stop_on_breakpoint(kernel_with_debug):
@@ -139,7 +163,11 @@ def test_stop_on_breakpoint(kernel_with_debug):
 f(2, 3)"""
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
-    source = r["body"]["sourcePath"]
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "some path"
 
     wait_for_debug_request(kernel_with_debug, "debugInfo")
 
@@ -156,6 +184,10 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
+
+    if not debugpy:
+        # Cannot stop on breakpoint if debugpy not installed
+        return
 
     # Wait for stop on breakpoint
     msg: dict = {"msg_type": "", "content": {}}
@@ -175,7 +207,11 @@ def f(a, b):
 f(2, 3)"""
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
-    source = r["body"]["sourcePath"]
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "some path"
 
     wait_for_debug_request(kernel_with_debug, "debugInfo")
 
@@ -192,6 +228,10 @@ f(2, 3)"""
     wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
 
     kernel_with_debug.execute(code)
+
+    if not debugpy:
+        # Cannot stop on breakpoint if debugpy not installed
+        return
 
     # Wait for stop on breakpoint
     msg: dict = {"msg_type": "", "content": {}}
@@ -216,7 +256,10 @@ print({var_name})
     def func(v):
         return v["name"]
 
-    assert var_name in list(map(func, r["body"]["variables"]))
+    if debugpy:
+        assert var_name in list(map(func, r["body"]["variables"]))
+    else:
+        assert r == {}
 
     reply = wait_for_debug_request(
         kernel_with_debug,
@@ -224,7 +267,10 @@ print({var_name})
         {"variableName": var_name},
     )
 
-    assert reply["body"]["data"] == {"text/plain": f"'{value}'"}
+    if debugpy:
+        assert reply["body"]["data"] == {"text/plain": f"'{value}'"}
+    else:
+        assert reply == {}
 
 
 def test_rich_inspect_at_breakpoint(kernel_with_debug):
@@ -235,7 +281,11 @@ def test_rich_inspect_at_breakpoint(kernel_with_debug):
 f(2, 3)"""
 
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
-    source = r["body"]["sourcePath"]
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "some path"
 
     wait_for_debug_request(
         kernel_with_debug,
@@ -252,6 +302,10 @@ f(2, 3)"""
     r = wait_for_debug_request(kernel_with_debug, "configurationDone")
 
     kernel_with_debug.execute(code)
+
+    if not debugpy:
+        # Cannot stop on breakpoint if debugpy not installed
+        return
 
     # Wait for stop on breakpoint
     msg: dict = {"msg_type": "", "content": {}}
@@ -304,7 +358,11 @@ my_test()"""
 
     # Init debugger and set breakpoint
     r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
-    source = r["body"]["sourcePath"]
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "some path"
 
     wait_for_debug_request(
         kernel_with_debug,
@@ -322,6 +380,10 @@ my_test()"""
 
     # Execute code
     kernel_with_debug.execute(code)
+
+    if not debugpy:
+        # Cannot stop on breakpoint if debugpy not installed
+        return
 
     # Wait for stop on breakpoint
     msg: dict = {"msg_type": "", "content": {}}

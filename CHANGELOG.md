@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.28.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.27.1...de45c7a49e197f0889f867f33f24cce322768a0e))
+
+### Enhancements made
+
+- Enable `ProactorEventLoop` on windows for `ipykernel` [#1184](https://github.com/ipython/ipykernel/pull/1184) ([@NewUserHa](https://github.com/NewUserHa))
+- Adds a flag in debug_info for the copyToGlobals support [#1099](https://github.com/ipython/ipykernel/pull/1099) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Support python 3.12 [#1185](https://github.com/ipython/ipykernel/pull/1185) ([@blink1073](https://github.com/blink1073))
+- Bump actions/setup-python from 4 to 5 [#1181](https://github.com/ipython/ipykernel/pull/1181) ([@dependabot](https://github.com/dependabot))
+- chore: update pre-commit hooks [#1179](https://github.com/ipython/ipykernel/pull/1179) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Refactor execute_request to reduce redundancy and improve consistency [#1177](https://github.com/ipython/ipykernel/pull/1177) ([@jjvraw](https://github.com/jjvraw))
+
+### Documentation improvements
+
+- Update pytest commands in README [#1178](https://github.com/ipython/ipykernel/pull/1178) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-11-27&to=2023-12-26&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-11-27..2023-12-26&type=Issues) | [@brichet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abrichet+updated%3A2023-11-27..2023-12-26&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2023-11-27..2023-12-26&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2023-11-27..2023-12-26&type=Issues) | [@jjvraw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajjvraw+updated%3A2023-11-27..2023-12-26&type=Issues) | [@NewUserHa](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ANewUserHa+updated%3A2023-11-27..2023-12-26&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-11-27..2023-12-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.27.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.27.0...f9c517e868462d05d6854204c2ad0a244db1cd19))
@@ -15,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-11-21&to=2023-11-27&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-11-21..2023-11-27&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.27.0
 

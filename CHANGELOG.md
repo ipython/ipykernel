@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.29.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.28.0...84955484ec1636ee4c7611471d20df2016b5cb57))
+
+### Enhancements made
+
+- Always set debugger to true in kernelspec [#1191](https://github.com/ipython/ipykernel/pull/1191) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Revert "Enable `ProactorEventLoop` on windows for `ipykernel`" [#1194](https://github.com/ipython/ipykernel/pull/1194) ([@blink1073](https://github.com/blink1073))
+- Make outputs go to correct cell when generated in threads/asyncio [#1186](https://github.com/ipython/ipykernel/pull/1186) ([@krassowski](https://github.com/krassowski))
+
+### Maintenance and upkeep improvements
+
+- Pin pytest-asyncio to 0.23.2 [#1189](https://github.com/ipython/ipykernel/pull/1189) ([@ianthomas23](https://github.com/ianthomas23))
+- chore: update pre-commit hooks [#1187](https://github.com/ipython/ipykernel/pull/1187) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-12-26&to=2024-01-16&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-12-26..2024-01-16&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2023-12-26..2024-01-16&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2023-12-26..2024-01-16&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-12-26..2024-01-16&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.28.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.27.1...de45c7a49e197f0889f867f33f24cce322768a0e))
@@ -27,8 +53,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-11-27&to=2023-12-26&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-11-27..2023-12-26&type=Issues) | [@brichet](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abrichet+updated%3A2023-11-27..2023-12-26&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2023-11-27..2023-12-26&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2023-11-27..2023-12-26&type=Issues) | [@jjvraw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajjvraw+updated%3A2023-11-27..2023-12-26&type=Issues) | [@NewUserHa](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ANewUserHa+updated%3A2023-11-27..2023-12-26&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-11-27..2023-12-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.27.1
 

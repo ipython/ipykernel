@@ -733,7 +733,7 @@ class Kernel(SingletonConfigurable):
         try:
             content = parent["content"]
             code = content["code"]
-            silent = content["silent"]
+            silent = content.get("silent", False)
             store_history = content.get("store_history", not silent)
             user_expressions = content.get("user_expressions", {})
             allow_stdin = content.get("allow_stdin", False)

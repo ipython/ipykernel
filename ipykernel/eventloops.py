@@ -118,11 +118,7 @@ def _notify_stream_qt(kernel):
     # so we start in a clean state ensuring that any new i/o events will notify.
     # schedule first call on the eventloop as soon as it's running,
     # so we don't block here processing events
-    if not hasattr(kernel, "_qt_timer"):
-        kernel._qt_timer = QtCore.QTimer(kernel.app)
-        kernel._qt_timer.setSingleShot(True)
-        kernel._qt_timer.timeout.connect(process_stream_events)
-    kernel._qt_timer.start(0)
+    QtCore.QTimer.singleShot(0, process_stream_events)
 
 
 @register_integration("qt", "qt5", "qt6")

@@ -82,6 +82,10 @@ def _notify_stream_qt(kernel):
         def enum_helper(name):
             return operator.attrgetter(name.rpartition(".")[0])(sys.modules[QtCore.__package__])
 
+    def exit_loop():
+        kernel._qt_notifier.setEnabled(False)
+        kernel.app.qt_event_loop.quit()
+
     def process_stream_events():
         """fall back to main loop when there's a socket event"""
         # call flush to ensure that the stream doesn't lose events
@@ -89,8 +93,7 @@ def _notify_stream_qt(kernel):
         # flush returns the number of events consumed.
         # if there were any, wake it up
         if kernel.shell_stream.flush(limit=1):
-            kernel._qt_notifier.setEnabled(False)
-            kernel.app.qt_event_loop.quit()
+            exit_loop()
 
     if not hasattr(kernel, "_qt_notifier"):
         fd = kernel.shell_stream.getsockopt(zmq.FD)
@@ -100,6 +103,13 @@ def _notify_stream_qt(kernel):
         kernel._qt_notifier.activated.connect(process_stream_events)
     else:
         kernel._qt_notifier.setEnabled(True)
+
+    # allow for scheduling exits from the loop in case a timeout needs to
+    # be set from the kernel level
+    def _schedule_exit(delay):
+        QtCore.QTimer.singleShot(int(1000 * delay), exit_loop)
+
+    loop_qt._schedule_exit = _schedule_exit
 
     # there may already be unprocessed events waiting.
     # these events will not wake zmq's edge-triggered FD

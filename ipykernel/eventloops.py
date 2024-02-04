@@ -83,6 +83,7 @@ def _notify_stream_qt(kernel):
             return operator.attrgetter(name.rpartition(".")[0])(sys.modules[QtCore.__package__])
 
     def exit_loop():
+        """fall back to main loop"""
         kernel._qt_notifier.setEnabled(False)
         kernel.app.qt_event_loop.quit()
 
@@ -107,6 +108,7 @@ def _notify_stream_qt(kernel):
     # allow for scheduling exits from the loop in case a timeout needs to
     # be set from the kernel level
     def _schedule_exit(delay):
+        """schedule fall back to main loop in [delay] seconds"""
         QtCore.QTimer.singleShot(int(1000 * delay), exit_loop)
 
     loop_qt._schedule_exit = _schedule_exit
@@ -235,23 +237,33 @@ def loop_tk(kernel):
                 self.app = app
                 self.app.withdraw()
 
-        def process_stream_events(stream, *a, **kw):
+        def exit_loop():
+            """fall back to main loop"""
+            app.tk.deletefilehandler(kernel.shell_stream.getsockopt(zmq.FD))
+            app.quit()
+            app.destroy()
+            del kernel.app_wrapper
+
+        def process_stream_events(*a, **kw):
             """fall back to main loop when there's a socket event"""
-            if stream.flush(limit=1):
-                app.tk.deletefilehandler(stream.getsockopt(zmq.FD))
-                app.quit()
-                app.destroy()
-                del kernel.app_wrapper
+            if kernel.shell_stream.flush(limit=1):
+                exit_loop()
+
+        # allow for scheduling exits from the loop in case a timeout needs to
+        # be set from the kernel level
+        def _schedule_exit(delay):
+            """schedule fall back to main loop in [delay] seconds"""
+            app.after(int(1000 * delay), exit_loop)
+
+        loop_tk._schedule_exit = _schedule_exit
 
         # For Tkinter, we create a Tk object and call its withdraw method.
         kernel.app_wrapper = BasicAppWrapper(app)
-
-        notifier = partial(process_stream_events, kernel.shell_stream)
-        # seems to be needed for tk
-        notifier.__name__ = "notifier"  # type:ignore[attr-defined]
-        app.tk.createfilehandler(kernel.shell_stream.getsockopt(zmq.FD), READABLE, notifier)
+        app.tk.createfilehandler(
+            kernel.shell_stream.getsockopt(zmq.FD), READABLE, process_stream_events
+        )
         # schedule initial call after start
-        app.after(0, notifier)
+        app.after(0, process_stream_events)
 
         app.mainloop()
 

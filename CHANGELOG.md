@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.29.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.1...d45fe71990d26c0bd5b7b3b2a4ccd3d1f6609899))
+
+### Bugs fixed
+
+- Fix: ipykernel_launcher, delete absolute sys.path\[0\] [#1206](https://github.com/ipython/ipykernel/pull/1206) ([@stdll00](https://github.com/stdll00))
+
+### Maintenance and upkeep improvements
+
+- Re-enable skipped debugger test [#1207](https://github.com/ipython/ipykernel/pull/1207) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-02-06&to=2024-02-07&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-02-06..2024-02-07&type=Issues) | [@stdll00](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Astdll00+updated%3A2024-02-06..2024-02-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.29.1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.0...09c9b2ad9c15202c5d1896ba24ec978b726c073b))
@@ -22,8 +42,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-01-16&to=2024-02-06&type=c))
 
 [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2024-01-16..2024-02-06&type=Issues) | [@Haadem](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AHaadem+updated%3A2024-01-16..2024-02-06&type=Issues) | [@petervandenabeele](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apetervandenabeele+updated%3A2024-01-16..2024-02-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2024-01-16..2024-02-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.0
 

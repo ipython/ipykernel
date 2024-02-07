@@ -1211,7 +1211,7 @@ class Kernel(SingletonConfigurable):
             # after stop_on_error_timeout, returning to the main io_loop and letting
             # the call_later fire.
             if self.eventloop is not None and hasattr(self.eventloop, "_schedule_exit"):
-                self.eventloop._schedule_exit(self.stop_on_error_timeout)
+                self.eventloop._schedule_exit(self.stop_on_error_timeout + 0.01)
         else:
             schedule_stop_aborting()
 

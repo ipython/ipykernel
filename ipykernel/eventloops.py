@@ -109,7 +109,16 @@ def _notify_stream_qt(kernel):
     # be set from the kernel level
     def _schedule_exit(delay):
         """schedule fall back to main loop in [delay] seconds"""
-        QtCore.QTimer.singleShot(int(1000 * delay), exit_loop)
+        # The signatures of QtCore.QTimer.singleShot are inconsistent between PySide and PyQt
+        # if setting the TimerType, so we create a timer explicitly and store it
+        # to avoid a memory leak.
+        # PreciseTimer is needed so we exit after _at least_ the specified delay, not within 5% of it
+        if not hasattr(kernel, "_qt_timer"):
+            kernel._qt_timer = QtCore.QTimer(kernel.app)
+            kernel._qt_timer.setSingleShot(True)
+            kernel._qt_timer.setTimerType(enum_helper("QtCore.Qt.TimerType").PreciseTimer)
+            kernel._qt_timer.timeout.connect(exit_loop)
+        kernel._qt_timer.start(int(1000 * delay))
 
     loop_qt._schedule_exit = _schedule_exit
 

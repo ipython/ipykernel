@@ -610,7 +610,7 @@ class Debugger:
         }
 
     async def inspectVariables(self, message):
-        """Handle an insepct variables message."""
+        """Handle an inspect variables message."""
         self.variable_explorer.untrack_all()
         # looks like the implementation of untrack_all in ptvsd
         # destroys objects we nee din track. We have no choice but

@@ -1,5 +1,4 @@
 """A custom hatch build hook for ipykernel."""
-import os
 import shutil
 import sys
 from pathlib import Path

@@ -280,6 +280,7 @@ unfixable = [
 # B018 Found useless expression. Either assign it to a variable or remove it.
 # S603 `subprocess` call: check for execution of untrusted input
 "tests/*" = ["B011", "C408", "T201", "B007", "EM", "PTH", "PLW", "PLC1901", "B018", "S603", "ARG", "RET", "PGH"]
+"*/__init__.py" = ["F401"]
 
 [tool.interrogate]
 ignore-init-module=true

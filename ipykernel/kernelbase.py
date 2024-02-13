@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import asyncio
-import concurrent.futures
 import inspect
 import itertools
 import logging
@@ -270,6 +269,9 @@ class Kernel(SingletonConfigurable):
         "usage_request",
     ]
 
+    # Flag to ensure a single control request is processed at a time.
+    _block_control = False
+
     def __init__(self, **kwargs):
         """Initialize the kernel."""
         super().__init__(**kwargs)
@@ -289,48 +291,24 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.control_queue: Queue[t.Any] = Queue()
-
         # Storing the accepted parameters for do_execute, used in execute_request
         self._do_exec_accepted_params = _accepts_parameters(
             self.do_execute, ["cell_meta", "cell_id"]
         )
 
-    def dispatch_control(self, msg):
-        self.control_queue.put_nowait(msg)
+    async def dispatch_control(self, msg):
+        # Ensure only one control message is processed at a time
+        while self._block_control:
+            await asyncio.sleep(0)
 
-    async def poll_control_queue(self):
-        while True:
-            msg = await self.control_queue.get()
-            # handle tracers from _flush_control_queue
-            if isinstance(msg, (concurrent.futures.Future, asyncio.Future)):
-                msg.set_result(None)
-                continue
+        self._block_control = True
+
+        try:
             await self.process_control(msg)
-
-    async def _flush_control_queue(self):
-        """Flush the control queue, wait for processing of any pending messages"""
-        tracer_future: concurrent.futures.Future[object] | asyncio.Future[object]
-        if self.control_thread:
-            control_loop = self.control_thread.io_loop
-            # concurrent.futures.Futures are threadsafe
-            # and can be used to await across threads
-            tracer_future = concurrent.futures.Future()
-            awaitable_future = asyncio.wrap_future(tracer_future)
-        else:
-            control_loop = self.io_loop
-            tracer_future = awaitable_future = asyncio.Future()
-
-        def _flush():
-            # control_stream.flush puts messages on the queue
-            if self.control_stream:
-                self.control_stream.flush()
-            # put Future on the queue after all of those,
-            # so we can wait for all queued messages to be processed
-            self.control_queue.put(tracer_future)
-
-        control_loop.add_callback(_flush)
-        return awaitable_future
+        except:
+            raise
+        finally:
+            self._block_control = False
 
     async def process_control(self, msg):
         """dispatch control requests"""
@@ -387,8 +365,6 @@ class Kernel(SingletonConfigurable):
         """dispatch shell requests"""
         if not self.session:
             return
-        # flush control queue before handling shell requests
-        await self._flush_control_queue()
 
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
@@ -578,9 +554,6 @@ class Kernel(SingletonConfigurable):
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
 
-        control_loop = self.control_thread.io_loop if self.control_thread else self.io_loop
-
-        asyncio.run_coroutine_threadsafe(self.poll_control_queue(), control_loop.asyncio_loop)
         if self.shell_stream:
             self.shell_stream.on_recv(
                 partial(

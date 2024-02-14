@@ -269,9 +269,6 @@ class Kernel(SingletonConfigurable):
         "usage_request",
     ]
 
-    # Flag to ensure a single control request is processed at a time.
-    _block_control = False
-
     def __init__(self, **kwargs):
         """Initialize the kernel."""
         super().__init__(**kwargs)
@@ -298,17 +295,8 @@ class Kernel(SingletonConfigurable):
 
     async def dispatch_control(self, msg):
         # Ensure only one control message is processed at a time
-        while self._block_control:
-            await asyncio.sleep(0)
-
-        self._block_control = True
-
-        try:
+        async with asyncio.Lock():
             await self.process_control(msg)
-        except:
-            raise
-        finally:
-            self._block_control = False
 
     async def process_control(self, msg):
         """dispatch control requests"""

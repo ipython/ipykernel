@@ -624,9 +624,7 @@ def test_sequential_control_messages():
         previous_end = None
         for reply, sleep in zip(replies, sleeps):
             start = datetime.fromisoformat(reply["metadata"]["started"])
-            end = reply["header"]["date"]
-            if isinstance(end, str):
-                end = datetime.fromisoformat(end)
+            end = reply["header"]["date"]  # Already a datetime
 
             if previous_end is not None:
                 assert start > previous_end

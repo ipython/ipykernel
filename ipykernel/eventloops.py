@@ -511,24 +511,24 @@ def set_qt_api_env_from_gui(gui):
     else:
         if gui == "qt5":
             try:
-                import PyQt5
+                import PyQt5  # noqa: F401
 
                 os.environ["QT_API"] = "pyqt5"
             except ImportError:
                 try:
-                    import PySide2
+                    import PySide2  # noqa: F401
 
                     os.environ["QT_API"] = "pyside2"
                 except ImportError:
                     os.environ["QT_API"] = "pyqt5"
         elif gui == "qt6":
             try:
-                import PyQt6
+                import PyQt6  # noqa: F401
 
                 os.environ["QT_API"] = "pyqt6"
             except ImportError:
                 try:
-                    import PySide6
+                    import PySide6  # noqa: F401
 
                     os.environ["QT_API"] = "pyside6"
                 except ImportError:
@@ -543,7 +543,7 @@ def set_qt_api_env_from_gui(gui):
 
     # Do the actual import now that the environment variable is set to make sure it works.
     try:
-        from IPython.external.qt_for_kernel import QtCore, QtGui
+        pass
     except Exception as e:
         # Clear the environment variable for the next attempt.
         if "QT_API" in os.environ:

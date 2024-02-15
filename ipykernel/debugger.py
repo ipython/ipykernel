@@ -21,7 +21,7 @@ from .compiler import get_file_name, get_tmp_directory, get_tmp_hash_seed
 
 try:
     # This import is required to have the next ones working...
-    from debugpy.server import api
+    from debugpy.server import api  # noqa: F401
 
     from _pydevd_bundle import pydevd_frame_utils  # isort: skip
     from _pydevd_bundle.pydevd_suspended_frames import (  # isort: skip
@@ -473,7 +473,7 @@ class Debugger:
         message_response = await self._forward_message(message)
         # debugpy can set breakpoints on different lines than the ones requested,
         # so we want to record the breakpoints that were actually added
-        if "success" in message_response and message_response["success"]:
+        if message_response.get("success"):
             self.breakpoint_list[source] = [
                 {"line": breakpoint["line"]}
                 for breakpoint in message_response["body"]["breakpoints"]
@@ -610,7 +610,7 @@ class Debugger:
         }
 
     async def inspectVariables(self, message):
-        """Handle an insepct variables message."""
+        """Handle an inspect variables message."""
         self.variable_explorer.untrack_all()
         # looks like the implementation of untrack_all in ptvsd
         # destroys objects we nee din track. We have no choice but
@@ -661,7 +661,7 @@ class Debugger:
                 }
             )
             if reply["success"]:
-                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})  # noqa: PGH001
+                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})
 
         body = {
             "data": repr_data,

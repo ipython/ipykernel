@@ -53,7 +53,7 @@ test = [
     "flaky",
     "ipyparallel",
     "pre-commit",
-    "pytest-asyncio==0.23.4",
+    "pytest-asyncio>=0.23.5",
     "pytest-timeout"
 ]
 cov = [
@@ -209,29 +209,29 @@ omit = [
 line-length = 100
 
 [tool.ruff.lint]
-select = [
-  "B",           # flake8-bugbear
-  "I",           # isort
-  "ARG",         # flake8-unused-arguments
-  "C4",          # flake8-comprehensions
-  "EM",          # flake8-errmsg
-  "ICN",         # flake8-import-conventions
-  "G",           # flake8-logging-format
-  "PGH",         # pygrep-hooks
-  "PIE",         # flake8-pie
-  "PL",          # pylint
-  "PT",          # flake8-pytest-style
-  "PTH",         # flake8-use-pathlib
-  "RET",         # flake8-return
-  "RUF",         # Ruff-specific
-  "SIM",         # flake8-simplify
-  "T20",         # flake8-print
-  "UP",          # pyupgrade
-  "YTT",         # flake8-2020
-  "EXE",         # flake8-executable
-  "NPY",         # NumPy specific rules
-  "PD",          # pandas-vet
-  "PYI",         # flake8-pyi
+extend-select = [
+  "B",        # flake8-bugbear
+  "I",        # isort
+  "ARG",      # flake8-unused-arguments
+  "C4",       # flake8-comprehensions
+  "EM",       # flake8-errmsg
+  "ICN",      # flake8-import-conventions
+  "G",        # flake8-logging-format
+  "PGH",      # pygrep-hooks
+  "PIE",      # flake8-pie
+  "PL",       # pylint
+  "PT",       # flake8-pytest-style
+  "PTH",      # flake8-use-pathlib
+  "RET",      # flake8-return
+  "RUF",      # Ruff-specific
+  "SIM",      # flake8-simplify
+  "T20",      # flake8-print
+  "UP",       # pyupgrade
+  "YTT",      # flake8-2020
+  "EXE",      # flake8-executable
+  "NPY",      # NumPy specific rules
+  "PD",       # pandas-vet
+  "PYI",      # flake8-pyi
 ]
 ignore = [
   "PLR",    # Design related pylint codes
@@ -265,6 +265,9 @@ unfixable = [
   "T201",
   # Don't touch noqa lines
   "RUF100",
+  # Don't touch imports
+  "F401",
+  "F403"
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -277,6 +280,7 @@ unfixable = [
 # B018 Found useless expression. Either assign it to a variable or remove it.
 # S603 `subprocess` call: check for execution of untrusted input
 "tests/*" = ["B011", "C408", "T201", "B007", "EM", "PTH", "PLW", "PLC1901", "B018", "S603", "ARG", "RET", "PGH"]
+"*/__init__.py" = ["F401"]
 
 [tool.interrogate]
 ignore-init-module=true

@@ -197,7 +197,6 @@ f(2, 3)"""
     assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="TODO Does not work on Python 3.10")
 def test_breakpoint_in_cell_with_leading_empty_lines(kernel_with_debug):
     code = """
 def f(a, b):

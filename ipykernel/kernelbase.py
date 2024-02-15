@@ -1049,7 +1049,7 @@ class Kernel(SingletonConfigurable):
         # Avoid littering logs with stack traces
         # complaining about dead processes
         except BaseException:
-            return None
+            return 0
 
     async def usage_request(self, stream, ident, parent):
         """Handle a usage request."""

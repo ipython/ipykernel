@@ -2,6 +2,47 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.29.2
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.1...d45fe71990d26c0bd5b7b3b2a4ccd3d1f6609899))
+
+### Bugs fixed
+
+- Fix: ipykernel_launcher, delete absolute sys.path\[0\] [#1206](https://github.com/ipython/ipykernel/pull/1206) ([@stdll00](https://github.com/stdll00))
+
+### Maintenance and upkeep improvements
+
+- Re-enable skipped debugger test [#1207](https://github.com/ipython/ipykernel/pull/1207) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-02-06&to=2024-02-07&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-02-06..2024-02-07&type=Issues) | [@stdll00](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Astdll00+updated%3A2024-02-06..2024-02-07&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+## 6.29.1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.0...09c9b2ad9c15202c5d1896ba24ec978b726c073b))
+
+### Bugs fixed
+
+- fix: on exception, return a 0, so that the "sum" still computes [#1204](https://github.com/ipython/ipykernel/pull/1204) ([@petervandenabeele](https://github.com/petervandenabeele))
+- Fix handling of "silent" in execute request [#1200](https://github.com/ipython/ipykernel/pull/1200) ([@Haadem](https://github.com/Haadem))
+
+### Maintenance and upkeep improvements
+
+- chore: update pre-commit hooks [#1205](https://github.com/ipython/ipykernel/pull/1205) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Do git ignore of /node_modules/.cache [#1203](https://github.com/ipython/ipykernel/pull/1203) ([@petervandenabeele](https://github.com/petervandenabeele))
+- Bump the actions group with 1 update [#1201](https://github.com/ipython/ipykernel/pull/1201) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-01-16&to=2024-02-06&type=c))
+
+[@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2024-01-16..2024-02-06&type=Issues) | [@Haadem](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AHaadem+updated%3A2024-01-16..2024-02-06&type=Issues) | [@petervandenabeele](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apetervandenabeele+updated%3A2024-01-16..2024-02-06&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2024-01-16..2024-02-06&type=Issues)
+
 ## 6.29.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.28.0...84955484ec1636ee4c7611471d20df2016b5cb57))
@@ -25,8 +66,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2023-12-26&to=2024-01-16&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2023-12-26..2024-01-16&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2023-12-26..2024-01-16&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2023-12-26..2024-01-16&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2023-12-26..2024-01-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.28.0
 

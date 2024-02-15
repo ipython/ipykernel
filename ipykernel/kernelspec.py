@@ -17,6 +17,7 @@ from typing import Any
 
 from jupyter_client.kernelspec import KernelSpecManager
 from traitlets import Unicode
+from traitlets.config import Application
 
 try:
     from .debugger import _is_debugpy_available
@@ -170,8 +171,6 @@ def install(
 
 
 # Entrypoint
-
-from traitlets.config import Application
 
 
 class InstallIPythonKernelSpecApp(Application):

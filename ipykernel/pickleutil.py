@@ -2,24 +2,22 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+import copy
+import pickle
+import sys
 import typing
 import warnings
+from types import FunctionType
+
+# This registers a hook when it's imported
+from traitlets.log import get_logger
+from traitlets.utils.importstring import import_item
 
 warnings.warn(
     "ipykernel.pickleutil is deprecated. It has moved to ipyparallel.",
     DeprecationWarning,
     stacklevel=2,
 )
-
-import copy
-import pickle
-import sys
-from types import FunctionType
-
-# This registers a hook when it's imported
-from ipyparallel.serialize import codeutil  # noqa F401
-from traitlets.log import get_logger
-from traitlets.utils.importstring import import_item
 
 buffer = memoryview
 class_type = type
@@ -77,7 +75,7 @@ def use_dill():
     # dill doesn't work with cPickle,
     # tell the two relevant modules to use plain pickle
 
-    global pickle  # noqa
+    global pickle  # noqa: PLW0603
     pickle = dill
 
     try:
@@ -98,7 +96,7 @@ def use_cloudpickle():
     """
     import cloudpickle
 
-    global pickle  # noqa
+    global pickle  # noqa: PLW0603
     pickle = cloudpickle
 
     try:
@@ -179,7 +177,7 @@ class Reference(CannedObject):
         if g is None:
             g = {}
 
-        return eval(self.name, g)  # noqa: S307
+        return eval(self.name, g)
 
 
 class CannedCell(CannedObject):
@@ -238,8 +236,7 @@ class CannedFunction(CannedObject):
             g = {}
         defaults = tuple(uncan(cfd, g) for cfd in self.defaults) if self.defaults else None
         closure = tuple(uncan(cell, g) for cell in self.closure) if self.closure else None
-        newFunc = FunctionType(self.code, g, self.__name__, defaults, closure)
-        return newFunc
+        return FunctionType(self.code, g, self.__name__, defaults, closure)
 
 
 class CannedClass(CannedObject):
@@ -300,9 +297,8 @@ class CannedArray(CannedObject):
         data = self.buffers[0]
         if self.pickled:
             # we just pickled it
-            return pickle.loads(data)  # noqa
-        else:
-            return frombuffer(data, dtype=self.dtype).reshape(self.shape)
+            return pickle.loads(data)
+        return frombuffer(data, dtype=self.dtype).reshape(self.shape)
 
 
 class CannedBytes(CannedObject):
@@ -355,7 +351,7 @@ def _import_mapping(mapping, original=None):
             except Exception:
                 if original and key not in original:
                     # only message on user-added classes
-                    log.error("canning class not importable: %r", key, exc_info=True)
+                    log.error("canning class not importable: %r", key, exc_info=True)  # noqa: G201
                 mapping.pop(key)
             else:
                 mapping[cls] = mapping.pop(key)
@@ -368,8 +364,7 @@ def istype(obj, check):
     """
     if isinstance(check, tuple):
         return any(type(obj) is cls for cls in check)
-    else:
-        return type(obj) is check
+    return type(obj) is check
 
 
 def can(obj):
@@ -381,7 +376,7 @@ def can(obj):
         if isinstance(cls, str):
             import_needed = True
             break
-        elif istype(obj, cls):
+        if istype(obj, cls):
             return canner(obj)
 
     if import_needed:
@@ -397,8 +392,7 @@ def can_class(obj):
     """Can a class object."""
     if isinstance(obj, class_type) and obj.__module__ == "__main__":
         return CannedClass(obj)
-    else:
-        return obj
+    return obj
 
 
 def can_dict(obj):
@@ -408,8 +402,7 @@ def can_dict(obj):
         for k, v in obj.items():
             newobj[k] = can(v)
         return newobj
-    else:
-        return obj
+    return obj
 
 
 sequence_types = (list, tuple, set)
@@ -420,8 +413,7 @@ def can_sequence(obj):
     if istype(obj, sequence_types):
         t = type(obj)
         return t([can(i) for i in obj])
-    else:
-        return obj
+    return obj
 
 
 def uncan(obj, g=None):
@@ -432,7 +424,7 @@ def uncan(obj, g=None):
         if isinstance(cls, str):
             import_needed = True
             break
-        elif isinstance(obj, cls):
+        if isinstance(obj, cls):
             return uncanner(obj, g)
 
     if import_needed:
@@ -451,8 +443,7 @@ def uncan_dict(obj, g=None):
         for k, v in obj.items():
             newobj[k] = uncan(v, g)
         return newobj
-    else:
-        return obj
+    return obj
 
 
 def uncan_sequence(obj, g=None):
@@ -460,8 +451,7 @@ def uncan_sequence(obj, g=None):
     if istype(obj, sequence_types):
         t = type(obj)
         return t([uncan(i, g) for i in obj])
-    else:
-        return obj
+    return obj
 
 
 # -------------------------------------------------------------------------------

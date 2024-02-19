@@ -14,13 +14,13 @@
 import sys
 import warnings
 
-warnings.warn(
-    "The Gtk3 event loop for ipykernel is deprecated", category=DeprecationWarning, stacklevel=2
-)
-
 # Third-party
 import gobject
 import gtk
+
+warnings.warn(
+    "The Gtk3 event loop for ipykernel is deprecated", category=DeprecationWarning, stacklevel=2
+)
 
 # -----------------------------------------------------------------------------
 # Classes and functions
@@ -88,7 +88,6 @@ class GTKEmbed:
 
         def dummy(*args, **kw):
             """No-op."""
-            pass
 
         # save and trap main and main_quit from gtk
         orig_main, gtk.main = gtk.main, dummy

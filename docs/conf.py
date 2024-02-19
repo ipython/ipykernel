@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # IPython Kernel documentation build configuration file, created by
 # sphinx-quickstart on Mon Oct  5 11:32:44 2015.
 #
@@ -14,6 +12,7 @@
 
 import os
 import shutil
+from pathlib import Path
 from typing import Any, Dict, List
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -38,7 +37,7 @@ extensions = [
 ]
 
 try:
-    import enchant  # noqa
+    import enchant  # noqa: F401
 
     extensions += ["sphinxcontrib.spelling"]
 except ImportError:
@@ -72,10 +71,10 @@ author = "IPython Development Team"
 #
 
 version_ns: Dict[str, Any] = {}
-here = os.path.dirname(__file__)
-version_py = os.path.join(here, os.pardir, "ipykernel", "_version.py")
+here = Path(__file__).parent.resolve()
+version_py = Path(here) / os.pardir / "ipykernel" / "_version.py"
 with open(version_py) as f:
-    exec(compile(f.read(), version_py, "exec"), version_ns)  # noqa
+    exec(compile(f.read(), version_py, "exec"), version_ns)
 
 # The short X.Y version.
 version = "%i.%i" % version_ns["version_info"][:2]
@@ -136,7 +135,7 @@ html_theme = "pydata_sphinx_theme"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-# html_theme_options = {}
+html_theme_options = {"navigation_with_keys": False}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -312,5 +311,4 @@ intersphinx_mapping = {
 
 
 def setup(app):
-    here = os.path.dirname(os.path.abspath(__file__))
-    shutil.copy(os.path.join(here, "..", "CHANGELOG.md"), "changelog.md")
+    shutil.copy(Path(here) / ".." / "CHANGELOG.md", "changelog.md")

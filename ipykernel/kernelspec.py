@@ -8,32 +8,31 @@ from __future__ import annotations
 import errno
 import json
 import os
+import platform
 import shutil
 import stat
 import sys
 import tempfile
+from pathlib import Path
 from typing import Any
 
 from jupyter_client.kernelspec import KernelSpecManager
 from traitlets import Unicode
-
-try:
-    from .debugger import _is_debugpy_available
-except ImportError:
-    _is_debugpy_available = False
+from traitlets.config import Application
 
 pjoin = os.path.join
 
 KERNEL_NAME = "python%i" % sys.version_info[0]
 
 # path to kernelspec resources
-RESOURCES = pjoin(os.path.dirname(__file__), "resources")
+RESOURCES = pjoin(Path(__file__).parent, "resources")
 
 
 def make_ipkernel_cmd(
     mod: str = "ipykernel_launcher",
     executable: str | None = None,
     extra_arguments: list[str] | None = None,
+    python_arguments: list[str] | None = None,
 ) -> list[str]:
     """Build Popen command list for launching an IPython kernel.
 
@@ -53,26 +52,29 @@ def make_ipkernel_cmd(
     if executable is None:
         executable = sys.executable
     extra_arguments = extra_arguments or []
-    arguments = [executable, "-m", mod, "-f", "{connection_file}"]
-    arguments.extend(extra_arguments)
-
-    return arguments
+    python_arguments = python_arguments or []
+    return [executable, *python_arguments, "-m", mod, "-f", "{connection_file}", *extra_arguments]
 
 
-def get_kernel_dict(extra_arguments: list[str] | None = None) -> dict[str, Any]:
+def get_kernel_dict(
+    extra_arguments: list[str] | None = None, python_arguments: list[str] | None = None
+) -> dict[str, Any]:
     """Construct dict for kernel.json"""
     return {
-        "argv": make_ipkernel_cmd(extra_arguments=extra_arguments),
+        "argv": make_ipkernel_cmd(
+            extra_arguments=extra_arguments, python_arguments=python_arguments
+        ),
         "display_name": "Python %i (ipykernel)" % sys.version_info[0],
         "language": "python",
-        "metadata": {"debugger": _is_debugpy_available},
+        "metadata": {"debugger": True},
     }
 
 
 def write_kernel_spec(
-    path: str | None = None,
+    path: Path | str | None = None,
     overrides: dict[str, Any] | None = None,
     extra_arguments: list[str] | None = None,
+    python_arguments: list[str] | None = None,
 ) -> str:
     """Write a kernel spec directory to `path`
 
@@ -82,25 +84,25 @@ def write_kernel_spec(
     The path to the kernelspec is always returned.
     """
     if path is None:
-        path = os.path.join(tempfile.mkdtemp(suffix="_kernels"), KERNEL_NAME)
+        path = Path(tempfile.mkdtemp(suffix="_kernels")) / KERNEL_NAME
 
     # stage resources
     shutil.copytree(RESOURCES, path)
 
     # ensure path is writable
-    mask = os.stat(path).st_mode
+    mask = Path(path).stat().st_mode
     if not mask & stat.S_IWUSR:
-        os.chmod(path, mask | stat.S_IWUSR)
+        Path(path).chmod(mask | stat.S_IWUSR)
 
     # write kernel.json
-    kernel_dict = get_kernel_dict(extra_arguments)
+    kernel_dict = get_kernel_dict(extra_arguments, python_arguments)
 
     if overrides:
         kernel_dict.update(overrides)
     with open(pjoin(path, "kernel.json"), "w") as f:
         json.dump(kernel_dict, f, indent=1)
 
-    return path
+    return str(path)
 
 
 def install(
@@ -111,6 +113,7 @@ def install(
     prefix: str | None = None,
     profile: str | None = None,
     env: dict[str, str] | None = None,
+    frozen_modules: bool = False,
 ) -> str:
     """Install the IPython kernelspec for Jupyter
 
@@ -135,6 +138,12 @@ def install(
         A dictionary of extra environment variables for the kernel.
         These will be added to the current environment variables before the
         kernel is started
+    frozen_modules : bool, optional
+        Whether to use frozen modules for potentially faster kernel startup.
+        Using frozen modules prevents debugging inside of some built-in
+        Python modules, such as io, abc, posixpath, ntpath, or stat.
+        The frozen modules are used in CPython for faster interpreter startup.
+        Ignored for cPython <3.11 and for other Python implementations.
 
     Returns
     -------
@@ -142,6 +151,9 @@ def install(
     """
     if kernel_spec_manager is None:
         kernel_spec_manager = KernelSpecManager()
+
+    if env is None:
+        env = {}
 
     if (kernel_name != KERNEL_NAME) and (display_name is None):
         # kernel_name is specified and display_name is not
@@ -157,9 +169,24 @@ def install(
             overrides["display_name"] = "Python %i [profile=%s]" % (sys.version_info[0], profile)
     else:
         extra_arguments = None
+
+    python_arguments = None
+
+    # addresses the debugger warning from debugpy about frozen modules
+    if sys.version_info >= (3, 11) and platform.python_implementation() == "CPython":
+        if not frozen_modules:
+            # disable frozen modules
+            python_arguments = ["-Xfrozen_modules=off"]
+        elif "PYDEVD_DISABLE_FILE_VALIDATION" not in env:
+            # user opted-in to have frozen modules, and we warned them about
+            # consequences for the - disable the debugger warning
+            env["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
     if env:
         overrides["env"] = env
-    path = write_kernel_spec(overrides=overrides, extra_arguments=extra_arguments)
+    path = write_kernel_spec(
+        overrides=overrides, extra_arguments=extra_arguments, python_arguments=python_arguments
+    )
     dest = kernel_spec_manager.install_kernel_spec(
         path, kernel_name=kernel_name, user=user, prefix=prefix
     )
@@ -169,8 +196,6 @@ def install(
 
 
 # Entrypoint
-
-from traitlets.config import Application
 
 
 class InstallIPythonKernelSpecApp(Application):
@@ -235,6 +260,12 @@ class InstallIPythonKernelSpecApp(Application):
             nargs=2,
             metavar=("ENV", "VALUE"),
             help="Set environment variables for the kernel.",
+        )
+        parser.add_argument(
+            "--frozen_modules",
+            action="store_true",
+            help="Enable frozen modules for potentially faster startup."
+            " This has a downside of preventing the debugger from navigating to certain built-in modules.",
         )
         opts = parser.parse_args(self.argv)
         if opts.env:

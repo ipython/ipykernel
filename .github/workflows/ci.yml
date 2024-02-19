@@ -22,16 +22,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.8", "3.11"]
+        python-version: ["3.8", "3.12"]
         include:
           - os: windows-latest
             python-version: "3.9"
           - os: ubuntu-latest
-            python-version: "pypy-3.8"
+            python-version: "pypy-3.9"
           - os: macos-latest
             python-version: "3.10"
           - os: ubuntu-latest
-            python-version: "3.8"
+            python-version: "3.11"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -84,8 +84,8 @@ jobs:
       - name: Run Linters
         run: |
           hatch run typing:test
-          hatch run lint:style
           pipx run interrogate -vv . --fail-under 90
+          hatch run lint:build
           pipx run doc8 --max-line-length=200
 
   check_release:
@@ -153,11 +153,11 @@ jobs:
 
       - name: List installed packages
         run: |
-          hatch run test:list
+          hatch -v run test:list
 
       - name: Run the unit tests
         run: |
-          hatch run test:nowarn || hatch run test:nowarn --lf
+          hatch -v run test:nowarn || hatch run test:nowarn --lf
 
   test_prereleases:
     name: Test Prereleases

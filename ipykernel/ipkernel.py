@@ -1,6 +1,7 @@
 """The IPython kernel implementation"""
 
 import builtins
+import gc
 import getpass
 import os
 import sys
@@ -14,6 +15,7 @@ from anyio import TASK_STATUS_IGNORED, create_task_group, to_thread
 from anyio.abc import TaskStatus
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
+from jupyter_client.session import extract_header
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
 
 from .comm.comm import BaseComm
@@ -21,8 +23,9 @@ from .comm.manager import CommManager
 from .compiler import XCachingCompiler
 from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
+from .iostream import OutStream
 from .kernelbase import Kernel as KernelBase
-from .kernelbase import _accepts_cell_id
+from .kernelbase import _accepts_parameters
 from .zmqshell import ZMQInteractiveShell
 
 try:
@@ -49,7 +52,7 @@ _comm_manager: t.Optional[CommManager] = None
 
 def _get_comm_manager(*args, **kwargs):
     """Create a new CommManager."""
-    global _comm_manager  # noqa
+    global _comm_manager  # noqa: PLW0603
     if _comm_manager is None:
         with _comm_lock:
             if _comm_manager is None:
@@ -126,9 +129,9 @@ class IPythonKernel(KernelBase):
         )
         self.shell.displayhook.session = self.session  # type:ignore[attr-defined]
 
-        jupyter_session_name = os.environ.get('JPY_SESSION_NAME')
+        jupyter_session_name = os.environ.get("JPY_SESSION_NAME")
         if jupyter_session_name:
-            self.shell.user_ns['__session__'] = jupyter_session_name
+            self.shell.user_ns["__session__"] = jupyter_session_name
 
         self.shell.displayhook.pub_socket = self.iopub_socket  # type:ignore[attr-defined]
         self.shell.displayhook.topic = self._topic("execute_result")  # type:ignore[attr-defined]
@@ -145,9 +148,17 @@ class IPythonKernel(KernelBase):
 
         if _use_appnope() and self._darwin_app_nap:
             # Disable app-nap as the kernel is not a gui but can have guis
-            import appnope
+            import appnope  # type:ignore[import-untyped]
 
             appnope.nope()
+
+        self._new_threads_parent_header = {}
+        self._initialize_thread_hooks()
+
+        if hasattr(gc, "callbacks"):
+            # while `gc.callbacks` exists since Python 3.3, pypy does not
+            # implement it even as of 3.9.
+            gc.callbacks.append(self._clean_thread_parent_frames)
 
     help_links = List(
         [
@@ -225,6 +236,7 @@ class IPythonKernel(KernelBase):
     def banner(self):
         if self.shell:
             return self.shell.banner
+        return None
 
     async def poll_stopped_queue(self):
         """Poll the stopped queue."""
@@ -307,12 +319,63 @@ class IPythonKernel(KernelBase):
     def execution_count(self):
         if self.shell:
             return self.shell.execution_count
+        return None
 
     @execution_count.setter
     def execution_count(self, value):
         # Ignore the incrementing done by KernelBase, in favour of our shell's
         # execution counter.
         pass
+
+    @contextmanager
+    def _cancel_on_sigint(self, future):
+        """ContextManager for capturing SIGINT and cancelling a future
+
+        SIGINT raises in the event loop when running async code,
+        but we want it to halt a coroutine.
+
+        Ideally, it would raise KeyboardInterrupt,
+        but this turns it into a CancelledError.
+        At least it gets a decent traceback to the user.
+        """
+        sigint_future: asyncio.Future[int] = asyncio.Future()
+
+        # whichever future finishes first,
+        # cancel the other one
+        def cancel_unless_done(f, _ignored):
+            if f.cancelled() or f.done():
+                return
+            f.cancel()
+
+        # when sigint finishes,
+        # abort the coroutine with CancelledError
+        sigint_future.add_done_callback(partial(cancel_unless_done, future))
+        # when the main future finishes,
+        # stop watching for SIGINT events
+        future.add_done_callback(partial(cancel_unless_done, sigint_future))
+
+        def handle_sigint(*args):
+            def set_sigint_result():
+                if sigint_future.cancelled() or sigint_future.done():
+                    return
+                sigint_future.set_result(1)
+
+            # use add_callback for thread safety
+            self.io_loop.add_callback(set_sigint_result)
+
+        # set the custom sigint handler during this context
+        save_sigint = signal.signal(signal.SIGINT, handle_sigint)
+        try:
+            yield
+        finally:
+            # restore the previous sigint handler
+            signal.signal(signal.SIGINT, save_sigint)
+
+    async def execute_request(self, stream, ident, parent):
+        """Override for cell output - cell reconciliation."""
+        parent_header = extract_header(parent)
+        self._associate_new_top_level_threads_with(parent_header)
+        await super().execute_request(stream, ident, parent)
 
     async def do_execute(
         self,
@@ -322,6 +385,7 @@ class IPythonKernel(KernelBase):
         user_expressions=None,
         allow_stdin=False,
         *,
+        cell_meta=None,
         cell_id=None,
     ):
         """Handle code execution."""
@@ -334,16 +398,16 @@ class IPythonKernel(KernelBase):
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
-            with_cell_id = _accepts_cell_id(run_cell)
+            accepts_params = _accepts_parameters(run_cell, ["cell_id"])
         else:
-            should_run_async = lambda cell: False  # noqa
+            should_run_async = lambda cell: False  # noqa: ARG005, E731
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
 
             async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
 
-            with_cell_id = _accepts_cell_id(shell.run_cell)
+            accepts_params = _accepts_parameters(shell.run_cell, ["cell_id"])
         try:
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
@@ -371,6 +435,7 @@ class IPythonKernel(KernelBase):
                     transformed_cell=transformed_cell,
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
+                    
                 coro = run_cell(code, **kwargs)
 
                 @dataclass
@@ -405,6 +470,7 @@ class IPythonKernel(KernelBase):
                 # make synchronous call,
                 # letting shell dispatch to loop runners
                 self.shell_is_blocking = True
+                if accepts
                 try:
                     res = shell.run_cell(code, **kwargs)
                 finally:
@@ -487,6 +553,7 @@ class IPythonKernel(KernelBase):
         """Handle a debug request."""
         if _is_debugpy_available:
             return await self.debugger.process_request(msg)
+        return None
 
     def _experimental_do_complete(self, code, cursor_pos):
         """
@@ -638,7 +705,7 @@ class IPythonKernel(KernelBase):
             working.update(ns)
             code = f"{resultname} = {fname}(*{argname},**{kwargname})"
             try:
-                exec(code, shell.user_global_ns, shell.user_ns)  # noqa
+                exec(code, shell.user_global_ns, shell.user_ns)
                 result = working.get(resultname)
             finally:
                 for key in ns:
@@ -682,6 +749,83 @@ class IPythonKernel(KernelBase):
         if self.shell:
             self.shell.reset(False)
         return dict(status="ok")
+
+    def _associate_new_top_level_threads_with(self, parent_header):
+        """Store the parent header to associate it with new top-level threads"""
+        self._new_threads_parent_header = parent_header
+
+    def _initialize_thread_hooks(self):
+        """Store thread hierarchy and thread-parent_header associations."""
+        stdout = self._stdout
+        stderr = self._stderr
+        kernel_thread_ident = threading.get_ident()
+        kernel = self
+        _threading_Thread_run = threading.Thread.run
+        _threading_Thread__init__ = threading.Thread.__init__
+
+        def run_closure(self: threading.Thread):
+            """Wrap the `threading.Thread.start` to intercept thread identity.
+
+            This is needed because there is no "start" hook yet, but there
+            might be one in the future: https://bugs.python.org/issue14073
+
+            This is a no-op if the `self._stdout` and `self._stderr` are not
+            sub-classes of `OutStream`.
+            """
+
+            try:
+                parent = self._ipykernel_parent_thread_ident  # type:ignore[attr-defined]
+            except AttributeError:
+                return
+            for stream in [stdout, stderr]:
+                if isinstance(stream, OutStream):
+                    if parent == kernel_thread_ident:
+                        stream._thread_to_parent_header[
+                            self.ident
+                        ] = kernel._new_threads_parent_header
+                    else:
+                        stream._thread_to_parent[self.ident] = parent
+            _threading_Thread_run(self)
+
+        def init_closure(self: threading.Thread, *args, **kwargs):
+            _threading_Thread__init__(self, *args, **kwargs)
+            self._ipykernel_parent_thread_ident = threading.get_ident()  # type:ignore[attr-defined]
+
+        threading.Thread.__init__ = init_closure  # type:ignore[method-assign]
+        threading.Thread.run = run_closure  # type:ignore[method-assign]
+
+    def _clean_thread_parent_frames(
+        self, phase: t.Literal["start", "stop"], info: t.Dict[str, t.Any]
+    ):
+        """Clean parent frames of threads which are no longer running.
+        This is meant to be invoked by garbage collector callback hook.
+
+        The implementation enumerates the threads because there is no "exit" hook yet,
+        but there might be one in the future: https://bugs.python.org/issue14073
+
+        This is a no-op if the `self._stdout` and `self._stderr` are not
+        sub-classes of `OutStream`.
+        """
+        # Only run before the garbage collector starts
+        if phase != "start":
+            return
+        active_threads = {thread.ident for thread in threading.enumerate()}
+        for stream in [self._stdout, self._stderr]:
+            if isinstance(stream, OutStream):
+                thread_to_parent_header = stream._thread_to_parent_header
+                for identity in list(thread_to_parent_header.keys()):
+                    if identity not in active_threads:
+                        try:
+                            del thread_to_parent_header[identity]
+                        except KeyError:
+                            pass
+                thread_to_parent = stream._thread_to_parent
+                for identity in list(thread_to_parent.keys()):
+                    if identity not in active_threads:
+                        try:
+                            del thread_to_parent[identity]
+                        except KeyError:
+                            pass
 
 
 # This exists only for backwards compatibility - use IPythonKernel instead

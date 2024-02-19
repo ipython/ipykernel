@@ -198,7 +198,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         first = self.disp_pub.unregister_hook(hook)
         self.disp_pub.publish(data)
 
-        self.assertTrue(first)
+        assert bool(first)
         assert hook.call_count == 1
         assert self.session.send_count == 1
 
@@ -207,7 +207,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         # should return false.
         #
         second = self.disp_pub.unregister_hook(hook)
-        self.assertFalse(second)
+        assert not bool(second)
 
 
 def test_magics(tmp_path):
@@ -220,6 +220,9 @@ def test_magics(tmp_path):
     tmp_file = tmp_path / "test.txt"
     tmp_file.write_text("hi", "utf8")
     magics.edit(str(tmp_file))
+    payload = shell.payload_manager.read_payload()[0]
+    assert payload["filename"] == str(tmp_file)
+
     magics.clear([])
     magics.less(str(tmp_file))
     if os.name == "posix":

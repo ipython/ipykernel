@@ -18,14 +18,14 @@ from jupyter_client.session import Session
 from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
 
 
-@pytest.fixture
+@pytest.fixture()
 def ctx():
     ctx = zmq.asyncio.Context()
     yield ctx
     ctx.destroy()
 
 
-@pytest.fixture
+@pytest.fixture()
 def iopub_thread(ctx):
     with ctx.socket(zmq.PUB) as pub:
         thread = IOPubThread(pub)
@@ -120,7 +120,7 @@ async def test_outstream(anyio_backend, iopub_thread):
 
 @pytest.mark.anyio
 async def test_event_pipe_gc(iopub_thread):
-    session = Session(key=b'abc')
+    session = Session(key=b"abc")
     stream = OutStream(
         session,
         iopub_thread,
@@ -152,7 +152,7 @@ async def test_event_pipe_gc(iopub_thread):
 
 def subprocess_test_echo_watch():
     # handshake Pub subscription
-    session = Session(key=b'abc')
+    session = Session(key=b"abc")
 
     # use PUSH socket to avoid subscription issues
     with zmq.asyncio.Context() as ctx, ctx.socket(zmq.PUSH) as pub:
@@ -202,7 +202,7 @@ async def test_echo_watch(ctx):
     s = ctx.socket(zmq.PULL)
     port = s.bind_to_random_port("tcp://127.0.0.1")
     url = f"tcp://127.0.0.1:{port}"
-    session = Session(key=b'abc')
+    session = Session(key=b"abc")
     stdout_chunks = []
     with s:
         env = dict(os.environ)

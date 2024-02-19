@@ -16,7 +16,7 @@ def dumps(obj):
 
 
 def loads(obj):
-    return uncan(pickle.loads(obj))  # noqa
+    return uncan(pickle.loads(obj))
 
 
 def test_no_closure():

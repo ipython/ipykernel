@@ -4,6 +4,7 @@ import re
 import sys
 import typing as t
 from math import inf
+from pathlib import Path
 
 import zmq
 from anyio import Event, create_memory_object_stream
@@ -20,7 +21,7 @@ from .compiler import get_file_name, get_tmp_directory, get_tmp_hash_seed
 
 try:
     # This import is required to have the next ones working...
-    from debugpy.server import api  # noqa
+    from debugpy.server import api  # noqa: F401
 
     from _pydevd_bundle import pydevd_frame_utils  # isort: skip
     from _pydevd_bundle.pydevd_suspended_frames import (  # isort: skip
@@ -181,10 +182,10 @@ class DebugpyMessageQueue:
                 self.tcp_buffer = ""
                 self._reset_tcp_pos()
                 return
-            else:
-                self.tcp_buffer = self.tcp_buffer[self.message_pos + self.message_size :]
-                self.log.debug("QUEUE - slicing tcp_buffer: %s", self.tcp_buffer)
-                self._reset_tcp_pos()
+
+            self.tcp_buffer = self.tcp_buffer[self.message_pos + self.message_size :]
+            self.log.debug("QUEUE - slicing tcp_buffer: %s", self.tcp_buffer)
+            self._reset_tcp_pos()
 
     async def get_message(self):
         """Get a message from the queue."""
@@ -264,8 +265,7 @@ class DebugpyClient:
         await self._wait_for_response()
 
         # 4] Waits for attachResponse and returns it
-        attach_rep = await self._wait_for_response()
-        return attach_rep
+        return await self._wait_for_response()
 
     def get_host_port(self):
         """Get the host debugpy port."""
@@ -301,11 +301,11 @@ class DebugpyClient:
             rep = await self._handle_init_sequence()
             self.wait_for_attach = False
             return rep
-        else:
-            rep = await self._wait_for_response()
-            self.log.debug("DEBUGPYCLIENT - returning:")
-            self.log.debug(rep)
-            return rep
+
+        rep = await self._wait_for_response()
+        self.log.debug("DEBUGPYCLIENT - returning:")
+        self.log.debug(rep)
+        return rep
 
 
 class Debugger:
@@ -372,9 +372,8 @@ class Debugger:
                 self.stopped_send_stream.send_nowait(msg)
                 # Do not forward the event now, will be done in the handle_stopped_event
                 return
-            else:
-                self.stopped_threads.add(msg["body"]["threadId"])
-                self.event_callback(msg)
+            self.stopped_threads.add(msg["body"]["threadId"])
+            self.event_callback(msg)
         elif msg["event"] == "continued":
             if msg["body"]["allThreadsContinued"]:
                 self.stopped_threads = set()
@@ -389,7 +388,7 @@ class Debugger:
 
     def _build_variables_response(self, request, variables):
         var_list = [var for var in variables if self.accept_variable(var["name"])]
-        reply = {
+        return {
             "seq": request["seq"],
             "type": "response",
             "request_seq": request["seq"],
@@ -397,7 +396,6 @@ class Debugger:
             "command": request["command"],
             "body": {"variables": var_list},
         }
-        return reply
 
     def _accept_stopped_thread(self, thread_name):
         # TODO: identify Thread-2, Thread-3 and Thread-4. These are NOT
@@ -425,8 +423,8 @@ class Debugger:
         """Start the debugger."""
         if not self.debugpy_initialized:
             tmp_dir = get_tmp_directory()
-            if not os.path.exists(tmp_dir):
-                os.makedirs(tmp_dir)
+            if not Path(tmp_dir).exists():
+                Path(tmp_dir).mkdir(parents=True)
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy;"
             code += 'debugpy.listen(("' + host + '",' + port + "))"
@@ -474,14 +472,13 @@ class Debugger:
         with open(file_name, "w", encoding="utf-8") as f:
             f.write(code)
 
-        reply = {
+        return {
             "type": "response",
             "request_seq": message["seq"],
             "success": True,
             "command": message["command"],
             "body": {"sourcePath": file_name},
         }
-        return reply
 
     async def setBreakpoints(self, message):
         """Handle a set breakpoints message."""
@@ -490,7 +487,7 @@ class Debugger:
         message_response = await self._forward_message(message)
         # debugpy can set breakpoints on different lines than the ones requested,
         # so we want to record the breakpoints that were actually added
-        if "success" in message_response and message_response["success"]:
+        if message_response.get("success"):
             self.breakpoint_list[source] = [
                 {"line": breakpoint["line"]}
                 for breakpoint in message_response["body"]["breakpoints"]
@@ -501,7 +498,7 @@ class Debugger:
         """Handle a source message."""
         reply = {"type": "response", "request_seq": message["seq"], "command": message["command"]}
         source_path = message["arguments"]["source"]["path"]
-        if os.path.isfile(source_path):
+        if Path(source_path).is_file():
             with open(source_path, encoding="utf-8") as f:
                 reply["success"] = True
                 reply["body"] = {"content": f.read()}
@@ -561,7 +558,7 @@ class Debugger:
         cond = variable_name not in forbid_list
         cond = cond and not bool(re.search(r"^_\d", variable_name))
         cond = cond and variable_name[0:2] != "_i"
-        return cond
+        return cond  # noqa: RET504
 
     async def variables(self, message):
         """Handle a variables message."""
@@ -571,12 +568,12 @@ class Debugger:
                 message["arguments"]["variablesReference"]
             )
             return self._build_variables_response(message, variables)
-        else:
-            reply = await self._forward_message(message)
-            # TODO : check start and count arguments work as expected in debugpy
-            reply["body"]["variables"] = [
-                var for var in reply["body"]["variables"] if self.accept_variable(var["name"])
-            ]
+
+        reply = await self._forward_message(message)
+        # TODO : check start and count arguments work as expected in debugpy
+        reply["body"]["variables"] = [
+            var for var in reply["body"]["variables"] if self.accept_variable(var["name"])
+        ]
         return reply
 
     async def attach(self, message):
@@ -594,21 +591,20 @@ class Debugger:
 
     async def configurationDone(self, message):
         """Handle a configuration done message."""
-        reply = {
+        return {
             "seq": message["seq"],
             "type": "response",
             "request_seq": message["seq"],
             "success": True,
             "command": message["command"],
         }
-        return reply
 
     async def debugInfo(self, message):
         """Handle a debug info message."""
         breakpoint_list = []
         for key, value in self.breakpoint_list.items():
             breakpoint_list.append({"source": key, "breakpoints": value})
-        reply = {
+        return {
             "type": "response",
             "request_seq": message["seq"],
             "success": True,
@@ -623,12 +619,12 @@ class Debugger:
                 "stoppedThreads": list(self.stopped_threads),
                 "richRendering": True,
                 "exceptionPaths": ["Python Exceptions"],
+                "copyToGlobals": True,
             },
         }
-        return reply
 
     async def inspectVariables(self, message):
-        """Handle an insepct variables message."""
+        """Handle an inspect variables message."""
         self.variable_explorer.untrack_all()
         # looks like the implementation of untrack_all in ptvsd
         # destroys objects we nee din track. We have no choice but
@@ -679,7 +675,7 @@ class Debugger:
                 }
             )
             if reply["success"]:
-                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})  # noqa: S307
+                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})
 
         body = {
             "data": repr_data,
@@ -722,8 +718,7 @@ class Debugger:
             if filename and filename.endswith(".py"):
                 mods.append({"id": i, "name": module.__name__, "path": filename})
 
-        reply = {"body": {"modules": mods, "totalModules": len(modules)}}
-        return reply
+        return {"body": {"modules": mods, "totalModules": len(modules)}}
 
     async def process_request(self, message):
         """Process a request."""

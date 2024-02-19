@@ -470,7 +470,6 @@ class IPythonKernel(KernelBase):
                 # make synchronous call,
                 # letting shell dispatch to loop runners
                 self.shell_is_blocking = True
-                if accepts
                 try:
                     res = shell.run_cell(code, **kwargs)
                 finally:

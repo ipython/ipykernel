@@ -739,6 +739,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                 self.io_loop.start()
             except KeyboardInterrupt:
                 pass
+            finally:
+                self.io_loop.close()
 
 
 launch_new_instance = IPKernelApp.launch_instance

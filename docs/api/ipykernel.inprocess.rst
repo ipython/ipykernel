@@ -41,6 +41,12 @@ Submodules
    :show-inheritance:
 
 
+.. automodule:: ipykernel.inprocess.session
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 .. automodule:: ipykernel.inprocess.socket
    :members:
    :undoc-members:

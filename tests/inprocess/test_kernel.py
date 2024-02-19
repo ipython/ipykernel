@@ -39,7 +39,7 @@ def patch_cell_id():
         Session.msg = orig_msg  # type:ignore
 
 
-@pytest.fixture
+@pytest.fixture()
 def anyio_backend():
     return "asyncio"
 

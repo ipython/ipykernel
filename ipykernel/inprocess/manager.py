@@ -45,7 +45,9 @@ class InProcessKernelManager(KernelManager):
     # Kernel management methods
     # --------------------------------------------------------------------------
 
-    async def start_kernel(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED, **kwds: Any) -> None:  # type: ignore[explicit-override, override]
+    async def start_kernel(
+        self, *, task_status: TaskStatus = TASK_STATUS_IGNORED, **kwds: Any
+    ) -> None:  # type: ignore[explicit-override, override]
         """Start the kernel."""
         from ipykernel.inprocess.ipkernel import InProcessKernel
 

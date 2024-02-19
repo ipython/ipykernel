@@ -579,7 +579,7 @@ class OutStream(TextIOBase):
             self._should_watch = False
             # thread won't wake unless there's something to read
             # writing something after _should_watch will not be echoed
-            os.write(self._original_stdstream_fd, b'\0')
+            os.write(self._original_stdstream_fd, b"\0")
             if self.watch_fd_thread is not None:
                 self.watch_fd_thread.join()
             # restore original FDs

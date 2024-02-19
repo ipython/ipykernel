@@ -23,7 +23,7 @@ except ImportError:
     resource = None  # type:ignore
 
 
-@pytest.fixture
+@pytest.fixture()
 def anyio_backend():
     return "asyncio"
 
@@ -183,7 +183,7 @@ class MockIPyKernel(KernelMixin, IPythonKernel):  # type:ignore
         super().__init__(*args, **kwargs)
 
 
-@pytest.fixture
+@pytest.fixture()
 async def kernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockKernel()
@@ -192,7 +192,7 @@ async def kernel(anyio_backend):
         kernel.destroy()
 
 
-@pytest.fixture
+@pytest.fixture()
 async def ipkernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockIPyKernel()

@@ -14,7 +14,7 @@ from ipykernel.inprocess.manager import InProcessKernelManager
 # -----------------------------------------------------------------------------
 
 
-@pytest.fixture
+@pytest.fixture()
 def anyio_backend():
     return "asyncio"
 

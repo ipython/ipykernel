@@ -118,7 +118,7 @@ async def test_outstream(anyio_backend, iopub_thread):
         assert stream.writable()
 
 
-@pytest.mark.anyio
+@pytest.mark.anyio()
 async def test_event_pipe_gc(iopub_thread):
     session = Session(key=b"abc")
     stream = OutStream(
@@ -192,7 +192,7 @@ def subprocess_test_echo_watch():
         iopub_thread.close()
 
 
-@pytest.mark.anyio
+@pytest.mark.anyio()
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
 async def test_echo_watch(ctx):
     """Test echo on underlying FD while capturing the same FD

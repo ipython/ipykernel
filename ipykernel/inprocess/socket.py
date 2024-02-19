@@ -59,7 +59,6 @@ class DummySocket(HasTraits):
 
     def flush(self, timeout=1.0):
         """no-op to comply with stream API"""
-        pass
 
     async def poll(self, timeout=0):
         assert timeout == 0

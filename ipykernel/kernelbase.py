@@ -105,7 +105,7 @@ class Kernel(SingletonConfigurable):
     banner: str
 
     _is_test = Bool(False)
-    
+
     @default("shell_streams")
     def _shell_streams_default(self):  # pragma: no cover
         warnings.warn(
@@ -404,7 +404,6 @@ class Kernel(SingletonConfigurable):
             except KeyboardInterrupt:
                 # Ctrl-C shouldn't crash the kernel
                 self.log.error("KeyboardInterrupt caught in kernel")
-                pass
             if self.eventloop is eventloop:
                 # schedule advance again
                 await schedule_next()
@@ -526,7 +525,7 @@ class Kernel(SingletonConfigurable):
         try:
             while True:
                 await self.process_control_message()
-        except BaseException as e:
+        except BaseException:
             if self.control_stop.is_set():
                 return
             self.log.debug("Advancing eventloop %s", eventloop)

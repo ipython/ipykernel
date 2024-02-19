@@ -435,7 +435,7 @@ class IPythonKernel(KernelBase):
                     transformed_cell=transformed_cell,
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
-                    
+
                 coro = run_cell(code, **kwargs)
 
                 @dataclass

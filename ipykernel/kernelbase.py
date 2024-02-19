@@ -364,7 +364,7 @@ class Kernel(SingletonConfigurable):
         if self.control_stream:
             self.control_stream.flush(zmq.POLLOUT)
 
-    def should_handle(self, stream, msg, idents):
+    async def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
 
         Allows subclasses to prevent handling of certain messages (e.g. aborted requests).

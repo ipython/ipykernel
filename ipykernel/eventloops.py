@@ -587,6 +587,10 @@ def enable_gui(gui, kernel=None):
         # User wants to turn off integration; clear any evidence if Qt was the last one.
         if hasattr(kernel, "app"):
             delattr(kernel, "app")
+        if hasattr(kernel, "_qt_notifier"):
+            delattr(kernel, "_qt_notifier")
+        if hasattr(kernel, "_qt_timer"):
+            delattr(kernel, "_qt_timer")
     else:
         if gui.startswith("qt"):
             # Prepare the kernel here so any exceptions are displayed in the client.

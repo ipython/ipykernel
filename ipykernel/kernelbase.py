@@ -10,7 +10,6 @@ import itertools
 import logging
 import os
 import queue
-import socket
 import sys
 import threading
 import time
@@ -305,7 +304,7 @@ class Kernel(SingletonConfigurable):
         if msg_id in self.aborted:
             # is it safe to assume a msg_id will not be resubmitted?
             self.aborted.remove(msg_id)
-            await self._send_abort_reply(socket, msg, idents)
+            await self._send_abort_reply(stream, msg, idents)
             return False
         return True
 

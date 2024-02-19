@@ -144,6 +144,7 @@ class InProcessKernel(IPythonKernel):
 
         def callback(msg):
             for frontend in self.frontends:
+                assert frontend is not None
                 frontend.iopub_channel.call_handlers(msg)
 
         self.iopub_thread.socket.on_recv = callback

@@ -722,12 +722,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     def start(self) -> None:
         """Start the application."""
         if self.subapp is not None:
-            return self.subapp.start()
+            self.subapp.start()
         if self.poller is not None:
             self.poller.start()
         backend = "trio" if self.trio_loop else "asyncio"
         run(self.main, backend=backend)
-        return None
+        return
 
     async def main(self):
         async with create_task_group() as tg:

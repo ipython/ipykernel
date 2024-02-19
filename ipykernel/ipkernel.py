@@ -1,17 +1,13 @@
 """The IPython kernel implementation"""
 
-import asyncio
 import builtins
 import gc
 import getpass
 import os
-import signal
 import sys
 import threading
 import typing as t
-from contextlib import contextmanager
 from dataclasses import dataclass
-from functools import partial
 
 import comm
 import zmq.asyncio
@@ -330,50 +326,6 @@ class IPythonKernel(KernelBase):
         # Ignore the incrementing done by KernelBase, in favour of our shell's
         # execution counter.
         pass
-
-    @contextmanager
-    def _cancel_on_sigint(self, future):
-        """ContextManager for capturing SIGINT and cancelling a future
-
-        SIGINT raises in the event loop when running async code,
-        but we want it to halt a coroutine.
-
-        Ideally, it would raise KeyboardInterrupt,
-        but this turns it into a CancelledError.
-        At least it gets a decent traceback to the user.
-        """
-        sigint_future: asyncio.Future[int] = asyncio.Future()
-
-        # whichever future finishes first,
-        # cancel the other one
-        def cancel_unless_done(f, _ignored):
-            if f.cancelled() or f.done():
-                return
-            f.cancel()
-
-        # when sigint finishes,
-        # abort the coroutine with CancelledError
-        sigint_future.add_done_callback(partial(cancel_unless_done, future))
-        # when the main future finishes,
-        # stop watching for SIGINT events
-        future.add_done_callback(partial(cancel_unless_done, sigint_future))
-
-        def handle_sigint(*args):
-            def set_sigint_result():
-                if sigint_future.cancelled() or sigint_future.done():
-                    return
-                sigint_future.set_result(1)
-
-            # use add_callback for thread safety
-            self.io_loop.add_callback(set_sigint_result)
-
-        # set the custom sigint handler during this context
-        save_sigint = signal.signal(signal.SIGINT, handle_sigint)
-        try:
-            yield
-        finally:
-            # restore the previous sigint handler
-            signal.signal(signal.SIGINT, save_sigint)
 
     async def execute_request(self, stream, ident, parent):
         """Override for cell output - cell reconciliation."""

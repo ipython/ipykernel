@@ -6,6 +6,7 @@
 from math import inf
 
 import zmq
+import zmq.asyncio
 from anyio import create_memory_object_stream
 from traitlets import HasTraits, Instance
 

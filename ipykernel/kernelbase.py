@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import asyncio
-import concurrent.futures
 import inspect
 import itertools
 import logging
@@ -138,7 +137,7 @@ class Kernel(SingletonConfigurable):
             self.shell_stream = change.new[0]
 
     control_socket = Instance(zmq.asyncio.Socket, allow_none=True)
-    control_tasks = List()
+    control_tasks: t.Any = List()
 
     debug_shell_socket = Any()
 
@@ -297,48 +296,6 @@ class Kernel(SingletonConfigurable):
     def dispatch_control(self, msg):
         self.control_queue.put_nowait(msg)
 
-    async def poll_control_queue(self):
-        while True:
-            msg = await self.control_queue.get()
-            # handle tracers from _flush_control_queue
-            if isinstance(msg, (concurrent.futures.Future, asyncio.Future)):
-                msg.set_result(None)
-                continue
-            await self.process_control(msg)
-
-    async def _flush_control_queue(self):
-        """Flush the control queue, wait for processing of any pending messages"""
-        tracer_future: concurrent.futures.Future[object] | asyncio.Future[object]
-        if self.control_thread:
-            control_loop = self.control_thread.io_loop
-            # concurrent.futures.Futures are threadsafe
-            # and can be used to await across threads
-            tracer_future = concurrent.futures.Future()
-            awaitable_future = asyncio.wrap_future(tracer_future)
-        else:
-            control_loop = self.io_loop
-            tracer_future = awaitable_future = asyncio.Future()
-
-        def _flush():
-            # control_stream.flush puts messages on the queue
-            if self.control_stream:
-                self.control_stream.flush()
-            # put Future on the queue after all of those,
-            # so we can wait for all queued messages to be processed
-            self.control_queue.put(tracer_future)
-
-        control_loop.add_callback(_flush)
-        return awaitable_future
-
-    async def process_control(self):
-        try:
-            while True:
-                await self.process_control_message()
-        except BaseException as e:
-            if self.control_stop.is_set():
-                return
-            raise e
-
     async def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
 
@@ -496,6 +453,15 @@ class Kernel(SingletonConfigurable):
             await to_thread.run_sync(self.control_stop.wait)
             tg.cancel_scope.cancel()
 
+    async def process_control(self):
+        try:
+            while True:
+                await self.process_control_message()
+        except BaseException as e:
+            if self.control_stop.is_set():
+                return
+            raise e
+
     async def process_control_message(self, msg=None):
         assert self.control_socket is not None
         assert self.session is not None
@@ -525,23 +491,6 @@ class Kernel(SingletonConfigurable):
                 result = handler(self.control_socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
-            except Exception:
-                self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-        self._publish_status("idle", "control")
-
-    async def dispatch_queue(self):
-        """Coroutine to preserve order of message handling
-
-        Ensures that only one message is processing at a time,
-        even when the handler is async
-        """
-
-        while True:
-            try:
-                await self.process_one()
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 

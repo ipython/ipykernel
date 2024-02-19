@@ -5,11 +5,13 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import inspect
 import itertools
 import logging
 import os
 import queue
+import socket
 import sys
 import threading
 import time
@@ -17,6 +19,7 @@ import typing as t
 import uuid
 import warnings
 from datetime import datetime
+from queue import Queue
 from signal import SIGINT, SIGTERM, Signals
 
 from .control import CONTROL_THREAD_NAME
@@ -52,6 +55,7 @@ from traitlets.traitlets import (
     Set,
     Unicode,
     default,
+    observe,
 )
 
 from ipykernel.jsonutil import json_clean
@@ -326,43 +330,14 @@ class Kernel(SingletonConfigurable):
         control_loop.add_callback(_flush)
         return awaitable_future
 
-    async def process_control(self, msg):
-        """dispatch control requests"""
-        if not self.session:
-            return
-        idents, msg = self.session.feed_identities(msg, copy=False)
+    async def process_control(self):
         try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
-        except Exception:
-            self.log.error("Invalid Control Message", exc_info=True)  # noqa: G201
-            return
-
-        self.log.debug("Control received: %s", msg)
-
-        # Set the parent message for side effects.
-        self.set_parent(idents, msg, channel="control")
-        self._publish_status("busy", "control")
-
-        header = msg["header"]
-        msg_type = header["msg_type"]
-
-        handler = self.control_handlers.get(msg_type, None)
-        if handler is None:
-            self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
-        else:
-            try:
-                result = handler(self.control_stream, idents, msg)
-                if inspect.isawaitable(result):
-                    await result
-            except Exception:
-                self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-        self._publish_status("idle", "control")
-        # flush to ensure reply is sent
-        if self.control_stream:
-            self.control_stream.flush(zmq.POLLOUT)
+            while True:
+                await self.process_control_message()
+        except BaseException as e:
+            if self.control_stop.is_set():
+                return
+            raise e
 
     async def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
@@ -455,7 +430,7 @@ class Kernel(SingletonConfigurable):
         try:
             msg = self.session.deserialize(msg, content=True, copy=True)
         except BaseException:
-            self.log.error("Invalid Message", exc_info=True)
+            self.log.error("Invalid Message", exc_info=True)  # noqa: G201
             return
 
         # Set the parent message for side effects.
@@ -521,30 +496,6 @@ class Kernel(SingletonConfigurable):
             await to_thread.run_sync(self.control_stop.wait)
             tg.cancel_scope.cancel()
 
-    async def process_control(self):
-        try:
-            while True:
-                await self.process_control_message()
-        except BaseException:
-            if self.control_stop.is_set():
-                return
-            self.log.debug("Advancing eventloop %s", eventloop)
-            try:
-                eventloop(self)
-            except KeyboardInterrupt:
-                # Ctrl-C shouldn't crash the kernel
-                self.log.error("KeyboardInterrupt caught in kernel")
-            if self.eventloop is eventloop:
-                # schedule advance again
-                schedule_next()
-
-        def schedule_next():
-            """Schedule the next advance of the eventloop"""
-            # flush the eventloop every so often,
-            # giving us a chance to handle messages in the meantime
-            self.log.debug("Scheduling eventloop advance")
-            self.io_loop.call_later(0.001, advance_eventloop)
-
     async def process_control_message(self, msg=None):
         assert self.control_socket is not None
         assert self.session is not None
@@ -554,7 +505,7 @@ class Kernel(SingletonConfigurable):
         try:
             msg = self.session.deserialize(msg, content=True, copy=True)
         except Exception:
-            self.log.error("Invalid Control Message", exc_info=True)
+            self.log.error("Invalid Control Message", exc_info=True)  # noqa: G201
             return
 
         self.log.debug("Control received: %s", msg)
@@ -571,10 +522,15 @@ class Kernel(SingletonConfigurable):
             self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
         else:
             try:
-                t, dispatch, args = self.msg_queue.get_nowait()
-            except (asyncio.QueueEmpty, QueueEmpty):
-                return
-        await dispatch(*args)
+                result = handler(self.control_socket, idents, msg)
+                if inspect.isawaitable(result):
+                    await result
+            except Exception:
+                self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+        self._publish_status("idle", "control")
 
     async def dispatch_queue(self):
         """Coroutine to preserve order of message handling
@@ -587,7 +543,7 @@ class Kernel(SingletonConfigurable):
             try:
                 await self.process_one()
             except Exception:
-                self.log.error("Exception in control handler:", exc_info=True)
+                self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 
         sys.stdout.flush()
         sys.stderr.flush()

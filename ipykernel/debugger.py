@@ -442,7 +442,7 @@ class Debugger:
             try:
                 msg = self.session.deserialize(msg, content=True, copy=True)
             except Exception:
-                self.log.error("Invalid message", exc_info=True)
+                self.log.error("Invalid message", exc_info=True)  # noqa: G201
             self.debugpy_initialized = msg["content"]["status"] == "ok"
 
         # Don't remove leading empty lines when debugging so the breakpoints are correctly positioned

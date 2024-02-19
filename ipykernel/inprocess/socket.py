@@ -42,13 +42,11 @@ class DummySocket(HasTraits):
         self.in_send_stream.send_nowait(msg)
 
     async def get(self):
-        msg = await self.out_receive_stream.receive()
-        return msg
+        return await self.out_receive_stream.receive()
 
     async def recv_multipart(self, flags=0, copy=True, track=False):
         """Recv a multipart message."""
-        msg = await self.in_receive_stream.receive()
-        return msg
+        return await self.in_receive_stream.receive()
 
     def send_multipart(self, msg_parts, flags=0, copy=True, track=False):
         """Send a multipart message."""

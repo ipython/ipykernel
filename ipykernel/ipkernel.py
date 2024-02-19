@@ -1,13 +1,17 @@
 """The IPython kernel implementation"""
 
+import asyncio
 import builtins
 import gc
 import getpass
 import os
+import signal
 import sys
 import threading
 import typing as t
+from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import partial
 
 import comm
 import zmq.asyncio
@@ -398,7 +402,7 @@ class IPythonKernel(KernelBase):
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
-            accepts_params = _accepts_parameters(run_cell, ["cell_id"])
+            with_cell_id = _accepts_parameters(run_cell, ["cell_id"])
         else:
             should_run_async = lambda cell: False  # noqa: ARG005, E731
             # older IPython,
@@ -407,7 +411,7 @@ class IPythonKernel(KernelBase):
             async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
 
-            accepts_params = _accepts_parameters(shell.run_cell, ["cell_id"])
+            with_cell_id = _accepts_parameters(shell.run_cell, ["cell_id"])
         try:
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",

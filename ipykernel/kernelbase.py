@@ -495,6 +495,19 @@ class Kernel(SingletonConfigurable):
                 t, dispatch, args = self.msg_queue.get_nowait()
             except (asyncio.QueueEmpty, QueueEmpty):
                 return
+
+        if self.control_thread is None and self.control_stream is not None:
+            # If there isn't a separate control thread then this main thread handles both shell
+            # and control messages. Before processing a shell message need to flush all control
+            # messages and allow them all to be processed.
+            await asyncio.sleep(0)
+            self.control_stream.flush()
+
+            socket = self.control_stream.socket
+            while socket.poll(1):
+                await asyncio.sleep(0)
+                self.control_stream.flush()
+
         await dispatch(*args)
 
     async def dispatch_queue(self):

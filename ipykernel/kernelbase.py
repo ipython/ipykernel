@@ -498,7 +498,7 @@ class Kernel(SingletonConfigurable):
 
         if self.control_thread is None and self.control_stream is not None:
             # If there isn't a separate control thread then this main thread handles both shell
-            # and control messages. Before processing a shell message need to flush all control
+            # and control messages. Before processing a shell message we need to flush all control
             # messages and allow them all to be processed.
             await asyncio.sleep(0)
             self.control_stream.flush()

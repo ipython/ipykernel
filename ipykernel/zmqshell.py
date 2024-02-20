@@ -553,9 +553,15 @@ class ZMQInteractiveShell(InteractiveShell):
         sys.stdout.flush()
         sys.stderr.flush()
 
+        # For Keyboard interrupt, remove the kernel source code from the
+        # traceback.
+        ename = str(etype.__name__)
+        if ename == "KeyboardInterrupt":
+            stb.pop(-2)
+
         exc_content = {
             "traceback": stb,
-            "ename": str(etype.__name__),
+            "ename": ename,
             "evalue": str(evalue),
         }
 

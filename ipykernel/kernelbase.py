@@ -472,7 +472,7 @@ class Kernel(SingletonConfigurable):
             self.log.info("Exiting as there is no eventloop")
             return
 
-        def advance_eventloop():
+        async def advance_eventloop():
             # check if eventloop changed:
             if self.eventloop is not eventloop:
                 self.log.info("exiting eventloop %s", eventloop)
@@ -494,10 +494,13 @@ class Kernel(SingletonConfigurable):
 
         def schedule_next():
             """Schedule the next advance of the eventloop"""
-            # flush the eventloop every so often,
-            # giving us a chance to handle messages in the meantime
+            # call_later allows the io_loop to process other events if needed.
+            # Going through schedule_dispatch ensures all other dispatches on msg_queue
+            # are processed before we enter the eventloop, even if the previous dispatch was
+            # already consumed from the queue by process_one and the queue is
+            # technically empty.
             self.log.debug("Scheduling eventloop advance")
-            self.io_loop.call_later(0.001, advance_eventloop)
+            self.io_loop.call_later(0.001, partial(self.schedule_dispatch, advance_eventloop))
 
         # begin polling the eventloop
         schedule_next()

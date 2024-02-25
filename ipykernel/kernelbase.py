@@ -460,6 +460,7 @@ class Kernel(SingletonConfigurable):
             if self.control_stop.is_set():
                 return
             raise e
+
     def post_handler_hook(self):
         """Hook to execute after calling message handler"""
         signal(SIGINT, self.saved_sigint_handler)
@@ -1150,7 +1151,7 @@ class Kernel(SingletonConfigurable):
         return (f"{base}.{topic}").encode()
 
     _aborting = Bool(False)
-    
+
     def _abort_queues(self):
         # while this flag is true,
         # execute requests will be aborted

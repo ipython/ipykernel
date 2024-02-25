@@ -460,6 +460,48 @@ class Kernel(SingletonConfigurable):
             if self.control_stop.is_set():
                 return
             raise e
+    def post_handler_hook(self):
+        """Hook to execute after calling message handler"""
+        signal(SIGINT, self.saved_sigint_handler)
+
+    def enter_eventloop(self):
+        """enter eventloop"""
+        self.log.info("Entering eventloop %s", self.eventloop)
+        # record handle, so we can check when this changes
+        eventloop = self.eventloop
+        if eventloop is None:
+            self.log.info("Exiting as there is no eventloop")
+            return
+
+        async def advance_eventloop():
+            # check if eventloop changed:
+            if self.eventloop is not eventloop:
+                self.log.info("exiting eventloop %s", eventloop)
+                return
+            if self.msg_queue.qsize():
+                self.log.debug("Delaying eventloop due to waiting messages")
+                # still messages to process, make the eventloop wait
+                schedule_next()
+                return
+            self.log.debug("Advancing eventloop %s", eventloop)
+            try:
+                eventloop(self)
+            except KeyboardInterrupt:
+                # Ctrl-C shouldn't crash the kernel
+                self.log.error("KeyboardInterrupt caught in kernel")
+            if self.eventloop is eventloop:
+                # schedule advance again
+                schedule_next()
+
+        def schedule_next():
+            """Schedule the next advance of the eventloop"""
+            # call_later allows the io_loop to process other events if needed.
+            # Going through schedule_dispatch ensures all other dispatches on msg_queue
+            # are processed before we enter the eventloop, even if the previous dispatch was
+            # already consumed from the queue by process_one and the queue is
+            # technically empty.
+            self.log.debug("Scheduling eventloop advance")
+            self.io_loop.call_later(0.001, partial(self.schedule_dispatch, advance_eventloop))
 
     async def process_control_message(self, msg=None):
         assert self.control_socket is not None
@@ -1108,6 +1150,41 @@ class Kernel(SingletonConfigurable):
         return (f"{base}.{topic}").encode()
 
     _aborting = Bool(False)
+    
+    def _abort_queues(self):
+        # while this flag is true,
+        # execute requests will be aborted
+        self._aborting = True
+        self.log.info("Aborting queue")
+
+        # flush streams, so all currently waiting messages
+        # are added to the queue
+        if self.shell_stream:
+            self.shell_stream.flush()
+
+        # Callback to signal that we are done aborting
+        # dispatch functions _must_ be async
+        async def stop_aborting():
+            self.log.info("Finishing abort")
+            self._aborting = False
+
+        # put the stop-aborting event on the message queue
+        # so that all messages already waiting in the queue are aborted
+        # before we reset the flag
+        schedule_stop_aborting = partial(self.schedule_dispatch, stop_aborting)
+
+        if self.stop_on_error_timeout:
+            # if we have a delay, give messages this long to arrive on the queue
+            # before we stop aborting requests
+            self.io_loop.call_later(self.stop_on_error_timeout, schedule_stop_aborting)
+            # If we have an eventloop, it may interfere with the call_later above.
+            # If the loop has a _schedule_exit method, we call that so the loop exits
+            # after stop_on_error_timeout, returning to the main io_loop and letting
+            # the call_later fire.
+            if self.eventloop is not None and hasattr(self.eventloop, "_schedule_exit"):
+                self.eventloop._schedule_exit(self.stop_on_error_timeout + 0.01)
+        else:
+            schedule_stop_aborting()
 
     async def _send_abort_reply(self, socket, msg, idents):
         """Send a reply to an aborted request"""

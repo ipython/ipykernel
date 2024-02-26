@@ -623,7 +623,13 @@ def test_sequential_control_messages():
         # Check messages are processed in order, one at a time, and of a sensible duration.
         previous_end = None
         for reply, sleep in zip(replies, sleeps):
-            start = datetime.fromisoformat(reply["metadata"]["started"])
+            start_str = reply["metadata"]["started"]
+            if sys.version_info[:2] < (3, 11) and start_str.endswith("Z"):
+                # Python < 3.11 doesn't support "Z" suffix in datetime.fromisoformat,
+                # so use alternative timezone format.
+                # https://github.com/python/cpython/issues/80010
+                start_str = start_str[:-1] + "+00:00"
+            start = datetime.fromisoformat(start_str)
             end = reply["header"]["date"]  # Already a datetime
 
             if previous_end is not None:

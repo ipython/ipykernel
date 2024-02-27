@@ -88,9 +88,6 @@ class InProcessKernel(IPythonKernel):
     def _abort_queues(self):
         """The in-process kernel doesn't abort requests."""
 
-    async def _flush_control_queue(self):
-        """No need to flush control queues for in-process"""
-
     def _input_request(self, prompt, ident, parent, password=False):
         # Flush output before making the request.
         self.raw_input_str = None

@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.29.3
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.2...de2221ce155668c343084fde37b77fb6b1671dc9))
+
+### Enhancements made
+
+- Eventloop scheduling improvements for stop_on_error_timeout and schedule_next [#1212](https://github.com/ipython/ipykernel/pull/1212) ([@jdranczewski](https://github.com/jdranczewski))
+
+### Bugs fixed
+
+- Disable frozen modules by default, add a toggle [#1213](https://github.com/ipython/ipykernel/pull/1213) ([@krassowski](https://github.com/krassowski))
+
+### Maintenance and upkeep improvements
+
+- Fix typings and update project urls [#1214](https://github.com/ipython/ipykernel/pull/1214) ([@blink1073](https://github.com/blink1073))
+- Unpin pytest-asyncio and update ruff config [#1209](https://github.com/ipython/ipykernel/pull/1209) ([@blink1073](https://github.com/blink1073))
+
+### Documentation improvements
+
+- Correct spelling mistake [#1208](https://github.com/ipython/ipykernel/pull/1208) ([@joouha](https://github.com/joouha))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-02-07&to=2024-02-26&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-02-07..2024-02-26&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-02-07..2024-02-26&type=Issues) | [@jdranczewski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajdranczewski+updated%3A2024-02-07..2024-02-26&type=Issues) | [@joouha](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajoouha+updated%3A2024-02-07..2024-02-26&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-02-07..2024-02-26&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.29.2
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.1...d45fe71990d26c0bd5b7b3b2a4ccd3d1f6609899))
@@ -19,8 +48,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-02-06&to=2024-02-07&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-02-06..2024-02-07&type=Issues) | [@stdll00](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Astdll00+updated%3A2024-02-06..2024-02-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.1
 

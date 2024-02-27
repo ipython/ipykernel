@@ -285,17 +285,55 @@ class Kernel(SingletonConfigurable):
         for msg_type in self.control_msg_types:
             self.control_handlers[msg_type] = getattr(self, msg_type)
 
-        self.control_queue: Queue[t.Any] = Queue()
-
         # Storing the accepted parameters for do_execute, used in execute_request
         self._do_exec_accepted_params = _accepts_parameters(
             self.do_execute, ["cell_meta", "cell_id"]
         )
 
-    def dispatch_control(self, msg):
-        self.control_queue.put_nowait(msg)
+    async def dispatch_control(self, msg):
+        # Ensure only one control message is processed at a time
+        async with asyncio.Lock():
+            await self.process_control(msg)
 
-    async def should_handle(self, stream, msg, idents):
+    async def process_control(self, msg):
+        """dispatch control requests"""
+        if not self.session:
+            return
+        idents, msg = self.session.feed_identities(msg, copy=False)
+        try:
+            msg = self.session.deserialize(msg, content=True, copy=False)
+        except Exception:
+            self.log.error("Invalid Control Message", exc_info=True)  # noqa: G201
+            return
+
+        self.log.debug("Control received: %s", msg)
+
+        # Set the parent message for side effects.
+        self.set_parent(idents, msg, channel="control")
+        self._publish_status("busy", "control")
+
+        header = msg["header"]
+        msg_type = header["msg_type"]
+
+        handler = self.control_handlers.get(msg_type, None)
+        if handler is None:
+            self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
+        else:
+            try:
+                result = handler(self.control_stream, idents, msg)
+                if inspect.isawaitable(result):
+                    await result
+            except Exception:
+                self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
+
+        sys.stdout.flush()
+        sys.stderr.flush()
+        self._publish_status("idle", "control")
+        # flush to ensure reply is sent
+        if self.control_stream:
+            self.control_stream.flush(zmq.POLLOUT)
+
+    def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
 
         Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
@@ -530,9 +568,34 @@ class Kernel(SingletonConfigurable):
             self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
         else:
             try:
-                result = handler(self.control_socket, idents, msg)
-                if inspect.isawaitable(result):
-                    await result
+                t, dispatch, args = self.msg_queue.get_nowait()
+            except (asyncio.QueueEmpty, QueueEmpty):
+                return
+
+        if self.control_thread is None and self.control_stream is not None:
+            # If there isn't a separate control thread then this main thread handles both shell
+            # and control messages. Before processing a shell message we need to flush all control
+            # messages and allow them all to be processed.
+            await asyncio.sleep(0)
+            self.control_stream.flush()
+
+            socket = self.control_stream.socket
+            while socket.poll(1):
+                await asyncio.sleep(0)
+                self.control_stream.flush()
+
+        await dispatch(*args)
+
+    async def dispatch_queue(self):
+        """Coroutine to preserve order of message handling
+
+        Ensures that only one message is processing at a time,
+        even when the handler is async
+        """
+
+        while True:
+            try:
+                await self.process_one()
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 
@@ -558,10 +621,14 @@ class Kernel(SingletonConfigurable):
             if not self._is_test and self.shell_socket is not None:
                 tg.start_soon(self.shell_main)
 
-            # publish idle status
-            self._publish_status("starting", "shell")
-
-            task_status.started()
+        if self.shell_stream:
+            self.shell_stream.on_recv(
+                partial(
+                    self.schedule_dispatch,
+                    self.dispatch_shell,
+                ),
+                copy=False,
+            )
 
     def stop(self):
         self.shell_stop.set()

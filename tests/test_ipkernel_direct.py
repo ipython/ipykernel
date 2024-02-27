@@ -165,42 +165,30 @@ async def test_dispatch_debugpy(ipkernel: IPythonKernel) -> None:
 @pytest.mark.skip("Queues don't exist anymore")
 async def test_start(ipkernel: IPythonKernel) -> None:
     shell_future: asyncio.Future = asyncio.Future()
-    control_future: asyncio.Future = asyncio.Future()
 
     async def fake_dispatch_queue():
         shell_future.set_result(None)
 
-    async def fake_poll_control_queue():
-        control_future.set_result(None)
-
     ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
-    ipkernel.poll_control_queue = fake_poll_control_queue  # type:ignore
-    await ipkernel.start()
-    ipkernel.debugpy_socket = None
-    await ipkernel.start()
-    # await ipkernel.process_one(False)
+    ipkernel.start()
+    ipkernel.debugpy_stream = None
+    ipkernel.start()
+    await ipkernel.process_one(False)
     await shell_future
-    await control_future
 
 
 @pytest.mark.skip("Queues don't exist anymore")
 async def test_start_no_debugpy(ipkernel: IPythonKernel) -> None:
     shell_future: asyncio.Future = asyncio.Future()
-    control_future: asyncio.Future = asyncio.Future()
 
     async def fake_dispatch_queue():
         shell_future.set_result(None)
 
-    async def fake_poll_control_queue():
-        control_future.set_result(None)
-
     ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
-    ipkernel.poll_control_queue = fake_poll_control_queue  # type:ignore
-    ipkernel.debugpy_socket = None
-    await ipkernel.start()
+    ipkernel.debugpy_stream = None
+    ipkernel.start()
 
     await shell_future
-    await control_future
 
 
 def test_create_comm():

@@ -10,6 +10,7 @@ import signal
 import subprocess
 import sys
 import time
+from datetime import datetime, timedelta
 from subprocess import Popen
 from tempfile import TemporaryDirectory
 
@@ -595,6 +596,47 @@ def test_control_thread_priority():
     # comparing first to last ought to be enough, since queues preserve order
     # use <= in case of very-fast handling and/or low resolution timers
     assert control_dates[-1] <= shell_dates[0]
+
+
+def test_sequential_control_messages():
+    with new_kernel() as kc:
+        msg_id = kc.execute("import time")
+        get_reply(kc, msg_id)
+
+        # Send multiple messages on the control channel.
+        # Using execute messages to vary duration.
+        sleeps = [0.6, 0.3, 0.1]
+
+        # Prepare messages
+        msgs = [
+            kc.session.msg("execute_request", {"code": f"time.sleep({sleep})"}) for sleep in sleeps
+        ]
+        msg_ids = [msg["header"]["msg_id"] for msg in msgs]
+
+        # Submit messages
+        for msg in msgs:
+            kc.control_channel.send(msg)
+
+        # Get replies
+        replies = [get_reply(kc, msg_id, channel="control") for msg_id in msg_ids]
+
+        # Check messages are processed in order, one at a time, and of a sensible duration.
+        previous_end = None
+        for reply, sleep in zip(replies, sleeps):
+            start_str = reply["metadata"]["started"]
+            if sys.version_info[:2] < (3, 11) and start_str.endswith("Z"):
+                # Python < 3.11 doesn't support "Z" suffix in datetime.fromisoformat,
+                # so use alternative timezone format.
+                # https://github.com/python/cpython/issues/80010
+                start_str = start_str[:-1] + "+00:00"
+            start = datetime.fromisoformat(start_str)
+            end = reply["header"]["date"]  # Already a datetime
+
+            if previous_end is not None:
+                assert start > previous_end
+            previous_end = end
+
+            assert end >= start + timedelta(seconds=sleep)
 
 
 def _child():

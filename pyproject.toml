@@ -24,14 +24,14 @@ dependencies = [
     "ipython>=7.23.1",
     "comm>=0.1.1",
     "traitlets>=5.4.0",
-    "jupyter_client>=6.1.12",
+    "jupyter_client>=8.0.0",
     "jupyter_core>=4.12,!=5.0.*",
     # For tk event loop support only.
     "nest_asyncio",
-    "tornado>=6.1",
+    "tornado>=6.2",
     "matplotlib-inline>=0.1",
     'appnope;platform_system=="Darwin"',
-    "pyzmq>=24",
+    "pyzmq>=25",
     "psutil",
     "packaging",
 ]

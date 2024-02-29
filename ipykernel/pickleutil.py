@@ -10,6 +10,7 @@ import warnings
 from types import FunctionType
 
 # This registers a hook when it's imported
+from ipyparallel.serialize import codeutil  # noqa: F401
 from traitlets.log import get_logger
 from traitlets.utils.importstring import import_item
 

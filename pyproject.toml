@@ -54,7 +54,7 @@ docs = [
   "trio"
 ]
 test = [
-    "pytest>=7.0",
+    "pytest>=7.0,<8",
     "pytest-cov",
     "flaky",
     "ipyparallel",

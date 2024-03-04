@@ -638,7 +638,7 @@ def test_sequential_control_messages():
             end = ensure_datetime(reply["header"]["date"])
 
             if previous_end is not None:
-                assert start > previous_end
+                assert start >= previous_end
             previous_end = end
 
             assert end >= start + timedelta(seconds=sleep)

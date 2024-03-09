@@ -17,8 +17,7 @@ import typing as t
 import uuid
 import warnings
 from datetime import datetime
-from functools import partial
-from signal import SIGINT, SIGTERM, Signals, signal
+from signal import SIGINT, SIGTERM, Signals
 
 from .control import CONTROL_THREAD_NAME
 
@@ -53,7 +52,6 @@ from traitlets.traitlets import (
     Set,
     Unicode,
     default,
-    observe,
 )
 
 from ipykernel.jsonutil import json_clean
@@ -94,46 +92,11 @@ class Kernel(SingletonConfigurable):
     profile_dir = Instance("IPython.core.profiledir.ProfileDir", allow_none=True)
     shell_socket = Instance(zmq.asyncio.Socket, allow_none=True)
 
-    shell_streams: List[t.Any] = List(
-        help="""Deprecated shell_streams alias. Use shell_stream
-
-        .. versionchanged:: 6.0
-            shell_streams is deprecated. Use shell_stream.
-        """
-    )
-
     implementation: str
     implementation_version: str
     banner: str
 
     _is_test = Bool(False)
-
-    @default("shell_streams")
-    def _shell_streams_default(self):  # pragma: no cover
-        warnings.warn(
-            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if self.shell_stream is not None:
-            return [self.shell_stream]
-        return []
-
-    @observe("shell_streams")
-    def _shell_streams_changed(self, change):  # pragma: no cover
-        warnings.warn(
-            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if len(change.new) > 1:
-            warnings.warn(
-                "Kernel only supports one shell stream. Additional streams will be ignored.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-        if change.new:
-            self.shell_stream = change.new[0]
 
     control_socket = Instance(zmq.asyncio.Socket, allow_none=True)
     control_tasks: t.Any = List()
@@ -353,10 +316,6 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
-    def pre_handler_hook(self):
-        """Hook to execute before calling message handler"""
-        # ensure default_int_handler during handler call
-
     async def enter_eventloop(self):
         """enter eventloop"""
         self.log.info("Entering eventloop %s", self.eventloop)
@@ -494,26 +453,12 @@ class Kernel(SingletonConfigurable):
             await to_thread.run_sync(self.control_stop.wait)
             tg.cancel_scope.cancel()
 
+    def pre_handler_hook(self):
+        """Hook to execute before calling message handler"""
+        # ensure default_int_handler during handler call
+
     def post_handler_hook(self):
         """Hook to execute after calling message handler"""
-        signal(SIGINT, self.saved_sigint_handler)
-
-    async def dispatch_queue(self):
-        """Coroutine to preserve order of message handling
-
-        Ensures that only one message is processing at a time,
-        even when the handler is async
-        """
-
-        while True:
-            try:
-                await self.process_one()
-            except Exception:
-                self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
-
-        sys.stdout.flush()
-        sys.stderr.flush()
-        self._publish_status("idle", "control")
 
     async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Process messages on shell and control channels"""
@@ -532,15 +477,6 @@ class Kernel(SingletonConfigurable):
             self.shell_stop = threading.Event()
             if not self._is_test and self.shell_socket is not None:
                 tg.start_soon(self.shell_main)
-
-        if hasattr(self, "shell_stream") and self.shell_stream:
-            self.shell_stream.on_recv(
-                partial(
-                    self.schedule_dispatch,
-                    self.dispatch_shell,
-                ),
-                copy=False,
-            )
 
     def stop(self):
         self.shell_stop.set()
@@ -1130,41 +1066,6 @@ class Kernel(SingletonConfigurable):
         return (f"{base}.{topic}").encode()
 
     _aborting = Bool(False)
-
-    def _abort_queues(self):
-        # while this flag is true,
-        # execute requests will be aborted
-        self._aborting = True
-        self.log.info("Aborting queue")
-
-        # flush streams, so all currently waiting messages
-        # are added to the queue
-        if self.shell_stream:
-            self.shell_stream.flush()
-
-        # Callback to signal that we are done aborting
-        # dispatch functions _must_ be async
-        async def stop_aborting():
-            self.log.info("Finishing abort")
-            self._aborting = False
-
-        # put the stop-aborting event on the message queue
-        # so that all messages already waiting in the queue are aborted
-        # before we reset the flag
-        schedule_stop_aborting = partial(self.schedule_dispatch, stop_aborting)
-
-        if self.stop_on_error_timeout:
-            # if we have a delay, give messages this long to arrive on the queue
-            # before we stop aborting requests
-            self.io_loop.call_later(self.stop_on_error_timeout, schedule_stop_aborting)
-            # If we have an eventloop, it may interfere with the call_later above.
-            # If the loop has a _schedule_exit method, we call that so the loop exits
-            # after stop_on_error_timeout, returning to the main io_loop and letting
-            # the call_later fire.
-            if self.eventloop is not None and hasattr(self.eventloop, "_schedule_exit"):
-                self.eventloop._schedule_exit(self.stop_on_error_timeout + 0.01)
-        else:
-            schedule_stop_aborting()
 
     async def _send_abort_reply(self, socket, msg, idents):
         """Send a reply to an aborted request"""

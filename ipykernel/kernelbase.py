@@ -290,9 +290,6 @@ class Kernel(SingletonConfigurable):
             self.do_execute, ["cell_meta", "cell_id"]
         )
 
-    async def dispatch_control(self, msg):
-        await self.process_control(msg)
-
     async def process_control(self):
         try:
             while True:
@@ -308,6 +305,8 @@ class Kernel(SingletonConfigurable):
         assert self.session is not None
 
         msg = msg or await self.control_socket.recv_multipart()
+        if len(msg) and isinstance(msg[0], bytes):
+            msg[0] = zmq.Message(msg[0])
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)
@@ -329,7 +328,7 @@ class Kernel(SingletonConfigurable):
             self.log.error("UNKNOWN CONTROL MESSAGE TYPE: %r", msg_type)
         else:
             try:
-                result = handler(self.control_stream, idents, msg)
+                result = handler(self.control_socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
             except Exception:
@@ -338,9 +337,6 @@ class Kernel(SingletonConfigurable):
         sys.stdout.flush()
         sys.stderr.flush()
         self._publish_status("idle", "control")
-        # flush to ensure reply is sent
-        if self.control_stream:
-            self.control_stream.flush(zmq.POLLOUT)
 
     async def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
@@ -535,7 +531,7 @@ class Kernel(SingletonConfigurable):
             if not self._is_test and self.shell_socket is not None:
                 tg.start_soon(self.shell_main)
 
-        if self.shell_stream:
+        if hasattr(self, "shell_stream") and self.shell_stream:
             self.shell_stream.on_recv(
                 partial(
                     self.schedule_dispatch,

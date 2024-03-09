@@ -282,7 +282,11 @@ class IOPubThread:
         if self.thread.is_alive():
             self._events.append(f)
             # wake event thread (message content is ignored)
-            self._event_pipe.send(b"")
+            try:
+                self._event_pipe.send(b"")
+            except RuntimeError:
+                pass
+
         else:
             f()
 

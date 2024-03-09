@@ -158,7 +158,7 @@ testpaths = [
     "tests",
     "tests/inprocess"
 ]
-timeout = 100
+timeout = 20
 # Restore this setting to debug failures
 timeout_method = "thread"
 filterwarnings= [

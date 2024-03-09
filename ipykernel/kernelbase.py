@@ -291,9 +291,7 @@ class Kernel(SingletonConfigurable):
         )
 
     async def dispatch_control(self, msg):
-        # Ensure only one control message is processed at a time
-        async with asyncio.Lock():
-            await self.process_control(msg)
+        await self.process_control(msg)
 
     async def process_control(self):
         try:

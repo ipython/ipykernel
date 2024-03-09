@@ -295,10 +295,21 @@ class Kernel(SingletonConfigurable):
         async with asyncio.Lock():
             await self.process_control(msg)
 
-    async def process_control(self, msg):
+    async def process_control(self):
+        try:
+            while True:
+                await self.process_control_message()
+        except BaseException as e:
+            if self.control_stop.is_set():
+                return
+            raise e
+
+    async def process_control_message(self, msg=None):
         """dispatch control requests"""
-        if not self.session:
-            return
+        assert self.control_socket is not None
+        assert self.session is not None
+
+        msg = msg or await self.control_socket.recv_multipart()
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
             msg = self.session.deserialize(msg, content=True, copy=False)

@@ -331,7 +331,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
         self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
 
-        self.stdin_socket = zmq.Context(context).socket(zmq.ROUTER)
+        self.stdin_socket = context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
         self.log.debug("stdin ROUTER Channel on port: %i" % self.stdin_port)

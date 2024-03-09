@@ -295,6 +295,7 @@ class Kernel(SingletonConfigurable):
             while True:
                 await self.process_control_message()
         except BaseException as e:
+            print("base exception")
             if self.control_stop.is_set():
                 return
             raise e
@@ -305,11 +306,12 @@ class Kernel(SingletonConfigurable):
         assert self.session is not None
 
         msg = msg or await self.control_socket.recv_multipart()
+        copy = False
         if len(msg) and isinstance(msg[0], bytes):
-            msg[0] = zmq.Message(msg[0])
-        idents, msg = self.session.feed_identities(msg, copy=False)
+            copy = True
+        idents, msg = self.session.feed_identities(msg, copy=copy)
         try:
-            msg = self.session.deserialize(msg, content=True, copy=False)
+            msg = self.session.deserialize(msg, content=True, copy=copy)
         except Exception:
             self.log.error("Invalid Control Message", exc_info=True)  # noqa: G201
             return

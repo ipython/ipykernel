@@ -267,11 +267,8 @@ class Kernel(SingletonConfigurable):
         """dispatch control requests"""
         assert self.control_socket is not None
         assert self.session is not None
-
         msg = msg or await self.control_socket.recv_multipart()
-        copy = False
-        if len(msg) and isinstance(msg[0], bytes):
-            copy = True
+        copy = not isinstance(msg[0], zmq.Message)
         idents, msg = self.session.feed_identities(msg, copy=copy)
         try:
             msg = self.session.deserialize(msg, content=True, copy=copy)
@@ -383,9 +380,10 @@ class Kernel(SingletonConfigurable):
 
         msg = msg or await self.shell_socket.recv_multipart()
         received_time = time.monotonic()
-        idents, msg = self.session.feed_identities(msg, copy=True)
+        copy = not isinstance(msg[0], zmq.Message)
+        idents, msg = self.session.feed_identities(msg, copy=copy)
         try:
-            msg = self.session.deserialize(msg, content=True, copy=True)
+            msg = self.session.deserialize(msg, content=True, copy=copy)
         except BaseException:
             self.log.error("Invalid Message", exc_info=True)  # noqa: G201
             return

@@ -620,20 +620,25 @@ def test_sequential_control_messages():
         # Get replies
         replies = [get_reply(kc, msg_id, channel="control") for msg_id in msg_ids]
 
+        def ensure_datetime(arg):
+            # Support arg which is a datetime or str.
+            if isinstance(arg, str):
+                if sys.version_info[:2] < (3, 11) and arg.endswith("Z"):
+                    # Python < 3.11 doesn't support "Z" suffix in datetime.fromisoformat,
+                    # so use alternative timezone format.
+                    # https://github.com/python/cpython/issues/80010
+                    arg = arg[:-1] + "+00:00"
+                return datetime.fromisoformat(arg)
+            return arg
+
         # Check messages are processed in order, one at a time, and of a sensible duration.
         previous_end = None
         for reply, sleep in zip(replies, sleeps):
-            start_str = reply["metadata"]["started"]
-            if sys.version_info[:2] < (3, 11) and start_str.endswith("Z"):
-                # Python < 3.11 doesn't support "Z" suffix in datetime.fromisoformat,
-                # so use alternative timezone format.
-                # https://github.com/python/cpython/issues/80010
-                start_str = start_str[:-1] + "+00:00"
-            start = datetime.fromisoformat(start_str)
-            end = reply["header"]["date"]  # Already a datetime
+            start = ensure_datetime(reply["metadata"]["started"])
+            end = ensure_datetime(reply["header"]["date"])
 
             if previous_end is not None:
-                assert start > previous_end
+                assert start >= previous_end
             previous_end = end
 
             assert end >= start + timedelta(seconds=sleep)

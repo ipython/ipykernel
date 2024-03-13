@@ -143,7 +143,7 @@ class IOPubThread:
             event_pipe = self._local.event_pipe
         except AttributeError:
             # new thread, new event pipe
-            ctx = self.socket.context
+            ctx = zmq.Context(self.socket.context)
             event_pipe = ctx.socket(zmq.PUSH)
             event_pipe.linger = 0
             event_pipe.connect(self._event_interface)

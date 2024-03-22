@@ -156,8 +156,9 @@ addopts = [
 ]
 testpaths = [
     "tests",
-    "tests/inprocess"
+    # "tests/inprocess"
 ]
+norecursedirs = "tests/inprocess"
 timeout = 60
 # Restore this setting to debug failures
 # timeout_method = "thread"

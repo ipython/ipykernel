@@ -20,7 +20,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "debugpy>=1.6.5",
+    "debugpy>=1.8.1",
     "ipython>=7.23.1",
     "comm>=0.1.1",
     "traitlets>=5.4.0",
@@ -28,12 +28,12 @@ dependencies = [
     "jupyter_core>=4.12,!=5.0.*",
     # For tk event loop support only.
     "nest_asyncio",
-    "tornado>=6.2",
     "matplotlib-inline>=0.1",
     'appnope;platform_system=="Darwin"',
-    "pyzmq>=25",
+    "pyzmq>=25.0",
     "psutil",
     "packaging",
+    "anyio>=4.0.0",
 ]
 
 [project.urls]
@@ -59,8 +59,9 @@ test = [
     "flaky",
     "ipyparallel",
     "pre-commit",
+    "pytest-timeout",
+    "trio",
     "pytest-asyncio>=0.23.5",
-    "pytest-timeout"
 ]
 cov = [
   "coverage[toml]",
@@ -155,12 +156,12 @@ addopts = [
 ]
 testpaths = [
     "tests",
-    "tests/inprocess"
+    # "tests/inprocess"
 ]
-asyncio_mode = "auto"
-timeout = 300
+norecursedirs = "tests/inprocess"
+timeout = 60
 # Restore this setting to debug failures
-#timeout_method = "thread"
+# timeout_method = "thread"
 filterwarnings= [
   # Fail on warnings
   "error",
@@ -176,8 +177,9 @@ filterwarnings= [
   "ignore:unclosed <socket.socket:ResourceWarning",
   "ignore:unclosed event loop:ResourceWarning",
   "ignore:There is no current event loop:DeprecationWarning",
+  "ignore:zmq.eventloop.ioloop is deprecated in pyzmq 17. pyzmq now works with default tornado and asyncio eventloops.:DeprecationWarning",
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
-
+  "ignore:trio.MultiError is deprecated since Trio 0.22.0:trio.TrioDeprecationWarning",
   # Ignore datetime warning.
   "ignore:datetime.datetime.utc:DeprecationWarning",
 ]

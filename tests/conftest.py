@@ -1,14 +1,16 @@
 import asyncio
 import logging
 import os
-from typing import no_type_check
+from math import inf
+from typing import Any, Callable, no_type_check
 from unittest.mock import MagicMock
 
 import pytest
 import zmq
+import zmq.asyncio
+from anyio import create_memory_object_stream, create_task_group
+from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from jupyter_client.session import Session
-from tornado.ioloop import IOLoop
-from zmq.eventloop.zmqstream import ZMQStream
 
 from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
@@ -19,6 +21,14 @@ try:
 except ImportError:
     # Windows
     resource = None  # type:ignore
+
+
+@pytest.fixture()
+def anyio_backend():
+    return "asyncio"
+
+
+pytestmark = pytest.mark.anyio
 
 
 # Handle resource limit
@@ -41,31 +51,57 @@ if os.name == "nt":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type:ignore
 
 
+class TestSession(Session):
+    """A session that copies sent messages to an internal stream, so that
+    they can be accessed later.
+    """
+
+    def __init__(self, sockets, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._streams = {}
+        for socket in sockets:
+            send_stream, receive_stream = create_memory_object_stream(max_buffer_size=inf)
+            self._streams[socket] = {"send": send_stream, "receive": receive_stream}
+
+    def send(self, socket, *args, **kwargs):
+        msg = super().send(socket, *args, **kwargs)
+        send_stream: MemoryObjectSendStream[Any] = self._streams[socket]["send"]
+        send_stream.send_nowait(msg)
+        return msg
+
+
 class KernelMixin:
+    shell_socket: zmq.asyncio.Socket
+    control_socket: zmq.asyncio.Socket
+    stop: Callable[[], None]
+
     log = logging.getLogger()
 
     def _initialize(self):
-        self.context = context = zmq.Context()
+        self._is_test = True
+        self.context = context = zmq.asyncio.Context()
         self.iopub_socket = context.socket(zmq.PUB)
         self.stdin_socket = context.socket(zmq.ROUTER)
-        self.session = Session()
         self.test_sockets = [self.iopub_socket]
-        self.test_streams = []
 
         for name in ["shell", "control"]:
             socket = context.socket(zmq.ROUTER)
-            stream = ZMQStream(socket)
-            stream.on_send(self._on_send)
             self.test_sockets.append(socket)
-            self.test_streams.append(stream)
-            setattr(self, f"{name}_stream", stream)
+            setattr(self, f"{name}_socket", socket)
+
+        self.session = TestSession(
+            [
+                self.shell_socket,
+                self.control_socket,
+                self.iopub_socket,
+            ]
+        )
 
     async def do_debug_request(self, msg):
         return {}
 
     def destroy(self):
-        for stream in self.test_streams:
-            stream.close()
+        self.stop()
         for socket in self.test_sockets:
             socket.close()
         self.context.destroy()
@@ -73,16 +109,20 @@ class KernelMixin:
     @no_type_check
     async def test_shell_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
-        await self.dispatch_shell(msg_list)
-        self.shell_stream.flush()
-        return await self._wait_for_msg()
+        await self.process_shell_message(msg_list)
+        receive_stream: MemoryObjectReceiveStream[Any] = self.session._streams[self.shell_socket][
+            "receive"
+        ]
+        return await receive_stream.receive()
 
     @no_type_check
     async def test_control_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
-        await self.process_control(msg_list)
-        self.control_stream.flush()
-        return await self._wait_for_msg()
+        await self.process_control_message(msg_list)
+        receive_stream: MemoryObjectReceiveStream[Any] = self.session._streams[self.control_socket][
+            "receive"
+        ]
+        return await receive_stream.receive()
 
     def _on_send(self, msg, *args, **kwargs):
         self._reply = msg
@@ -91,7 +131,7 @@ class KernelMixin:
         self._reply = None
         raw_msg = self.session.msg(*args, **kwargs)
         msg = self.session.serialize(raw_msg)
-        return [zmq.Message(m) for m in msg]
+        return msg
 
     async def _wait_for_msg(self):
         while not self._reply:
@@ -144,17 +184,19 @@ class MockIPyKernel(KernelMixin, IPythonKernel):  # type:ignore
 
 
 @pytest.fixture()
-def kernel():
-    kernel = MockKernel()
-    kernel.io_loop = IOLoop.current()
-    yield kernel
-    kernel.destroy()
+async def kernel(anyio_backend):
+    async with create_task_group() as tg:
+        kernel = MockKernel()
+        tg.start_soon(kernel.start)
+        yield kernel
+        kernel.destroy()
 
 
 @pytest.fixture()
-def ipkernel():
-    kernel = MockIPyKernel()
-    kernel.io_loop = IOLoop.current()
-    yield kernel
-    kernel.destroy()
-    ZMQInteractiveShell.clear_instance()
+async def ipkernel(anyio_backend):
+    async with create_task_group() as tg:
+        kernel = MockIPyKernel()
+        tg.start_soon(kernel.start)
+        yield kernel
+        kernel.destroy()
+        ZMQInteractiveShell.clear_instance()

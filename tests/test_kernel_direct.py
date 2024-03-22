@@ -104,6 +104,7 @@ async def test_direct_debug_request(kernel):
     assert reply["header"]["msg_type"] == "debug_reply"
 
 
+@pytest.mark.skip("Shell streams don't exist anymore")
 async def test_deprecated_features(kernel):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
@@ -119,33 +120,26 @@ async def test_deprecated_features(kernel):
 async def test_process_control(kernel):
     from jupyter_client.session import DELIM
 
-    class FakeMsg:
-        def __init__(self, bytes):
-            self.bytes = bytes
-
-    await kernel.process_control([FakeMsg(DELIM), 1])
+    await kernel.process_control_message([DELIM, 1])
     msg = kernel._prep_msg("does_not_exist")
-    await kernel.process_control(msg)
+    await kernel.process_control_message(msg)
 
 
-def test_should_handle(kernel):
+async def test_should_handle(kernel):
     msg = kernel.session.msg("debug_request", {})
     kernel.aborted.add(msg["header"]["msg_id"])
-    assert not kernel.should_handle(kernel.control_stream, msg, [])
+    assert not await kernel.should_handle(kernel.control_socket, msg, [])
 
 
 async def test_dispatch_shell(kernel):
     from jupyter_client.session import DELIM
 
-    class FakeMsg:
-        def __init__(self, bytes):
-            self.bytes = bytes
-
-    await kernel.dispatch_shell([FakeMsg(DELIM), 1])
+    await kernel.process_shell_message([DELIM, 1])
     msg = kernel._prep_msg("does_not_exist")
-    await kernel.dispatch_shell(msg)
+    await kernel.process_shell_message(msg)
 
 
+@pytest.mark.skip("kernelbase.do_one_iteration doesn't exist anymore")
 async def test_do_one_iteration(kernel):
     kernel.msg_queue = asyncio.Queue()
     await kernel.do_one_iteration()
@@ -156,7 +150,7 @@ async def test_publish_debug_event(kernel):
 
 
 async def test_connect_request(kernel):
-    await kernel.connect_request(kernel.shell_stream, "foo", {})
+    await kernel.connect_request(kernel.shell_socket, b"foo", {})
 
 
 async def test_send_interrupt_children(kernel):

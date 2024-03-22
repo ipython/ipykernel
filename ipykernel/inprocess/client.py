@@ -11,11 +11,9 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-import asyncio
 
 from jupyter_client.client import KernelClient
 from jupyter_client.clientabc import KernelClientABC
-from jupyter_core.utils import run_sync
 
 # IPython imports
 from traitlets import Instance, Type, default
@@ -102,7 +100,7 @@ class InProcessKernelClient(KernelClient):
     # Methods for sending specific messages
     # -------------------------------------
 
-    def execute(
+    async def execute(
         self, code, silent=False, store_history=True, user_expressions=None, allow_stdin=None
     ):
         """Execute code on the client."""
@@ -116,19 +114,19 @@ class InProcessKernelClient(KernelClient):
             allow_stdin=allow_stdin,
         )
         msg = self.session.msg("execute_request", content)
-        self._dispatch_to_kernel(msg)
+        await self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
-    def complete(self, code, cursor_pos=None):
+    async def complete(self, code, cursor_pos=None):
         """Get code completion."""
         if cursor_pos is None:
             cursor_pos = len(code)
         content = dict(code=code, cursor_pos=cursor_pos)
         msg = self.session.msg("complete_request", content)
-        self._dispatch_to_kernel(msg)
+        await self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
-    def inspect(self, code, cursor_pos=None, detail_level=0):
+    async def inspect(self, code, cursor_pos=None, detail_level=0):
         """Get code inspection."""
         if cursor_pos is None:
             cursor_pos = len(code)
@@ -138,14 +136,14 @@ class InProcessKernelClient(KernelClient):
             detail_level=detail_level,
         )
         msg = self.session.msg("inspect_request", content)
-        self._dispatch_to_kernel(msg)
+        await self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
-    def history(self, raw=True, output=False, hist_access_type="range", **kwds):
+    async def history(self, raw=True, output=False, hist_access_type="range", **kwds):
         """Get code history."""
         content = dict(raw=raw, output=output, hist_access_type=hist_access_type, **kwds)
         msg = self.session.msg("history_request", content)
-        self._dispatch_to_kernel(msg)
+        await self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
     def shutdown(self, restart=False):
@@ -154,17 +152,17 @@ class InProcessKernelClient(KernelClient):
         msg = "Cannot shutdown in-process kernel"
         raise NotImplementedError(msg)
 
-    def kernel_info(self):
+    async def kernel_info(self):
         """Request kernel info."""
         msg = self.session.msg("kernel_info_request")
-        self._dispatch_to_kernel(msg)
+        await self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
-    def comm_info(self, target_name=None):
+    async def comm_info(self, target_name=None):
         """Request a dictionary of valid comms and their targets."""
         content = {} if target_name is None else dict(target_name=target_name)
         msg = self.session.msg("comm_info_request", content)
-        self._dispatch_to_kernel(msg)
+        await self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
     def input(self, string):
@@ -174,29 +172,21 @@ class InProcessKernelClient(KernelClient):
             raise RuntimeError(msg)
         self.kernel.raw_input_str = string
 
-    def is_complete(self, code):
+    async def is_complete(self, code):
         """Handle an is_complete request."""
         msg = self.session.msg("is_complete_request", {"code": code})
-        self._dispatch_to_kernel(msg)
+        await self._dispatch_to_kernel(msg)
         return msg["header"]["msg_id"]
 
-    def _dispatch_to_kernel(self, msg):
+    async def _dispatch_to_kernel(self, msg):
         """Send a message to the kernel and handle a reply."""
         kernel = self.kernel
         if kernel is None:
-            msg = "Cannot send request. No kernel exists."
-            raise RuntimeError(msg)
+            error_message = "Cannot send request. No kernel exists."
+            raise RuntimeError(error_message)
 
-        stream = kernel.shell_stream
-        self.session.send(stream, msg)
-        msg_parts = stream.recv_multipart()
-        if run_sync is not None:
-            dispatch_shell = run_sync(kernel.dispatch_shell)
-            dispatch_shell(msg_parts)
-        else:
-            loop = asyncio.get_event_loop()  # type:ignore[unreachable]
-            loop.run_until_complete(kernel.dispatch_shell(msg_parts))
-        idents, reply_msg = self.session.recv(stream, copy=False)
+        kernel.shell_socket.put(msg)
+        reply_msg = await kernel.shell_socket.get()
         self.shell_channel.call_handlers_later(reply_msg)
 
     def get_shell_msg(self, block=True, timeout=None):

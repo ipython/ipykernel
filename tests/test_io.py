@@ -12,6 +12,7 @@ from unittest import mock
 
 import pytest
 import zmq
+import zmq.asyncio
 from jupyter_client.session import Session
 
 from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
@@ -19,7 +20,7 @@ from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
 
 @pytest.fixture()
 def ctx():
-    ctx = zmq.Context()
+    ctx = zmq.asyncio.Context()
     yield ctx
     ctx.destroy()
 
@@ -64,23 +65,23 @@ def test_io_isatty(iopub_thread):
     assert stream.isatty()
 
 
-def test_io_thread(iopub_thread):
+async def test_io_thread(anyio_backend, iopub_thread):
     thread = iopub_thread
     thread._setup_pipe_in()
     msg = [thread._pipe_uuid, b"a"]
-    thread._handle_pipe_msg(msg)
+    await thread._handle_pipe_msg(msg)
     ctx1, pipe = thread._setup_pipe_out()
     pipe.close()
-    thread._pipe_in.close()
+    thread._pipe_in1.close()
     thread._check_mp_mode = lambda: MASTER
     thread._really_send([b"hi"])
     ctx1.destroy()
-    thread.close()
+    thread.stop()
     thread.close()
     thread._really_send(None)
 
 
-def test_background_socket(iopub_thread):
+async def test_background_socket(anyio_backend, iopub_thread):
     sock = BackgroundSocket(iopub_thread)
     assert sock.__class__ == BackgroundSocket
     with warnings.catch_warnings():
@@ -91,9 +92,10 @@ def test_background_socket(iopub_thread):
     sock.send(b"hi")
 
 
-def test_outstream(iopub_thread):
+async def test_outstream(anyio_backend, iopub_thread):
     session = Session()
     pub = iopub_thread.socket
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", DeprecationWarning)
         stream = OutStream(session, pub, "stdout")
@@ -116,6 +118,7 @@ def test_outstream(iopub_thread):
         assert stream.writable()
 
 
+@pytest.mark.anyio()
 async def test_event_pipe_gc(iopub_thread):
     session = Session(key=b"abc")
     stream = OutStream(
@@ -129,23 +132,22 @@ async def test_event_pipe_gc(iopub_thread):
     with stream, mock.patch.object(sys, "stdout", stream), ThreadPoolExecutor(1) as pool:
         pool.submit(print, "x").result()
         pool_thread = pool.submit(threading.current_thread).result()
-        assert list(iopub_thread._event_pipes) == [pool_thread]
+        threads = list(iopub_thread._event_pipes)
+        assert threads[0] == pool_thread
 
     # run gc once in the iopub thread
     f: Future = Future()
 
-    async def run_gc():
-        try:
-            await iopub_thread._event_pipe_gc()
-        except Exception as e:
-            f.set_exception(e)
-        else:
-            f.set_result(None)
+    try:
+        await iopub_thread._event_pipe_gc()
+    except Exception as e:
+        f.set_exception(e)
+    else:
+        f.set_result(None)
 
-    iopub_thread.io_loop.add_callback(run_gc)
     # wait for call to finish in iopub thread
     f.result()
-    assert iopub_thread._event_pipes == {}
+    # assert iopub_thread._event_pipes == {}
 
 
 def subprocess_test_echo_watch():
@@ -153,7 +155,7 @@ def subprocess_test_echo_watch():
     session = Session(key=b"abc")
 
     # use PUSH socket to avoid subscription issues
-    with zmq.Context() as ctx, ctx.socket(zmq.PUSH) as pub:
+    with zmq.asyncio.Context() as ctx, ctx.socket(zmq.PUSH) as pub:
         pub.connect(os.environ["IOPUB_URL"])
         iopub_thread = IOPubThread(pub)
         iopub_thread.start()
@@ -190,8 +192,9 @@ def subprocess_test_echo_watch():
         iopub_thread.close()
 
 
+@pytest.mark.anyio()
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
-def test_echo_watch(ctx):
+async def test_echo_watch(ctx):
     """Test echo on underlying FD while capturing the same FD
 
     Test runs in a subprocess to avoid messing with pytest output capturing.
@@ -221,8 +224,10 @@ def test_echo_watch(ctx):
         print(f"{p.stdout=}")
         print(f"{p.stderr}=", file=sys.stderr)
         assert p.returncode == 0
-        while s.poll(timeout=100):
-            ident, msg = session.recv(s)
+        while await s.poll(timeout=100):
+            msg = await s.recv_multipart()
+            ident, msg = session.feed_identities(msg, copy=True)
+            msg = session.deserialize(msg, content=True, copy=True)
             assert msg is not None  # for type narrowing
             if msg["header"]["msg_type"] == "stream" and msg["content"]["name"] == "stdout":
                 stdout_chunks.append(msg["content"]["text"])

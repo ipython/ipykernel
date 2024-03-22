@@ -2,7 +2,6 @@ import json
 import os
 import threading
 import time
-from unittest.mock import patch
 
 import pytest
 from jupyter_core.paths import secure_write
@@ -40,7 +39,7 @@ def test_start_app():
 
     def trigger_stop():
         time.sleep(1)
-        app.io_loop.add_callback(app.io_loop.stop)
+        app.stop()
 
     thread = threading.Thread(target=trigger_stop)
     thread.start()
@@ -121,11 +120,17 @@ def test_merge_connection_file():
 @pytest.mark.skipif(trio is None, reason="requires trio")
 def test_trio_loop():
     app = IPKernelApp(trio_loop=True)
+
+    def trigger_stop():
+        time.sleep(1)
+        app.stop()
+
+    thread = threading.Thread(target=trigger_stop)
+    thread.start()
+
     app.kernel = MockKernel()
     app.init_sockets()
-    with patch("ipykernel.trio_runner.TrioRunner.run", lambda _: None):
-        app.start()
+    app.start()
     app.cleanup_connection_file()
-    app.io_loop.add_callback(app.io_loop.stop)
     app.kernel.destroy()
     app.close()

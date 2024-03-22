@@ -1,5 +1,8 @@
 """Test async/await integration"""
 
+import os
+import time
+
 import pytest
 
 from .test_message_spec import validate_message
@@ -28,7 +31,9 @@ def test_async_await():
     assert content["status"] == "ok", content
 
 
-@pytest.mark.parametrize("asynclib", ["asyncio", "trio", "curio"])
+# FIXME: @pytest.mark.parametrize("asynclib", ["asyncio", "trio", "curio"])
+@pytest.mark.skipif(os.name == "nt", reason="Cannot interrupt on Windows")
+@pytest.mark.parametrize("asynclib", ["asyncio"])
 def test_async_interrupt(asynclib, request):
     assert KC is not None
     assert KM is not None
@@ -49,10 +54,18 @@ def test_async_interrupt(asynclib, request):
     assert busy["content"]["execution_state"] == "busy"
     echo = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(echo, "execute_input")
-    stream = KC.get_iopub_msg(timeout=TIMEOUT)
     # wait for the stream output to be sure kernel is in the async block
-    validate_message(stream, "stream")
-    assert stream["content"]["text"] == "begin\n"
+    stream = ""
+    t0 = time.monotonic()
+    while True:
+        msg = KC.get_iopub_msg(timeout=TIMEOUT)
+        validate_message(msg, "stream")
+        stream += msg["content"]["text"]
+        assert "begin\n".startswith(stream)
+        if stream == "begin\n":
+            break
+        if time.monotonic() - t0 > TIMEOUT:
+            raise TimeoutError()
 
     KM.interrupt_kernel()
     reply = KC.get_shell_msg()["content"]

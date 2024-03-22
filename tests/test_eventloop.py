@@ -108,7 +108,7 @@ def test_tk_loop(kernel):
 @windows_skip
 def test_asyncio_loop(kernel):
     def do_thing():
-        loop.call_soon(loop.stop)
+        loop.call_later(0.01, loop.stop)
 
     loop = asyncio.get_event_loop()
     loop.call_soon(do_thing)

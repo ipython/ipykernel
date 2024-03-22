@@ -84,8 +84,8 @@ jobs:
       - name: Run Linters
         run: |
           hatch run typing:test
+          pipx run interrogate -vv . --fail-under 90
           hatch run lint:build
-          pipx run interrogate -vv .
           pipx run doc8 --max-line-length=200
 
   check_release:

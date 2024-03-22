@@ -415,13 +415,12 @@ def loop_asyncio(kernel):
     loop._should_close = False  # type:ignore[attr-defined]
 
     # pause eventloop when there's an event on a zmq socket
-    def process_stream_events(stream):
+    def process_stream_events(socket):
         """fall back to main loop when there's a socket event"""
-        if stream.flush(limit=1):
-            loop.stop()
+        loop.stop()
 
-    notifier = partial(process_stream_events, kernel.shell_stream)
-    loop.add_reader(kernel.shell_stream.getsockopt(zmq.FD), notifier)
+    notifier = partial(process_stream_events, kernel.shell_socket)
+    loop.add_reader(kernel.shell_socket.getsockopt(zmq.FD), notifier)
     loop.call_soon(notifier)
 
     while True:

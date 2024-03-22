@@ -3,13 +3,13 @@ import os
 import re
 import sys
 import typing as t
+from math import inf
 from pathlib import Path
 
 import zmq
+from anyio import Event, create_memory_object_stream
 from IPython.core.getipython import get_ipython
 from IPython.core.inputtransformer2 import leading_empty_lines
-from tornado.locks import Event
-from tornado.queues import Queue
 from zmq.utils import jsonapi
 
 try:
@@ -117,7 +117,9 @@ class DebugpyMessageQueue:
         self.tcp_buffer = ""
         self._reset_tcp_pos()
         self.event_callback = event_callback
-        self.message_queue: Queue[t.Any] = Queue()
+        self.message_send_stream, self.message_receive_stream = create_memory_object_stream[dict](
+            max_buffer_size=inf
+        )
         self.log = log
 
     def _reset_tcp_pos(self):
@@ -136,7 +138,7 @@ class DebugpyMessageQueue:
         else:
             self.log.debug("QUEUE - put message:")
             self.log.debug(msg)
-            self.message_queue.put_nowait(msg)
+            self.message_send_stream.send_nowait(msg)
 
     def put_tcp_frame(self, frame):
         """Put a tcp frame in the queue."""
@@ -187,24 +189,30 @@ class DebugpyMessageQueue:
 
     async def get_message(self):
         """Get a message from the queue."""
-        return await self.message_queue.get()
+        return await self.message_receive_stream.receive()
 
 
 class DebugpyClient:
     """A client for debugpy."""
 
-    def __init__(self, log, debugpy_stream, event_callback):
+    def __init__(self, log, debugpy_socket, event_callback):
         """Initialize the client."""
         self.log = log
-        self.debugpy_stream = debugpy_stream
+        self.debugpy_socket = debugpy_socket
         self.event_callback = event_callback
         self.message_queue = DebugpyMessageQueue(self._forward_event, self.log)
         self.debugpy_host = "127.0.0.1"
         self.debugpy_port = -1
         self.routing_id = None
         self.wait_for_attach = True
-        self.init_event = Event()
+        self._init_event = None
         self.init_event_seq = -1
+
+    @property
+    def init_event(self):
+        if self._init_event is None:
+            self._init_event = Event()
+        return self._init_event
 
     def _get_endpoint(self):
         host, port = self.get_host_port()
@@ -216,9 +224,9 @@ class DebugpyClient:
             self.init_event_seq = msg["seq"]
         self.event_callback(msg)
 
-    def _send_request(self, msg):
+    async def _send_request(self, msg):
         if self.routing_id is None:
-            self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
+            self.routing_id = self.debugpy_socket.getsockopt(ROUTING_ID)
         content = jsonapi.dumps(
             msg,
             default=json_default,
@@ -233,7 +241,7 @@ class DebugpyClient:
         self.log.debug("DEBUGPYCLIENT:")
         self.log.debug(self.routing_id)
         self.log.debug(buf)
-        self.debugpy_stream.send_multipart((self.routing_id, buf))
+        await self.debugpy_socket.send_multipart((self.routing_id, buf))
 
     async def _wait_for_response(self):
         # Since events are never pushed to the message_queue
@@ -251,7 +259,7 @@ class DebugpyClient:
             "seq": int(self.init_event_seq) + 1,
             "command": "configurationDone",
         }
-        self._send_request(configurationDone)
+        await self._send_request(configurationDone)
 
         # 3]  Waits for configurationDone response
         await self._wait_for_response()
@@ -262,7 +270,7 @@ class DebugpyClient:
     def get_host_port(self):
         """Get the host debugpy port."""
         if self.debugpy_port == -1:
-            socket = self.debugpy_stream.socket
+            socket = self.debugpy_socket
             socket.bind_to_random_port("tcp://" + self.debugpy_host)
             self.endpoint = socket.getsockopt(zmq.LAST_ENDPOINT).decode("utf-8")
             socket.unbind(self.endpoint)
@@ -272,14 +280,13 @@ class DebugpyClient:
 
     def connect_tcp_socket(self):
         """Connect to the tcp socket."""
-        self.debugpy_stream.socket.connect(self._get_endpoint())
-        self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
+        self.debugpy_socket.connect(self._get_endpoint())
+        self.routing_id = self.debugpy_socket.getsockopt(ROUTING_ID)
 
     def disconnect_tcp_socket(self):
         """Disconnect from the tcp socket."""
-        self.debugpy_stream.socket.disconnect(self._get_endpoint())
+        self.debugpy_socket.disconnect(self._get_endpoint())
         self.routing_id = None
-        self.init_event = Event()
         self.init_event_seq = -1
         self.wait_for_attach = True
 
@@ -289,7 +296,7 @@ class DebugpyClient:
 
     async def send_dap_request(self, msg):
         """Send a dap request."""
-        self._send_request(msg)
+        await self._send_request(msg)
         if self.wait_for_attach and msg["command"] == "attach":
             rep = await self._handle_init_sequence()
             self.wait_for_attach = False
@@ -325,17 +332,19 @@ class Debugger:
     ]
 
     def __init__(
-        self, log, debugpy_stream, event_callback, shell_socket, session, just_my_code=True
+        self, log, debugpy_socket, event_callback, shell_socket, session, just_my_code=True
     ):
         """Initialize the debugger."""
         self.log = log
-        self.debugpy_client = DebugpyClient(log, debugpy_stream, self._handle_event)
+        self.debugpy_client = DebugpyClient(log, debugpy_socket, self._handle_event)
         self.shell_socket = shell_socket
         self.session = session
         self.is_started = False
         self.event_callback = event_callback
         self.just_my_code = just_my_code
-        self.stopped_queue: Queue[t.Any] = Queue()
+        self.stopped_send_stream, self.stopped_receive_stream = create_memory_object_stream[dict](
+            max_buffer_size=inf
+        )
 
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:
@@ -360,7 +369,7 @@ class Debugger:
     def _handle_event(self, msg):
         if msg["event"] == "stopped":
             if msg["body"]["allThreadsStopped"]:
-                self.stopped_queue.put_nowait(msg)
+                self.stopped_send_stream.send_nowait(msg)
                 # Do not forward the event now, will be done in the handle_stopped_event
                 return
             self.stopped_threads.add(msg["body"]["threadId"])
@@ -398,7 +407,7 @@ class Debugger:
         """Handle a stopped event."""
         # Wait for a stopped event message in the stopped queue
         # This message is used for triggering the 'threads' request
-        event = await self.stopped_queue.get()
+        event = await self.stopped_receive_stream.receive()
         req = {"seq": event["seq"] + 1, "type": "request", "command": "threads"}
         rep = await self._forward_message(req)
         for thread in rep["body"]["threads"]:
@@ -410,7 +419,7 @@ class Debugger:
     def tcp_client(self):
         return self.debugpy_client
 
-    def start(self):
+    async def start(self):
         """Start the debugger."""
         if not self.debugpy_initialized:
             tmp_dir = get_tmp_directory()
@@ -428,7 +437,12 @@ class Debugger:
                 (self.shell_socket.getsockopt(ROUTING_ID)),
             )
 
-            ident, msg = self.session.recv(self.shell_socket, mode=0)
+            msg = await self.shell_socket.recv_multipart()
+            ident, msg = self.session.feed_identities(msg, copy=True)
+            try:
+                msg = self.session.deserialize(msg, content=True, copy=True)
+            except Exception:
+                self.log.error("Invalid message", exc_info=True)  # noqa: G201
             self.debugpy_initialized = msg["content"]["status"] == "ok"
 
         # Don't remove leading empty lines when debugging so the breakpoints are correctly positioned
@@ -714,7 +728,7 @@ class Debugger:
             if self.is_started:
                 self.log.info("The debugger has already started")
             else:
-                self.is_started = self.start()
+                self.is_started = await self.start()
                 if self.is_started:
                     self.log.info("The debugger has started")
                 else:

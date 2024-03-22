@@ -5,6 +5,7 @@
 
 import re
 import sys
+import time
 from queue import Empty
 
 import pytest
@@ -364,7 +365,6 @@ def test_execute_stop_on_error():
     KC.execute(code='print("Hello")')
     KC.execute(code='print("world")')
     reply = KC.get_shell_msg(timeout=TIMEOUT)
-    print(reply)
     reply = KC.get_shell_msg(timeout=TIMEOUT)
     assert reply["content"]["status"] == "aborted"
     # second message, too
@@ -595,10 +595,17 @@ def test_stream():
 
     msg_id, reply = execute("print('hi')")
 
-    stdout = KC.get_iopub_msg(timeout=TIMEOUT)
-    validate_message(stdout, "stream", msg_id)
-    content = stdout["content"]
-    assert content["text"] == "hi\n"
+    stream = ""
+    t0 = time.monotonic()
+    while True:
+        msg = KC.get_iopub_msg(timeout=TIMEOUT)
+        validate_message(msg, "stream", msg_id)
+        stream += msg["content"]["text"]
+        assert "hi\n".startswith(stream)
+        if stream == "hi\n":
+            break
+        if time.monotonic() - t0 > TIMEOUT:
+            raise TimeoutError()
 
 
 def test_display_data():

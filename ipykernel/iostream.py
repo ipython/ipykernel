@@ -15,13 +15,12 @@ import warnings
 from binascii import b2a_hex
 from collections import defaultdict, deque
 from io import StringIO, TextIOBase
-from threading import local
+from threading import Event, Thread, local
 from typing import Any, Callable, Deque, Dict, Optional
 
 import zmq
+from anyio import create_task_group, run, sleep, to_thread
 from jupyter_client.session import extract_header
-from tornado.ioloop import IOLoop
-from zmq.eventloop.zmqstream import ZMQStream
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -35,6 +34,38 @@ PIPE_BUFFER_SIZE = 1000
 # -----------------------------------------------------------------------------
 # IO classes
 # -----------------------------------------------------------------------------
+
+
+class _IOPubThread(Thread):
+    """A thread for a IOPub."""
+
+    def __init__(self, tasks, **kwargs):
+        """Initialize the thread."""
+        Thread.__init__(self, name="IOPub", **kwargs)
+        self._tasks = tasks
+        self.pydev_do_not_trace = True
+        self.is_pydev_daemon_thread = True
+        self.daemon = True
+        self.__stop = Event()
+
+    def run(self):
+        """Run the thread."""
+        self.name = "IOPub"
+        run(self._main)
+
+    async def _main(self):
+        async with create_task_group() as tg:
+            for task in self._tasks:
+                tg.start_soon(task)
+            await to_thread.run_sync(self.__stop.wait)
+            tg.cancel_scope.cancel()
+
+    def stop(self):
+        """Stop the thread.
+
+        This method is threadsafe.
+        """
+        self.__stop.set()
 
 
 class IOPubThread:
@@ -58,11 +89,9 @@ class IOPubThread:
             piped from subprocesses.
         """
         self.socket = socket
-        self._stopped = False
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
         self._pipe_flag = pipe
-        self.io_loop = IOLoop(make_current=False)
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
@@ -72,53 +101,25 @@ class IOPubThread:
         self._event_pipe_gc_seconds: float = 10
         self._event_pipe_gc_task: Optional[asyncio.Task[Any]] = None
         self._setup_event_pipe()
-        self.thread = threading.Thread(target=self._thread_main, name="IOPub")
-        self.thread.daemon = True
-        self.thread.pydev_do_not_trace = True  # type:ignore[attr-defined]
-        self.thread.is_pydev_daemon_thread = True  # type:ignore[attr-defined]
-        self.thread.name = "IOPub"
-
-    def _thread_main(self):
-        """The inner loop that's actually run in a thread"""
-
-        def _start_event_gc():
-            self._event_pipe_gc_task = asyncio.ensure_future(self._run_event_pipe_gc())
-
-        self.io_loop.run_sync(_start_event_gc)
-
-        if not self._stopped:
-            # avoid race if stop called before start thread gets here
-            # probably only comes up in tests
-            self.io_loop.start()
-
-        if self._event_pipe_gc_task is not None:
-            # cancel gc task to avoid pending task warnings
-            async def _cancel():
-                self._event_pipe_gc_task.cancel()  # type:ignore[union-attr]
-
-            if not self._stopped:
-                self.io_loop.run_sync(_cancel)
-            else:
-                self._event_pipe_gc_task.cancel()
-
-        self.io_loop.close(all_fds=True)
+        tasks = [self._handle_event, self._run_event_pipe_gc]
+        if pipe:
+            tasks.append(self._handle_pipe_msgs)
+        self.thread = _IOPubThread(tasks)
 
     def _setup_event_pipe(self):
         """Create the PULL socket listening for events that should fire in this thread."""
         ctx = self.socket.context
-        pipe_in = ctx.socket(zmq.PULL)
-        pipe_in.linger = 0
+        self._pipe_in0 = ctx.socket(zmq.PULL)
+        self._pipe_in0.linger = 0
 
         _uuid = b2a_hex(os.urandom(16)).decode("ascii")
         iface = self._event_interface = "inproc://%s" % _uuid
-        pipe_in.bind(iface)
-        self._event_puller = ZMQStream(pipe_in, self.io_loop)
-        self._event_puller.on_recv(self._handle_event)
+        self._pipe_in0.bind(iface)
 
     async def _run_event_pipe_gc(self):
         """Task to run event pipe gc continuously"""
         while True:
-            await asyncio.sleep(self._event_pipe_gc_seconds)
+            await sleep(self._event_pipe_gc_seconds)
             try:
                 await self._event_pipe_gc()
             except Exception as e:
@@ -142,7 +143,7 @@ class IOPubThread:
             event_pipe = self._local.event_pipe
         except AttributeError:
             # new thread, new event pipe
-            ctx = self.socket.context
+            ctx = zmq.Context(self.socket.context)
             event_pipe = ctx.socket(zmq.PUSH)
             event_pipe.linger = 0
             event_pipe.connect(self._event_interface)
@@ -154,7 +155,7 @@ class IOPubThread:
                 self._event_pipes[threading.current_thread()] = event_pipe
         return event_pipe
 
-    def _handle_event(self, msg):
+    async def _handle_event(self):
         """Handle an event on the event pipe
 
         Content of the message is ignored.
@@ -162,12 +163,19 @@ class IOPubThread:
         Whenever *an* event arrives on the event stream,
         *all* waiting events are processed in order.
         """
-        # freeze event count so new writes don't extend the queue
-        # while we are processing
-        n_events = len(self._events)
-        for _ in range(n_events):
-            event_f = self._events.popleft()
-            event_f()
+        try:
+            while True:
+                await self._pipe_in0.recv()
+                # freeze event count so new writes don't extend the queue
+                # while we are processing
+                n_events = len(self._events)
+                for _ in range(n_events):
+                    event_f = self._events.popleft()
+                    event_f()
+        except Exception as e:
+            if self.thread.__stop.is_set():
+                return
+            raise e
 
     def _setup_pipe_in(self):
         """setup listening pipe for IOPub from forked subprocesses"""
@@ -176,11 +184,11 @@ class IOPubThread:
         # use UUID to authenticate pipe messages
         self._pipe_uuid = os.urandom(16)
 
-        pipe_in = ctx.socket(zmq.PULL)
-        pipe_in.linger = 0
+        self._pipe_in1 = ctx.socket(zmq.PULL)
+        self._pipe_in1.linger = 0
 
         try:
-            self._pipe_port = pipe_in.bind_to_random_port("tcp://127.0.0.1")
+            self._pipe_port = self._pipe_in1.bind_to_random_port("tcp://127.0.0.1")
         except zmq.ZMQError as e:
             warnings.warn(
                 "Couldn't bind IOPub Pipe to 127.0.0.1: %s" % e
@@ -188,13 +196,22 @@ class IOPubThread:
                 stacklevel=2,
             )
             self._pipe_flag = False
-            pipe_in.close()
+            self._pipe_in1.close()
             return
-        self._pipe_in = ZMQStream(pipe_in, self.io_loop)
-        self._pipe_in.on_recv(self._handle_pipe_msg)
 
-    def _handle_pipe_msg(self, msg):
+    async def _handle_pipe_msgs(self):
+        """handle pipe messages from a subprocess"""
+        try:
+            while True:
+                await self._handle_pipe_msg()
+        except Exception as e:
+            if self.thread.__stop.is_set():
+                return
+            raise e
+
+    async def _handle_pipe_msg(self, msg=None):
         """handle a pipe message from a subprocess"""
+        msg = msg or await self._pipe_in1.recv_multipart()
         if not self._pipe_flag or not self._is_master_process():
             return
         if msg[0] != self._pipe_uuid:
@@ -221,7 +238,6 @@ class IOPubThread:
 
     def start(self):
         """Start the IOPub thread"""
-        self.thread.name = "IOPub"
         self.thread.start()
         # make sure we don't prevent process exit
         # I'm not sure why setting daemon=True above isn't enough, but it doesn't appear to be.
@@ -229,10 +245,9 @@ class IOPubThread:
 
     def stop(self):
         """Stop the IOPub thread"""
-        self._stopped = True
         if not self.thread.is_alive():
             return
-        self.io_loop.add_callback(self.io_loop.stop)
+        self.thread.stop()
 
         self.thread.join(timeout=30)
         if self.thread.is_alive():
@@ -249,6 +264,9 @@ class IOPubThread:
         """Close the IOPub thread."""
         if self.closed:
             return
+        self._pipe_in0.close()
+        if self._pipe_flag:
+            self._pipe_in1.close()
         self.socket.close()
         self.socket = None
 
@@ -264,7 +282,11 @@ class IOPubThread:
         if self.thread.is_alive():
             self._events.append(f)
             # wake event thread (message content is ignored)
-            self._event_pipe.send(b"")
+            try:
+                self._event_pipe.send(b"")
+            except RuntimeError:
+                pass
+
         else:
             f()
 
@@ -434,6 +456,8 @@ class OutStream(TextIOBase):
             )
         # This is necessary for compatibility with Python built-in streams
         self.session = session
+        self._has_thread = False
+        self.watch_fd_thread = None
         if not isinstance(pub_thread, IOPubThread):
             # Backward-compat: given socket, not thread. Wrap in a thread.
             warnings.warn(
@@ -444,6 +468,7 @@ class OutStream(TextIOBase):
             )
             pub_thread = IOPubThread(pub_thread)
             pub_thread.start()
+            self._has_thread = True
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()
@@ -457,7 +482,6 @@ class OutStream(TextIOBase):
         self._master_pid = os.getpid()
         self._flush_pending = False
         self._subprocess_flush_pending = False
-        self._io_loop = pub_thread.io_loop
         self._buffer_lock = threading.RLock()
         self._buffers = defaultdict(StringIO)
         self.echo = None
@@ -561,13 +585,16 @@ class OutStream(TextIOBase):
             # thread won't wake unless there's something to read
             # writing something after _should_watch will not be echoed
             os.write(self._original_stdstream_fd, b"\0")
-            self.watch_fd_thread.join()
+            if self.watch_fd_thread is not None:
+                self.watch_fd_thread.join()
             # restore original FDs
             os.dup2(self._original_stdstream_copy, self._original_stdstream_fd)
             os.close(self._original_stdstream_copy)
         if self._exc:
             etype, value, tb = self._exc
             traceback.print_exception(etype, value, tb)
+        if self._has_thread:
+            self.pub_thread.stop()
         self.pub_thread = None
 
     @property
@@ -584,10 +611,7 @@ class OutStream(TextIOBase):
         self._flush_pending = True
 
         # add_timeout has to be handed to the io thread via event pipe
-        def _schedule_in_thread():
-            self._io_loop.call_later(self.flush_interval, self._flush)
-
-        self.pub_thread.schedule(_schedule_in_thread)
+        self.pub_thread.schedule(self._flush)
 
     def flush(self):
         """trigger actual zmq send

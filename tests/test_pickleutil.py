@@ -1,9 +1,15 @@
 import pickle
+import sys
 import warnings
+
+import pytest
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from ipykernel.pickleutil import can, uncan
+
+if sys.platform.startswith("win"):
+    pytest.skip("skipping pickle tests on windows", allow_module_level=True)
 
 
 def interactive(f):

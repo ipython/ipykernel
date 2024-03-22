@@ -1,5 +1,6 @@
 """Test async/await integration"""
 
+import os
 import time
 
 import pytest
@@ -31,6 +32,7 @@ def test_async_await():
 
 
 # FIXME: @pytest.mark.parametrize("asynclib", ["asyncio", "trio", "curio"])
+@pytest.mark.skipif(os.name == "nt", reason="Cannot interrupt on Windows")
 @pytest.mark.parametrize("asynclib", ["asyncio"])
 def test_async_interrupt(asynclib, request):
     assert KC is not None

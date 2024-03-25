@@ -21,7 +21,6 @@ from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, obser
 from .comm.comm import BaseComm
 from .comm.manager import CommManager
 from .compiler import XCachingCompiler
-from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
 from .iostream import OutStream
 from .kernelbase import Kernel as KernelBase
@@ -75,9 +74,7 @@ class IPythonKernel(KernelBase):
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
     ).tag(config=True)
 
-    debugpy_socket = (
-        Instance(zmq.asyncio.Socket, allow_none=True) if _is_debugpy_available else None
-    )
+    debugpy_socket = Instance(zmq.asyncio.Socket, allow_none=True)
 
     user_module = Any()
 
@@ -106,6 +103,8 @@ class IPythonKernel(KernelBase):
         super().__init__(**kwargs)
 
         self.executing_blocking_code_in_main_shell = False
+
+        from .debugger import Debugger, _is_debugpy_available
 
         # Initialize the Debugger
         if _is_debugpy_available:
@@ -214,6 +213,8 @@ class IPythonKernel(KernelBase):
             tg.cancel_scope.cancel()
 
     async def receive_debugpy_messages(self):
+        from .debugger import _is_debugpy_available
+
         if not _is_debugpy_available:
             return
 
@@ -221,6 +222,8 @@ class IPythonKernel(KernelBase):
             await self.receive_debugpy_message()
 
     async def receive_debugpy_message(self, msg=None):
+        from .debugger import _is_debugpy_available
+
         if not _is_debugpy_available:
             return
 
@@ -506,6 +509,8 @@ class IPythonKernel(KernelBase):
 
     async def do_debug_request(self, msg):
         """Handle a debug request."""
+        from .debugger import _is_debugpy_available
+
         if _is_debugpy_available:
             return await self.debugger.process_request(msg)
         return None

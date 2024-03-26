@@ -18,7 +18,7 @@ from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from jupyter_client.session import extract_header
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
 
-from .comm.comm import BaseComm
+from .comm.comm import Comm
 from .comm.manager import CommManager
 from .compiler import XCachingCompiler
 from .eventloops import _use_appnope
@@ -41,7 +41,7 @@ _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
 def _create_comm(*args, **kwargs):
     """Create a new Comm."""
-    return BaseComm(*args, **kwargs)
+    return Comm(*args, **kwargs)
 
 
 # there can only be one comm manager in a ipykernel process

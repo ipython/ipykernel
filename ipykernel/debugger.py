@@ -254,15 +254,15 @@ class DebugpyClient:
         await self.init_event.wait()
 
         # 2] Sends configurationDone request
-        configurationDone = {
-            "type": "request",
-            "seq": int(self.init_event_seq) + 1,
-            "command": "configurationDone",
-        }
-        await self._send_request(configurationDone)
+        # configurationDone = {
+        #     "type": "request",
+        #     "seq": int(self.init_event_seq) + 1,
+        #     "command": "configurationDone",
+        # }
+        # await self._send_request(configurationDone)
 
-        # 3]  Waits for configurationDone response
-        await self._wait_for_response()
+        # # 3]  Waits for configurationDone response
+        # await self._wait_for_response()
 
         # 4] Waits for attachResponse and returns it
         return await self._wait_for_response()

@@ -427,8 +427,9 @@ class Debugger:
                 Path(tmp_dir).mkdir(parents=True)
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy;"
-            code += 'debugpy.listen(("' + host + '",' + port + "), in_process_debug_adapter=True)"
+            code += 'debugpy.listen(("' + host + '",' + str(port) + "), in_process_debug_adapter=True)"
             content = {"code": code, "silent": True}
+            print("debugpy: before sending request")
             self.session.send(
                 self.shell_socket,
                 "execute_request",
@@ -436,9 +437,11 @@ class Debugger:
                 None,
                 (self.shell_socket.getsockopt(ROUTING_ID)),
             )
+            print("debugpy: after sending request")
 
             msg = await self.shell_socket.recv_multipart()
             ident, msg = self.session.feed_identities(msg, copy=True)
+            print("debugpy: receving msg " + str(msg))
             try:
                 msg = self.session.deserialize(msg, content=True, copy=True)
             except Exception:

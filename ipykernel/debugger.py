@@ -270,12 +270,12 @@ class DebugpyClient:
     def get_host_port(self):
         """Get the host debugpy port."""
         if self.debugpy_port == -1:
-            socket = self.debugpy_socket
-            socket.bind_to_random_port("tcp://" + self.debugpy_host)
-            self.endpoint = socket.getsockopt(zmq.LAST_ENDPOINT).decode("utf-8")
-            socket.unbind(self.endpoint)
-            index = self.endpoint.rfind(":")
-            self.debugpy_port = self.endpoint[index + 1 :]
+            # socket = self.debugpy_socket
+            # socket.bind_to_random_port("tcp://" + self.debugpy_host)
+            # self.endpoint = socket.getsockopt(zmq.LAST_ENDPOINT).decode("utf-8")
+            # socket.unbind(self.endpoint)
+            # index = self.endpoint.rfind(":")
+            self.debugpy_port = 5678
         return self.debugpy_host, self.debugpy_port
 
     def connect_tcp_socket(self):
@@ -427,7 +427,7 @@ class Debugger:
                 Path(tmp_dir).mkdir(parents=True)
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy;"
-            code += 'debugpy.listen(("' + host + '",' + port + "))"
+            code += 'debugpy.listen(("' + host + '",' + port + "), in_process_debug_adapter=True)"
             content = {"code": code, "silent": True}
             self.session.send(
                 self.shell_socket,

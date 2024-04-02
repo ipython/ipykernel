@@ -368,10 +368,10 @@ class Debugger:
 
     def _handle_event(self, msg):
         if msg["event"] == "stopped":
-            if msg["body"]["allThreadsStopped"]:
-                self.stopped_send_stream.send_nowait(msg)
-                # Do not forward the event now, will be done in the handle_stopped_event
-                return
+            # if msg["body"]["allThreadsStopped"]:
+            #     self.stopped_send_stream.send_nowait(msg)
+            #     # Do not forward the event now, will be done in the handle_stopped_event
+            #     return
             self.stopped_threads.add(msg["body"]["threadId"])
             self.event_callback(msg)
         elif msg["event"] == "continued":

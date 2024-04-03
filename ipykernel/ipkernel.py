@@ -382,7 +382,7 @@ class IPythonKernel(KernelBase):
                 store_history=store_history,
                 silent=silent,
             )
-            if with_cell_id:
+            if with_cell_id and with_cell_id["cell_id"]:
                 kwargs.update(cell_id=cell_id)
 
             if should_run_async(

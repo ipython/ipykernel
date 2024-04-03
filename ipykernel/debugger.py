@@ -253,6 +253,10 @@ class DebugpyClient:
         # 1] Waits for initialized event
         await self.init_event.wait()
 
+        # do not send configurationDone request because when FE receive configurationDone response
+        # it will think debugger setup is done and start running the set
+        # we only want configurationDone request that FE sends out to indicate that we are okay to run the cell now
+
         # 2] Sends configurationDone request
         # configurationDone = {
         #     "type": "request",
@@ -368,6 +372,7 @@ class Debugger:
 
     def _handle_event(self, msg):
         if msg["event"] == "stopped":
+            # do not go through handle_stopped_event to avoid conflict with existing monkey patch
             # if msg["body"]["allThreadsStopped"]:
             #     self.stopped_send_stream.send_nowait(msg)
             #     # Do not forward the event now, will be done in the handle_stopped_event

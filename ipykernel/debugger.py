@@ -432,7 +432,9 @@ class Debugger:
                 Path(tmp_dir).mkdir(parents=True)
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy;"
-            code += 'debugpy.listen(("' + host + '",' + str(port) + "), in_process_debug_adapter=True)"
+            code += (
+                'debugpy.listen(("' + host + '",' + str(port) + "), in_process_debug_adapter=True)"
+            )
             content = {"code": code, "silent": True}
             print("debugpy: before sending request")
             self.session.send(

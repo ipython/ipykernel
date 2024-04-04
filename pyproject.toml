@@ -27,13 +27,13 @@ dependencies = [
     "jupyter_client>=6.1.12",
     "jupyter_core>=4.12,!=5.0.*",
     # For tk event loop support only.
-    "nest_asyncio",
+    "nest_asyncio>=1.4",
     "tornado>=6.1",
     "matplotlib-inline>=0.1",
-    'appnope;platform_system=="Darwin"',
-    "pyzmq>=24",
-    "psutil",
-    "packaging",
+    'appnope>=0.1.2;platform_system=="Darwin"',
+    "pyzmq>=25.0",
+    "psutil>=5.7",
+    "packaging>=22",
 ]
 
 [project.urls]

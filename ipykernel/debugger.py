@@ -285,10 +285,6 @@ class DebugpyClient:
     def connect_tcp_socket(self):
         """Connect to the tcp socket."""
         self.debugpy_socket.connect(self._get_endpoint())
-        print(
-            "DEBUGPYCLIENT - deubgppy socket connected to "
-            + self.debugpy_socket.getsockopt(zmq.LAST_ENDPOINT)
-        )
         self.routing_id = self.debugpy_socket.getsockopt(ROUTING_ID)
 
     def disconnect_tcp_socket(self):
@@ -449,10 +445,6 @@ class Debugger:
                 (self.shell_socket.getsockopt(ROUTING_ID)),
             )
             print("debugpy: after sending request")
-            print(
-                "DEBUGPYCLIENT - send message to shell channel "
-                + self.shell_socket.getsockopt(zmq.LAST_ENDPOINT)
-            )
 
             msg = await self.shell_socket.recv_multipart()
             ident, msg = self.session.feed_identities(msg, copy=True)

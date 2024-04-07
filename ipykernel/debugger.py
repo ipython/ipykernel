@@ -285,6 +285,7 @@ class DebugpyClient:
     def connect_tcp_socket(self):
         """Connect to the tcp socket."""
         self.debugpy_socket.connect(self._get_endpoint())
+        print("DEBUGPYCLIENT - connected to " + self.debugpy_socket.getsockopt(ROUTING_ID))
         self.routing_id = self.debugpy_socket.getsockopt(ROUTING_ID)
 
     def disconnect_tcp_socket(self):

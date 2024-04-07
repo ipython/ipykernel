@@ -329,6 +329,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
+        print("shell ROUTER Channel on port: %i" % self.control_port)
         self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
 
         self.stdin_socket = zmq.Context(context).socket(zmq.ROUTER)
@@ -350,6 +351,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
+        print("control ROUTER Channel on port: %i" % self.control_port)
         self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
 
         self.debugpy_socket = context.socket(zmq.STREAM)
@@ -358,6 +360,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.debug_shell_socket = context.socket(zmq.DEALER)
         self.debug_shell_socket.linger = 1000
         if self.shell_socket.getsockopt(zmq.LAST_ENDPOINT):
+            print("debug_shell_socket uses shell LAST_ENDPOINT")
             self.debug_shell_socket.connect(self.shell_socket.getsockopt(zmq.LAST_ENDPOINT))
 
         if hasattr(zmq, "ROUTER_HANDOVER"):

@@ -11,14 +11,13 @@ from .utils import TIMEOUT, execute, flush_channels, start_new_kernel
 KC = KM = None
 
 
-def setup_function():
+@pytest.fixture(autouse=True)
+def _setup_env():
     """start the global kernel (if it isn't running) and return its client"""
     global KM, KC
     KM, KC = start_new_kernel()
     flush_channels(KC)
-
-
-def teardown_function():
+    yield
     assert KC is not None
     assert KM is not None
     KC.stop_channels()

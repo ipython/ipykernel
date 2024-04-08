@@ -42,14 +42,13 @@ def _get_qt_vers():
 _get_qt_vers()
 
 
-def setup():
+@pytest.fixture(autouse=True)
+def _setup_env():
     """start the global kernel (if it isn't running) and return its client"""
     global KM, KC
     KM, KC = start_new_kernel()
     flush_channels(KC)
-
-
-def teardown():
+    yield
     assert KM is not None
     assert KC is not None
     KC.stop_channels()

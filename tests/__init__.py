@@ -7,6 +7,8 @@ import sys
 import tempfile
 from unittest.mock import patch
 
+import pytest
+
 from ipykernel.kernelspec import install
 
 pjoin = os.path.join
@@ -15,7 +17,8 @@ tmp = None
 patchers: list = []
 
 
-def setup():
+@pytest.fixture(autouse=True)
+def _global_setup():
     """setup temporary env for tests"""
     global tmp
     tmp = tempfile.mkdtemp()
@@ -34,9 +37,7 @@ def setup():
 
     # install IPython in the temp home:
     install(user=True)
-
-
-def teardown():
+    yield
     for p in patchers:
         p.stop()
 

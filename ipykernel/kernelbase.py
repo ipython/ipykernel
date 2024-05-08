@@ -206,6 +206,9 @@ class Kernel(SingletonConfigurable):
     # execution count we store in the shell.
     execution_count = 0
 
+    # Dictionary of subshell_id to subshell info.
+    _subshells = {}
+
     msg_types = [
         "execute_request",
         "complete_request",
@@ -227,6 +230,9 @@ class Kernel(SingletonConfigurable):
         "abort_request",
         "debug_request",
         "usage_request",
+        "create_subshell_request",
+        "delete_subshell_request",
+        "list_subshell_request",
     ]
 
     _eventloop_set: Event = Event()
@@ -1014,6 +1020,62 @@ class Kernel(SingletonConfigurable):
 
     async def do_debug_request(self, msg):
         raise NotImplementedError
+
+    # ---------------------------------------------------------------------------
+    # Subshell control message handlers
+    # ---------------------------------------------------------------------------
+
+    async def create_subshell_request(self, socket, ident, parent):
+        if not self._supports_kernel_subshells():
+            self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
+            return
+
+        subshell_id = str(uuid.uuid4())
+        self._subshells[subshell_id] = {}
+
+        content = {
+            "status": "ok",
+            "subshell_id": subshell_id,
+        }
+        self.session.send(socket, "create_subshell_reply", content, parent, ident)
+
+    async def delete_subshell_request(self, socket, ident, parent):
+        if not self._supports_kernel_subshells():
+            self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
+            return
+
+        try:
+            content = parent["content"]
+            subshell_id = content["subshell_id"]
+        except Exception:
+            self.log.error("Got bad msg: ")
+            self.log.error("%s", parent)
+            return
+
+        content: dict[str, t.Any] = {"status": "ok"}
+        try:
+            self._subshells.pop(subshell_id)
+        except KeyError as err:
+            import traceback
+            content = {
+                "status": "error",
+                "traceback": traceback.format_stack(),
+                "ename": str(type(err).__name__),
+                "evalue": str(err),
+            }
+
+        self.session.send(socket, "delete_subshell_reply", content, parent, ident)
+
+    async def list_subshell_request(self, socket, ident, parent):
+        if not self._supports_kernel_subshells():
+            self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
+            return
+
+        content = {
+            "status": "ok",
+            "subshell_id": list(self._subshells),
+        }
+        self.session.send(socket, "list_subshell_reply", content, parent, ident)
 
     # ---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)

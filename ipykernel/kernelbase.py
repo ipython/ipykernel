@@ -103,6 +103,7 @@ class Kernel(SingletonConfigurable):
     debug_shell_socket = Any()
 
     control_thread = Any()
+    shell_channel_thread = Any()
     iopub_socket = Any()
     iopub_thread = Any()
     stdin_socket = Any()
@@ -259,7 +260,6 @@ class Kernel(SingletonConfigurable):
             while True:
                 await self.process_control_message()
         except BaseException as e:
-            print("base exception")
             if self.control_stop.is_set():
                 return
             raise e
@@ -356,28 +356,47 @@ class Kernel(SingletonConfigurable):
     def _message_counter_default(self):
         return itertools.count()
 
-    async def shell_main(self):
-        async with create_task_group() as tg:
-            tg.start_soon(self.process_shell)
-            await to_thread.run_sync(self.shell_stop.wait)
-            tg.cancel_scope.cancel()
+    async def shell_channel_thread_main(self):
+        assert self.shell_socket is not None
+        assert self.session is not None
+        assert self.shell_channel_thread
 
-    async def process_shell(self):
         try:
             while True:
-                await self.process_shell_message()
+                msg = await self.shell_socket.recv_multipart()
+                send_socket = self.shell_channel_thread.get_send_inproc_socket()
+                assert send_socket is not None
+                send_socket.send_multipart(msg, copy=False)
         except BaseException as e:
             if self.shell_stop.is_set():
                 return
             raise e
 
-    async def process_shell_message(self, msg=None):
-        assert self.shell_socket is not None
+    async def shell_main(self, recv_socket):
+        async with create_task_group() as tg:
+            tg.start_soon(self.process_shell, recv_socket)
+            await to_thread.run_sync(self.shell_stop.wait)
+            tg.cancel_scope.cancel()
+
+    async def process_shell(self, recv_socket=None):
+        try:
+            while True:
+                await self.process_shell_message(recv_socket=recv_socket)
+        except BaseException as e:
+            if self.shell_stop.is_set():
+                return
+            raise e
+
+    async def process_shell_message(self, msg=None, recv_socket=None):
+        if not recv_socket:
+            recv_socket = self.shell_socket
+
+        assert recv_socket is not None
         assert self.session is not None
 
-        no_msg = msg is None if self._is_test else not await self.shell_socket.poll(0)
+        no_msg = msg is None if self._is_test else not await recv_socket.poll(0)
+        msg = msg or await recv_socket.recv_multipart(copy=False)
 
-        msg = msg or await self.shell_socket.recv_multipart()
         received_time = time.monotonic()
         copy = not isinstance(msg[0], zmq.Message)
         idents, msg = self.session.feed_identities(msg, copy=copy)
@@ -474,8 +493,17 @@ class Kernel(SingletonConfigurable):
             self.shell_is_awaiting = False
             self.shell_is_blocking = False
             self.shell_stop = threading.Event()
-            if not self._is_test and self.shell_socket is not None:
-                tg.start_soon(self.shell_main)
+
+            if self.shell_channel_thread:
+                # Each subshell thread listens on inproc socket for messages from shell channel thread
+                recv_socket = self.shell_channel_thread.create_inproc_sockets()
+                tg.start_soon(self.shell_main, recv_socket)
+
+                self.shell_channel_thread.set_task(self.shell_channel_thread_main)
+                self.shell_channel_thread.start()
+            else:
+                if not self._is_test and self.shell_socket is not None:
+                    tg.start_soon(self.shell_main, self.shell_socket)
 
     def stop(self):
         if not self._eventloop_set.is_set():

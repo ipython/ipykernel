@@ -498,6 +498,8 @@ def test_kernel_info_request():
     msg_id = KC.kernel_info()
     reply = get_reply(KC, msg_id, TIMEOUT)
     validate_message(reply, "kernel_info_reply", msg_id)
+    assert "supported_features" in reply["content"]
+    assert "kernel subshells" in reply["content"]["supported_features"]
 
 
 def test_connect_request():

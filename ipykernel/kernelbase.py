@@ -833,7 +833,7 @@ class Kernel(SingletonConfigurable):
 
     @property
     def kernel_info(self):
-        return {
+        info = {
             "protocol_version": kernel_protocol_version,
             "implementation": self.implementation,
             "implementation_version": self.implementation_version,
@@ -841,6 +841,9 @@ class Kernel(SingletonConfigurable):
             "banner": self.banner,
             "help_links": self.help_links,
         }
+        if self._supports_kernel_subshells():
+            info["supported_features"] = ["kernel subshells"]
+        return info
 
     async def kernel_info_request(self, socket, ident, parent):
         """Handle a kernel info request."""
@@ -1301,3 +1304,6 @@ class Kernel(SingletonConfigurable):
                     ident=self._topic("shutdown"),
                 )
                 self.log.debug("%s", self._shutdown_message)
+
+    def _supports_kernel_subshells(self):
+        return self.shell_channel_thread is not None

@@ -206,9 +206,6 @@ class Kernel(SingletonConfigurable):
     # execution count we store in the shell.
     execution_count = 0
 
-    # Dictionary of subshell_id to subshell info.
-    _subshells = {}
-
     msg_types = [
         "execute_request",
         "complete_request",
@@ -370,7 +367,8 @@ class Kernel(SingletonConfigurable):
         try:
             while True:
                 msg = await self.shell_socket.recv_multipart()
-                send_socket = self.shell_channel_thread.get_send_inproc_socket()
+                subshell_id = None  # Would obtain this from msg
+                send_socket = self.shell_channel_thread.cache.get_send_socket(subshell_id)
                 assert send_socket is not None
                 send_socket.send_multipart(msg, copy=False)
         except BaseException as e:
@@ -486,6 +484,7 @@ class Kernel(SingletonConfigurable):
 
     async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Process messages on shell and control channels"""
+
         async with create_task_group() as tg:
             self.control_stop = threading.Event()
             if not self._is_test and self.control_socket is not None:
@@ -502,8 +501,7 @@ class Kernel(SingletonConfigurable):
 
             if self.shell_channel_thread:
                 # Each subshell thread listens on inproc socket for messages from shell channel thread
-                recv_socket = self.shell_channel_thread.create_inproc_sockets()
-                tg.start_soon(self.shell_main, recv_socket)
+                tg.start_soon(self.shell_main, self.shell_channel_thread.cache.get_recv_socket(None))
 
                 self.shell_channel_thread.set_task(self.shell_channel_thread_main)
                 self.shell_channel_thread.start()
@@ -1031,7 +1029,7 @@ class Kernel(SingletonConfigurable):
             return
 
         subshell_id = str(uuid.uuid4())
-        self._subshells[subshell_id] = {}
+        self.shell_channel_thread.cache.create(subshell_id)
 
         content = {
             "status": "ok",
@@ -1054,7 +1052,8 @@ class Kernel(SingletonConfigurable):
 
         content: dict[str, t.Any] = {"status": "ok"}
         try:
-            self._subshells.pop(subshell_id)
+            # Should error here give traceback to the user? Probably not.
+            self.shell_channel_thread.cache.remove(subshell_id)
         except KeyError as err:
             import traceback
             content = {
@@ -1073,7 +1072,7 @@ class Kernel(SingletonConfigurable):
 
         content = {
             "status": "ok",
-            "subshell_id": list(self._subshells),
+            "subshell_id": self.shell_channel_thread.cache.list(),
         }
         self.session.send(socket, "list_subshell_reply", content, parent, ident)
 

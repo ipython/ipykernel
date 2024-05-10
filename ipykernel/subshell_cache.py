@@ -5,6 +5,8 @@
 from threading import Lock
 import zmq
 
+from .subshell import SubshellThread
+
 
 class SubshellCache:
     """A cache for subshell information.
@@ -45,15 +47,17 @@ class SubshellCache:
         self._parent_send_socket = None
         assert not self._cache  # Should not be anything left in cache.
 
-    def create(self, subshell_id: str) -> None:
+    def create(self, subshell_id: str, thread: SubshellThread) -> None:
         # check if subshell_id already exists...
         # assume it doesn't
+
         with self._lock:
             assert subshell_id not in self._cache
             send_socket, recv_socket = self._create_inproc_sockets(subshell_id)
             self._cache[subshell_id] = {
-                send_socket: send_socket,
-                recv_socket: recv_socket,
+                "send_socket": send_socket,
+                "recv_socket": recv_socket,
+                "thread": thread,
             }
 
     def get_recv_socket(self, subshell_id: str | None):
@@ -78,6 +82,12 @@ class SubshellCache:
         """Raises key error if subshell_id not in cache"""
         with self._lock:
             dict_ = self._cache.pop(subshell_id)
+
+        thread = dict_["thread"]
+        if thread and thread.is_alive():
+            thread.stop()
+            thread.join()
+
         for socket in (dict_["send_socket"], dict_["recv_socket"]):
             if socket and not socket.closed:
                 socket.close()

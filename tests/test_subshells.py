@@ -32,6 +32,19 @@ def list_subshell_helper(kc):
     return reply["content"]
 
 
+def get_thread_count(kc):
+    code = "import threading as t; print(t.active_count())"
+    msg_id = kc.execute(code=code)
+    while True:
+        msg = kc.get_iopub_msg()
+        # Get the stream message corresponding to msg_id
+        if msg["msg_type"] == "stream" and msg["parent_header"]["msg_id"] == msg_id:
+            content = msg["content"]
+            #assert content["name"] == "stdout"
+            break
+    return int(content["text"].strip())
+
+
 # Tests
 
 def test_supported():
@@ -57,3 +70,16 @@ def test_delete_non_existent():
         assert reply["status"] == "error"
         for key in ("ename", "evalue", "traceback"):
             assert key in reply
+
+
+def test_thread_counts():
+    with kernel() as kc:
+        nthreads = get_thread_count(kc)
+
+        subshell_id = create_subshell_helper(kc)["subshell_id"]
+        nthreads2 = get_thread_count(kc)
+        assert nthreads2 > nthreads
+
+        delete_subshell_helper(kc, subshell_id)
+        nthreads3 = get_thread_count(kc)
+        assert nthreads3 == nthreads

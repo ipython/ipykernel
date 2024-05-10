@@ -20,6 +20,7 @@ from datetime import datetime
 from signal import SIGINT, SIGTERM, Signals
 
 from .control import CONTROL_THREAD_NAME
+from .subshell import SubshellThread
 
 if sys.platform != "win32":
     from signal import SIGKILL
@@ -1022,7 +1023,11 @@ class Kernel(SingletonConfigurable):
             return
 
         subshell_id = str(uuid.uuid4())
-        self.shell_channel_thread.cache.create(subshell_id)
+        thread = SubshellThread(subshell_id)
+        self.shell_channel_thread.cache.create(subshell_id, thread)
+
+        #thread.set_task()
+        thread.start()
 
         content = {
             "status": "ok",
@@ -1044,6 +1049,7 @@ class Kernel(SingletonConfigurable):
             return
 
         content: dict[str, t.Any] = {"status": "ok"}
+
         try:
             # Should error here give traceback to the user? Probably not.
             self.shell_channel_thread.cache.remove(subshell_id)

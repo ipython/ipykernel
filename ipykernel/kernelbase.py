@@ -368,7 +368,15 @@ class Kernel(SingletonConfigurable):
         try:
             while True:
                 msg = await self.shell_socket.recv_multipart()
-                subshell_id = None  # Would obtain this from msg
+
+                # Deserialize whole message just to get subshell_id.
+                # Keep original message to send to subshell_id unmodified.
+                # Ideally only want to deserialize message once.
+                copy = not isinstance(msg[0], zmq.Message)
+                _, msg2 = self.session.feed_identities(msg, copy=copy)
+                msg2 = self.session.deserialize(msg2, content=False, copy=copy)
+                subshell_id = msg2["header"].get("subshell_id")
+
                 send_socket = self.shell_channel_thread.cache.get_send_socket(subshell_id)
                 assert send_socket is not None
                 send_socket.send_multipart(msg, copy=False)
@@ -377,11 +385,18 @@ class Kernel(SingletonConfigurable):
                 return
             raise e
 
-    async def shell_main(self, recv_socket):
+    async def shell_main(self, subshell_id: str | None):
+        if self._supports_kernel_subshells():
+            recv_socket = self.shell_channel_thread.cache.get_recv_socket(subshell_id)
+        else:
+            recv_socket = self.shell_socket
+
         async with create_task_group() as tg:
             tg.start_soon(self.process_shell, recv_socket)
-            await to_thread.run_sync(self.shell_stop.wait)
-            tg.cancel_scope.cancel()
+            if subshell_id is None:
+                # Main subshell.
+                await to_thread.run_sync(self.shell_stop.wait)
+                tg.cancel_scope.cancel()
 
     async def process_shell(self, recv_socket=None):
         try:
@@ -502,13 +517,13 @@ class Kernel(SingletonConfigurable):
 
             if self.shell_channel_thread:
                 # Each subshell thread listens on inproc socket for messages from shell channel thread
-                tg.start_soon(self.shell_main, self.shell_channel_thread.cache.get_recv_socket(None))
+                tg.start_soon(self.shell_main, None)
 
                 self.shell_channel_thread.set_task(self.shell_channel_thread_main)
                 self.shell_channel_thread.start()
             else:
                 if not self._is_test and self.shell_socket is not None:
-                    tg.start_soon(self.shell_main, self.shell_socket)
+                    tg.start_soon(self.shell_main, None)
 
     def stop(self):
         if not self._eventloop_set.is_set():
@@ -1032,8 +1047,9 @@ class Kernel(SingletonConfigurable):
         subshell_id = str(uuid.uuid4())
         thread = SubshellThread(subshell_id)
         self.shell_channel_thread.cache.create(subshell_id, thread)
+        recv_socket = self.shell_channel_thread.cache.get_recv_socket(subshell_id)
 
-        #thread.set_task()
+        thread.set_task(self.shell_main, subshell_id)
         thread.start()
 
         content = {

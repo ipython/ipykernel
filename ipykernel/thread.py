@@ -14,9 +14,11 @@ class BaseThread(Thread):
         self.is_pydev_daemon_thread = True
         self.__stop = Event()
         self._task = None
+        self._task_args = ()
 
-    def set_task(self, task):
+    def set_task(self, task, *args):
         self._task = task
+        self._task_args = args
 
     def run(self):
         """Run the thread."""
@@ -25,7 +27,7 @@ class BaseThread(Thread):
     async def _main(self):
         async with create_task_group() as tg:
             if self._task is not None:
-                tg.start_soon(self._task)
+                tg.start_soon(self._task, *self._task_args)
             await to_thread.run_sync(self.__stop.wait)
             tg.cancel_scope.cancel()
 

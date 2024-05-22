@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, get_reply, kernel
+from .utils import TIMEOUT, get_reply, get_replies, kernel
 
 
 # Helpers
@@ -51,12 +51,12 @@ def execute_request_subshell_id(kc: BlockingKernelClient, code: str, subshell_id
     return content["text"].strip()
 
 
-def get_thread_count(kc: BlockingKernelClient) -> int:
+def execute_thread_count(kc: BlockingKernelClient) -> int:
     code = "import threading as t; print(t.active_count())"
     return int(execute_request_subshell_id(kc, code, None))
 
 
-def get_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None) -> tuple[str, str]:
+def execute_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None) -> tuple[str, str]:
     code = "import threading as t; print(t.get_ident(), t.main_thread().ident)"
     return execute_request_subshell_id(kc, code, subshell_id).split()
 
@@ -90,14 +90,14 @@ def test_delete_non_existent():
 
 def test_thread_counts():
     with kernel() as kc:
-        nthreads = get_thread_count(kc)
+        nthreads = execute_thread_count(kc)
 
         subshell_id = create_subshell_helper(kc)["subshell_id"]
-        nthreads2 = get_thread_count(kc)
+        nthreads2 = execute_thread_count(kc)
         assert nthreads2 > nthreads
 
         delete_subshell_helper(kc, subshell_id)
-        nthreads3 = get_thread_count(kc)
+        nthreads3 = execute_thread_count(kc)
         assert nthreads3 == nthreads
 
 
@@ -105,10 +105,10 @@ def test_thread_ids():
     with kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
-        thread_id, main_thread_id = get_thread_ids(kc)
+        thread_id, main_thread_id = execute_thread_ids(kc)
         assert thread_id == main_thread_id
 
-        thread_id, main_thread_id = get_thread_ids(kc, subshell_id)
+        thread_id, main_thread_id = execute_thread_ids(kc, subshell_id)
         assert thread_id != main_thread_id
 
         delete_subshell_helper(kc, subshell_id)
@@ -119,7 +119,7 @@ def test_run_concurrently():
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
         # Prepare messages
-        times = (0.05, 0.1)  # Sleep seconds
+        times = (0.05, 0.1)  # Sleep seconds. Test can fail with (0.05, 0.05)
         msgs = []
         for id, sleep in zip((None, subshell_id), times):
             code = f"import time; time.sleep({sleep})"
@@ -132,12 +132,37 @@ def test_run_concurrently():
         for msg in msgs:
             kc.shell_channel.send(msg)
 
-        # Wait for replies
-        _ = [get_reply(kc, msg["msg_id"]) for msg in msgs]
+        _ = get_replies(kc, [msg["msg_id"] for msg in msgs])
         end = datetime.now()
 
         duration = end - start
         assert duration >= timedelta(seconds=max(times))
         assert duration < timedelta(seconds=sum(times))
+
+        delete_subshell_helper(kc, subshell_id)
+
+
+def test_execution_count():
+    with kernel() as kc:
+        subshell_id = create_subshell_helper(kc)["subshell_id"]
+
+        # Prepare messages
+        times = (0.1, 0.05, 0.2, 0.07)  # Sleep seconds
+        msgs = []
+        for id, sleep in zip((None, subshell_id, None, subshell_id), times):
+            code = f"import time; time.sleep({sleep})"
+            msg = kc.session.msg("execute_request", {"code": code})
+            msg["header"]["subshell_id"] = id
+            msgs.append(msg)
+
+        for msg in msgs:
+            kc.shell_channel.send(msg)
+
+        # Wait for replies, may be in any order.
+        replies = get_replies(kc, [msg["msg_id"] for msg in msgs])
+        
+        execution_counts = [r["content"]["execution_count"] for r in replies]
+        ec = execution_counts[0]
+        assert execution_counts == [ec, ec-1, ec+2, ec+1]
 
         delete_subshell_helper(kc, subshell_id)

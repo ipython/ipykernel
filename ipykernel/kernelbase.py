@@ -1047,7 +1047,6 @@ class Kernel(SingletonConfigurable):
         subshell_id = str(uuid.uuid4())
         thread = SubshellThread(subshell_id)
         self.shell_channel_thread.cache.create(subshell_id, thread)
-        recv_socket = self.shell_channel_thread.cache.get_recv_socket(subshell_id)
 
         thread.set_task(self.shell_main, subshell_id)
         thread.start()

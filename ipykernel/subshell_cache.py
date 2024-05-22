@@ -2,10 +2,18 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from dataclasses import dataclass
 from threading import Lock
 import zmq
 
 from .subshell import SubshellThread
+
+
+@dataclass
+class Subshell:
+    thread: SubshellThread
+    send_socket: zmq.Socket
+    recv_socket: zmq.Socket
 
 
 class SubshellCache:
@@ -31,7 +39,7 @@ class SubshellCache:
     """
     def __init__(self, context: zmq.Context):
         self._context: zmq.Context = context
-        self._cache = {}
+        self._cache: dict[str, Subshell] = {}
         self._lock: Lock = Lock()
 
         # Parent subshell sockets.
@@ -45,7 +53,14 @@ class SubshellCache:
 
         self._parent_recv_socket = None
         self._parent_send_socket = None
-        assert not self._cache  # Should not be anything left in cache.
+
+        with self._lock:
+            while True:
+                try:
+                    _, subshell = self._cache.popitem()
+                except KeyError:
+                    break
+                self._stop_subshell(subshell)
 
     def create(self, subshell_id: str, thread: SubshellThread) -> None:
         # check if subshell_id already exists...
@@ -54,43 +69,32 @@ class SubshellCache:
         with self._lock:
             assert subshell_id not in self._cache
             send_socket, recv_socket = self._create_inproc_sockets(subshell_id)
-            self._cache[subshell_id] = {
-                "send_socket": send_socket,
-                "recv_socket": recv_socket,
-                "thread": thread,
-            }
+            self._cache[subshell_id] = Subshell(thread, send_socket, recv_socket)
+
+    def delete(self, subshell_id: str) -> None:
+        """Raises key error if subshell_id not in cache"""
+        with self._lock:
+            subshell = self._cache.pop(subshell_id)
+
+        self._stop_subshell(subshell)
 
     def get_recv_socket(self, subshell_id: str | None):
         if subshell_id is None:
             return self._parent_recv_socket
         else:
             with self._lock:
-                return self._cache[subshell_id]["recv_socket"]
+                return self._cache[subshell_id].recv_socket
 
     def get_send_socket(self, subshell_id: str | None):
         if subshell_id is None:
             return self._parent_send_socket
         else:
             with self._lock:
-                return self._cache[subshell_id]["send_socket"]
+                return self._cache[subshell_id].send_socket
 
     def list(self) -> list[str]:
         with self._lock:
             return list(self._cache)
-
-    def remove(self, subshell_id: str) -> None:
-        """Raises key error if subshell_id not in cache"""
-        with self._lock:
-            dict_ = self._cache.pop(subshell_id)
-
-        thread = dict_["thread"]
-        if thread and thread.is_alive():
-            thread.stop()
-            thread.join()
-
-        for socket in (dict_["send_socket"], dict_["recv_socket"]):
-            if socket and not socket.closed:
-                socket.close()
 
     def _create_inproc_sockets(self, subshell_id: str | None):
         """Create a pair of inproc sockets to communicate with a subshell.
@@ -107,3 +111,13 @@ class SubshellCache:
         send_socket.connect(address)
 
         return send_socket, recv_socket
+
+    def _stop_subshell(self, subshell: Subshell):
+        thread = subshell.thread
+        if thread and thread.is_alive():
+            thread.stop()
+            thread.join()
+
+        for socket in (subshell.send_socket, subshell.recv_socket):
+            if socket and not socket.closed:
+                socket.close()

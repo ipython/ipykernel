@@ -160,9 +160,30 @@ def test_execution_count():
 
         # Wait for replies, may be in any order.
         replies = get_replies(kc, [msg["msg_id"] for msg in msgs])
-        
+
         execution_counts = [r["content"]["execution_count"] for r in replies]
         ec = execution_counts[0]
         assert execution_counts == [ec, ec-1, ec+2, ec+1]
 
         delete_subshell_helper(kc, subshell_id)
+
+
+def test_create_while_execute():
+    with kernel() as kc:
+        # Send request to execute code on main subshell.
+        msg = kc.session.msg("execute_request", {"code": "import time; time.sleep(0.05)"})
+        kc.shell_channel.send(msg)
+
+        # Create subshell via control channel.
+        control_msg = kc.session.msg("create_subshell_request")
+        kc.control_channel.send(control_msg)
+        control_reply = get_reply(kc, control_msg["header"]["msg_id"], TIMEOUT, channel="control")
+        subshell_id = control_reply["content"]["subshell_id"]
+        control_date = control_reply["header"]["date"]
+
+        # Get result message from main subshell.
+        shell_date = get_reply(kc, msg["msg_id"])["header"]["date"]
+
+        delete_subshell_helper(kc, subshell_id)
+
+        assert control_date < shell_date

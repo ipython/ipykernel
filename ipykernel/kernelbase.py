@@ -1074,7 +1074,7 @@ class Kernel(SingletonConfigurable):
 
         try:
             # Should error here give traceback to the user? Probably not.
-            self.shell_channel_thread.cache.remove(subshell_id)
+            self.shell_channel_thread.cache.delete(subshell_id)
         except KeyError as err:
             import traceback
             content = {

@@ -3,7 +3,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from dataclasses import dataclass
-from threading import Lock
+from threading import Lock, main_thread
 import zmq
 
 from .subshell import SubshellThread
@@ -95,6 +95,20 @@ class SubshellCache:
     def list(self) -> list[str]:
         with self._lock:
             return list(self._cache)
+
+    def subshell_id_from_thread_id(self, thread_id) -> str | None:
+        """Return subshell_id of the specified thread_id.
+
+        Raises RuntimeError if thread_id is not the main shell or a subshell.
+        """
+        with self._lock:
+            if thread_id == main_thread().ident:
+                return None
+            for id, subshell in self._cache.items():
+                if subshell.thread.ident == thread_id:
+                    return id
+            msg = f"Thread id '{thread_id} does not correspond to a subshell of this kernel"
+            raise RuntimeError(msg)
 
     def _create_inproc_sockets(self, subshell_id: str | None):
         """Create a pair of inproc sockets to communicate with a subshell.

@@ -172,6 +172,8 @@ filterwarnings= [
 
   # IPython warnings
   "ignore: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`:PendingDeprecationWarning",
+  "ignore: backends is deprecated since IPython 8.24, backends are managed in matplotlib and can be externally registered.:DeprecationWarning",
+  "ignore: backend2gui is deprecated since IPython 8.24, backends are managed in matplotlib and can be externally registered.:DeprecationWarning",
 
   # Ignore jupyter_client warnings
   "ignore:unclosed <socket.socket:ResourceWarning",

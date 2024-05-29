@@ -732,14 +732,20 @@ class Kernel(SingletonConfigurable):
         reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
-        reply_msg = self.session.send(
-            socket,
-            "execute_reply",
-            reply_content,
-            parent,
+        kwargs = dict(
+            stream=socket,
+            msg_or_type="execute_reply",
+            content=reply_content,
+            parent=parent,
             metadata=metadata,
             ident=ident,
         )
+
+        if self._supports_kernel_subshells():
+            with self.LOCK:
+                reply_msg = self.session.send(**kwargs)
+        else:
+            reply_msg = self.session.send(**kwargs)
 
         self.log.debug("%s", reply_msg)
 

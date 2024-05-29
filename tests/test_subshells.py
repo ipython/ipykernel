@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from datetime import datetime, timedelta
+import pytest
 
 from jupyter_client.blocking.client import BlockingKernelClient
 
@@ -114,12 +115,14 @@ def test_thread_ids():
         delete_subshell_helper(kc, subshell_id)
 
 
-def test_run_concurrently():
+@pytest.mark.parametrize("times", [(0.1, 0.05), (0.05, 0.1), (0.05, 0.05)])
+def test_run_concurrently(times):
     with kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
-        # Prepare messages
-        times = (0.05, 0.1)  # Sleep seconds. Test can fail with (0.05, 0.05)
+        # Prepare messages, times are sleep times in seconds.
+        # Identical times for both subshells is a harder test as preparing and sending
+        # the execute_reply messages may overlap.
         msgs = []
         for id, sleep in zip((None, subshell_id), times):
             code = f"import time; time.sleep({sleep})"

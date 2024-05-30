@@ -520,6 +520,8 @@ class Kernel(SingletonConfigurable):
                 tg.start_soon(self.shell_main, None)
 
                 self.shell_channel_thread.set_task(self.shell_channel_thread_main)
+                cache = self.shell_channel_thread.cache
+                self.shell_channel_thread.set_task(cache._TASK, self.shell_main)
                 self.shell_channel_thread.start()
             else:
                 if not self._is_test and self.shell_socket is not None:
@@ -1050,23 +1052,20 @@ class Kernel(SingletonConfigurable):
             self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
             return
 
-        subshell_id = str(uuid.uuid4())
-        thread = SubshellThread(subshell_id)
-        self.shell_channel_thread.cache.create(subshell_id, thread)
+        # Check this is called in the control thread only (if it exists).
 
-        thread.set_task(self.shell_main, subshell_id)
-        thread.start()
+        s = self.shell_channel_thread.cache.control_recv_socket
+        await s.send_json( {"type": "create"})
+        reply = await s.recv_json()
 
-        content = {
-            "status": "ok",
-            "subshell_id": subshell_id,
-        }
-        self.session.send(socket, "create_subshell_reply", content, parent, ident)
+        self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
     async def delete_subshell_request(self, socket, ident, parent):
         if not self._supports_kernel_subshells():
             self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
             return
+
+        # Check this is called in the control thread only (if it exists).
 
         try:
             content = parent["content"]
@@ -1076,32 +1075,24 @@ class Kernel(SingletonConfigurable):
             self.log.error("%s", parent)
             return
 
-        content: dict[str, t.Any] = {"status": "ok"}
+        s = self.shell_channel_thread.cache.control_recv_socket
+        await s.send_json({"type": "delete", "subshell_id": subshell_id})
+        reply = await s.recv_json()
 
-        try:
-            # Should error here give traceback to the user? Probably not.
-            self.shell_channel_thread.cache.delete(subshell_id)
-        except KeyError as err:
-            import traceback
-            content = {
-                "status": "error",
-                "traceback": traceback.format_stack(),
-                "ename": str(type(err).__name__),
-                "evalue": str(err),
-            }
-
-        self.session.send(socket, "delete_subshell_reply", content, parent, ident)
+        self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
     async def list_subshell_request(self, socket, ident, parent):
         if not self._supports_kernel_subshells():
             self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
             return
 
-        content = {
-            "status": "ok",
-            "subshell_id": self.shell_channel_thread.cache.list(),
-        }
-        self.session.send(socket, "list_subshell_reply", content, parent, ident)
+        # Check this is called in the control thread only (if it exists).
+
+        s = self.shell_channel_thread.cache.control_recv_socket
+        await s.send_json({"type": "list"})
+        reply = await s.recv_json()
+
+        self.session.send(socket, "list_subshell_reply", reply, parent, ident)
 
     # ---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)

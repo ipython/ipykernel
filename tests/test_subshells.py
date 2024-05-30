@@ -85,8 +85,7 @@ def test_delete_non_existent():
     with kernel() as kc:
         reply = delete_subshell_helper(kc, "unknown_subshell_id")
         assert reply["status"] == "error"
-        for key in ("ename", "evalue", "traceback"):
-            assert key in reply
+        assert "evalue" in reply
 
 
 def test_thread_counts():

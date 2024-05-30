@@ -2,8 +2,11 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from anyio import create_task_group
 from dataclasses import dataclass
 from threading import Lock, main_thread
+import typing as t
+import uuid
 import zmq
 
 from .subshell import SubshellThread
@@ -46,13 +49,60 @@ class SubshellCache:
         self._parent_send_socket, self._parent_recv_socket = \
             self._create_inproc_sockets(None)
 
+
+        # Socket names are poor. Better to have this/cache end and other end.
+        self.control_send_socket, self.control_recv_socket = \
+            self._create_inproc_sockets("control")
+
+
+    def _process_control_request(self, request, subshell_task):
+        try:
+            type = request["type"]
+            reply: dict[str, t.Any] = {"status": "ok"}
+
+            if type == "create":
+                reply["subshell_id"] = self.create(subshell_task)
+            elif type == "delete":
+                subshell_id = request["subshell_id"]
+                self.delete(subshell_id)
+            elif type == "list":
+                reply["subshell_id"] = self.list()
+            else:
+                raise RuntimeError(f"Unrecognised message type {type}")
+        except BaseException as err:
+            # Not sure what information to return here.
+            reply = {
+                "status": "error",
+                "evalue": str(err),
+            }
+        return reply
+
+
+    async def _TASK(self, subshell_task):  # messages from control channel via inproc pair sockets.
+        while True:
+            request = await self.control_send_socket.recv_json()
+            reply = self._process_control_request(request, subshell_task)
+            await self.control_send_socket.send_json(reply)
+
+
+    async def list_from_control(self):
+        async with create_task_group() as tg:
+            tg.start_soon(self._TASK)
+
+
     def close(self):
         for socket in (self._parent_send_socket, self._parent_recv_socket):
             if socket and not socket.closed:
                 socket.close()
 
+        for socket in (self.control_send_socket, self.control_recv_socket):
+            if socket and not socket.closed:
+                socket.close()
+
         self._parent_recv_socket = None
         self._parent_send_socket = None
+        self.control_send_socket = None
+        self.control_recv_socket = None
 
         with self._lock:
             while True:
@@ -62,14 +112,23 @@ class SubshellCache:
                     break
                 self._stop_subshell(subshell)
 
-    def create(self, subshell_id: str, thread: SubshellThread) -> None:
+    def create(self, subshell_task) -> str:
+        # Create new subshell thread and start it.
+
         # check if subshell_id already exists...
-        # assume it doesn't
+        # assume it doesn't so far.
+
+        subshell_id = str(uuid.uuid4())
+        thread = SubshellThread(subshell_id)
 
         with self._lock:
             assert subshell_id not in self._cache
             send_socket, recv_socket = self._create_inproc_sockets(subshell_id)
             self._cache[subshell_id] = Subshell(thread, send_socket, recv_socket)
+
+        thread.set_task(subshell_task, subshell_id)
+        thread.start()
+        return subshell_id
 
     def delete(self, subshell_id: str) -> None:
         """Raises key error if subshell_id not in cache"""

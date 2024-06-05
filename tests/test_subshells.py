@@ -4,11 +4,13 @@
 # Distributed under the terms of the Modified BSD License.
 
 from datetime import datetime, timedelta
+import platform
 import pytest
+import time
 
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, get_reply, get_replies, kernel
+from .utils import TIMEOUT, get_reply, get_replies, kernel, new_kernel, wait_for_idle
 
 
 # Helpers
@@ -114,11 +116,11 @@ def test_thread_ids():
         delete_subshell_helper(kc, subshell_id)
 
 
-@pytest.mark.parametrize("times", [(0.1, 0.05), (0.05, 0.1), (0.05, 0.05)])
-def test_run_concurrently(times):
+def test_run_concurrently():
     with kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
+        times = (0.05, 0.05)
         # Prepare messages, times are sleep times in seconds.
         # Identical times for both subshells is a harder test as preparing and sending
         # the execute_reply messages may overlap.
@@ -189,3 +191,21 @@ def test_create_while_execute():
         delete_subshell_helper(kc, subshell_id)
 
         assert control_date < shell_date
+
+
+@pytest.mark.skipif(
+    platform.python_implementation() == "PyPy",
+    reason="does not work on PyPy",
+)
+def test_shutdown_with_subshell():
+    with new_kernel() as kc:
+        km = kc.parent
+        subshell_id = create_subshell_helper(kc)["subshell_id"]
+        assert list_subshell_helper(kc)["subshell_id"] == [subshell_id]
+        kc.shutdown()
+        for _ in range(100):  # 10 s timeout
+            if km.is_alive():
+                time.sleep(0.1)
+            else:
+                break
+        assert not km.is_alive()

@@ -19,6 +19,9 @@ class Subshell:
     recv_socket: zmq.Socket
 
 
+
+# SubshellManager perhaps???????
+
 class SubshellCache:
     """A cache for subshell information.
 
@@ -40,15 +43,19 @@ class SubshellCache:
     Read-only access to the parent subshell sockets never needs to be wrapped in a
     mutex as there is only one pair over the whole lifetime of this object.
     """
-    def __init__(self, context: zmq.Context):
+    def __init__(self, context: zmq.Context, shell_socket):
+
+
+        # assert this is only called from the main thread...
+
         self._context: zmq.Context = context
+        self._shell_socket = shell_socket
         self._cache: dict[str, Subshell] = {}
         self._lock: Lock = Lock()
 
         # Parent subshell sockets.
         self._parent_send_socket, self._parent_recv_socket = \
             self._create_inproc_sockets(None)
-
 
         # Socket names are poor. Better to have this/cache end and other end.
         self.control_send_socket, self.control_recv_socket = \
@@ -61,12 +68,12 @@ class SubshellCache:
             reply: dict[str, t.Any] = {"status": "ok"}
 
             if type == "create":
-                reply["subshell_id"] = self.create(subshell_task)
+                reply["subshell_id"] = self.create_subshell(subshell_task)
             elif type == "delete":
                 subshell_id = request["subshell_id"]
-                self.delete(subshell_id)
+                self.delete_subshell(subshell_id)
             elif type == "list":
-                reply["subshell_id"] = self.list()
+                reply["subshell_id"] = self.list_subshell()
             else:
                 raise RuntimeError(f"Unrecognised message type {type}")
         except BaseException as err:
@@ -84,6 +91,12 @@ class SubshellCache:
             reply = self._process_control_request(request, subshell_task)
             await self.control_send_socket.send_json(reply)
 
+
+    async def _from_subshell_task(self, send_socket):
+        while True:
+            msg = await send_socket.recv_multipart(copy=False)
+            with self._lock:
+                self._shell_socket.send_multipart(msg)
 
     async def list_from_control(self):
         async with create_task_group() as tg:
@@ -112,7 +125,7 @@ class SubshellCache:
                     break
                 self._stop_subshell(subshell)
 
-    def create(self, subshell_task) -> str:
+    def create_subshell(self, subshell_task) -> str:
         # Create new subshell thread and start it.
 
         # check if subshell_id already exists...
@@ -126,11 +139,13 @@ class SubshellCache:
             send_socket, recv_socket = self._create_inproc_sockets(subshell_id)
             self._cache[subshell_id] = Subshell(thread, send_socket, recv_socket)
 
-        thread.set_task(subshell_task, subshell_id)
+        thread.add_task(subshell_task, subshell_id)
+        thread.add_task(self._from_subshell_task, send_socket)
         thread.start()
+
         return subshell_id
 
-    def delete(self, subshell_id: str) -> None:
+    def delete_subshell(self, subshell_id: str) -> None:
         """Raises key error if subshell_id not in cache"""
         with self._lock:
             subshell = self._cache.pop(subshell_id)
@@ -151,7 +166,7 @@ class SubshellCache:
             with self._lock:
                 return self._cache[subshell_id].send_socket
 
-    def list(self) -> list[str]:
+    def list_subshell(self) -> list[str]:
         with self._lock:
             return list(self._cache)
 

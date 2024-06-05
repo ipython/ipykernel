@@ -16,7 +16,8 @@ class BaseThread(Thread):
         self._tasks = []
         self._task_args = []
 
-    def set_task(self, task, *args):
+    def add_task(self, task, *args):
+        # May only add tasks before the thread is started.
         self._tasks.append(task)
         self._task_args.append(args)
 

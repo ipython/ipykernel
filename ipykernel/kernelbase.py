@@ -408,6 +408,7 @@ class Kernel(SingletonConfigurable):
             raise e
 
     async def process_shell_message(self, msg=None, recv_socket=None):
+        #### Do not like the name recv_socket
         if not recv_socket:
             recv_socket = self.shell_socket
 
@@ -463,7 +464,7 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                result = handler(self.shell_socket, idents, msg)
+                result = handler(recv_socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
             except Exception:
@@ -505,7 +506,7 @@ class Kernel(SingletonConfigurable):
             self.control_stop = threading.Event()
             if not self._is_test and self.control_socket is not None:
                 if self.control_thread:
-                    self.control_thread.set_task(self.control_main)
+                    self.control_thread.add_task(self.control_main)
                     self.control_thread.start()
                 else:
                     tg.start_soon(self.control_main)
@@ -519,9 +520,13 @@ class Kernel(SingletonConfigurable):
                 # Each subshell thread listens on inproc socket for messages from shell channel thread
                 tg.start_soon(self.shell_main, None)
 
-                self.shell_channel_thread.set_task(self.shell_channel_thread_main)
+                # Needs tidying.
                 cache = self.shell_channel_thread.cache
-                self.shell_channel_thread.set_task(cache._TASK, self.shell_main)
+                parent_send_socket = cache._parent_send_socket
+
+                self.shell_channel_thread.add_task(self.shell_channel_thread_main)
+                self.shell_channel_thread.add_task(cache._TASK, self.shell_main)
+                self.shell_channel_thread.add_task(cache._from_subshell_task, parent_send_socket)
                 self.shell_channel_thread.start()
             else:
                 if not self._is_test and self.shell_socket is not None:
@@ -734,20 +739,14 @@ class Kernel(SingletonConfigurable):
         reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
-        kwargs = dict(
-            stream=socket,
-            msg_or_type="execute_reply",
+        reply_msg = self.session.send(
+            socket,
+            "execute_reply",
             content=reply_content,
             parent=parent,
             metadata=metadata,
             ident=ident,
         )
-
-        if self._supports_kernel_subshells():
-            with self.LOCK:
-                reply_msg = self.session.send(**kwargs)
-        else:
-            reply_msg = self.session.send(**kwargs)
 
         self.log.debug("%s", reply_msg)
 

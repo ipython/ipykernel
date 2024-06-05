@@ -370,7 +370,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.control_socket.router_handover = 1
 
         self.control_thread = ControlThread(daemon=True)
-        self.shell_channel_thread = ShellChannelThread(context, daemon=True)
+        self.shell_channel_thread = ShellChannelThread(context, self.shell_socket, daemon=True)
 
     def init_iopub(self, context):
         """Initialize the iopub channel."""

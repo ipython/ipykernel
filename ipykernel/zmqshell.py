@@ -461,7 +461,7 @@ class KernelMagics(Magics):
             subshell_id = kernel.shell_channel_thread.cache.subshell_id_from_thread_id(thread_id)
         except RuntimeError:
             subshell_id = "unknown"
-        subshell_id_list = kernel.shell_channel_thread.cache.list()
+        subshell_id_list = kernel.shell_channel_thread.cache.list_subshell()
 
         print(f"subshell id: {subshell_id}")
         print(f"thread id: {thread_id}")

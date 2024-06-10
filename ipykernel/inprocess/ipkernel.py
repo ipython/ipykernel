@@ -97,8 +97,10 @@ class InProcessKernel(IPythonKernel):
     def _input_request(self, prompt, ident, parent, password=False):
         # Flush output before making the request.
         self.raw_input_str = None
-        sys.stderr.flush()
-        sys.stdout.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
 
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))

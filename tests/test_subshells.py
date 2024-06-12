@@ -3,17 +3,17 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from datetime import datetime, timedelta
 import platform
-import pytest
 import time
+from datetime import datetime, timedelta
 
+import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, get_reply, get_replies, kernel, new_kernel, wait_for_idle
-
+from .utils import TIMEOUT, get_replies, get_reply, kernel, new_kernel
 
 # Helpers
+
 
 def create_subshell_helper(kc: BlockingKernelClient):
     msg = kc.session.msg("create_subshell_request")
@@ -49,7 +49,7 @@ def execute_request_subshell_id(kc: BlockingKernelClient, code: str, subshell_id
         # Get the stream message corresponding to msg_id
         if msg["msg_type"] == "stream" and msg["parent_header"]["msg_id"] == msg_id:
             content = msg["content"]
-            #assert content["name"] == "stdout"
+            # assert content["name"] == "stdout"
             break
     return content["text"].strip()
 
@@ -65,6 +65,7 @@ def execute_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None)
 
 
 # Tests
+
 
 def test_supported():
     with kernel() as kc:
@@ -116,16 +117,20 @@ def test_thread_ids():
         delete_subshell_helper(kc, subshell_id)
 
 
-def test_run_concurrently():
+@pytest.mark.parametrize("include_main_shell", [True, False])
+def test_run_concurrently(include_main_shell):
     with kernel() as kc:
-        subshell_id = create_subshell_helper(kc)["subshell_id"]
+        subshell_ids = [
+            None if include_main_shell else create_subshell_helper(kc)["subshell_id"],
+            create_subshell_helper(kc)["subshell_id"],
+        ]
 
         times = (0.05, 0.05)
         # Prepare messages, times are sleep times in seconds.
         # Identical times for both subshells is a harder test as preparing and sending
         # the execute_reply messages may overlap.
         msgs = []
-        for id, sleep in zip((None, subshell_id), times):
+        for id, sleep in zip(subshell_ids, times):
             code = f"import time; time.sleep({sleep})"
             msg = kc.session.msg("execute_request", {"code": code})
             msg["header"]["subshell_id"] = id
@@ -143,7 +148,9 @@ def test_run_concurrently():
         assert duration >= timedelta(seconds=max(times))
         assert duration < timedelta(seconds=sum(times))
 
-        delete_subshell_helper(kc, subshell_id)
+        for subshell_id in subshell_ids:
+            if subshell_id:
+                delete_subshell_helper(kc, subshell_id)
 
 
 def test_execution_count():
@@ -162,12 +169,12 @@ def test_execution_count():
         for msg in msgs:
             kc.shell_channel.send(msg)
 
-        # Wait for replies, may be in any order.
+        # Wait for replies, may be in any order.
         replies = get_replies(kc, [msg["msg_id"] for msg in msgs])
 
         execution_counts = [r["content"]["execution_count"] for r in replies]
         ec = execution_counts[0]
-        assert execution_counts == [ec, ec-1, ec+2, ec+1]
+        assert execution_counts == [ec, ec - 1, ec + 2, ec + 1]
 
         delete_subshell_helper(kc, subshell_id)
 
@@ -198,6 +205,7 @@ def test_create_while_execute():
     reason="does not work on PyPy",
 )
 def test_shutdown_with_subshell():
+    # Based on test_kernel.py::test_shutdown
     with new_kernel() as kc:
         km = kc.parent
         subshell_id = create_subshell_helper(kc)["subshell_id"]

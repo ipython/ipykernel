@@ -19,7 +19,6 @@ from datetime import datetime
 from signal import SIGINT, SIGTERM, Signals
 
 from .control import CONTROL_THREAD_NAME
-from .subshell import SubshellThread
 
 if sys.platform != "win32":
     from signal import SIGKILL
@@ -272,6 +271,8 @@ class Kernel(SingletonConfigurable):
         """dispatch control requests"""
         assert self.control_socket is not None
         assert self.session is not None
+        assert self.control_thread is None or threading.current_thread() == self.control_thread
+
         msg = msg or await self.control_socket.recv_multipart()
         copy = not isinstance(msg[0], zmq.Message)
         idents, msg = self.session.feed_identities(msg, copy=copy)
@@ -361,9 +362,16 @@ class Kernel(SingletonConfigurable):
         return itertools.count()
 
     async def shell_channel_thread_main(self):
+        """Main loop for shell channel thread.
+
+        Listen for incoming messages on kernel shell_socket.  For each message
+        received, extract the subshell_id from the message header and forward the
+        message to the correct subshell via ZMQ inproc pair socket.
+        """
         assert self.shell_socket is not None
         assert self.session is not None
-        assert self.shell_channel_thread
+        assert self.shell_channel_thread is not None
+        assert threading.current_thread() == self.shell_channel_thread
 
         try:
             while True:
@@ -377,46 +385,63 @@ class Kernel(SingletonConfigurable):
                 msg2 = self.session.deserialize(msg2, content=False, copy=copy)
                 subshell_id = msg2["header"].get("subshell_id")
 
-                send_socket = self.shell_channel_thread.cache.get_send_socket(subshell_id)
-                assert send_socket is not None
-                send_socket.send_multipart(msg, copy=False)
+                # Find inproc pair socket to use to send message to correct subshell.
+                socket = self.shell_channel_thread.manager.get_shell_channel_socket(subshell_id)
+                assert socket is not None
+                socket.send_multipart(msg, copy=False)
         except BaseException as e:
             if self.shell_stop.is_set():
                 return
             raise e
 
     async def shell_main(self, subshell_id: str | None):
+        """Main loop for a single subshell."""
         if self._supports_kernel_subshells():
-            recv_socket = self.shell_channel_thread.cache.get_recv_socket(subshell_id)
+            if subshell_id is None:
+                assert threading.current_thread() == threading.main_thread()
+            else:
+                assert threading.current_thread() not in (
+                    self.shell_channel_thread,
+                    threading.main_thread(),
+                )
+            # Inproc pair socket that this subshell uses to talk to shell channel thread.
+            socket = self.shell_channel_thread.manager.get_other_socket(subshell_id)
         else:
-            recv_socket = self.shell_socket
+            assert subshell_id is None
+            assert threading.current_thread() == threading.main_thread()
+            socket = self.shell_socket
 
         async with create_task_group() as tg:
-            tg.start_soon(self.process_shell, recv_socket)
+            tg.start_soon(self.process_shell, socket)
             if subshell_id is None:
                 # Main subshell.
                 await to_thread.run_sync(self.shell_stop.wait)
                 tg.cancel_scope.cancel()
 
-    async def process_shell(self, recv_socket=None):
+    async def process_shell(self, socket=None):
         try:
             while True:
-                await self.process_shell_message(recv_socket=recv_socket)
+                await self.process_shell_message(socket=socket)
         except BaseException as e:
             if self.shell_stop.is_set():
                 return
             raise e
 
-    async def process_shell_message(self, msg=None, recv_socket=None):
-        #### Do not like the name recv_socket
-        if not recv_socket:
-            recv_socket = self.shell_socket
+    async def process_shell_message(self, msg=None, socket=None):
+        if not socket:
+            socket = self.shell_socket
 
-        assert recv_socket is not None
         assert self.session is not None
+        if self._supports_kernel_subshells():
+            assert threading.current_thread() not in (
+                self.control_thread,
+                self.shell_channel_thread,
+            )
+        else:
+            assert threading.current_thread() == threading.main_thread()
 
-        no_msg = msg is None if self._is_test else not await recv_socket.poll(0)
-        msg = msg or await recv_socket.recv_multipart(copy=False)
+        no_msg = msg is None if self._is_test else not await socket.poll(0)
+        msg = msg or await socket.recv_multipart(copy=False)
 
         received_time = time.monotonic()
         copy = not isinstance(msg[0], zmq.Message)
@@ -464,7 +489,7 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                result = handler(recv_socket, idents, msg)
+                result = handler(socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
             except Exception:
@@ -501,7 +526,6 @@ class Kernel(SingletonConfigurable):
 
     async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Process messages on shell and control channels"""
-
         async with create_task_group() as tg:
             self.control_stop = threading.Event()
             if not self._is_test and self.control_socket is not None:
@@ -517,16 +541,13 @@ class Kernel(SingletonConfigurable):
             self.shell_stop = threading.Event()
 
             if self.shell_channel_thread:
-                # Each subshell thread listens on inproc socket for messages from shell channel thread
                 tg.start_soon(self.shell_main, None)
 
-                # Needs tidying.
-                cache = self.shell_channel_thread.cache
-                parent_send_socket = cache._parent_send_socket
-
+                # Assign tasks to and start shell channel thread.
+                manager = self.shell_channel_thread.manager
                 self.shell_channel_thread.add_task(self.shell_channel_thread_main)
-                self.shell_channel_thread.add_task(cache._TASK, self.shell_main)
-                self.shell_channel_thread.add_task(cache._from_subshell_task, parent_send_socket)
+                self.shell_channel_thread.add_task(manager.listen_from_control, self.shell_main)
+                self.shell_channel_thread.add_task(manager.listen_from_subshells)
                 self.shell_channel_thread.start()
             else:
                 if not self._is_test and self.shell_socket is not None:
@@ -1048,14 +1069,14 @@ class Kernel(SingletonConfigurable):
 
     async def create_subshell_request(self, socket, ident, parent):
         if not self._supports_kernel_subshells():
-            self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
+            self.log.error("Subshells are not supported by this kernel")
             return
 
-        # Check this is called in the control thread only (if it exists).
-
-        s = self.shell_channel_thread.cache.control_recv_socket
-        await s.send_json( {"type": "create"})
-        reply = await s.recv_json()
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
+        await other_socket.send_json({"type": "create"})
+        reply = await other_socket.recv_json()
 
         self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
@@ -1063,8 +1084,6 @@ class Kernel(SingletonConfigurable):
         if not self._supports_kernel_subshells():
             self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
             return
-
-        # Check this is called in the control thread only (if it exists).
 
         try:
             content = parent["content"]
@@ -1074,22 +1093,24 @@ class Kernel(SingletonConfigurable):
             self.log.error("%s", parent)
             return
 
-        s = self.shell_channel_thread.cache.control_recv_socket
-        await s.send_json({"type": "delete", "subshell_id": subshell_id})
-        reply = await s.recv_json()
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
+        await other_socket.send_json({"type": "delete", "subshell_id": subshell_id})
+        reply = await other_socket.recv_json()
 
         self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
     async def list_subshell_request(self, socket, ident, parent):
         if not self._supports_kernel_subshells():
-            self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
+            self.log.error("Subshells are not supported by this kernel")
             return
 
-        # Check this is called in the control thread only (if it exists).
-
-        s = self.shell_channel_thread.cache.control_recv_socket
-        await s.send_json({"type": "list"})
-        reply = await s.recv_json()
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
+        await other_socket.send_json({"type": "list"})
+        reply = await other_socket.recv_json()
 
         self.session.send(socket, "list_subshell_reply", reply, parent, ident)
 

@@ -450,18 +450,21 @@ class KernelMagics(Magics):
         app = IPKernelApp.instance()
         kernel = app.kernel
 
-        if not (hasattr(kernel, "_supports_kernel_subshells") and
-                kernel._supports_kernel_subshells()):
+        if not (
+            hasattr(kernel, "_supports_kernel_subshells") and kernel._supports_kernel_subshells()
+        ):
             print("Kernel does not support subshells")
             return
 
         import threading
+
         thread_id = threading.current_thread().ident
+        manager = kernel.shell_channel_thread.manager
         try:
-            subshell_id = kernel.shell_channel_thread.cache.subshell_id_from_thread_id(thread_id)
+            subshell_id = manager.subshell_id_from_thread_id(thread_id)
         except RuntimeError:
             subshell_id = "unknown"
-        subshell_id_list = kernel.shell_channel_thread.cache.list_subshell()
+        subshell_id_list = manager.list_subshell()
 
         print(f"subshell id: {subshell_id}")
         print(f"thread id: {thread_id}")

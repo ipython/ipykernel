@@ -27,7 +27,10 @@ async def test_properties(ipkernel: IPythonKernel) -> None:
 async def test_direct_kernel_info_request(ipkernel):
     reply = await ipkernel.test_shell_message("kernel_info_request", {})
     assert reply["header"]["msg_type"] == "kernel_info_reply"
-    assert "supported_features" not in reply["content"] or "kernel subshells" not in reply["content"]["supported_features"]
+    assert (
+        "supported_features" not in reply["content"]
+        or "kernel subshells" not in reply["content"]["supported_features"]
+    )
 
 
 async def test_direct_execute_request(ipkernel: MockIPyKernel) -> None:

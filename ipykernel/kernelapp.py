@@ -56,7 +56,6 @@ from .parentpoller import ParentPollerUnix, ParentPollerWindows
 from .shellchannel import ShellChannelThread
 from .zmqshell import ZMQInteractiveShell
 
-
 # -----------------------------------------------------------------------------
 # Flags and Aliases
 # -----------------------------------------------------------------------------

@@ -73,7 +73,7 @@ def get_replies(kc, msg_ids: list[str], timeout=TIMEOUT, channel="shell"):
     # Replies are returned in the same order as the msg_ids, not in the order of arrival.
     t0 = time()
     count = 0
-    replies = [None]*len(msg_ids)
+    replies = [None] * len(msg_ids)
     while True:
         get_msg = getattr(kc, f"get_{channel}_msg")
         reply = get_msg(timeout=timeout)

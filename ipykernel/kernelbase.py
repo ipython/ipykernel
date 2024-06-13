@@ -382,13 +382,16 @@ class Kernel(SingletonConfigurable):
                 # Ideally only want to deserialize message once.
                 copy = not isinstance(msg[0], zmq.Message)
                 _, msg2 = self.session.feed_identities(msg, copy=copy)
-                msg2 = self.session.deserialize(msg2, content=False, copy=copy)
-                subshell_id = msg2["header"].get("subshell_id")
+                try:
+                    msg3 = self.session.deserialize(msg2, content=False, copy=copy)
+                    subshell_id = msg3["header"].get("subshell_id")
 
-                # Find inproc pair socket to use to send message to correct subshell.
-                socket = self.shell_channel_thread.manager.get_shell_channel_socket(subshell_id)
-                assert socket is not None
-                socket.send_multipart(msg, copy=False)
+                    # Find inproc pair socket to use to send message to correct subshell.
+                    socket = self.shell_channel_thread.manager.get_shell_channel_socket(subshell_id)
+                    assert socket is not None
+                    socket.send_multipart(msg, copy=False)
+                except Exception:
+                    self.log.error("Invalid message", exc_info=True)  # noqa: G201
         except BaseException as e:
             if self.shell_stop.is_set():
                 return
@@ -1068,6 +1071,8 @@ class Kernel(SingletonConfigurable):
     # ---------------------------------------------------------------------------
 
     async def create_subshell_request(self, socket, ident, parent):
+        if not self.session:
+            return
         if not self._supports_kernel_subshells():
             self.log.error("Subshells are not supported by this kernel")
             return
@@ -1081,6 +1086,8 @@ class Kernel(SingletonConfigurable):
         self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
     async def delete_subshell_request(self, socket, ident, parent):
+        if not self.session:
+            return
         if not self._supports_kernel_subshells():
             self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
             return
@@ -1102,6 +1109,8 @@ class Kernel(SingletonConfigurable):
         self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
     async def list_subshell_request(self, socket, ident, parent):
+        if not self.session:
+            return
         if not self._supports_kernel_subshells():
             self.log.error("Subshells are not supported by this kernel")
             return

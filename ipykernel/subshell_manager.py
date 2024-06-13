@@ -227,7 +227,7 @@ class SubshellManager:
         assert current_thread().name == "Shell channel"
 
         thread = subshell.thread
-        if thread and thread.is_alive():
+        if thread.is_alive():
             thread.stop()
             thread.join()
 

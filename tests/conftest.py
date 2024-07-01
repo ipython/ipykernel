@@ -63,6 +63,12 @@ class TestSession(Session):
             send_stream, receive_stream = create_memory_object_stream(max_buffer_size=inf)
             self._streams[socket] = {"send": send_stream, "receive": receive_stream}
 
+    def close(self):
+        for streams in self._streams.values():
+            for stream in streams.values():
+                stream.close()
+        self._streams.clear()
+
     def send(self, socket, *args, **kwargs):
         msg = super().send(socket, *args, **kwargs)
         send_stream: MemoryObjectSendStream[Any] = self._streams[socket]["send"]
@@ -102,6 +108,7 @@ class KernelMixin:
 
     def destroy(self):
         self.stop()
+        self.session.close()
         for socket in self.test_sockets:
             socket.close()
         self.context.destroy()

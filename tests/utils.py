@@ -75,15 +75,13 @@ def get_replies(kc, msg_ids: list[str], timeout=TIMEOUT, channel="shell"):
     t0 = time()
     count = 0
     replies = [None] * len(msg_ids)
-    while True:
+    while count < len(msg_ids):
         get_msg = getattr(kc, f"get_{channel}_msg")
         reply = get_msg(timeout=timeout)
         try:
             msg_id = reply["parent_header"]["msg_id"]
             replies[msg_ids.index(msg_id)] = reply
             count += 1
-            if count == len(msg_ids):
-                break
         except ValueError:
             # Allow debugging ignored replies
             print(f"Ignoring reply not to any of {msg_ids}: {reply}")

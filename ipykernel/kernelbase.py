@@ -296,8 +296,10 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 
-        sys.stdout.flush()
-        sys.stderr.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
         self._publish_status("idle", "control")
 
     async def should_handle(self, stream, msg, idents):
@@ -439,8 +441,10 @@ class Kernel(SingletonConfigurable):
                 except Exception:
                     self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
 
-        sys.stdout.flush()
-        sys.stderr.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
         self._publish_status("idle", "shell")
 
     async def control_main(self):
@@ -665,8 +669,10 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
 
         # Flush output before sending the reply.
-        sys.stdout.flush()
-        sys.stderr.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
         # FIXME: on rare occasions, the flush doesn't seem to make it to the
         # clients... This seems to mitigate the problem, but we definitely need
         # to better understand what's going on.
@@ -997,8 +1003,10 @@ class Kernel(SingletonConfigurable):
         reply_content, result_buf = self.do_apply(content, bufs, msg_id, md)
 
         # flush i/o
-        sys.stdout.flush()
-        sys.stderr.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
 
         md = self.finish_metadata(parent, md, reply_content)
         if not self.session:
@@ -1136,8 +1144,10 @@ class Kernel(SingletonConfigurable):
 
     def _input_request(self, prompt, ident, parent, password=False):
         # Flush output before making the request.
-        sys.stderr.flush()
-        sys.stdout.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
 
         # flush the stdin socket, to purge stale replies
         while True:

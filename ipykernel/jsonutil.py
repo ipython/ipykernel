@@ -26,7 +26,7 @@ ISO8601_PAT = re.compile(
 
 # holy crap, strptime is not threadsafe.
 # Calling it once at import seems to help.
-datetime.strptime("1", "%d")
+datetime.strptime("2000-01-01", "%Y-%m-%d")
 
 # -----------------------------------------------------------------------------
 # Classes and functions

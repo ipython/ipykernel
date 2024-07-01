@@ -439,6 +439,40 @@ class KernelMagics(Magics):
         else:
             print("Autosave disabled")
 
+    @line_magic
+    def subshell(self, arg_s):
+        from ipykernel.kernelapp import IPKernelApp
+
+        if not IPKernelApp.initialized():
+            msg = "Not in a running Kernel"
+            raise RuntimeError(msg)
+
+        app = IPKernelApp.instance()
+        kernel = app.kernel
+
+        if not (
+            hasattr(kernel, "_supports_kernel_subshells") and kernel._supports_kernel_subshells()
+        ):
+            print("Kernel does not support subshells")
+            return
+
+        import threading
+
+        thread_id = threading.current_thread().ident
+        manager = kernel.shell_channel_thread.manager
+        try:
+            subshell_id = manager.subshell_id_from_thread_id(thread_id)
+        except RuntimeError:
+            subshell_id = "unknown"
+        subshell_id_list = manager.list_subshell()
+
+        print(f"subshell id: {subshell_id}")
+        print(f"thread id: {thread_id}")
+        print(f"main thread id: {threading.main_thread().ident}")
+        print(f"pid: {os.getpid()}")
+        print(f"thread count: {threading.active_count()}")
+        print(f"subshell list: {subshell_id_list}")
+
 
 class ZMQInteractiveShell(InteractiveShell):
     """A subclass of InteractiveShell for ZMQ."""

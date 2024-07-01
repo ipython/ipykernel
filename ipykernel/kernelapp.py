@@ -53,6 +53,7 @@ from .heartbeat import Heartbeat
 from .iostream import IOPubThread
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
+from .shellchannel import ShellChannelThread
 from .zmqshell import ZMQInteractiveShell
 
 # -----------------------------------------------------------------------------
@@ -143,6 +144,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     iopub_socket = Any()
     iopub_thread = Any()
     control_thread = Any()
+    shell_channel_thread = Any()
 
     _ports = Dict()
 
@@ -367,6 +369,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.control_socket.router_handover = 1
 
         self.control_thread = ControlThread(daemon=True)
+        self.shell_channel_thread = ShellChannelThread(context, self.shell_socket, daemon=True)
 
     def init_iopub(self, context):
         """Initialize the iopub channel."""
@@ -406,6 +409,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.log.debug("Closing control thread")
             self.control_thread.stop()
             self.control_thread.join()
+        if self.shell_channel_thread and self.shell_channel_thread.is_alive():
+            self.log.debug("Closing shell channel thread")
+            self.shell_channel_thread.stop()
+            self.shell_channel_thread.join()
 
         if self.debugpy_socket and not self.debugpy_socket.closed:
             self.debugpy_socket.close()
@@ -562,6 +569,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             debug_shell_socket=self.debug_shell_socket,
             shell_socket=self.shell_socket,
             control_thread=self.control_thread,
+            shell_channel_thread=self.shell_channel_thread,
             iopub_thread=self.iopub_thread,
             iopub_socket=self.iopub_socket,
             stdin_socket=self.stdin_socket,

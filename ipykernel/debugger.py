@@ -253,16 +253,20 @@ class DebugpyClient:
         # 1] Waits for initialized event
         await self.init_event.wait()
 
-        # 2] Sends configurationDone request
-        configurationDone = {
-            "type": "request",
-            "seq": int(self.init_event_seq) + 1,
-            "command": "configurationDone",
-        }
-        await self._send_request(configurationDone)
+        # do not send configurationDone request because when FE receive configurationDone response
+        # it will think debugger setup is done and start running the set
+        # we only want configurationDone request that FE sends out to indicate that we are okay to run the cell now
 
-        # 3]  Waits for configurationDone response
-        await self._wait_for_response()
+        # 2] Sends configurationDone request
+        # configurationDone = {
+        #     "type": "request",
+        #     "seq": int(self.init_event_seq) + 1,
+        #     "command": "configurationDone",
+        # }
+        # await self._send_request(configurationDone)
+
+        # # 3]  Waits for configurationDone response
+        # await self._wait_for_response()
 
         # 4] Waits for attachResponse and returns it
         return await self._wait_for_response()
@@ -270,12 +274,12 @@ class DebugpyClient:
     def get_host_port(self):
         """Get the host debugpy port."""
         if self.debugpy_port == -1:
-            socket = self.debugpy_socket
-            socket.bind_to_random_port("tcp://" + self.debugpy_host)
-            self.endpoint = socket.getsockopt(zmq.LAST_ENDPOINT).decode("utf-8")
-            socket.unbind(self.endpoint)
-            index = self.endpoint.rfind(":")
-            self.debugpy_port = self.endpoint[index + 1 :]
+            # socket = self.debugpy_socket
+            # socket.bind_to_random_port("tcp://" + self.debugpy_host)
+            # self.endpoint = socket.getsockopt(zmq.LAST_ENDPOINT).decode("utf-8")
+            # socket.unbind(self.endpoint)
+            # index = self.endpoint.rfind(":")
+            self.debugpy_port = 5678
         return self.debugpy_host, self.debugpy_port
 
     def connect_tcp_socket(self):
@@ -368,10 +372,11 @@ class Debugger:
 
     def _handle_event(self, msg):
         if msg["event"] == "stopped":
-            if msg["body"]["allThreadsStopped"]:
-                self.stopped_send_stream.send_nowait(msg)
-                # Do not forward the event now, will be done in the handle_stopped_event
-                return
+            # do not go through handle_stopped_event to avoid conflict with existing monkey patch
+            # if msg["body"]["allThreadsStopped"]:
+            #     self.stopped_send_stream.send_nowait(msg)
+            #     # Do not forward the event now, will be done in the handle_stopped_event
+            #     return
             self.stopped_threads.add(msg["body"]["threadId"])
             self.event_callback(msg)
         elif msg["event"] == "continued":
@@ -427,8 +432,11 @@ class Debugger:
                 Path(tmp_dir).mkdir(parents=True)
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy;"
-            code += 'debugpy.listen(("' + host + '",' + port + "))"
+            code += (
+                'debugpy.listen(("' + host + '",' + str(port) + "), in_process_debug_adapter=True)"
+            )
             content = {"code": code, "silent": True}
+            print("debugpy: before sending request")
             self.session.send(
                 self.shell_socket,
                 "execute_request",
@@ -436,9 +444,11 @@ class Debugger:
                 None,
                 (self.shell_socket.getsockopt(ROUTING_ID)),
             )
+            print("debugpy: after sending request")
 
             msg = await self.shell_socket.recv_multipart()
             ident, msg = self.session.feed_identities(msg, copy=True)
+            print("debugpy: receving msg " + str(msg))
             try:
                 msg = self.session.deserialize(msg, content=True, copy=True)
             except Exception:

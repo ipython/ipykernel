@@ -726,8 +726,99 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.poller is not None:
             self.poller.start()
         backend = "trio" if self.trio_loop else "asyncio"
-        run(self.main, backend=backend)
-        return
+
+        while True:
+            run(self.main, backend=backend)
+            if not getattr(self.kernel, "_fork_requested", False):
+                break
+            self.fork()
+
+    def fork(self):
+        # HACK: Why is this necessary?
+        # Without it, the *parent* kernel doesn't work.
+        # Also, it doesn't work if I try to start it again with
+        # self.init_iopub()...
+        self.iopub_thread.stop()
+
+        # Create a temporary connection file that will be inherited by the child process.
+        connection_file, conn = write_connection_file()
+
+        parent_pid = os.getpid()
+        pid = os.fork()
+        self.kernel._fork_requested = False  # reset for parent AND child
+        if pid == 0:
+            self.log.debug("Child kernel with pid %s", os.getpid())
+
+            # close all sockets and ioloops
+            self.close()
+
+            # Reset all ports so they will be reinitialized with the ports from the connection file
+            for name in [
+                "%s_port" % channel for channel in ("shell", "stdin", "iopub", "hb", "control")
+            ]:
+                setattr(self, name, 0)
+            self.connection_file = connection_file
+
+            # Reset the ZMQ context for it to be recreated
+            self.context = None
+
+            # Make ParentPoller work correctly (the new process is a child of the previous kernel)
+            self.parent_handle = parent_pid
+
+            # Session have a protection to send messages from forked processes through the `check_pid` flag.
+            self.session.pid = os.getpid()
+            self.session.key = conn["key"].encode()
+
+            self.init_connection_file()
+            self.init_poller()
+            self.init_sockets()
+            self.init_heartbeat()
+            self.init_io()
+
+            kernel = self.kernel
+            params = dict(
+                parent=self,
+                session=self.session,
+                control_socket=self.control_socket,
+                control_thread=self.control_thread,
+                debugpy_socket=self.debugpy_socket,
+                debug_shell_socket=self.debug_shell_socket,
+                shell_socket=self.shell_socket,
+                iopub_thread=self.iopub_thread,
+                iopub_socket=self.iopub_socket,
+                stdin_socket=self.stdin_socket,
+                log=self.log,
+                profile_dir=self.profile_dir,
+            )
+            for k, v in params.items():
+                setattr(kernel, k, v)
+
+            kernel.user_ns = kernel.shell.user_ns
+            kernel.init_shell()
+
+            kernel.record_ports({name + "_port": port for name, port in self._ports.items()})
+            self.kernel = kernel
+
+            # Allow the displayhook to get the execution count
+            self.displayhook.get_execution_count = lambda: kernel.execution_count
+
+            # shell init steps
+            self.init_shell()
+            if self.shell:
+                self.init_gui_pylab()
+                self.init_extensions()
+                self.init_code()
+            # flush stdout/stderr, so that anything written to these streams during
+            # initialization do not get associated with the first execution request
+            sys.stdout.flush()
+            sys.stderr.flush()
+            self.start()
+        else:
+            self.log.debug("Parent kernel will resume")
+            # keep a reference, since the will set this to None
+            post_fork_callback = self.kernel._post_fork_callback
+            post_fork_callback(pid, conn)
+            self.kernel._post_fork_callback = None
 
     async def main(self):
         async with create_task_group() as tg:

@@ -208,6 +208,11 @@ class IsCompleteReplyIncomplete(Reference):
     indent = Unicode()
 
 
+class ForkReply(Reply):
+    pid = Integer()
+    conn = Dict()
+
+
 # IOPub messages
 
 
@@ -255,6 +260,7 @@ references = {
     "stream": Stream(),
     "display_data": DisplayData(),
     "header": RHeader(),
+    "fork_reply": ForkReply(),
 }
 
 # -----------------------------------------------------------------------------

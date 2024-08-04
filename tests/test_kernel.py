@@ -23,6 +23,7 @@ from IPython.paths import locate_profile
 from .utils import (
     TIMEOUT,
     assemble_output,
+    connect_to_kernel,
     execute,
     flush_channels,
     get_reply,
@@ -489,6 +490,50 @@ def test_shutdown():
             else:
                 break
         assert not km.is_alive()
+
+
+def test_fork_metadata():
+    with new_kernel() as kc:
+        from .test_message_spec import validate_message
+
+        km = kc.parent
+        fork_msg_id = kc.fork()
+        fork_reply = kc.get_shell_msg(timeout=TIMEOUT)
+        validate_message(fork_reply, "fork_reply", fork_msg_id)
+        assert fork_msg_id == fork_reply["parent_header"]["msg_id"] == fork_msg_id
+        assert fork_reply["content"]["conn"]["key"] != kc.session.key.decode()
+        fork_pid = fork_reply["content"]["pid"]
+        _check_status(fork_reply["content"])
+        wait_for_idle(kc)
+
+        assert fork_pid != km.provisioner.pid
+        # TODO: Inspect if `fork_pid` is running? Might need to use `psutil` for this in order to be cross platform
+
+        with connect_to_kernel(fork_reply["content"]["conn"], TIMEOUT) as kc_fork:
+            assert fork_reply["content"]["conn"]["key"] == kc_fork.session.key.decode()
+            kc_fork.shutdown()
+
+
+def test_fork():
+    def execute_with_user_expression(kc, code, user_expression):
+        _, reply = execute(code, kc=kc, user_expressions={"my-user-expression": user_expression})
+        content = reply["user_expressions"]["my-user-expression"]["data"]["text/plain"]
+        wait_for_idle(kc)
+        return content
+
+    """Kernel forks after fork_request"""
+    with kernel() as kc:
+        assert execute_with_user_expression(kc, "a = 1", "a") == "1"
+        assert execute_with_user_expression(kc, "b = 2", "b") == "2"
+        kc.fork()
+        fork_reply = kc.get_shell_msg(timeout=TIMEOUT)
+        wait_for_idle(kc)
+
+        with connect_to_kernel(fork_reply["content"]["conn"], TIMEOUT) as kc_fork:
+            assert execute_with_user_expression(kc_fork, "a = 11", "a, b") == str((11, 2))
+            assert execute_with_user_expression(kc_fork, "b = 12", "a, b") == str((11, 12))
+            assert execute_with_user_expression(kc, "z = 20", "a, b") == str((1, 2))
+            kc_fork.shutdown()
 
 
 def test_interrupt_during_input():

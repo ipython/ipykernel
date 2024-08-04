@@ -217,6 +217,7 @@ class Kernel(SingletonConfigurable):
         "shutdown_request",
         "is_complete_request",
         "interrupt_request",
+        "fork",
         # deprecated:
         "apply_request",
     ]
@@ -228,6 +229,25 @@ class Kernel(SingletonConfigurable):
         "debug_request",
         "usage_request",
     ]
+
+    def fork(self, stream, ident, parent):
+        # Forking in the (async)io loop is not supported.
+        # instead, we stop it, and use the io loop to pass
+        # information up the callstack
+        # loop = ioloop.IOLoop.current()
+        self._fork_requested = True
+
+        def post_fork_callback(pid, conn):
+            reply_content = json_clean({"status": "ok", "pid": pid, "conn": conn})
+            metadata = {}
+            metadata = self.finish_metadata(parent, metadata, reply_content)
+
+            self.session.send(
+                stream, "fork_reply", reply_content, parent, metadata=metadata, ident=ident
+            )
+
+        self._post_fork_callback = post_fork_callback
+        self.stop()
 
     def __init__(self, **kwargs):
         """Initialize the kernel."""
@@ -469,7 +489,8 @@ class Kernel(SingletonConfigurable):
             if not self._is_test and self.control_socket is not None:
                 if self.control_thread:
                     self.control_thread.set_task(self.control_main)
-                    self.control_thread.start()
+                    if not self.control_thread.is_alive():
+                        self.control_thread.start()
                 else:
                     tg.start_soon(self.control_main)
 

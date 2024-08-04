@@ -117,6 +117,23 @@ class IPythonKernel(KernelBase):
                 self.debug_just_my_code,
             )
 
+        self.init_shell()
+
+        if _use_appnope() and self._darwin_app_nap:
+            # Disable app-nap as the kernel is not a gui but can have guis
+            import appnope  # type:ignore[import-untyped]
+
+            appnope.nope()
+
+        self._new_threads_parent_header = {}
+        self._initialize_thread_hooks()
+
+        if hasattr(gc, "callbacks"):
+            # while `gc.callbacks` exists since Python 3.3, pypy does not
+            # implement it even as of 3.9.
+            gc.callbacks.append(self._clean_thread_parent_frames)
+
+    def init_shell(self):
         # Initialize the InteractiveShell subclass
         self.shell = self.shell_class.instance(
             parent=self,
@@ -144,20 +161,6 @@ class IPythonKernel(KernelBase):
         comm_msg_types = ["comm_open", "comm_msg", "comm_close"]
         for msg_type in comm_msg_types:
             self.shell_handlers[msg_type] = getattr(self.comm_manager, msg_type)
-
-        if _use_appnope() and self._darwin_app_nap:
-            # Disable app-nap as the kernel is not a gui but can have guis
-            import appnope  # type:ignore[import-untyped]
-
-            appnope.nope()
-
-        self._new_threads_parent_header = {}
-        self._initialize_thread_hooks()
-
-        if hasattr(gc, "callbacks"):
-            # while `gc.callbacks` exists since Python 3.3, pypy does not
-            # implement it even as of 3.9.
-            gc.callbacks.append(self._clean_thread_parent_frames)
 
     help_links = List(
         [

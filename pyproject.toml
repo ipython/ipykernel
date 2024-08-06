@@ -181,9 +181,12 @@ filterwarnings= [
   "ignore:There is no current event loop:DeprecationWarning",
   "ignore:zmq.eventloop.ioloop is deprecated in pyzmq 17. pyzmq now works with default tornado and asyncio eventloops.:DeprecationWarning",
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
-  "ignore:trio.MultiError is deprecated since Trio 0.22.0:trio.TrioDeprecationWarning",
+
   # Ignore datetime warning.
   "ignore:datetime.datetime.utc:DeprecationWarning",
+
+  # https://github.com/python-trio/trio/issues/3053
+  "ignore:The `hash` argument is deprecated in favor of `unsafe_hash` and will be removed in or after August 2025.",
 ]
 
 [tool.coverage.report]

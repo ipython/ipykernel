@@ -2,6 +2,44 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.29.5
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.4...1e62d48298e353a9879fae99bc752f9bb48797ef))
+
+### Bugs fixed
+
+- Fix use of "%matplotlib osx" [#1237](https://github.com/ipython/ipykernel/pull/1237) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- \[6.x\] Update Release Scripts  [#1251](https://github.com/ipython/ipykernel/pull/1251) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-03-27&to=2024-06-29&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-03-27..2024-06-29&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-03-27..2024-06-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+## 6.29.4
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.3...1cea5332ffc37f32e8232fd2b8b8ddd91b2bbdcf))
+
+### Bugs fixed
+
+- Fix side effect import for pickleutil [#1216](https://github.com/ipython/ipykernel/pull/1216) ([@blink1073](https://github.com/blink1073))
+
+### Maintenance and upkeep improvements
+
+- Do not import debugger/debugpy unless needed [#1223](https://github.com/ipython/ipykernel/pull/1223) ([@krassowski](https://github.com/krassowski))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-02-26&to=2024-03-27&type=c))
+
+[@agronholm](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aagronholm+updated%3A2024-02-26..2024-03-27&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-02-26..2024-03-27&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-02-26..2024-03-27&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-02-26..2024-03-27&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-02-26..2024-03-27&type=Issues)
+
 ## 6.29.3
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.2...de2221ce155668c343084fde37b77fb6b1671dc9))

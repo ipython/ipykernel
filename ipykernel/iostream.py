@@ -215,7 +215,7 @@ class IOPubThread:
         if not self._pipe_flag or not self._is_master_process():
             return
         if msg[0] != self._pipe_uuid:
-            print("Bad pipe message: %s", msg, file=sys.__stderr__)
+            # print("Bad pipe message: %s", msg, file=sys.__stderr__)
             return
         self.send_multipart(msg[1:])
 

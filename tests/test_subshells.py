@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, get_replies, get_reply, kernel, new_kernel
+from .utils import TIMEOUT, get_replies, get_reply, new_kernel
 
 # Helpers
 
@@ -76,7 +76,7 @@ def execute_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None)
 
 
 def test_supported():
-    with kernel() as kc:
+    with new_kernel() as kc:
         msg_id = kc.kernel_info()
         reply = get_reply(kc, msg_id, TIMEOUT)
         assert "supported_features" in reply["content"]
@@ -84,7 +84,7 @@ def test_supported():
 
 
 def test_subshell_id_lifetime():
-    with kernel() as kc:
+    with new_kernel() as kc:
         assert list_subshell_helper(kc)["subshell_id"] == []
         subshell_id = create_subshell_helper(kc)["subshell_id"]
         assert list_subshell_helper(kc)["subshell_id"] == [subshell_id]
@@ -93,14 +93,14 @@ def test_subshell_id_lifetime():
 
 
 def test_delete_non_existent():
-    with kernel() as kc:
+    with new_kernel() as kc:
         reply = delete_subshell_helper(kc, "unknown_subshell_id")
         assert reply["status"] == "error"
         assert "evalue" in reply
 
 
 def test_thread_counts():
-    with kernel() as kc:
+    with new_kernel() as kc:
         nthreads = execute_thread_count(kc)
 
         subshell_id = create_subshell_helper(kc)["subshell_id"]
@@ -113,7 +113,7 @@ def test_thread_counts():
 
 
 def test_thread_ids():
-    with kernel() as kc:
+    with new_kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
         thread_id, main_thread_id = execute_thread_ids(kc)
@@ -128,7 +128,7 @@ def test_thread_ids():
 @pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
 @pytest.mark.parametrize("overlap", [True, False])
 def test_run_concurrently_sequence(are_subshells, overlap):
-    with kernel() as kc:
+    with new_kernel() as kc:
         subshell_ids = [
             create_subshell_helper(kc)["subshell_id"] if is_subshell else None
             for is_subshell in are_subshells
@@ -165,7 +165,7 @@ def test_run_concurrently_sequence(are_subshells, overlap):
 
 @pytest.mark.parametrize("include_main_shell", [True, False])
 def test_run_concurrently_timing(include_main_shell):
-    with kernel() as kc:
+    with new_kernel() as kc:
         subshell_ids = [
             None if include_main_shell else create_subshell_helper(kc)["subshell_id"],
             create_subshell_helper(kc)["subshell_id"],
@@ -204,7 +204,7 @@ def test_run_concurrently_timing(include_main_shell):
 
 
 def test_execution_count():
-    with kernel() as kc:
+    with new_kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
         # Prepare messages
@@ -230,7 +230,7 @@ def test_execution_count():
 
 
 def test_create_while_execute():
-    with kernel() as kc:
+    with new_kernel() as kc:
         # Send request to execute code on main subshell.
         msg = kc.session.msg("execute_request", {"code": "import time; time.sleep(0.05)"})
         kc.shell_channel.send(msg)

@@ -729,11 +729,17 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         run(self.main, backend=backend)
         return
 
+    async def _wait_to_enter_eventloop(self):
+        await self.kernel._eventloop_set.wait()
+        await self.kernel.enter_eventloop()
+
     async def main(self):
         async with create_task_group() as tg:
-            if self.kernel.eventloop:
-                tg.start_soon(self.kernel.enter_eventloop)
+            tg.start_soon(self._wait_to_enter_eventloop)
             tg.start_soon(self.kernel.start)
+
+        if self.kernel.eventloop:
+            self.kernel._eventloop_set.set()
 
     def stop(self):
         """Stop the kernel, thread-safe."""

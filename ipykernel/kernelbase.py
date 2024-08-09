@@ -36,7 +36,7 @@ except ImportError:
 
 import psutil
 import zmq
-from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
+from anyio import TASK_STATUS_IGNORED, Event, create_task_group, sleep, to_thread
 from anyio.abc import TaskStatus
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -229,6 +229,8 @@ class Kernel(SingletonConfigurable):
         "usage_request",
     ]
 
+    _eventloop_set: Event = Event()
+
     def __init__(self, **kwargs):
         """Initialize the kernel."""
         super().__init__(**kwargs)
@@ -321,7 +323,9 @@ class Kernel(SingletonConfigurable):
         # record handle, so we can check when this changes
         eventloop = self.eventloop
         if eventloop is None:
-            self.log.info("Exiting as there is no eventloop")
+            # Do not warn if shutting down.
+            if not (hasattr(self, "shell") and self.shell.exit_now):
+                self.log.info("Exiting as there is no eventloop")
             return
 
         async def advance_eventloop():
@@ -335,20 +339,14 @@ class Kernel(SingletonConfigurable):
             except KeyboardInterrupt:
                 # Ctrl-C shouldn't crash the kernel
                 self.log.error("KeyboardInterrupt caught in kernel")
-            if self.eventloop is eventloop:
-                # schedule advance again
-                await schedule_next()
 
-        async def schedule_next():
-            """Schedule the next advance of the eventloop"""
+        # begin polling the eventloop
+        while self.eventloop is eventloop:
             # flush the eventloop every so often,
             # giving us a chance to handle messages in the meantime
             self.log.debug("Scheduling eventloop advance")
             await sleep(0.001)
             await advance_eventloop()
-
-        # begin polling the eventloop
-        await schedule_next()
 
     _message_counter = Any(
         help="""Monotonic counter of messages
@@ -481,6 +479,10 @@ class Kernel(SingletonConfigurable):
                 tg.start_soon(self.shell_main)
 
     def stop(self):
+        if not self._eventloop_set.is_set():
+            # Stop the async task that is waiting for the eventloop to be set.
+            self._eventloop_set.set()
+
         self.shell_stop.set()
         self.control_stop.set()
 

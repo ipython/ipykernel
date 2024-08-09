@@ -324,7 +324,7 @@ class Kernel(SingletonConfigurable):
         eventloop = self.eventloop
         if eventloop is None:
             # Do not warn if shutting down.
-            if not (self.shell and self.shell.exit_now):
+            if not (hasattr(self, "shell") and self.shell.exit_now):
                 self.log.info("Exiting as there is no eventloop")
             return
 

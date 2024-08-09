@@ -10,6 +10,7 @@ from functools import partial
 
 import zmq
 from packaging.version import Version as V
+from sniffio import AsyncLibraryNotFoundError
 from traitlets.config.application import Application
 
 
@@ -93,11 +94,11 @@ def _notify_stream_qt(kernel):
         # due to our consuming of the edge-triggered FD
         # flush returns the number of events consumed.
         # if there were any, wake it up
-        if kernel.shell_stream.flush(limit=1):
+        if (kernel.shell_socket.get(zmq.EVENTS) & zmq.POLLIN) > 0:
             exit_loop()
 
     if not hasattr(kernel, "_qt_notifier"):
-        fd = kernel.shell_stream.getsockopt(zmq.FD)
+        fd = kernel.shell_socket.getsockopt(zmq.FD)
         kernel._qt_notifier = QtCore.QSocketNotifier(
             fd, enum_helper("QtCore.QSocketNotifier.Type").Read, kernel.app.qt_event_loop
         )
@@ -179,7 +180,7 @@ def loop_wx(kernel):
 
     def wake():
         """wake from wx"""
-        if kernel.shell_stream.flush(limit=1):
+        if (kernel.shell_socket.get(zmq.EVENTS) & zmq.POLLIN) > 0:
             kernel.app.ExitMainLoop()
             return
 
@@ -248,14 +249,14 @@ def loop_tk(kernel):
 
         def exit_loop():
             """fall back to main loop"""
-            app.tk.deletefilehandler(kernel.shell_stream.getsockopt(zmq.FD))
+            app.tk.deletefilehandler(kernel.shell_socket.getsockopt(zmq.FD))
             app.quit()
             app.destroy()
             del kernel.app_wrapper
 
         def process_stream_events(*a, **kw):
             """fall back to main loop when there's a socket event"""
-            if kernel.shell_stream.flush(limit=1):
+            if (kernel.shell_socket.get(zmq.EVENTS) & zmq.POLLIN) > 0:
                 exit_loop()
 
         # allow for scheduling exits from the loop in case a timeout needs to
@@ -269,7 +270,7 @@ def loop_tk(kernel):
         # For Tkinter, we create a Tk object and call its withdraw method.
         kernel.app_wrapper = BasicAppWrapper(app)
         app.tk.createfilehandler(
-            kernel.shell_stream.getsockopt(zmq.FD), READABLE, process_stream_events
+            kernel.shell_socket.getsockopt(zmq.FD), READABLE, process_stream_events
         )
         # schedule initial call after start
         app.after(0, process_stream_events)
@@ -377,7 +378,7 @@ def loop_cocoa(kernel):
                 # don't let interrupts during mainloop invoke crash_handler:
                 sys.excepthook = handle_int
                 mainloop(kernel._poll_interval)
-                if kernel.shell_stream.flush(limit=1):
+                if (kernel.shell_socket.get(zmq.EVENTS) & zmq.POLLIN) > 0:
                     # events to process, return control to kernel
                     return
             except BaseException:
@@ -604,3 +605,10 @@ def enable_gui(gui, kernel=None):
     kernel.eventloop = loop
     # We set `eventloop`; the function the user chose is executed in `Kernel.enter_eventloop`, thus
     # any exceptions raised during the event loop will not be shown in the client.
+
+    # If running in async loop then set anyio event to trigger starting the eventloop.
+    # If not running in async loop do nothing as this will be handled in IPKernelApp.main().
+    try:
+        kernel._eventloop_set.set()
+    except AsyncLibraryNotFoundError:
+        pass

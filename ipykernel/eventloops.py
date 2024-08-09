@@ -10,7 +10,6 @@ from functools import partial
 
 import zmq
 from packaging.version import Version as V
-from sniffio import AsyncLibraryNotFoundError
 from traitlets.config.application import Application
 
 
@@ -610,5 +609,6 @@ def enable_gui(gui, kernel=None):
     # If not running in async loop do nothing as this will be handled in IPKernelApp.main().
     try:
         kernel._eventloop_set.set()
-    except AsyncLibraryNotFoundError:
+    except RuntimeError:
+        # Expecting sniffio.AsyncLibraryNotFoundError but don't want to import sniffio just for that
         pass

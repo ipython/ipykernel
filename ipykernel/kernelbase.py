@@ -4,7 +4,6 @@
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
-import asyncio
 import inspect
 import itertools
 import logging
@@ -1258,7 +1257,7 @@ class Kernel(SingletonConfigurable):
                     delay,
                     children,
                 )
-                await asyncio.sleep(delay)
+                await sleep(delay)
 
     async def _at_shutdown(self):
         """Actions taken at shutdown by the kernel, called by python's atexit."""

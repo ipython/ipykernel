@@ -3,7 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import asyncio
 import atexit
 import contextvars
 import io
@@ -99,7 +98,6 @@ class IOPubThread:
         self._event_pipes: Dict[threading.Thread, Any] = {}
         self._event_pipe_gc_lock: threading.Lock = threading.Lock()
         self._event_pipe_gc_seconds: float = 10
-        self._event_pipe_gc_task: Optional[asyncio.Task[Any]] = None
         self._setup_event_pipe()
         tasks = [self._handle_event, self._run_event_pipe_gc]
         if pipe:

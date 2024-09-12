@@ -11,7 +11,7 @@ from threading import Lock, current_thread, main_thread
 
 import zmq
 import zmq.asyncio
-from anyio import sleep
+from anyio import Event, create_task_group
 
 from .subshell import SubshellThread
 
@@ -50,8 +50,9 @@ class SubshellManager:
         self._parent_shell_channel_socket = self._create_inproc_pair_socket(None, True)
         self._parent_other_socket = self._create_inproc_pair_socket(None, False)
 
-        self._poller = zmq.Poller()
+        self._poller = zmq.asyncio.Poller()
         self._poller.register(self._parent_shell_channel_socket, zmq.POLLIN)
+        self._subshell_change = Event()
 
     def close(self):
         """Stop all subshells and close all resources."""
@@ -126,12 +127,13 @@ class SubshellManager:
         assert current_thread().name == "Shell channel"
 
         while True:
-            for socket, _ in self._poller.poll(0):
-                msg = await socket.recv_multipart(copy=False)
-                self._shell_socket.send_multipart(msg)
+            async with create_task_group() as tg:
+                tg.start_soon(self._listen_from_subshells)
+                await self._subshell_change.wait()
+                tg.cancel_scope.cancel()
 
-            # Yield to other tasks.
-            await sleep(0)
+            # anyio.Event is single use, so recreate to reuse
+            self._subshell_change = Event()
 
     def subshell_id_from_thread_id(self, thread_id) -> str | None:
         """Return subshell_id of the specified thread_id.
@@ -177,6 +179,7 @@ class SubshellManager:
         thread.start()
 
         self._poller.register(shell_channel_socket, zmq.POLLIN)
+        self._subshell_change.set()
 
         return subshell_id
 
@@ -195,6 +198,23 @@ class SubshellManager:
     def _get_inproc_socket_address(self, name: str | None):
         full_name = f"subshell-{name}" if name else "subshell"
         return f"inproc://{full_name}"
+
+    async def _listen_from_subshells(self):
+        """Await next reply message from any subshell (parent or child) and resend
+        to the client via the shell_socket.
+
+        If a subshell is created or deleted then the poller is updated and the task
+        executing this function is cancelled and then rescheduled with the updated
+        poller.
+
+        Runs in the shell channel thread.
+        """
+        assert current_thread().name == "Shell channel"
+
+        while True:
+            for socket, _ in await self._poller.poll():
+                msg = await socket.recv_multipart(copy=False)
+                self._shell_socket.send_multipart(msg)
 
     async def _process_control_request(self, request, subshell_task):
         """Process a control request message received on the control inproc
@@ -233,4 +253,5 @@ class SubshellManager:
             thread.join()
 
         self._poller.unregister(subshell.shell_channel_socket)
+        self._subshell_change.set()
         subshell.shell_channel_socket.close()

@@ -32,6 +32,9 @@ class SubshellManager:
     the shell channel thread so there is only ever one write access at any one time.
     Reading of cache information can be performed by other threads, so all reads are
     protected by a lock so that they are atomic.
+
+    Sending reply messages via the shell_socket is wrapped by another lock to protect
+    against multiple subshells attempting to send at the same time.
     """
 
     def __init__(self, context: zmq.asyncio.Context, shell_socket):
@@ -40,7 +43,8 @@ class SubshellManager:
         self._context: zmq.asyncio.Context = context
         self._shell_socket = shell_socket
         self._cache: dict[str, Subshell] = {}
-        self._lock: Lock = Lock()
+        self._lock_cache = Lock()
+        self._lock_shell_socket = Lock()
 
         # Inproc pair sockets for control channel and main shell (parent subshell).
         # Each inproc pair has a "shell_channel" socket used in the shell channel
@@ -70,7 +74,7 @@ class SubshellManager:
             if socket is not None:
                 socket.close()
 
-        with self._lock:
+        with self._lock_cache:
             while True:
                 try:
                     _, subshell = self._cache.popitem()
@@ -88,7 +92,7 @@ class SubshellManager:
         """
         if subshell_id is None:
             return self._parent_other_socket
-        with self._lock:
+        with self._lock_cache:
             return self._cache[subshell_id].thread._pair_socket
 
     def get_shell_channel_socket(self, subshell_id: str | None):
@@ -98,7 +102,7 @@ class SubshellManager:
         """
         if subshell_id is None:
             return self._parent_shell_channel_socket
-        with self._lock:
+        with self._lock_cache:
             return self._cache[subshell_id].shell_channel_socket
 
     def list_subshell(self) -> list[str]:
@@ -106,7 +110,7 @@ class SubshellManager:
 
         Can be called by any subshell using %subshell magic.
         """
-        with self._lock:
+        with self._lock_cache:
             return list(self._cache)
 
     async def listen_from_control(self, subshell_task):
@@ -141,7 +145,7 @@ class SubshellManager:
 
         Only used by %subshell magic so does not have to be fast/cached.
         """
-        with self._lock:
+        with self._lock_cache:
             if thread_id == main_thread().ident:
                 return None
             for id, subshell in self._cache.items():
@@ -167,7 +171,7 @@ class SubshellManager:
         subshell_id = str(uuid.uuid4())
         thread = SubshellThread(subshell_id)
 
-        with self._lock:
+        with self._lock_cache:
             assert subshell_id not in self._cache
             shell_channel_socket = self._create_inproc_pair_socket(subshell_id, True)
             self._cache[subshell_id] = Subshell(thread, shell_channel_socket)
@@ -190,7 +194,7 @@ class SubshellManager:
         """
         assert current_thread().name == "Shell channel"
 
-        with self._lock:
+        with self._lock_cache:
             subshell = self._cache.pop(subshell_id)
 
         self._stop_subshell(subshell)
@@ -202,13 +206,13 @@ class SubshellManager:
     def _get_shell_channel_socket(self, subshell_id: str | None) -> zmq.asyncio.Socket:
         if subshell_id is None:
             return self._parent_shell_channel_socket
-        with self._lock:
+        with self._lock_cache:
             return self._cache[subshell_id].shell_channel_socket
 
     def _is_subshell(self, subshell_id: str | None) -> bool:
         if subshell_id is None:
             return True
-        with self._lock:
+        with self._lock_cache:
             return subshell_id in self._cache
 
     async def _listen_for_subshell_reply(self, subshell_id: str | None):
@@ -224,7 +228,8 @@ class SubshellManager:
         try:
             while True:
                 msg = await shell_channel_socket.recv_multipart(copy=False)
-                self._shell_socket.send_multipart(msg)
+                with self._lock_shell_socket:
+                    self._shell_socket.send_multipart(msg)
         except BaseException as e:
             if not self._is_subshell(subshell_id):
                 # Subshell no longer exists so exit gracefully

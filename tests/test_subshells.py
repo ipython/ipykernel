@@ -208,7 +208,7 @@ def test_execution_count():
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
         # Prepare messages
-        times = (0.1, 0.05, 0.2, 0.07)  # Sleep seconds
+        times = (0.2, 0.1, 0.4, 0.15)  # Sleep seconds
         msgs = []
         for id, sleep in zip((None, subshell_id, None, subshell_id), times):
             code = f"import time; time.sleep({sleep})"

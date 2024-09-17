@@ -110,6 +110,30 @@ Submodules
    :show-inheritance:
 
 
+.. automodule:: ipykernel.shellchannel
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.subshell
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.subshell_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.thread
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 .. automodule:: ipykernel.trio_runner
    :members:
    :undoc-members:

@@ -469,7 +469,7 @@ class Kernel(SingletonConfigurable):
             elif received_time - self._aborted_time > self.stop_on_error_timeout:
                 self._aborting = False
             if self._aborting:
-                await self._send_abort_reply(self.shell_socket, msg, idents)
+                await self._send_abort_reply(socket, msg, idents)
                 self._publish_status("idle", "shell")
                 return
 
@@ -479,7 +479,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
-        if not await self.should_handle(self.shell_socket, msg, idents):
+        if not await self.should_handle(socket, msg, idents):
             return
 
         handler = self.shell_handlers.get(msg_type)

@@ -233,7 +233,7 @@ class SubshellManager:
             while True:
                 msg = await shell_channel_socket.recv_multipart(copy=False)
                 with self._lock_shell_socket:
-                    self._shell_socket.send_multipart(msg)
+                    await self._shell_socket.send_multipart(msg)
         except BaseException as e:
             if not self._is_subshell(subshell_id):
                 # Subshell no longer exists so exit gracefully

@@ -154,7 +154,7 @@ class SubshellManager:
             for id, subshell in self._cache.items():
                 if subshell.thread.ident == thread_id:
                     return id
-            msg = f"Thread id '{thread_id} does not correspond to a subshell of this kernel"
+            msg = f"Thread id {thread_id!r} does not correspond to a subshell of this kernel"
             raise RuntimeError(msg)
 
     def _create_inproc_pair_socket(
@@ -235,11 +235,11 @@ class SubshellManager:
                 msg = await shell_channel_socket.recv_multipart(copy=False)
                 with self._lock_shell_socket:
                     await self._shell_socket.send_multipart(msg)
-        except BaseException as e:
+        except BaseException:
             if not self._is_subshell(subshell_id):
                 # Subshell no longer exists so exit gracefully
                 return
-            raise e
+            raise
 
     async def _process_control_request(self, request, subshell_task) -> dict[str, t.Any]:
         """Process a control request message received on the control inproc
@@ -259,7 +259,7 @@ class SubshellManager:
             elif type == "list":
                 reply["subshell_id"] = self.list_subshell()
             else:
-                msg = f"Unrecognised message type {type}"
+                msg = f"Unrecognised message type {type!r}"
                 raise RuntimeError(msg)
         except BaseException as err:
             reply = {

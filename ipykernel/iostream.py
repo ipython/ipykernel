@@ -170,10 +170,10 @@ class IOPubThread:
                 for _ in range(n_events):
                     event_f = self._events.popleft()
                     event_f()
-        except Exception as e:
+        except Exception:
             if self.thread.__stop.is_set():
                 return
-            raise e
+            raise
 
     def _setup_pipe_in(self):
         """setup listening pipe for IOPub from forked subprocesses"""
@@ -202,10 +202,10 @@ class IOPubThread:
         try:
             while True:
                 await self._handle_pipe_msg()
-        except Exception as e:
+        except Exception:
             if self.thread.__stop.is_set():
                 return
-            raise e
+            raise
 
     async def _handle_pipe_msg(self, msg=None):
         """handle a pipe message from a subprocess"""

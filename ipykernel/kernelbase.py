@@ -262,10 +262,10 @@ class Kernel(SingletonConfigurable):
         try:
             while True:
                 await self.process_control_message()
-        except BaseException as e:
+        except BaseException:
             if self.control_stop.is_set():
                 return
-            raise e
+            raise
 
     async def process_control_message(self, msg=None):
         """dispatch control requests"""
@@ -392,10 +392,10 @@ class Kernel(SingletonConfigurable):
                     socket.send_multipart(msg, copy=False)
                 except Exception:
                     self.log.error("Invalid message", exc_info=True)  # noqa: G201
-        except BaseException as e:
+        except BaseException:
             if self.shell_stop.is_set():
                 return
-            raise e
+            raise
 
     async def shell_main(self, subshell_id: str | None):
         """Main loop for a single subshell."""
@@ -426,10 +426,10 @@ class Kernel(SingletonConfigurable):
         try:
             while True:
                 await self.process_shell_message(socket=socket)
-        except BaseException as e:
+        except BaseException:
             if self.shell_stop.is_set():
                 return
-            raise e
+            raise
 
     async def process_shell_message(self, msg=None, socket=None):
         # If socket is None kernel subshells are not supported so use socket=shell_socket.
@@ -718,8 +718,7 @@ class Kernel(SingletonConfigurable):
             cell_meta = parent.get("metadata", {})
             cell_id = cell_meta.get("cellId")
         except Exception:
-            self.log.error("Got bad msg: ")
-            self.log.error("%s", parent)
+            self.log.error("Got bad msg from parent: %s", parent)
             return
 
         stop_on_error = content.get("stop_on_error", True)
@@ -1101,8 +1100,7 @@ class Kernel(SingletonConfigurable):
             content = parent["content"]
             subshell_id = content["subshell_id"]
         except Exception:
-            self.log.error("Got bad msg: ")
-            self.log.error("%s", parent)
+            self.log.error("Got bad msg from parent: %s", parent)
             return
 
         # This should only be called in the control thread if it exists.

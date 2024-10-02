@@ -16,9 +16,9 @@ machinery.  This should thus be thought of as scaffolding.
 
 import os
 import sys
+import threading
 import warnings
 from pathlib import Path
-from threading import local
 
 from IPython.core import page, payloadpage
 from IPython.core.autocall import ZMQExitAutocall
@@ -69,7 +69,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
     @default("_thread_local")
     def _default_thread_local(self):
         """Initialize our thread local storage"""
-        return local()
+        return threading.local()
 
     @property
     def _hooks(self):
@@ -441,6 +441,9 @@ class KernelMagics(Magics):
 
     @line_magic
     def subshell(self, arg_s):
+        """
+        List all current subshells
+        """
         from ipykernel.kernelapp import IPKernelApp
 
         if not IPKernelApp.initialized():
@@ -453,8 +456,6 @@ class KernelMagics(Magics):
         if not getattr(kernel, "_supports_kernel_subshells", False):
             print("Kernel does not support subshells")
             return
-
-        import threading
 
         thread_id = threading.current_thread().ident
         manager = kernel.shell_channel_thread.manager

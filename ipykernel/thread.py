@@ -10,7 +10,7 @@ class BaseThread(Thread):
 
     def __init__(self, name, **kwargs):
         """Initialize the thread."""
-        Thread.__init__(self, name=name, **kwargs)
+        super().__init__(name=name, **kwargs)
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
         self.__stop = Event()

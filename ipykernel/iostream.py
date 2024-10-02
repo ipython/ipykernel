@@ -40,7 +40,7 @@ class _IOPubThread(Thread):
 
     def __init__(self, tasks, **kwargs):
         """Initialize the thread."""
-        Thread.__init__(self, name="IOPub", **kwargs)
+        super().__init__(name="IOPub", **kwargs)
         self._tasks = tasks
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True

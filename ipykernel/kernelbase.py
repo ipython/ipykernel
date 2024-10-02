@@ -399,7 +399,7 @@ class Kernel(SingletonConfigurable):
 
     async def shell_main(self, subshell_id: str | None):
         """Main loop for a single subshell."""
-        if self._supports_kernel_subshells():
+        if self._supports_kernel_subshells:
             if subshell_id is None:
                 assert threading.current_thread() == threading.main_thread()
             else:
@@ -435,7 +435,7 @@ class Kernel(SingletonConfigurable):
             socket = self.shell_socket
 
         assert self.session is not None
-        if self._supports_kernel_subshells():
+        if self._supports_kernel_subshells:
             assert threading.current_thread() not in (
                 self.control_thread,
                 self.shell_channel_thread,
@@ -894,7 +894,7 @@ class Kernel(SingletonConfigurable):
             "help_links": self.help_links,
             "supported_features": [],
         }
-        if self._supports_kernel_subshells():
+        if self._supports_kernel_subshells:
             info["supported_features"].append("kernel subshells")
         return info
 
@@ -1074,7 +1074,7 @@ class Kernel(SingletonConfigurable):
     async def create_subshell_request(self, socket, ident, parent):
         if not self.session:
             return
-        if not self._supports_kernel_subshells():
+        if not self._supports_kernel_subshells:
             self.log.error("Subshells are not supported by this kernel")
             return
 
@@ -1089,7 +1089,7 @@ class Kernel(SingletonConfigurable):
     async def delete_subshell_request(self, socket, ident, parent):
         if not self.session:
             return
-        if not self._supports_kernel_subshells():
+        if not self._supports_kernel_subshells:
             self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
             return
 
@@ -1112,7 +1112,7 @@ class Kernel(SingletonConfigurable):
     async def list_subshell_request(self, socket, ident, parent):
         if not self.session:
             return
-        if not self._supports_kernel_subshells():
+        if not self._supports_kernel_subshells:
             self.log.error("Subshells are not supported by this kernel")
             return
 
@@ -1415,5 +1415,6 @@ class Kernel(SingletonConfigurable):
                 )
                 self.log.debug("%s", self._shutdown_message)
 
+    @property
     def _supports_kernel_subshells(self):
         return self.shell_channel_thread is not None

@@ -450,9 +450,7 @@ class KernelMagics(Magics):
         app = IPKernelApp.instance()
         kernel = app.kernel
 
-        if not (
-            hasattr(kernel, "_supports_kernel_subshells") and kernel._supports_kernel_subshells()
-        ):
+        if not getattr(kernel, "_supports_kernel_subshells", False):
             print("Kernel does not support subshells")
             return
 

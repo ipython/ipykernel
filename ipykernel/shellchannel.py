@@ -1,8 +1,6 @@
 """A thread for a shell channel."""
 from .subshell_manager import SubshellManager
-from .thread import BaseThread
-
-SHELL_CHANNEL_THREAD_NAME = "Shell channel"
+from .thread import SHELL_CHANNEL_THREAD_NAME, BaseThread
 
 
 class ShellChannelThread(BaseThread):

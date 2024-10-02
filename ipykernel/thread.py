@@ -4,6 +4,9 @@ from threading import Event, Thread
 
 from anyio import create_task_group, run, to_thread
 
+CONTROL_THREAD_NAME = "Control"
+SHELL_CHANNEL_THREAD_NAME = "Shell channel"
+
 
 class BaseThread(Thread):
     """Base class for threads."""

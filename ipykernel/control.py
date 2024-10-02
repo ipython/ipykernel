@@ -1,8 +1,6 @@
 """A thread for a control channel."""
 
-from .thread import BaseThread
-
-CONTROL_THREAD_NAME = "Control"
+from .thread import CONTROL_THREAD_NAME, BaseThread
 
 
 class ControlThread(BaseThread):

@@ -14,6 +14,7 @@ import zmq.asyncio
 from anyio import create_memory_object_stream, create_task_group
 
 from .subshell import SubshellThread
+from .thread import SHELL_CHANNEL_THREAD_NAME
 
 
 @dataclass
@@ -60,7 +61,7 @@ class SubshellManager:
 
     def close(self) -> None:
         """Stop all subshells and close all resources."""
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         self._send_stream.close()
         self._receive_stream.close()
@@ -119,7 +120,7 @@ class SubshellManager:
         """Listen for messages on the control inproc socket, handle those messages and
         return replies on the same socket.  Runs in the shell channel thread.
         """
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         socket = self._control_shell_channel_socket
         while True:
@@ -133,7 +134,7 @@ class SubshellManager:
 
         Runs in the shell channel thread.
         """
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         async with create_task_group() as tg:
             tg.start_soon(self._listen_for_subshell_reply, None)
@@ -170,7 +171,7 @@ class SubshellManager:
 
     async def _create_subshell(self, subshell_task) -> str:
         """Create and start a new subshell thread."""
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         subshell_id = str(uuid.uuid4())
         thread = SubshellThread(subshell_id)
@@ -196,7 +197,7 @@ class SubshellManager:
 
         Raises key error if subshell_id not in cache.
         """
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         with self._lock_cache:
             subshell = self._cache.pop(subshell_id)
@@ -225,7 +226,7 @@ class SubshellManager:
 
         Runs in the shell channel thread.
         """
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         shell_channel_socket = self._get_shell_channel_socket(subshell_id)
 
@@ -244,7 +245,7 @@ class SubshellManager:
         """Process a control request message received on the control inproc
         socket and return the reply.  Runs in the shell channel thread.
         """
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         try:
             type = request["type"]
@@ -269,7 +270,7 @@ class SubshellManager:
 
     def _stop_subshell(self, subshell: Subshell) -> None:
         """Stop a subshell thread and close all of its resources."""
-        assert current_thread().name == "Shell channel"
+        assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         thread = subshell.thread
         if thread.is_alive():

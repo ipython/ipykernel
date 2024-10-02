@@ -892,9 +892,10 @@ class Kernel(SingletonConfigurable):
             "language_info": self.language_info,
             "banner": self.banner,
             "help_links": self.help_links,
+            "supported_features": [],
         }
         if self._supports_kernel_subshells():
-            info["supported_features"] = ["kernel subshells"]
+            info["supported_features"].append("kernel subshells")
         return info
 
     async def kernel_info_request(self, socket, ident, parent):

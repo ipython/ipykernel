@@ -1,4 +1,5 @@
 """Base class for threads."""
+import typing as t
 from threading import Event, Thread
 
 from anyio import create_task_group, run, to_thread
@@ -13,13 +14,11 @@ class BaseThread(Thread):
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
         self.__stop = Event()
-        self._tasks = []
-        self._task_args = []
+        self._tasks_and_args: t.List[t.Tuple[t.Callable, t.Tuple]] = []
 
-    def add_task(self, task, *args):
+    def add_task(self, task: t.Callable, *args: t.Tuple):
         # May only add tasks before the thread is started.
-        self._tasks.append(task)
-        self._task_args.append(args)
+        self._tasks_and_args.append((task, args))
 
     def run(self):
         """Run the thread."""
@@ -27,7 +26,7 @@ class BaseThread(Thread):
 
     async def _main(self):
         async with create_task_group() as tg:
-            for task, args in zip(self._tasks, self._task_args):
+            for task, args in self._tasks_and_args:
                 tg.start_soon(task, *args)
             await to_thread.run_sync(self.__stop.wait)
             tg.cancel_scope.cancel()

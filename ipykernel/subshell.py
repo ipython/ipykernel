@@ -17,7 +17,7 @@ class SubshellThread(BaseThread):
         # Inproc PAIR socket, for communication with shell channel thread.
         self._pair_socket: zmq.asyncio.Socket | None = None
 
-    async def create_pair_socket(self, context: zmq.asyncio.Context, address: str):
+    async def create_pair_socket(self, context: zmq.asyncio.Context, address: str) -> None:
         """Create inproc PAIR socket, for communication with shell channel thread.
 
         Should be called from this thread, so usually via add_task before the
@@ -27,7 +27,7 @@ class SubshellThread(BaseThread):
         self._pair_socket = context.socket(zmq.PAIR)
         self._pair_socket.connect(address)
 
-    def run(self):
+    def run(self) -> None:
         try:
             super().run()
         finally:

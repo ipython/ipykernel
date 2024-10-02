@@ -116,7 +116,7 @@ class SubshellManager:
         with self._lock_cache:
             return list(self._cache)
 
-    async def listen_from_control(self, subshell_task) -> None:
+    async def listen_from_control(self, subshell_task: t.Any) -> None:
         """Listen for messages on the control inproc socket, handle those messages and
         return replies on the same socket.  Runs in the shell channel thread.
         """
@@ -141,7 +141,7 @@ class SubshellManager:
             async for subshell_id in self._receive_stream:
                 tg.start_soon(self._listen_for_subshell_reply, subshell_id)
 
-    def subshell_id_from_thread_id(self, thread_id) -> str | None:
+    def subshell_id_from_thread_id(self, thread_id: int) -> str | None:
         """Return subshell_id of the specified thread_id.
 
         Raises RuntimeError if thread_id is not the main shell or a subshell.
@@ -169,7 +169,7 @@ class SubshellManager:
             socket.connect(address)
         return socket
 
-    async def _create_subshell(self, subshell_task) -> str:
+    async def _create_subshell(self, subshell_task: t.Any) -> str:
         """Create and start a new subshell thread."""
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
@@ -241,7 +241,9 @@ class SubshellManager:
                 return
             raise
 
-    async def _process_control_request(self, request, subshell_task) -> dict[str, t.Any]:
+    async def _process_control_request(
+        self, request: dict[str, t.Any], subshell_task: t.Any
+    ) -> dict[str, t.Any]:
         """Process a control request message received on the control inproc
         socket and return the reply.  Runs in the shell channel thread.
         """

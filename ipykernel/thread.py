@@ -17,9 +17,9 @@ class BaseThread(Thread):
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
         self.__stop = Event()
-        self._tasks_and_args: t.List[t.Tuple[t.Callable, t.Tuple]] = []
+        self._tasks_and_args: t.List[t.Tuple[t.Any, t.Any]] = []
 
-    def add_task(self, task: t.Callable, *args: t.Tuple):
+    def add_task(self, task: t.Any, *args: t.Any) -> None:
         # May only add tasks before the thread is started.
         self._tasks_and_args.append((task, args))
 
@@ -34,7 +34,7 @@ class BaseThread(Thread):
             await to_thread.run_sync(self.__stop.wait)
             tg.cancel_scope.cancel()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the thread.
 
         This method is threadsafe.

@@ -18,7 +18,7 @@ import warnings
 from datetime import datetime
 from signal import SIGINT, SIGTERM, Signals
 
-from .control import CONTROL_THREAD_NAME
+from .thread import CONTROL_THREAD_NAME
 
 if sys.platform != "win32":
     from signal import SIGKILL
@@ -898,7 +898,7 @@ class Kernel(SingletonConfigurable):
             "supported_features": [],
         }
         if self._supports_kernel_subshells:
-            info["supported_features"].append("kernel subshells")
+            info["supported_features"] = ["kernel subshells"]
         return info
 
     async def kernel_info_request(self, socket, ident, parent):
@@ -1074,7 +1074,7 @@ class Kernel(SingletonConfigurable):
     # Subshell control message handlers
     # ---------------------------------------------------------------------------
 
-    async def create_subshell_request(self, socket, ident, parent):
+    async def create_subshell_request(self, socket, ident, parent) -> None:
         if not self.session:
             return
         if not self._supports_kernel_subshells:
@@ -1089,7 +1089,7 @@ class Kernel(SingletonConfigurable):
 
         self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
-    async def delete_subshell_request(self, socket, ident, parent):
+    async def delete_subshell_request(self, socket, ident, parent) -> None:
         if not self.session:
             return
         if not self._supports_kernel_subshells:
@@ -1111,7 +1111,7 @@ class Kernel(SingletonConfigurable):
 
         self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
-    async def list_subshell_request(self, socket, ident, parent):
+    async def list_subshell_request(self, socket, ident, parent) -> None:
         if not self.session:
             return
         if not self._supports_kernel_subshells:

@@ -27,8 +27,8 @@ class ShellChannelThread(BaseThread):
 
     def run(self):
         """Run the thread."""
-        self.name = SHELL_CHANNEL_THREAD_NAME
-        super().run()
-
-        if self._manager:
-            self._manager.close()
+        try:
+            super().run()
+        finally:
+            if self._manager:
+                self._manager.close()

@@ -28,8 +28,9 @@ class SubshellThread(BaseThread):
         self._pair_socket.connect(address)
 
     def run(self):
-        super().run()
-
-        if self._pair_socket is not None:
-            self._pair_socket.close()
-            self._pair_socket = None
+        try:
+            super().run()
+        finally:
+            if self._pair_socket is not None:
+                self._pair_socket.close()
+                self._pair_socket = None

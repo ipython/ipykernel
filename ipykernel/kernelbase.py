@@ -422,6 +422,7 @@ class Kernel(SingletonConfigurable):
                 tg.cancel_scope.cancel()
 
     async def process_shell(self, socket=None):
+        # socket=None is valid if kernel subshells are not supported.
         try:
             while True:
                 await self.process_shell_message(socket=socket)
@@ -431,17 +432,20 @@ class Kernel(SingletonConfigurable):
             raise e
 
     async def process_shell_message(self, msg=None, socket=None):
-        if not socket:
-            socket = self.shell_socket
-
+        # If socket is None kernel subshells are not supported so use socket=shell_socket.
+        # If msg is set, process that message.
+        # If msg is None, await the next message to arrive on the socket.
         assert self.session is not None
         if self._supports_kernel_subshells:
             assert threading.current_thread() not in (
                 self.control_thread,
                 self.shell_channel_thread,
             )
+            assert socket is not None
         else:
             assert threading.current_thread() == threading.main_thread()
+            assert socket is None
+            socket = self.shell_socket
 
         no_msg = msg is None if self._is_test else not await socket.poll(0)
         msg = msg or await socket.recv_multipart(copy=False)

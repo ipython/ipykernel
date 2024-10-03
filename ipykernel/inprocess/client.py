@@ -55,7 +55,7 @@ class InProcessKernelClient(KernelClient):
 
         return BlockingInProcessKernelClient
 
-    def get_connection_info(self):
+    def get_connection_info(self):  # type: ignore[override]
         """Get the connection info for the client."""
         d = super().get_connection_info()
         d["kernel"] = self.kernel  # type:ignore[assignment]
@@ -100,8 +100,13 @@ class InProcessKernelClient(KernelClient):
     # Methods for sending specific messages
     # -------------------------------------
 
-    async def execute(
-        self, code, silent=False, store_history=True, user_expressions=None, allow_stdin=None
+    async def execute(  # type: ignore[override]
+        self,
+        code,
+        silent=False,
+        store_history=True,
+        user_expressions=None,
+        allow_stdin=None,
     ):
         """Execute code on the client."""
         if allow_stdin is None:

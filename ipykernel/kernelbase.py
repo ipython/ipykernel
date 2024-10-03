@@ -233,6 +233,14 @@ class Kernel(SingletonConfigurable):
     ]
 
     _eventloop_set: Event = Event()
+    control_handlers: Dict[
+        str,
+        t.Callable[[zmq.asyncio.Socket, list[bytes], str], t.Awaitable[t.Any]]
+        |
+        # I think this one should be deprecated, and we should check the handlers are
+        # coroutine functions.
+        t.Callable[[zmq.asyncio.Socket, list[bytes], str], t.Any],
+    ]
 
     def __init__(self, **kwargs):
         """Initialize the kernel."""

@@ -2,6 +2,7 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
 
 import atexit
 import os
@@ -66,6 +67,28 @@ def get_reply(kc, msg_id, timeout=TIMEOUT, channel="shell"):
         timeout -= t1 - t0
         t0 = t1
     return reply
+
+
+def get_replies(kc, msg_ids: list[str], timeout=TIMEOUT, channel="shell"):
+    # Get replies which may arrive in any order as they may be running on different subshells.
+    # Replies are returned in the same order as the msg_ids, not in the order of arrival.
+    t0 = time()
+    count = 0
+    replies = [None] * len(msg_ids)
+    while count < len(msg_ids):
+        get_msg = getattr(kc, f"get_{channel}_msg")
+        reply = get_msg(timeout=timeout)
+        try:
+            msg_id = reply["parent_header"]["msg_id"]
+            replies[msg_ids.index(msg_id)] = reply
+            count += 1
+        except ValueError:
+            # Allow debugging ignored replies
+            print(f"Ignoring reply not to any of {msg_ids}: {reply}")
+        t1 = time()
+        timeout -= t1 - t0
+        t0 = t1
+    return replies
 
 
 def execute(code="", kc=None, **kwargs):

@@ -18,7 +18,7 @@ import warnings
 from datetime import datetime
 from signal import SIGINT, SIGTERM, Signals
 
-from .control import CONTROL_THREAD_NAME
+from .thread import CONTROL_THREAD_NAME
 
 if sys.platform != "win32":
     from signal import SIGKILL
@@ -103,6 +103,7 @@ class Kernel(SingletonConfigurable):
     debug_shell_socket = Any()
 
     control_thread = Any()
+    shell_channel_thread = Any()
     iopub_socket = Any()
     iopub_thread = Any()
     stdin_socket = Any()
@@ -226,6 +227,9 @@ class Kernel(SingletonConfigurable):
         "abort_request",
         "debug_request",
         "usage_request",
+        "create_subshell_request",
+        "delete_subshell_request",
+        "list_subshell_request",
     ]
 
     _eventloop_set: Event = Event()
@@ -258,16 +262,17 @@ class Kernel(SingletonConfigurable):
         try:
             while True:
                 await self.process_control_message()
-        except BaseException as e:
-            print("base exception")
+        except BaseException:
             if self.control_stop.is_set():
                 return
-            raise e
+            raise
 
     async def process_control_message(self, msg=None):
         """dispatch control requests"""
         assert self.control_socket is not None
         assert self.session is not None
+        assert self.control_thread is None or threading.current_thread() == self.control_thread
+
         msg = msg or await self.control_socket.recv_multipart()
         copy = not isinstance(msg[0], zmq.Message)
         idents, msg = self.session.feed_identities(msg, copy=copy)
@@ -356,28 +361,95 @@ class Kernel(SingletonConfigurable):
     def _message_counter_default(self):
         return itertools.count()
 
-    async def shell_main(self):
-        async with create_task_group() as tg:
-            tg.start_soon(self.process_shell)
-            await to_thread.run_sync(self.shell_stop.wait)
-            tg.cancel_scope.cancel()
+    async def shell_channel_thread_main(self):
+        """Main loop for shell channel thread.
 
-    async def process_shell(self):
-        try:
-            while True:
-                await self.process_shell_message()
-        except BaseException as e:
-            if self.shell_stop.is_set():
-                return
-            raise e
-
-    async def process_shell_message(self, msg=None):
+        Listen for incoming messages on kernel shell_socket.  For each message
+        received, extract the subshell_id from the message header and forward the
+        message to the correct subshell via ZMQ inproc pair socket.
+        """
         assert self.shell_socket is not None
         assert self.session is not None
+        assert self.shell_channel_thread is not None
+        assert threading.current_thread() == self.shell_channel_thread
 
-        no_msg = msg is None if self._is_test else not await self.shell_socket.poll(0)
+        try:
+            while True:
+                msg = await self.shell_socket.recv_multipart()
 
-        msg = msg or await self.shell_socket.recv_multipart()
+                # Deserialize whole message just to get subshell_id.
+                # Keep original message to send to subshell_id unmodified.
+                # Ideally only want to deserialize message once.
+                copy = not isinstance(msg[0], zmq.Message)
+                _, msg2 = self.session.feed_identities(msg, copy=copy)
+                try:
+                    msg3 = self.session.deserialize(msg2, content=False, copy=copy)
+                    subshell_id = msg3["header"].get("subshell_id")
+
+                    # Find inproc pair socket to use to send message to correct subshell.
+                    socket = self.shell_channel_thread.manager.get_shell_channel_socket(subshell_id)
+                    assert socket is not None
+                    socket.send_multipart(msg, copy=False)
+                except Exception:
+                    self.log.error("Invalid message", exc_info=True)  # noqa: G201
+        except BaseException:
+            if self.shell_stop.is_set():
+                return
+            raise
+
+    async def shell_main(self, subshell_id: str | None):
+        """Main loop for a single subshell."""
+        if self._supports_kernel_subshells:
+            if subshell_id is None:
+                assert threading.current_thread() == threading.main_thread()
+            else:
+                assert threading.current_thread() not in (
+                    self.shell_channel_thread,
+                    threading.main_thread(),
+                )
+            # Inproc pair socket that this subshell uses to talk to shell channel thread.
+            socket = self.shell_channel_thread.manager.get_other_socket(subshell_id)
+        else:
+            assert subshell_id is None
+            assert threading.current_thread() == threading.main_thread()
+            socket = self.shell_socket
+
+        async with create_task_group() as tg:
+            tg.start_soon(self.process_shell, socket)
+            if subshell_id is None:
+                # Main subshell.
+                await to_thread.run_sync(self.shell_stop.wait)
+                tg.cancel_scope.cancel()
+
+    async def process_shell(self, socket=None):
+        # socket=None is valid if kernel subshells are not supported.
+        try:
+            while True:
+                await self.process_shell_message(socket=socket)
+        except BaseException:
+            if self.shell_stop.is_set():
+                return
+            raise
+
+    async def process_shell_message(self, msg=None, socket=None):
+        # If socket is None kernel subshells are not supported so use socket=shell_socket.
+        # If msg is set, process that message.
+        # If msg is None, await the next message to arrive on the socket.
+        assert self.session is not None
+        if self._supports_kernel_subshells:
+            assert threading.current_thread() not in (
+                self.control_thread,
+                self.shell_channel_thread,
+            )
+            assert socket is not None
+        else:
+            assert threading.current_thread() == threading.main_thread()
+            assert socket is None
+            socket = self.shell_socket
+
+        no_msg = msg is None if self._is_test else not await socket.poll(0)
+        msg = msg or await socket.recv_multipart(copy=False)
+
         received_time = time.monotonic()
         copy = not isinstance(msg[0], zmq.Message)
         idents, msg = self.session.feed_identities(msg, copy=copy)
@@ -401,7 +473,7 @@ class Kernel(SingletonConfigurable):
             elif received_time - self._aborted_time > self.stop_on_error_timeout:
                 self._aborting = False
             if self._aborting:
-                await self._send_abort_reply(self.shell_socket, msg, idents)
+                await self._send_abort_reply(socket, msg, idents)
                 self._publish_status("idle", "shell")
                 return
 
@@ -411,7 +483,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
-        if not await self.should_handle(self.shell_socket, msg, idents):
+        if not await self.should_handle(socket, msg, idents):
             return
 
         handler = self.shell_handlers.get(msg_type)
@@ -424,7 +496,7 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                result = handler(self.shell_socket, idents, msg)
+                result = handler(socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
             except Exception:
@@ -465,7 +537,7 @@ class Kernel(SingletonConfigurable):
             self.control_stop = threading.Event()
             if not self._is_test and self.control_socket is not None:
                 if self.control_thread:
-                    self.control_thread.set_task(self.control_main)
+                    self.control_thread.add_task(self.control_main)
                     self.control_thread.start()
                 else:
                     tg.start_soon(self.control_main)
@@ -474,8 +546,19 @@ class Kernel(SingletonConfigurable):
             self.shell_is_awaiting = False
             self.shell_is_blocking = False
             self.shell_stop = threading.Event()
-            if not self._is_test and self.shell_socket is not None:
-                tg.start_soon(self.shell_main)
+
+            if self.shell_channel_thread:
+                tg.start_soon(self.shell_main, None)
+
+                # Assign tasks to and start shell channel thread.
+                manager = self.shell_channel_thread.manager
+                self.shell_channel_thread.add_task(self.shell_channel_thread_main)
+                self.shell_channel_thread.add_task(manager.listen_from_control, self.shell_main)
+                self.shell_channel_thread.add_task(manager.listen_from_subshells)
+                self.shell_channel_thread.start()
+            else:
+                if not self._is_test and self.shell_socket is not None:
+                    tg.start_soon(self.shell_main, None)
 
     def stop(self):
         if not self._eventloop_set.is_set():
@@ -635,8 +718,7 @@ class Kernel(SingletonConfigurable):
             cell_meta = parent.get("metadata", {})
             cell_id = cell_meta.get("cellId")
         except Exception:
-            self.log.error("Got bad msg: ")
-            self.log.error("%s", parent)
+            self.log.error("Got bad msg from parent: %s", parent)
             return
 
         stop_on_error = content.get("stop_on_error", True)
@@ -687,8 +769,8 @@ class Kernel(SingletonConfigurable):
         reply_msg = self.session.send(
             socket,
             "execute_reply",
-            reply_content,
-            parent,
+            content=reply_content,
+            parent=parent,
             metadata=metadata,
             ident=ident,
         )
@@ -806,14 +888,18 @@ class Kernel(SingletonConfigurable):
 
     @property
     def kernel_info(self):
-        return {
+        info = {
             "protocol_version": kernel_protocol_version,
             "implementation": self.implementation,
             "implementation_version": self.implementation_version,
             "language_info": self.language_info,
             "banner": self.banner,
             "help_links": self.help_links,
+            "supported_features": [],
         }
+        if self._supports_kernel_subshells:
+            info["supported_features"] = ["kernel subshells"]
+        return info
 
     async def kernel_info_request(self, socket, ident, parent):
         """Handle a kernel info request."""
@@ -983,6 +1069,62 @@ class Kernel(SingletonConfigurable):
 
     async def do_debug_request(self, msg):
         raise NotImplementedError
+
+    # ---------------------------------------------------------------------------
+    # Subshell control message handlers
+    # ---------------------------------------------------------------------------
+
+    async def create_subshell_request(self, socket, ident, parent) -> None:
+        if not self.session:
+            return
+        if not self._supports_kernel_subshells:
+            self.log.error("Subshells are not supported by this kernel")
+            return
+
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
+        await other_socket.send_json({"type": "create"})
+        reply = await other_socket.recv_json()
+
+        self.session.send(socket, "create_subshell_reply", reply, parent, ident)
+
+    async def delete_subshell_request(self, socket, ident, parent) -> None:
+        if not self.session:
+            return
+        if not self._supports_kernel_subshells:
+            self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
+            return
+
+        try:
+            content = parent["content"]
+            subshell_id = content["subshell_id"]
+        except Exception:
+            self.log.error("Got bad msg from parent: %s", parent)
+            return
+
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
+        await other_socket.send_json({"type": "delete", "subshell_id": subshell_id})
+        reply = await other_socket.recv_json()
+
+        self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
+
+    async def list_subshell_request(self, socket, ident, parent) -> None:
+        if not self.session:
+            return
+        if not self._supports_kernel_subshells:
+            self.log.error("Subshells are not supported by this kernel")
+            return
+
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
+        await other_socket.send_json({"type": "list"})
+        reply = await other_socket.recv_json()
+
+        self.session.send(socket, "list_subshell_reply", reply, parent, ident)
 
     # ---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)
@@ -1274,3 +1416,7 @@ class Kernel(SingletonConfigurable):
                     ident=self._topic("shutdown"),
                 )
                 self.log.debug("%s", self._shutdown_message)
+
+    @property
+    def _supports_kernel_subshells(self):
+        return self.shell_channel_thread is not None

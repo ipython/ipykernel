@@ -9,7 +9,7 @@ from ipykernel.parentpoller import ParentPollerUnix, ParentPollerWindows
 
 
 @pytest.mark.skipif(os.name == "nt", reason="only works on posix")
-def test_parent_poller_unix():
+def test_parent_poller_unix_to_pid1():
     poller = ParentPollerUnix()
     with mock.patch("os.getppid", lambda: 1):  # noqa: PT008
 
@@ -25,6 +25,22 @@ def test_parent_poller_unix():
 
     with mock.patch("os.getppid", mock_getppid), pytest.raises(ValueError):  # noqa: PT011
         poller.run()
+
+
+@pytest.mark.skipif(os.name == "nt", reason="only works on posix")
+def test_parent_poller_unix_reparent_not_pid1():
+    parent_pid = 221
+    parent_pids = iter([parent_pid, parent_pid - 1])
+
+    poller = ParentPollerUnix(parent_pid=parent_pid)
+
+    with mock.patch("os.getppid", lambda: next(parent_pids)):  # noqa: PT008
+
+        def exit_mock(*args):
+            sys.exit(1)
+
+        with mock.patch("os._exit", exit_mock), pytest.raises(SystemExit):
+            poller.run()
 
 
 @pytest.mark.skipif(os.name != "nt", reason="only works on windows")

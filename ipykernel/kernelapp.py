@@ -220,7 +220,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # PID 1 (init) is special and will never go away,
             # only be reassigned.
             # Parent polling doesn't work if ppid == 1 to start with.
-            self.poller = ParentPollerUnix()
+            self.poller = ParentPollerUnix(parent_pid=self.parent_handle)
 
     def _try_bind_socket(self, s, port):
         iface = f"{self.transport}://{self.ip}"

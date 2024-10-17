@@ -641,7 +641,7 @@ class IPythonKernel(KernelBase):
     def do_apply(self, content, bufs, msg_id, reply_metadata):
         """Handle an apply request."""
         try:
-            from ipyparallel.serialize import serialize_object, unpack_apply_message
+            from ipyparallel.serialize import serialize_object, unpack_apply_message  # type: ignore[import-not-found]
         except ImportError:
             from .serialize import serialize_object, unpack_apply_message
 

@@ -15,11 +15,11 @@ import sys
 import warnings
 
 # Third-party
-import gi
+import gi  # type: ignore[import-not-found]
 
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import GObject, Gtk  # noqa: E402
+from gi.repository import GObject, Gtk  # type: ignore[import-not-found] # noqa: E402
 
 warnings.warn(
     "The Gtk3 event loop for ipykernel is deprecated", category=DeprecationWarning, stacklevel=2

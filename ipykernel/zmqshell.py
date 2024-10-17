@@ -78,7 +78,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def publish(  # type:ignore[override]
+    def publish(
         self,
         data,
         metadata=None,
@@ -402,7 +402,7 @@ class KernelMagics(Magics):
         # %qtconsole should imply bind_kernel for engines:
         # FIXME: move to ipyparallel Kernel subclass
         if "ipyparallel" in sys.modules:
-            from ipyparallel import bind_kernel
+            from ipyparallel import bind_kernel  # type: ignore[import-not-found]
 
             bind_kernel()
 
@@ -516,7 +516,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     # Over ZeroMQ, GUI control isn't done with PyOS_InputHook as there is no
     # interactive input being read; we provide event loop support in ipkernel
-    def enable_gui(self, gui):  # type:ignore[override]
+    def enable_gui(self, gui):
         """Enable a given guil."""
         from .eventloops import enable_gui as real_enable_gui
 
@@ -636,12 +636,12 @@ class ZMQInteractiveShell(InteractiveShell):
             self.data_pub.set_parent(parent)
         try:
             stdout = sys.stdout
-            stdout.set_parent(parent)  # type:ignore[union-attr]
+            stdout.set_parent(parent)
         except AttributeError:
             pass
         try:
             stderr = sys.stderr
-            stderr.set_parent(parent)  # type:ignore[union-attr]
+            stderr.set_parent(parent)
         except AttributeError:
             pass
 

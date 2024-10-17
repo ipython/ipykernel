@@ -261,7 +261,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                     raise
         return None
 
-    def write_connection_file(self):  # type: ignore[override]
+    def write_connection_file(self):
         """write connection info to JSON file"""
         cf = self.abs_connection_file
         connection_info = dict(

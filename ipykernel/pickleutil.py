@@ -11,7 +11,9 @@ from types import FunctionType
 
 # This registers a hook when it's imported
 try:
-    from ipyparallel.serialize import codeutil  # noqa: F401
+    from ipyparallel.serialize import (  #  type: ignore[import-not-found]
+        codeutil,
+    )  # noqa: F401,
 except ImportError:
     pass
 from traitlets.log import get_logger

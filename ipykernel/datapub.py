@@ -13,7 +13,7 @@ from ipykernel.jsonutil import json_clean
 
 try:
     # available since ipyparallel 5.0.0
-    from ipyparallel.serialize import serialize_object
+    from ipyparallel.serialize import serialize_object  # type: ignore[import-not-found]
 except ImportError:
     # Deprecated since ipykernel 4.3.0
     from ipykernel.serialize import serialize_object

@@ -172,7 +172,7 @@ def _loop_wx(app):
 def loop_wx(kernel):
     """Start a kernel with wx event loop support."""
 
-    import wx
+    import wx  # type: ignore[import-not-found]
 
     # Wx uses milliseconds
     poll_interval = int(1000 * kernel._poll_interval)
@@ -515,19 +515,19 @@ def set_qt_api_env_from_gui(gui):
                 os.environ["QT_API"] = "pyqt5"
             except ImportError:
                 try:
-                    import PySide2  # noqa: F401
+                    import PySide2  # type: ignore[import-not-found] #noqa: F401
 
                     os.environ["QT_API"] = "pyside2"
                 except ImportError:
                     os.environ["QT_API"] = "pyqt5"
         elif gui == "qt6":
             try:
-                import PyQt6  # noqa: F401
+                import PyQt6  #  type: ignore[import-not-found] #noqa: F401
 
                 os.environ["QT_API"] = "pyqt6"
             except ImportError:
                 try:
-                    import PySide6  # noqa: F401
+                    import PySide6  #  type: ignore[import-not-found] # noqa: F401
 
                     os.environ["QT_API"] = "pyside6"
                 except ImportError:

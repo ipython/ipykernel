@@ -23,8 +23,10 @@ try:
     # This import is required to have the next ones working...
     from debugpy.server import api  # noqa: F401
 
-    from _pydevd_bundle import pydevd_frame_utils  # isort: skip
-    from _pydevd_bundle.pydevd_suspended_frames import (  # isort: skip
+    from _pydevd_bundle import (  # type:ignore[import-not-found]
+        pydevd_frame_utils,
+    )  #  isort: skip
+    from _pydevd_bundle.pydevd_suspended_frames import (  # type:ignore[import-not-found] # isort: skip
         SuspendedFramesManager,
         _FramesTracker,
     )
@@ -70,7 +72,7 @@ class _DummyPyDB:
 
     def __init__(self):
         """Init."""
-        from _pydevd_bundle.pydevd_api import PyDevdAPI
+        from _pydevd_bundle.pydevd_api import PyDevdAPI  # type: ignore[import-not-found]
 
         self.variable_presentation = PyDevdAPI.VariablePresentation()
 

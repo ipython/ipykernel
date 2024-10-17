@@ -102,7 +102,7 @@ class Kernel(SingletonConfigurable):
     control_tasks: t.Any = List()
 
     debug_shell_socket = Any()
-    control_thread: Thread
+    control_thread: t.Optional[Thread] = None
     shell_channel_thread: Thread
 
     iopub_socket = Any()

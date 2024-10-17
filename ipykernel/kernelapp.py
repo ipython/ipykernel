@@ -16,6 +16,7 @@ from functools import partial
 from io import FileIO, TextIOWrapper
 from logging import StreamHandler
 from pathlib import Path
+from threading import Thread
 
 import zmq
 import zmq.asyncio
@@ -142,9 +143,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     debug_shell_socket = Any()
     stdin_socket = Any()
     iopub_socket = Any()
-    iopub_thread = Any()
-    control_thread = Any()
-    shell_channel_thread = Any()
+    iopub_thread: Thread
+    control_thread: Thread
+    shell_channel_thread: Thread
 
     _ports = Dict()
 

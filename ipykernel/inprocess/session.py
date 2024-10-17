@@ -2,7 +2,7 @@ from jupyter_client.session import Session as _Session
 
 
 class Session(_Session):
-    async def recv(self, socket, copy=True):
+    async def recv(self, socket, copy=True):  # type:ignore[override]
         return await socket.recv_multipart()
 
     def send(

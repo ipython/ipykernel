@@ -82,8 +82,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
         self,
         data,
         metadata=None,
+        source=None,
+        *,
         transient=None,
         update=False,
+        **kwargs,
     ):
         """Publish a display-data message
 
@@ -516,7 +519,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     # Over ZeroMQ, GUI control isn't done with PyOS_InputHook as there is no
     # interactive input being read; we provide event loop support in ipkernel
-    def enable_gui(self, gui):
+    def enable_gui(self, gui):  # type:ignore[override]
         """Enable a given guil."""
         from .eventloops import enable_gui as real_enable_gui
 
@@ -636,12 +639,12 @@ class ZMQInteractiveShell(InteractiveShell):
             self.data_pub.set_parent(parent)
         try:
             stdout = sys.stdout
-            stdout.set_parent(parent)  # type: ignore[attr-defined]
+            stdout.set_parent(parent)  # type: ignore[union-attr]
         except AttributeError:
             pass
         try:
             stderr = sys.stderr
-            stderr.set_parent(parent)  # type: ignore[attr-defined]
+            stderr.set_parent(parent)  # type: ignore[union-attr]
         except AttributeError:
             pass
 

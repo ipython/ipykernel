@@ -57,6 +57,16 @@ repos:
             "types-psutil",
             "types-pycurl",
             "types-python-dateutil",
+            "PyQt5",
+            "anyio",
+            "cloudpickle",
+            "comm",
+            "debugpy",
+            "dill",
+            "nest_asyncio",
+            "numpy",
+            "packaging",
+            "trio",
           ]
 
   - repo: https://github.com/adamchainz/blacken-docs

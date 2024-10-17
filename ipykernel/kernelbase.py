@@ -266,7 +266,7 @@ class Kernel(SingletonConfigurable):
             # function is not called
             warnings.warn(
                 "`do_debug_request` will be required to be a coroutine "
-                "functions in the future. coroutine functions have ben supported "
+                "function in the future. Coroutine functions have been supported "
                 "since ipykernel 6.0 (2021)",
                 DeprecationWarning,
                 stacklevel=2,
@@ -1028,7 +1028,7 @@ class Kernel(SingletonConfigurable):
         # If this is incorrect, remove `debug_request` from the deprecated message types
         # at the beginning of this class
         warnings.warn(
-            "debug_request is deprecated in kernel_base since ipykernel 6.10"
+            "`debug_request` is deprecated in `kernelbase.py` since ipykernel 6.10"
             " (2022). It is only part of IPython parallel. Did you mean do_debug_request ?",
             DeprecationWarning,
             stacklevel=2,

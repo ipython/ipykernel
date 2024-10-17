@@ -657,7 +657,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                where asyncio.ProactorEventLoop supports add_reader and friends.
 
         """
-        if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+        if sys.platform.startswith("win"):
             import asyncio
 
             try:

@@ -279,7 +279,7 @@ def loop_tk(kernel):
     else:
         import asyncio
 
-        import nest_asyncio
+        import nest_asyncio  # type: ignore [import-untyped]
 
         nest_asyncio.apply()
 

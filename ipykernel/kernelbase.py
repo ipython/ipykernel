@@ -539,7 +539,9 @@ class Kernel(SingletonConfigurable):
     def post_handler_hook(self):
         """Hook to execute after calling message handler"""
 
-    async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
+    async def start(
+        self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED
+    ) -> None:
         """Process messages on shell and control channels"""
         async with create_task_group() as tg:
             self.control_stop = threading.Event()

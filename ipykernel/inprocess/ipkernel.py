@@ -82,7 +82,9 @@ class InProcessKernel(IPythonKernel):
         with self._redirected_io():
             await super().execute_request(stream, ident, parent)
 
-    async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
+    async def start(
+        self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED
+    ) -> None:
         """Override registration of dispatchers for streams."""
         if self.shell:
             self.shell.exit_now = False

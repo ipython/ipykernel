@@ -76,7 +76,7 @@ def use_dill():
     adds support for object methods and closures to serialization.
     """
     # import dill causes most of the magic
-    import dill
+    import dill  # type: ignore[import-untyped]
 
     # dill doesn't work with cPickle,
     # tell the two relevant modules to use plain pickle
@@ -100,7 +100,7 @@ def use_cloudpickle():
 
     adds support for object methods and closures to serialization.
     """
-    import cloudpickle
+    import cloudpickle  # type: ignore[import-untyped]
 
     global pickle  # noqa: PLW0603
     pickle = cloudpickle

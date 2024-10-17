@@ -636,12 +636,12 @@ class ZMQInteractiveShell(InteractiveShell):
             self.data_pub.set_parent(parent)
         try:
             stdout = sys.stdout
-            stdout.set_parent(parent)
+            stdout.set_parent(parent)  # type: ignore[attr-defined]
         except AttributeError:
             pass
         try:
             stderr = sys.stderr
-            stderr.set_parent(parent)
+            stderr.set_parent(parent)  # type: ignore[attr-defined]
         except AttributeError:
             pass
 

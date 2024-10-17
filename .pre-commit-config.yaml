@@ -44,13 +44,19 @@ repos:
     hooks:
       - id: mypy
         files: ipykernel
-        args: ["--install-types", "--non-interactive"]
+        args: []
         additional_dependencies:
           [
             "traitlets>=5.13",
             "ipython>=8.16.1",
             "jupyter_client>=8.5",
             "appnope",
+            "types-Pygments",
+            "types-colorama",
+            "types-decorator",
+            "types-psutil",
+            "types-pycurl",
+            "types-python-dateutil",
           ]
 
   - repo: https://github.com/adamchainz/blacken-docs

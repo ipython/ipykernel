@@ -63,3 +63,6 @@ class DummySocket(HasTraits):
         assert timeout == 0
         statistics = self.in_receive_stream.statistics()
         return statistics.current_buffer_used != 0
+
+    def close(self):
+        pass

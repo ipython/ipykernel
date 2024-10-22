@@ -412,7 +412,7 @@ class Kernel(SingletonConfigurable):
         else:
             assert subshell_id is None
             assert threading.current_thread() == threading.main_thread()
-            socket = self.shell_socket
+            socket = None
 
         async with create_task_group() as tg:
             tg.start_soon(self.process_shell, socket)

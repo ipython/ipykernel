@@ -274,10 +274,9 @@ class Kernel(SingletonConfigurable):
         assert self.control_thread is None or threading.current_thread() == self.control_thread
 
         msg = msg or await self.control_socket.recv_multipart()
-        copy = not isinstance(msg[0], zmq.Message)
-        idents, msg = self.session.feed_identities(msg, copy=copy)
+        idents, msg = self.session.feed_identities(msg)
         try:
-            msg = self.session.deserialize(msg, content=True, copy=copy)
+            msg = self.session.deserialize(msg, content=True)
         except Exception:
             self.log.error("Invalid Control Message", exc_info=True)  # noqa: G201
             return
@@ -375,15 +374,12 @@ class Kernel(SingletonConfigurable):
 
         try:
             while True:
-                msg = await self.shell_socket.recv_multipart()
-
-                # Deserialize whole message just to get subshell_id.
+                msg = await self.shell_socket.recv_multipart(copy=False)
+                # deserialize only the header to get subshell_id
                 # Keep original message to send to subshell_id unmodified.
-                # Ideally only want to deserialize message once.
-                copy = not isinstance(msg[0], zmq.Message)
-                _, msg2 = self.session.feed_identities(msg, copy=copy)
+                _, msg2 = self.session.feed_identities(msg, copy=False)
                 try:
-                    msg3 = self.session.deserialize(msg2, content=False, copy=copy)
+                    msg3 = self.session.deserialize(msg2, content=False, copy=False)
                     subshell_id = msg3["header"].get("subshell_id")
 
                     # Find inproc pair socket to use to send message to correct subshell.
@@ -1210,9 +1206,7 @@ class Kernel(SingletonConfigurable):
 
     def _topic(self, topic):
         """prefixed topic for IOPub messages"""
-        base = "kernel.%s" % self.ident
-
-        return (f"{base}.{topic}").encode()
+        return (f"kernel.{self.ident}.{topic}").encode()
 
     _aborting = Bool(False)
 

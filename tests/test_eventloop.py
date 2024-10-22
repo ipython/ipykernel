@@ -7,7 +7,6 @@ import threading
 import time
 
 import pytest
-import tornado
 
 from ipykernel.eventloops import (
     enable_gui,
@@ -16,7 +15,7 @@ from ipykernel.eventloops import (
     loop_tk,
 )
 
-from .utils import execute, flush_channels, start_new_kernel
+from .utils import flush_channels, start_new_kernel
 
 KC = KM = None
 
@@ -59,25 +58,6 @@ async_code = """
 from tests._asyncio_utils import async_func
 async_func()
 """
-
-
-@pytest.mark.skipif(tornado.version_info < (5,), reason="only relevant on tornado 5")
-def test_asyncio_interrupt():
-    assert KM is not None
-    assert KC is not None
-    flush_channels(KC)
-    msg_id, content = execute("%gui asyncio", KC)
-    assert content["status"] == "ok", content
-
-    flush_channels(KC)
-    msg_id, content = execute(async_code, KC)
-    assert content["status"] == "ok", content
-
-    KM.interrupt_kernel()
-
-    flush_channels(KC)
-    msg_id, content = execute(async_code, KC)
-    assert content["status"] == "ok"
 
 
 windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")

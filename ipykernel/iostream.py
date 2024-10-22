@@ -92,7 +92,10 @@ class IOPubThread:
         # ensure all of our sockets as sync zmq.Sockets
         # don't create async wrappers until we are within the appropriate coroutines
         self.socket: zmq.Socket[bytes] | None = zmq.Socket(socket)
-        self._sync_context: zmq.Context[zmq.Socket[bytes]] = zmq.Context(socket.context)
+        if self.socket.context is None:
+            # bug in pyzmq, shadow socket doesn't always inherit context attribute
+            self.socket.context = socket.context
+        self._context = socket.context
 
         self.background_socket = BackgroundSocket(self)
         self._main_pid = os.getpid()
@@ -112,8 +115,7 @@ class IOPubThread:
 
     def _setup_event_pipe(self):
         """Create the PULL socket listening for events that should fire in this thread."""
-        ctx = self._sync_context
-        self._pipe_in0 = ctx.socket(zmq.PULL)
+        self._pipe_in0 = self._context.socket(zmq.PULL, socket_class=zmq.Socket)
         self._pipe_in0.linger = 0
 
         _uuid = b2a_hex(os.urandom(16)).decode("ascii")
@@ -147,7 +149,8 @@ class IOPubThread:
             event_pipe = self._local.event_pipe
         except AttributeError:
             # new thread, new event pipe
-            event_pipe = self._sync_context.socket(zmq.PUSH)
+            # create sync base socket
+            event_pipe = self._context.socket(zmq.PUSH, socket_class=zmq.Socket)
             event_pipe.linger = 0
             event_pipe.connect(self._event_interface)
             self._local.event_pipe = event_pipe
@@ -184,12 +187,12 @@ class IOPubThread:
 
     def _setup_pipe_in(self):
         """setup listening pipe for IOPub from forked subprocesses"""
-        ctx = self._sync_context
+        ctx = self._context
 
         # use UUID to authenticate pipe messages
         self._pipe_uuid = os.urandom(16)
 
-        self._pipe_in1 = ctx.socket(zmq.PULL)
+        self._pipe_in1 = ctx.socket(zmq.PULL, socket_class=zmq.Socket)
         self._pipe_in1.linger = 0
 
         try:

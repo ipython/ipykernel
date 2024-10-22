@@ -8,18 +8,19 @@ import logging
 import comm.base_comm
 import traitlets
 import traitlets.config
+from typing import Dict, Any
 
 from .comm import Comm
 
 logger = logging.getLogger("ipykernel.comm")
 
 
-class CommManager(comm.base_comm.CommManager, traitlets.config.LoggingConfigurable):  # type:ignore[misc]
+class CommManager(comm.base_comm.CommManager, traitlets.config.LoggingConfigurable):
     """A comm manager."""
 
     kernel = traitlets.Instance("ipykernel.kernelbase.Kernel")
-    comms = traitlets.Dict()
-    targets = traitlets.Dict()
+    comms: Dict[Any, Any]
+    targets: Dict[str, Any]
 
     def __init__(self, **kwargs):
         """Initialize the manager."""
@@ -33,7 +34,7 @@ class CommManager(comm.base_comm.CommManager, traitlets.config.LoggingConfigurab
         # but we should let the base class create the comm with comm.create_comm in a major release
         content = msg["content"]
         comm_id = content["comm_id"]
-        target_name = content["target_name"]
+        target_name: str = content["target_name"]
         f = self.targets.get(target_name, None)
         comm = Comm(
             comm_id=comm_id,

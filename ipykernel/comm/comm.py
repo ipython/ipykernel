@@ -9,14 +9,14 @@ from warnings import warn
 
 import comm.base_comm
 import traitlets.config
-from traitlets import Bool, Bytes, Instance, Unicode, default
+from traitlets import Bool, Instance, Unicode, default
 
 from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
 
 
 # this is the class that will be created if we do comm.create_comm
-class BaseComm(comm.base_comm.BaseComm):  # type:ignore[misc]
+class BaseComm(comm.base_comm.BaseComm):
     """The base class for comms."""
 
     kernel: Optional["Kernel"] = None
@@ -50,18 +50,18 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
     """Class for communicating between a Frontend and a Kernel"""
 
     kernel = Instance("ipykernel.kernelbase.Kernel", allow_none=True)  # type:ignore[assignment]
-    comm_id = Unicode()
-    primary = Bool(True, help="Am I the primary or secondary Comm?")
+    comm_id = Unicode()  # type: ignore[assignment]
+    primary = Bool(True, help="Am I the primary or secondary Comm?")  # type: ignore[assignment]
 
-    target_name = Unicode("comm")
-    target_module = Unicode(
+    target_name = Unicode("comm")  # type: ignore[assignment]
+    target_module = Unicode(  # type: ignore[assignment]
         None,
         allow_none=True,
         help="""requirejs module from
         which to load comm target.""",
     )
 
-    topic = Bytes()
+    topic: bytes
 
     @default("kernel")
     def _default_kernel(self):
@@ -90,7 +90,7 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
         kernel = kwargs.pop("kernel", None)
         if target_name:
             kwargs["target_name"] = target_name
-        BaseComm.__init__(self, data=data, metadata=metadata, buffers=buffers, **kwargs)  # type:ignore[call-arg]
+        BaseComm.__init__(self, data=data, metadata=metadata, buffers=buffers, **kwargs)
         # only re-add kernel if explicitly provided
         if had_kernel:
             kwargs["kernel"] = kernel

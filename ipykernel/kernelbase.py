@@ -233,6 +233,14 @@ class Kernel(SingletonConfigurable):
     ]
 
     _eventloop_set: Event = Event()
+    control_handlers: Dict[
+        str,
+        t.Callable[[zmq.asyncio.Socket, list[bytes], str], t.Awaitable[t.Any]]
+        |
+        # I think this one should be deprecated, and we should check the handlers are
+        # coroutine functions.
+        t.Callable[[zmq.asyncio.Socket, list[bytes], str], t.Any],
+    ]
 
     def __init__(self, **kwargs):
         """Initialize the kernel."""
@@ -531,7 +539,9 @@ class Kernel(SingletonConfigurable):
     def post_handler_hook(self):
         """Hook to execute after calling message handler"""
 
-    async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
+    async def start(
+        self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED
+    ) -> None:
         """Process messages on shell and control channels"""
         async with create_task_group() as tg:
             self.control_stop = threading.Event()

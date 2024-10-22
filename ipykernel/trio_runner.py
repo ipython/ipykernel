@@ -50,7 +50,7 @@ class TrioRunner:
             async with trio.open_nursery() as nursery:
                 # TODO This hack prevents the nursery from cancelling all child
                 # tasks when an uncaught exception occurs, but it's ugly.
-                nursery._add_exc = log_nursery_exc
+                nursery._add_exc = log_nursery_exc  # type: ignore [method-assign]
                 builtins.GLOBAL_NURSERY = nursery  # type:ignore[attr-defined]
                 await trio.sleep_forever()
 
@@ -65,7 +65,7 @@ class TrioRunner:
             self._cell_cancel_scope = trio.CancelScope()
             with self._cell_cancel_scope:
                 return await coro
-            self._cell_cancel_scope = None  # type:ignore[unreachable]
+            self._cell_cancel_scope = None
             return None
 
         return trio.from_thread.run(loc, async_fn, trio_token=self._trio_token)

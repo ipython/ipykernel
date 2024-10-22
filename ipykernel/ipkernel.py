@@ -246,7 +246,9 @@ class IPythonKernel(KernelBase):
         while True:
             await self.debugger.handle_stopped_event()
 
-    async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
+    async def start(
+        self, *, task_status: TaskStatus[None] = TASK_STATUS_IGNORED
+    ) -> None:
         """Start the kernel."""
         if self.shell:
             self.shell.exit_now = False
@@ -641,7 +643,7 @@ class IPythonKernel(KernelBase):
     def do_apply(self, content, bufs, msg_id, reply_metadata):
         """Handle an apply request."""
         try:
-            from ipyparallel.serialize import serialize_object, unpack_apply_message
+            from ipyparallel.serialize import serialize_object, unpack_apply_message  # type: ignore[import-not-found]
         except ImportError:
             from .serialize import serialize_object, unpack_apply_message
 

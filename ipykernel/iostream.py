@@ -94,7 +94,7 @@ class IOPubThread:
         self.socket: zmq.Socket[bytes] | None = zmq.Socket(socket)
         if self.socket.context is None:
             # bug in pyzmq, shadow socket doesn't always inherit context attribute
-            self.socket.context = socket.context
+            self.socket.context = socket.context  # type:ignore[unreachable]
         self._context = socket.context
 
         self.background_socket = BackgroundSocket(self)

@@ -2,6 +2,53 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.0a0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.3...314cc49da6e7d69d74f4741d4ea6568e926d1819))
+
+### Enhancements made
+
+- Detect parent change in more cases on unix [#1271](https://github.com/ipython/ipykernel/pull/1271) ([@bluss](https://github.com/bluss))
+- Kernel subshells (JEP91) implementation [#1249](https://github.com/ipython/ipykernel/pull/1249) ([@ianthomas23](https://github.com/ianthomas23))
+- Remove control queue [#1210](https://github.com/ipython/ipykernel/pull/1210) ([@ianthomas23](https://github.com/ianthomas23))
+- Replace Tornado with AnyIO [#1079](https://github.com/ipython/ipykernel/pull/1079) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Bugs fixed
+
+- Fix eventloop integration with anyio [#1265](https://github.com/ipython/ipykernel/pull/1265) ([@ianthomas23](https://github.com/ianthomas23))
+- Explicitly close memory object streams [#1253](https://github.com/ipython/ipykernel/pull/1253) ([@ianthomas23](https://github.com/ianthomas23))
+- Fixed error accessing sys.stdout/sys.stderr when those are None [#1247](https://github.com/ipython/ipykernel/pull/1247) ([@gregory-shklover](https://github.com/gregory-shklover))
+- Correctly handle with_cell_id in async do_execute [#1227](https://github.com/ipython/ipykernel/pull/1227) ([@ianthomas23](https://github.com/ianthomas23))
+- Do not import debugger/debugpy unless needed [#1223](https://github.com/ipython/ipykernel/pull/1223) ([@krassowski](https://github.com/krassowski))
+- Allow datetime or str in test_sequential_control_messages [#1219](https://github.com/ipython/ipykernel/pull/1219) ([@ianthomas23](https://github.com/ianthomas23))
+- Fix side effect import for pickleutil [#1217](https://github.com/ipython/ipykernel/pull/1217) ([@blink1073](https://github.com/blink1073))
+
+### Maintenance and upkeep improvements
+
+- Remove direct use of asyncio [#1266](https://github.com/ipython/ipykernel/pull/1266) ([@davidbrochart](https://github.com/davidbrochart))
+- Specify argtypes when using macos msg [#1264](https://github.com/ipython/ipykernel/pull/1264) ([@ianthomas23](https://github.com/ianthomas23))
+- Forward port changelog for 6.29.4 and 5 to main branch [#1263](https://github.com/ipython/ipykernel/pull/1263) ([@ianthomas23](https://github.com/ianthomas23))
+- Ignore warning from trio [#1262](https://github.com/ipython/ipykernel/pull/1262) ([@ianthomas23](https://github.com/ianthomas23))
+- Build docs on ubuntu [#1257](https://github.com/ipython/ipykernel/pull/1257) ([@blink1073](https://github.com/blink1073))
+- Avoid a DeprecationWarning on Python 3.13+ [#1248](https://github.com/ipython/ipykernel/pull/1248) ([@hroncok](https://github.com/hroncok))
+- Catch IPython 8.24 DeprecationWarnings [#1242](https://github.com/ipython/ipykernel/pull/1242) ([@s-t-e-v-e-n-k](https://github.com/s-t-e-v-e-n-k))
+- Update version to 7.0.0 [#1241](https://github.com/ipython/ipykernel/pull/1241) ([@mlucool](https://github.com/mlucool))
+- Add compat with pytest 8 [#1231](https://github.com/ipython/ipykernel/pull/1231) ([@blink1073](https://github.com/blink1073))
+- Set all min deps [#1229](https://github.com/ipython/ipykernel/pull/1229) ([@blink1073](https://github.com/blink1073))
+- Update Release Scripts [#1221](https://github.com/ipython/ipykernel/pull/1221) ([@blink1073](https://github.com/blink1073))
+
+### Documentation improvements
+
+- Forward port changelog for 6.29.4 and 5 to main branch [#1263](https://github.com/ipython/ipykernel/pull/1263) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-02-26&to=2024-10-22&type=c))
+
+[@agronholm](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aagronholm+updated%3A2024-02-26..2024-10-22&type=Issues) | [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-02-26..2024-10-22&type=Issues) | [@bluss](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abluss+updated%3A2024-02-26..2024-10-22&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2024-02-26..2024-10-22&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-02-26..2024-10-22&type=Issues) | [@gregory-shklover](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Agregory-shklover+updated%3A2024-02-26..2024-10-22&type=Issues) | [@hroncok](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ahroncok+updated%3A2024-02-26..2024-10-22&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-02-26..2024-10-22&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2024-02-26..2024-10-22&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-02-26..2024-10-22&type=Issues) | [@maartenbreddels](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amaartenbreddels+updated%3A2024-02-26..2024-10-22&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-02-26..2024-10-22&type=Issues) | [@mlucool](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amlucool+updated%3A2024-02-26..2024-10-22&type=Issues) | [@s-t-e-v-e-n-k](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3As-t-e-v-e-n-k+updated%3A2024-02-26..2024-10-22&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.29.5
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.4...1e62d48298e353a9879fae99bc752f9bb48797ef))
@@ -19,8 +66,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-03-27&to=2024-06-29&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-03-27..2024-06-29&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-03-27..2024-06-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.4
 
@@ -66,8 +111,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-02-07&to=2024-02-26&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-02-07..2024-02-26&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-02-07..2024-02-26&type=Issues) | [@jdranczewski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajdranczewski+updated%3A2024-02-07..2024-02-26&type=Issues) | [@joouha](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajoouha+updated%3A2024-02-07..2024-02-26&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-02-07..2024-02-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.2
 

@@ -167,7 +167,7 @@ class IOPubThread:
         *all* waiting events are processed in order.
         """
         # create async wrapper within coroutine
-        pipe_in = zmq.asyncio.Socket.shadow(self._pipe_in0)
+        pipe_in = zmq.asyncio.Socket(self._pipe_in0)
         try:
             while True:
                 await pipe_in.recv()

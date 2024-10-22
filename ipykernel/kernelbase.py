@@ -50,7 +50,6 @@ from traitlets.traitlets import (
     Instance,
     Integer,
     List,
-    Set,
     Unicode,
     default,
     observe,
@@ -240,9 +239,6 @@ class Kernel(SingletonConfigurable):
     # by record_ports and used by connect_request.
     _recorded_ports = Dict()
 
-    # set of aborted msg_ids
-    aborted = Set()
-
     # Track execution count here. For IPython, we override this to use the
     # execution count we store in the shell.
     execution_count = 0
@@ -258,14 +254,10 @@ class Kernel(SingletonConfigurable):
         "shutdown_request",
         "is_complete_request",
         "interrupt_request",
-        # deprecated:
-        "apply_request",
     ]
     # add deprecated ipyparallel control messages
     control_msg_types = [
         *msg_types,
-        "clear_request",
-        "abort_request",
         "debug_request",
         "usage_request",
         "create_subshell_request",
@@ -343,13 +335,11 @@ class Kernel(SingletonConfigurable):
         """Check whether a shell-channel message should be handled
 
         Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
+
+        .. versionchanged:: 7
+            Subclass should_handle _may_ be async.
+            Base class implementation is not async.
         """
-        msg_id = msg["header"]["msg_id"]
-        if msg_id in self.aborted:
-            # is it safe to assume a msg_id will not be resubmitted?
-            self.aborted.remove(msg_id)
-            self._send_abort_reply(stream, msg, idents)
-            return False
         return True
 
     async def dispatch_shell(self, msg, /, subshell_id: str | None = None):
@@ -412,8 +402,12 @@ class Kernel(SingletonConfigurable):
         self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
-        if not self.should_handle(stream, msg, idents):
+        should_handle: bool | t.Awaitable[bool] = self.should_handle(stream, msg, idents)
+        if inspect.isawaitable(should_handle):
+            should_handle = await should_handle
+        if not should_handle:
             self._publish_status_and_flush("idle", "shell", stream)
+            self.log.debug("Not handling %s:%s", msg_type, msg["header"].get("msg_id"))
             return
 
         handler = self.shell_handlers.get(msg_type, None)
@@ -1227,88 +1221,6 @@ class Kernel(SingletonConfigurable):
         reply = control_socket.recv_json()
 
         self.session.send(socket, "list_subshell_reply", reply, parent, ident)
-
-    # ---------------------------------------------------------------------------
-    # Engine methods (DEPRECATED)
-    # ---------------------------------------------------------------------------
-
-    async def apply_request(self, stream, ident, parent):  # pragma: no cover
-        """Handle an apply request."""
-        self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
-        try:
-            content = parent["content"]
-            bufs = parent["buffers"]
-            msg_id = parent["header"]["msg_id"]
-        except Exception:
-            self.log.error("Got bad msg: %s", parent, exc_info=True)  # noqa: G201
-            return
-
-        md = self.init_metadata(parent)
-
-        reply_content, result_buf = self.do_apply(content, bufs, msg_id, md)
-
-        # flush i/o
-        if sys.stdout is not None:
-            sys.stdout.flush()
-        if sys.stderr is not None:
-            sys.stderr.flush()
-
-        md = self.finish_metadata(parent, md, reply_content)
-        if not self.session:
-            return
-        self.session.send(
-            stream,
-            "apply_reply",
-            reply_content,
-            parent=parent,
-            ident=ident,
-            buffers=result_buf,
-            metadata=md,
-        )
-
-    def do_apply(self, content, bufs, msg_id, reply_metadata):
-        """DEPRECATED"""
-        raise NotImplementedError
-
-    # ---------------------------------------------------------------------------
-    # Control messages (DEPRECATED)
-    # ---------------------------------------------------------------------------
-
-    async def abort_request(self, stream, ident, parent):  # pragma: no cover
-        """abort a specific msg by id"""
-        self.log.warning(
-            "abort_request is deprecated in kernel_base. It is only part of IPython parallel"
-        )
-        msg_ids = parent["content"].get("msg_ids", None)
-        if isinstance(msg_ids, str):
-            msg_ids = [msg_ids]
-        if not msg_ids:
-            subshell_id = parent["header"].get("subshell_id")
-            self._abort_queues(subshell_id)
-
-        for mid in msg_ids:
-            self.aborted.add(str(mid))
-
-        content = dict(status="ok")
-        if not self.session:
-            return
-        reply_msg = self.session.send(
-            stream, "abort_reply", content=content, parent=parent, ident=ident
-        )
-        self.log.debug("%s", reply_msg)
-
-    async def clear_request(self, stream, idents, parent):  # pragma: no cover
-        """Clear our namespace."""
-        self.log.warning(
-            "clear_request is deprecated in kernel_base. It is only part of IPython parallel"
-        )
-        content = self.do_clear()
-        if self.session:
-            self.session.send(stream, "clear_reply", ident=idents, parent=parent, content=content)
-
-    def do_clear(self):
-        """DEPRECATED since 4.0.3"""
-        raise NotImplementedError
 
     # ---------------------------------------------------------------------------
     # Protected interface

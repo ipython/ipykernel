@@ -32,10 +32,10 @@ from .utils import (
 )
 
 
-def _check_master(kc, expected=True, stream="stdout"):
+def _check_main(kc, expected=True, stream="stdout"):
     execute(kc=kc, code="import sys")
     flush_channels(kc)
-    msg_id, content = execute(kc=kc, code="print(sys.%s._is_master_process())" % stream)
+    msg_id, content = execute(kc=kc, code="print(sys.%s._is_main_process())" % stream)
     stdout, stderr = assemble_output(kc.get_iopub_msg)
     assert stdout.strip() == repr(expected)
 
@@ -56,7 +56,7 @@ def test_simple_print():
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == "hi\n"
         assert stderr == ""
-        _check_master(kc, expected=True)
+        _check_main(kc, expected=True)
 
 
 def test_print_to_correct_cell_from_thread():
@@ -168,7 +168,7 @@ def test_capture_fd():
         stdout, stderr = assemble_output(iopub)
         assert stdout == "capsys\n"
         assert stderr == ""
-        _check_master(kc, expected=True)
+        _check_main(kc, expected=True)
 
 
 @pytest.mark.skip(reason="Currently don't capture during test as pytest does its own capturing")
@@ -182,7 +182,7 @@ def test_subprocess_peek_at_stream_fileno():
         stdout, stderr = assemble_output(iopub)
         assert stdout == "CAP1\nCAP2\n"
         assert stderr == ""
-        _check_master(kc, expected=True)
+        _check_main(kc, expected=True)
 
 
 def test_sys_path():
@@ -218,7 +218,7 @@ def test_sys_path_profile_dir():
 def test_subprocess_print():
     """printing from forked mp.Process"""
     with new_kernel() as kc:
-        _check_master(kc, expected=True)
+        _check_main(kc, expected=True)
         flush_channels(kc)
         np = 5
         code = "\n".join(
@@ -238,8 +238,8 @@ def test_subprocess_print():
         for n in range(np):
             assert stdout.count(str(n)) == 1, stdout
         assert stderr == ""
-        _check_master(kc, expected=True)
-        _check_master(kc, expected=True, stream="stderr")
+        _check_main(kc, expected=True)
+        _check_main(kc, expected=True, stream="stderr")
 
 
 @flaky(max_runs=3)
@@ -261,8 +261,8 @@ def test_subprocess_noprint():
         assert stdout == ""
         assert stderr == ""
 
-        _check_master(kc, expected=True)
-        _check_master(kc, expected=True, stream="stderr")
+        _check_main(kc, expected=True)
+        _check_main(kc, expected=True, stream="stderr")
 
 
 @flaky(max_runs=3)
@@ -287,8 +287,8 @@ def test_subprocess_error():
         assert stdout == ""
         assert "ValueError" in stderr
 
-        _check_master(kc, expected=True)
-        _check_master(kc, expected=True, stream="stderr")
+        _check_main(kc, expected=True)
+        _check_main(kc, expected=True, stream="stderr")
 
 
 # raw_input tests

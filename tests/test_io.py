@@ -15,7 +15,7 @@ import zmq
 import zmq.asyncio
 from jupyter_client.session import Session
 
-from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
+from ipykernel.iostream import _PARENT, BackgroundSocket, IOPubThread, OutStream
 
 
 @pytest.fixture()
@@ -73,7 +73,7 @@ async def test_io_thread(anyio_backend, iopub_thread):
     ctx1, pipe = thread._setup_pipe_out()
     pipe.close()
     thread._pipe_in1.close()
-    thread._check_mp_mode = lambda: MASTER
+    thread._check_mp_mode = lambda: _PARENT
     thread._really_send([b"hi"])
     ctx1.destroy()
     thread.stop()

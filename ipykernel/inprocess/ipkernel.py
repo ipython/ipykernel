@@ -6,6 +6,7 @@
 import logging
 import sys
 from contextlib import contextmanager
+from typing import cast
 
 from anyio import TASK_STATUS_IGNORED
 from anyio.abc import TaskStatus
@@ -146,7 +147,8 @@ class InProcessKernel(IPythonKernel):
                 assert frontend is not None
                 frontend.iopub_channel.call_handlers(msg)
 
-        self.iopub_thread.socket.on_recv = callback
+        iopub_socket = cast(DummySocket, self.iopub_thread.socket)
+        iopub_socket.on_recv = callback
 
     # ------ Trait initializers -----------------------------------------------
 

@@ -255,7 +255,9 @@ class Kernel(SingletonConfigurable):
         "is_complete_request",
         "interrupt_request",
     ]
-    # add deprecated ipyparallel control messages
+
+    # control channel accepts all shell messages
+    # and some of its own
     control_msg_types = [
         *msg_types,
         "debug_request",

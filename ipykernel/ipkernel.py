@@ -1,5 +1,7 @@
 """The IPython kernel implementation"""
 
+from __future__ import annotations
+
 import asyncio
 import builtins
 import gc
@@ -16,7 +18,7 @@ import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from jupyter_client.session import extract_header
-from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
+from traitlets import Any, Bool, HasTraits, Instance, List, Type, default, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm
@@ -52,7 +54,7 @@ def _create_comm(*args, **kwargs):
 
 # there can only be one comm manager in a ipykernel process
 _comm_lock = threading.Lock()
-_comm_manager: t.Optional[CommManager] = None
+_comm_manager: CommManager | None = None
 
 
 def _get_comm_manager(*args, **kwargs):
@@ -90,7 +92,11 @@ class IPythonKernel(KernelBase):
         if self.shell is not None:
             self.shell.user_module = change["new"]
 
-    user_ns = Instance(dict, args=None, allow_none=True)
+    user_ns = Instance("collections.abc.Mapping", allow_none=True)
+
+    @default("user_ns")
+    def _default_user_ns(self):
+        return dict()
 
     @observe("user_ns")
     @observe_compat

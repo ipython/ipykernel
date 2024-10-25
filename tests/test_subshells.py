@@ -133,15 +133,20 @@ def test_run_concurrently_sequence(are_subshells, overlap):
             create_subshell_helper(kc)["subshell_id"] if is_subshell else None
             for is_subshell in are_subshells
         ]
+
+        # Import time module before running time-sensitive subshell code.
+        execute_request_subshell_id(kc, "import time; print('ok')", None)
+
+        sleep = 0.1
         if overlap:
             codes = [
-                "import time; start0=True; end0=False; time.sleep(0.2); end0=True",
-                "assert start0; assert not end0; time.sleep(0.2); assert end0",
+                f"start0=True; end0=False; time.sleep({sleep}); end0=True",
+                f"time.sleep({sleep/2}); assert start0; assert not end0; time.sleep({sleep}); assert end0",
             ]
         else:
             codes = [
-                "import time; start0=True; end0=False; time.sleep(0.2); assert end1",
-                "assert start0; assert not end0; end1=True",
+                f"start0=True; end0=False; time.sleep({sleep}); assert end1",
+                f"time.sleep({sleep/2}); assert start0; assert not end0; end1=True",
             ]
 
         msgs = []
@@ -150,8 +155,6 @@ def test_run_concurrently_sequence(are_subshells, overlap):
             msg["header"]["subshell_id"] = subshell_id
             kc.shell_channel.send(msg)
             msgs.append(msg)
-            if len(msgs) == 1:
-                time.sleep(0.1)  # Wait for first execute_request to start.
 
         replies = get_replies(kc, [msg["msg_id"] for msg in msgs])
 
@@ -171,13 +174,16 @@ def test_run_concurrently_timing(include_main_shell):
             create_subshell_helper(kc)["subshell_id"],
         ]
 
+        # Import time module before running time-sensitive subshell code.
+        execute_request_subshell_id(kc, "import time; print('ok')", None)
+
         times = (0.2, 0.2)
         # Prepare messages, times are sleep times in seconds.
         # Identical times for both subshells is a harder test as preparing and sending
         # the execute_reply messages may overlap.
         msgs = []
         for id, sleep in zip(subshell_ids, times):
-            code = f"import time; time.sleep({sleep})"
+            code = f"time.sleep({sleep})"
             msg = kc.session.msg("execute_request", {"code": code})
             msg["header"]["subshell_id"] = id
             msgs.append(msg)

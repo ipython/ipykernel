@@ -150,6 +150,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: minimum
+          python_version: "3.9"
 
       - name: List installed packages
         run: |

@@ -17,7 +17,7 @@ class BaseThread(Thread):
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
         self.__stop = Event()
-        self._tasks_and_args: t.List[t.Tuple[t.Any, t.Any]] = []
+        self._tasks_and_args: list[tuple[t.Any, t.Any]] = []
 
     def add_task(self, task: t.Any, *args: t.Any) -> None:
         # May only add tasks before the thread is started.

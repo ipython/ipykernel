@@ -18,7 +18,7 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "debugpy>=1.8.1",
     "ipython>=7.23.1",
@@ -187,6 +187,9 @@ filterwarnings= [
 
   # https://github.com/python-trio/trio/issues/3053
   "ignore:The `hash` argument is deprecated in favor of `unsafe_hash` and will be removed in or after August 2025.",
+
+  # ignore unclosed sqlite in traits
+  "ignore:unclosed database in <sqlite3.Connection:ResourceWarning",
 ]
 
 [tool.coverage.report]

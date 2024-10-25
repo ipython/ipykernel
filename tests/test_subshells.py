@@ -137,7 +137,7 @@ def test_run_concurrently_sequence(are_subshells, overlap):
         # Import time module before running time-sensitive subshell code.
         execute_request_subshell_id(kc, "import time; print('ok')", None)
 
-        sleep = 0.1
+        sleep = 0.2
         if overlap:
             codes = [
                 f"start0=True; end0=False; time.sleep({sleep}); end0=True",

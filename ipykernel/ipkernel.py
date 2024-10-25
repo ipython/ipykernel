@@ -9,7 +9,6 @@ import os
 import sys
 import threading
 import typing as t
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 import comm
@@ -19,7 +18,7 @@ from anyio.abc import TaskStatus
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from jupyter_client.session import extract_header
-from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
+from traitlets import Any, Bool, HasTraits, Instance, List, Type, default, observe, observe_compat
 
 from .comm.comm import BaseComm
 from .comm.manager import CommManager
@@ -87,7 +86,11 @@ class IPythonKernel(KernelBase):
         if self.shell is not None:
             self.shell.user_module = change["new"]
 
-    user_ns = Instance(Mapping, args=None, allow_none=True)
+    user_ns = Instance("collections.abc.Mapping", allow_none=True)
+
+    @default("user_ns")
+    def _default_user_ns(self):
+        return dict()
 
     @observe("user_ns")
     @observe_compat

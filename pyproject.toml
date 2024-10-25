@@ -187,6 +187,9 @@ filterwarnings= [
 
   # https://github.com/python-trio/trio/issues/3053
   "ignore:The `hash` argument is deprecated in favor of `unsafe_hash` and will be removed in or after August 2025.",
+
+  # ignore unclosed sqlite in traits
+  "ignore:unclosed database in <sqlite3.Connection:ResourceWarning",
 ]
 
 [tool.coverage.report]

@@ -15,7 +15,7 @@ from binascii import b2a_hex
 from collections import defaultdict, deque
 from io import StringIO, TextIOBase
 from threading import Event, Thread, local
-from typing import Any, Callable, Deque, Dict, Optional
+from typing import Any, Callable, Optional
 
 import zmq
 from anyio import create_task_group, run, sleep, to_thread
@@ -94,8 +94,8 @@ class IOPubThread:
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()
-        self._events: Deque[Callable[..., Any]] = deque()
-        self._event_pipes: Dict[threading.Thread, Any] = {}
+        self._events: deque[Callable[..., Any]] = deque()
+        self._event_pipes: dict[threading.Thread, Any] = {}
         self._event_pipe_gc_lock: threading.Lock = threading.Lock()
         self._event_pipe_gc_seconds: float = 10
         self._setup_event_pipe()
@@ -470,7 +470,7 @@ class OutStream(TextIOBase):
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()
-        self._parent_header: contextvars.ContextVar[Dict[str, Any]] = contextvars.ContextVar(
+        self._parent_header: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
             "parent_header"
         )
         self._parent_header.set({})

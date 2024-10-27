@@ -9,7 +9,7 @@ from itertools import chain
 
 try:
     # available since ipyparallel 5.0.0
-    from ipyparallel.serialize.canning import (
+    from ipyparallel.serialize.canning import (  # type: ignore[import-not-found]
         CannedObject,
         can,
         can_sequence,
@@ -18,7 +18,7 @@ try:
         uncan,
         uncan_sequence,
     )
-    from ipyparallel.serialize.serialize import PICKLE_PROTOCOL
+    from ipyparallel.serialize.serialize import PICKLE_PROTOCOL  # type: ignore[import-not-found]
 except ImportError:
     # Deprecated since ipykernel 4.3.0
     from ipykernel.pickleutil import (

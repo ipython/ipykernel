@@ -131,11 +131,52 @@ build = [
 [tool.mypy]
 files = "ipykernel"
 strict = true
-disable_error_code = ["no-untyped-def", "no-untyped-call", "import-not-found"]
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
-follow_imports = "normal"
-pretty = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+    "ipykernel.inprocess.manager",
+    "ipykernel.inprocess.ipkernel",
+    "ipykernel.inprocess.blocking",
+    "ipykernel.inprocess.client",
+    "ipykernel.inprocess.session",
+    "ipykernel.datapub",
+    "ipykernel.embed",
+    "ipykernel.kernelapp",
+    "ipykernel.pickleutil",
+    "ipykernel.ipkernel",
+    "ipykernel.zmqshell",
+    "ipykernel._eventloop_macos",
+    "ipykernel.comm.comm",
+    "ipykernel.comm.manager",
+    "ipykernel.compiler",
+    "ipykernel.connect",
+    "ipykernel.control",
+    "ipykernel.debugger",
+    "ipykernel.displayhook",
+    "ipykernel.eventloops",
+    "ipykernel.gui.gtk3embed",
+    "ipykernel.gui.gtkembed",
+    "ipykernel.heartbeat",
+    "ipykernel.inprocess.channels",
+    "ipykernel.inprocess.socket",
+    "ipykernel.iostream",
+    "ipykernel.jsonutil",
+    "ipykernel.kernelbase",
+    "ipykernel.log",
+    "ipykernel.parentpoller",
+    "ipykernel.serialize",
+    "ipykernel.shellchannel",
+    "ipykernel.subshell",
+    "ipykernel.thread",
+    "ipykernel.trio_runner",
+    ]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_calls = false
+
 
 [tool.pytest.ini_options]
 minversion = "6.0"

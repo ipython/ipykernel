@@ -9,6 +9,7 @@ import zmq
 import zmq.asyncio
 from anyio import create_memory_object_stream
 from traitlets import HasTraits, Instance
+from typing import Any
 
 # -----------------------------------------------------------------------------
 # Dummy socket class
@@ -32,12 +33,12 @@ class DummySocket(HasTraits):
         self.is_shell = is_shell
         self.on_recv = None
         if is_shell:
-            self.in_send_stream, self.in_receive_stream = create_memory_object_stream[dict](
-                max_buffer_size=inf
-            )
-            self.out_send_stream, self.out_receive_stream = create_memory_object_stream[dict](
-                max_buffer_size=inf
-            )
+            self.in_send_stream, self.in_receive_stream = create_memory_object_stream[
+                dict[Any, Any]
+            ](max_buffer_size=inf)
+            self.out_send_stream, self.out_receive_stream = create_memory_object_stream[
+                dict[Any, Any]
+            ](max_buffer_size=inf)
 
     def put(self, msg):
         self.in_send_stream.send_nowait(msg)

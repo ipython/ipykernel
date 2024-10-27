@@ -21,10 +21,12 @@ from .compiler import get_file_name, get_tmp_directory, get_tmp_hash_seed
 
 try:
     # This import is required to have the next ones working...
-    from debugpy.server import api  # noqa: F401
+    from debugpy.server import api  # type: ignore[import-untyped]# noqa: F401
 
-    from _pydevd_bundle import pydevd_frame_utils  # isort: skip
-    from _pydevd_bundle.pydevd_suspended_frames import (  # isort: skip
+    from _pydevd_bundle import (  # type:ignore[import-not-found]
+        pydevd_frame_utils,
+    )  #  isort: skip
+    from _pydevd_bundle.pydevd_suspended_frames import (  # type:ignore[import-not-found] # isort: skip
         SuspendedFramesManager,
         _FramesTracker,
     )
@@ -70,7 +72,7 @@ class _DummyPyDB:
 
     def __init__(self):
         """Init."""
-        from _pydevd_bundle.pydevd_api import PyDevdAPI
+        from _pydevd_bundle.pydevd_api import PyDevdAPI  # type: ignore[import-not-found]
 
         self.variable_presentation = PyDevdAPI.VariablePresentation()
 
@@ -117,9 +119,10 @@ class DebugpyMessageQueue:
         self.tcp_buffer = ""
         self._reset_tcp_pos()
         self.event_callback = event_callback
-        self.message_send_stream, self.message_receive_stream = create_memory_object_stream[dict](
-            max_buffer_size=inf
-        )
+        (
+            self.message_send_stream,
+            self.message_receive_stream,
+        ) = create_memory_object_stream[dict[t.Any, t.Any]](max_buffer_size=inf)
         self.log = log
 
     def _reset_tcp_pos(self):
@@ -342,9 +345,10 @@ class Debugger:
         self.is_started = False
         self.event_callback = event_callback
         self.just_my_code = just_my_code
-        self.stopped_send_stream, self.stopped_receive_stream = create_memory_object_stream[dict](
-            max_buffer_size=inf
-        )
+        (
+            self.stopped_send_stream,
+            self.stopped_receive_stream,
+        ) = create_memory_object_stream[dict[t.Any, t.Any]](max_buffer_size=inf)
 
         self.started_debug_handlers = {}
         for msg_type in Debugger.started_debug_msg_types:

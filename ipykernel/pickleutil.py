@@ -11,7 +11,9 @@ from types import FunctionType
 
 # This registers a hook when it's imported
 try:
-    from ipyparallel.serialize import codeutil  # noqa: F401
+    from ipyparallel.serialize import (  #  type: ignore[import-not-found]
+        codeutil,
+    )  # noqa: F401,
 except ImportError:
     pass
 from traitlets.log import get_logger
@@ -74,7 +76,7 @@ def use_dill():
     adds support for object methods and closures to serialization.
     """
     # import dill causes most of the magic
-    import dill
+    import dill  # type: ignore[import-untyped]
 
     # dill doesn't work with cPickle,
     # tell the two relevant modules to use plain pickle
@@ -98,7 +100,7 @@ def use_cloudpickle():
 
     adds support for object methods and closures to serialization.
     """
-    import cloudpickle
+    import cloudpickle  # type: ignore[import-untyped]
 
     global pickle  # noqa: PLW0603
     pickle = cloudpickle

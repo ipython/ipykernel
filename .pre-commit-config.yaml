@@ -40,18 +40,33 @@ repos:
         types_or: [yaml, html, json]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.8.0"
+    rev: "v1.12.0"
     hooks:
       - id: mypy
         files: ipykernel
-        stages: [manual]
-        args: ["--install-types", "--non-interactive"]
+        args: []
         additional_dependencies:
           [
             "traitlets>=5.13",
             "ipython>=8.16.1",
             "jupyter_client>=8.5",
             "appnope",
+            "types-Pygments",
+            "types-colorama",
+            "types-decorator",
+            "types-psutil",
+            "types-pycurl",
+            "types-python-dateutil",
+            "PyQt5",
+            "anyio",
+            "cloudpickle",
+            "comm",
+            "debugpy",
+            "dill",
+            "nest_asyncio",
+            "numpy",
+            "packaging",
+            "trio",
           ]
 
   - repo: https://github.com/adamchainz/blacken-docs

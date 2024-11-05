@@ -134,19 +134,22 @@ def test_run_concurrently_sequence(are_subshells, overlap):
             for is_subshell in are_subshells
         ]
 
-        # Import time module before running time-sensitive subshell code.
-        execute_request_subshell_id(kc, "import time; print('ok')", None)
+        # Import time module before running time-sensitive subshell code
+        # and use threading.Barrier to synchronise start of subshell code.
+        execute_request_subshell_id(
+            kc, "import threading as t, time; b=t.Barrier(2); print('ok')", None
+        )
 
         sleep = 0.2
         if overlap:
             codes = [
-                f"start0=True; end0=False; time.sleep({sleep}); end0=True",
-                f"time.sleep({sleep/2}); assert start0; assert not end0; time.sleep({sleep}); assert end0",
+                f"b.wait(); start0=True; end0=False; time.sleep({sleep}); end0=True",
+                f"b.wait(); time.sleep({sleep/2}); assert start0; assert not end0; time.sleep({sleep}); assert end0",
             ]
         else:
             codes = [
-                f"start0=True; end0=False; time.sleep({sleep}); assert end1",
-                f"time.sleep({sleep/2}); assert start0; assert not end0; end1=True",
+                f"b.wait(); start0=True; end0=False; time.sleep({sleep}); assert end1",
+                f"b.wait(); time.sleep({sleep/2}); assert start0; assert not end0; end1=True",
             ]
 
         msgs = []
@@ -174,8 +177,11 @@ def test_run_concurrently_timing(include_main_shell):
             create_subshell_helper(kc)["subshell_id"],
         ]
 
-        # Import time module before running time-sensitive subshell code.
-        execute_request_subshell_id(kc, "import time; print('ok')", None)
+        # Import time module before running time-sensitive subshell code
+        # and use threading.Barrier to synchronise start of subshell code.
+        execute_request_subshell_id(
+            kc, "import threading as t, time; b=t.Barrier(2); print('ok')", None
+        )
 
         times = (0.2, 0.2)
         # Prepare messages, times are sleep times in seconds.
@@ -183,7 +189,7 @@ def test_run_concurrently_timing(include_main_shell):
         # the execute_reply messages may overlap.
         msgs = []
         for id, sleep in zip(subshell_ids, times):
-            code = f"time.sleep({sleep})"
+            code = f"b.wait(); time.sleep({sleep})"
             msg = kc.session.msg("execute_request", {"code": code})
             msg["header"]["subshell_id"] = id
             msgs.append(msg)
@@ -213,11 +219,17 @@ def test_execution_count():
     with new_kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
+        # Import time module before running time-sensitive subshell code
+        # and use threading.Barrier to synchronise start of subshell code.
+        execute_request_subshell_id(
+            kc, "import threading as t, time; b=t.Barrier(2); print('ok')", None
+        )
+
         # Prepare messages
         times = (0.2, 0.1, 0.4, 0.15)  # Sleep seconds
         msgs = []
-        for id, sleep in zip((None, subshell_id, None, subshell_id), times):
-            code = f"import time; time.sleep({sleep})"
+        for i, (id, sleep) in enumerate(zip((None, subshell_id, None, subshell_id), times)):
+            code = f"b.wait(); time.sleep({sleep})" if i < 2 else f"time.sleep({sleep})"
             msg = kc.session.msg("execute_request", {"code": code})
             msg["header"]["subshell_id"] = id
             msgs.append(msg)

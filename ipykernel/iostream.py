@@ -20,6 +20,7 @@ from threading import Event, Thread, local
 from typing import Any, Callable
 
 import zmq
+import zmq_anyio
 from anyio import create_task_group, run, sleep, to_thread
 from jupyter_client.session import extract_header
 
@@ -55,11 +56,11 @@ class _IOPubThread(Thread):
         run(self._main)
 
     async def _main(self):
-        async with create_task_group() as tg:
+        async with create_task_group() as self._task_group:
             for task in self._tasks:
-                tg.start_soon(task)
+                self._task_group.start_soon(task)
             await to_thread.run_sync(self.__stop.wait)
-            tg.cancel_scope.cancel()
+            self._task_group.cancel_scope.cancel()
 
     def stop(self):
         """Stop the thread.
@@ -78,7 +79,7 @@ class IOPubThread:
     whose IO is always run in a thread.
     """
 
-    def __init__(self, socket, pipe=False):
+    def __init__(self, socket: zmq_anyio.Socket, pipe=False):
         """Create IOPub thread
 
         Parameters
@@ -91,10 +92,7 @@ class IOPubThread:
         """
         # ensure all of our sockets as sync zmq.Sockets
         # don't create async wrappers until we are within the appropriate coroutines
-        self.socket: zmq.Socket[bytes] | None = zmq.Socket(socket)
-        if self.socket.context is None:
-            # bug in pyzmq, shadow socket doesn't always inherit context attribute
-            self.socket.context = socket.context  # type:ignore[unreachable]
+        self.socket: zmq_anyio.Socket = socket
         self._context = socket.context
 
         self.background_socket = BackgroundSocket(self)
@@ -108,14 +106,14 @@ class IOPubThread:
         self._event_pipe_gc_lock: threading.Lock = threading.Lock()
         self._event_pipe_gc_seconds: float = 10
         self._setup_event_pipe()
-        tasks = [self._handle_event, self._run_event_pipe_gc]
+        tasks = [self._handle_event, self._run_event_pipe_gc, self.socket.start]
         if pipe:
             tasks.append(self._handle_pipe_msgs)
         self.thread = _IOPubThread(tasks)
 
     def _setup_event_pipe(self):
         """Create the PULL socket listening for events that should fire in this thread."""
-        self._pipe_in0 = self._context.socket(zmq.PULL, socket_class=zmq.Socket)
+        self._pipe_in0 = self._context.socket(zmq.PULL)
         self._pipe_in0.linger = 0
 
         _uuid = b2a_hex(os.urandom(16)).decode("ascii")
@@ -150,7 +148,7 @@ class IOPubThread:
         except AttributeError:
             # new thread, new event pipe
             # create sync base socket
-            event_pipe = self._context.socket(zmq.PUSH, socket_class=zmq.Socket)
+            event_pipe = self._context.socket(zmq.PUSH)
             event_pipe.linger = 0
             event_pipe.connect(self._event_interface)
             self._local.event_pipe = event_pipe
@@ -169,30 +167,28 @@ class IOPubThread:
         Whenever *an* event arrives on the event stream,
         *all* waiting events are processed in order.
         """
-        # create async wrapper within coroutine
-        pipe_in = zmq.asyncio.Socket(self._pipe_in0)
-        try:
-            while True:
-                await pipe_in.recv()
-                # freeze event count so new writes don't extend the queue
-                # while we are processing
-                n_events = len(self._events)
-                for _ in range(n_events):
-                    event_f = self._events.popleft()
-                    event_f()
-        except Exception:
-            if self.thread.__stop.is_set():
-                return
-            raise
+        pipe_in = zmq_anyio.Socket(self._pipe_in0)
+        async with pipe_in:
+            try:
+                while True:
+                    await pipe_in.arecv()
+                    # freeze event count so new writes don't extend the queue
+                    # while we are processing
+                    n_events = len(self._events)
+                    for _ in range(n_events):
+                        event_f = self._events.popleft()
+                        event_f()
+            except Exception:
+                if self.thread.__stop.is_set():
+                    return
+                raise
 
     def _setup_pipe_in(self):
         """setup listening pipe for IOPub from forked subprocesses"""
-        ctx = self._context
-
         # use UUID to authenticate pipe messages
         self._pipe_uuid = os.urandom(16)
 
-        self._pipe_in1 = ctx.socket(zmq.PULL, socket_class=zmq.Socket)
+        self._pipe_in1 = zmq_anyio.Socket(self._context.socket(zmq.PULL))
         self._pipe_in1.linger = 0
 
         try:
@@ -210,18 +206,18 @@ class IOPubThread:
     async def _handle_pipe_msgs(self):
         """handle pipe messages from a subprocess"""
         # create async wrapper within coroutine
-        self._async_pipe_in1 = zmq.asyncio.Socket(self._pipe_in1)
-        try:
-            while True:
-                await self._handle_pipe_msg()
-        except Exception:
-            if self.thread.__stop.is_set():
-                return
-            raise
+        async with self._pipe_in1:
+            try:
+                while True:
+                    await self._handle_pipe_msg()
+            except Exception:
+                if self.thread.__stop.is_set():
+                    return
+                raise
 
     async def _handle_pipe_msg(self, msg=None):
         """handle a pipe message from a subprocess"""
-        msg = msg or await self._async_pipe_in1.recv_multipart()
+        msg = msg or await self._pipe_in1.arecv_multipart()
         if not self._pipe_flag or not self._is_main_process():
             return
         if msg[0] != self._pipe_uuid:

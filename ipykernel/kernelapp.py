@@ -19,7 +19,7 @@ from pathlib import Path
 
 import zmq
 import zmq.asyncio
-from anyio import create_task_group, run
+from anyio import create_task_group, run, to_thread
 from IPython.core.application import (  # type:ignore[attr-defined]
     BaseIPythonApplication,
     base_aliases,
@@ -738,7 +738,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         return
 
     async def _wait_to_enter_eventloop(self):
-        await self.kernel._eventloop_set.wait()
+        await to_thread.run_sync(self.kernel._eventloop_set.wait)
         await self.kernel.enter_eventloop()
 
     async def main(self):

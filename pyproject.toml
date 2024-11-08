@@ -50,6 +50,7 @@ docs = [
   "sphinxcontrib_github_alt",
   "sphinxcontrib-spelling",
   "sphinx-autodoc-typehints",
+  "intersphinx_registry",
   "trio"
 ]
 test = [

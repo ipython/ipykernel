@@ -29,7 +29,10 @@ class BaseThread(Thread):
 
     def run(self) -> None:
         """Run the thread."""
-        run(self._main)
+        try:
+            run(self._main)
+        except Exception:
+            pass
 
     async def _main(self) -> None:
         async with create_task_group() as tg:

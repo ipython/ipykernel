@@ -195,6 +195,7 @@ filterwarnings= [
 
   # ignore timeout cancel coroutine not awaited in zmq-anyio
   "ignore: coroutine 'Poller._apoll.<locals>.trigger_timeout' was never awaited",
+  "ignore: Unclosed socket"
 ]
 
 [tool.coverage.report]

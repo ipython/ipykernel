@@ -1,5 +1,6 @@
 import logging
 from math import inf
+from threading import Event
 from typing import Any, Callable, no_type_check
 from unittest.mock import MagicMock
 
@@ -19,11 +20,6 @@ try:
 except ImportError:
     # Windows
     resource = None  # type:ignore
-
-
-@pytest.fixture()
-def anyio_backend():
-    return "asyncio"
 
 
 pytestmark = pytest.mark.anyio
@@ -159,6 +155,8 @@ class MockKernel(KernelMixin, Kernel):  # type:ignore
     def __init__(self, *args, **kwargs):
         self._initialize()
         self.shell = MagicMock()
+        self.shell_stop = Event()
+        self.control_stop = Event()
         super().__init__(*args, **kwargs)
 
     def do_execute(
@@ -180,6 +178,8 @@ class MockKernel(KernelMixin, Kernel):  # type:ignore
 class MockIPyKernel(KernelMixin, IPythonKernel):  # type:ignore
     def __init__(self, *args, **kwargs):
         self._initialize()
+        self.shell_stop = Event()
+        self.control_stop = Event()
         super().__init__(*args, **kwargs)
 
 

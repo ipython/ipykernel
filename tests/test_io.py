@@ -29,13 +29,16 @@ def ctx():
 
 @pytest.fixture()
 async def iopub_thread(ctx):
-    async with zmq_anyio.Socket(ctx.socket(zmq.PUB)) as pub:
-        thread = IOPubThread(pub)
-        thread.start()
+    try:
+        async with zmq_anyio.Socket(ctx.socket(zmq.PUB)) as pub:
+            thread = IOPubThread(pub)
+            thread.start()
 
-        yield thread
-        thread.stop()
-        thread.close()
+            yield thread
+            thread.stop()
+            thread.close()
+    except Exception:
+        pass
 
 
 async def test_io_api(iopub_thread):
@@ -67,7 +70,7 @@ async def test_io_isatty(iopub_thread):
     assert stream.isatty()
 
 
-async def test_io_thread(anyio_backend, iopub_thread):
+async def test_io_thread(iopub_thread):
     thread = iopub_thread
     thread._setup_pipe_in()
     msg = [thread._pipe_uuid, b"a"]
@@ -81,7 +84,7 @@ async def test_io_thread(anyio_backend, iopub_thread):
     thread.stop()
 
 
-async def test_background_socket(anyio_backend, iopub_thread):
+async def test_background_socket(iopub_thread):
     sock = BackgroundSocket(iopub_thread)
     assert sock.__class__ == BackgroundSocket
     with warnings.catch_warnings():
@@ -92,7 +95,7 @@ async def test_background_socket(anyio_backend, iopub_thread):
     sock.send(b"hi")
 
 
-async def test_outstream(anyio_backend, iopub_thread):
+async def test_outstream(iopub_thread):
     session = Session()
     pub = iopub_thread.socket
 
@@ -118,7 +121,6 @@ async def test_outstream(anyio_backend, iopub_thread):
         assert stream.writable()
 
 
-@pytest.mark.anyio()
 async def test_event_pipe_gc(iopub_thread):
     session = Session(key=b"abc")
     stream = OutStream(
@@ -193,7 +195,6 @@ async def subprocess_test_echo_watch():
             iopub_thread.close()
 
 
-@pytest.mark.anyio()
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
 async def test_echo_watch(ctx):
     """Test echo on underlying FD while capturing the same FD

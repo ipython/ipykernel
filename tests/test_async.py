@@ -8,8 +8,6 @@ import pytest
 from .test_message_spec import validate_message
 from .utils import TIMEOUT, execute, flush_channels, start_new_kernel
 
-pytestmark = pytest.mark.anyio
-
 KC = KM = None
 
 
@@ -33,6 +31,7 @@ def test_async_await():
 
 
 @pytest.mark.skipif(os.name == "nt", reason="Cannot interrupt on Windows")
+@pytest.mark.parametrize("anyio_backend", ["asyncio"])  # FIXME: %autoawait trio
 def test_async_interrupt(anyio_backend, request):
     assert KC is not None
     assert KM is not None

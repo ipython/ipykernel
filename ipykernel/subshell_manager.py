@@ -7,8 +7,8 @@ from __future__ import annotations
 import typing as t
 import uuid
 from dataclasses import dataclass
+from functools import partial
 from threading import Lock, current_thread, main_thread
-from typing import Callable
 
 import zmq
 import zmq_anyio
@@ -44,13 +44,11 @@ class SubshellManager:
         self,
         context: zmq.Context,  # type: ignore[type-arg]
         shell_socket: zmq_anyio.Socket,
-        get_task_group: Callable[[], TaskGroup],
     ):
         assert current_thread() == main_thread()
 
         self._context: zmq.Context = context  # type: ignore[type-arg]
         self._shell_socket = shell_socket
-        self._get_task_group = get_task_group
         self._cache: dict[str, Subshell] = {}
         self._lock_cache = Lock()
         self._lock_shell_socket = Lock()
@@ -91,9 +89,9 @@ class SubshellManager:
                     break
                 self._stop_subshell(subshell)
 
-    async def get_control_other_socket(self, task_group: TaskGroup) -> zmq_anyio.Socket:
+    async def get_control_other_socket(self, thread: BaseThread) -> zmq_anyio.Socket:
         if not self._control_other_socket.started.is_set():
-            task_group.start_soon(self._control_other_socket.start)
+            thread.start_soon(self._control_other_socket.start)
             await self._control_other_socket.started.wait()
         return self._control_other_socket
 
@@ -134,7 +132,7 @@ class SubshellManager:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         if not self._control_shell_channel_socket.started.is_set():
-            thread.get_task_group().start_soon(self._control_shell_channel_socket.start)
+            thread.start_soon(self._control_shell_channel_socket.start)
             await self._control_shell_channel_socket.started.wait()
         socket = self._control_shell_channel_socket
         while True:
@@ -200,8 +198,8 @@ class SubshellManager:
         await self._send_stream.send(subshell_id)
 
         address = self._get_inproc_socket_address(subshell_id)
-        thread.add_task(thread.create_pair_socket, self._context, address)
-        thread.add_task(subshell_task, subshell_id)
+        thread.start_soon(partial(thread.create_pair_socket, self._context, address))
+        thread.start_soon(partial(subshell_task, subshell_id))
         thread.start()
 
         return subshell_id

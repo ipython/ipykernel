@@ -25,13 +25,13 @@ class SubshellThread(BaseThread):
     ) -> None:
         """Create inproc PAIR socket, for communication with shell channel thread.
 
-        Should be called from this thread, so usually via add_task before the
+        Should be called from this thread, so usually via start_soon before the
         thread is started.
         """
         assert current_thread() == self
         self._pair_socket = zmq_anyio.Socket(context, zmq.PAIR)
         self._pair_socket.connect(address)
-        self.add_task(self._pair_socket.start)
+        self.start_soon(self._pair_socket.start)
 
     def run(self) -> None:
         try:

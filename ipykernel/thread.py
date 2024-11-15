@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable
 from queue import Queue
-from threading import Thread
+from threading import Event, Thread
 from typing import Callable
 
 from anyio import create_task_group, run, to_thread
@@ -18,6 +18,8 @@ class BaseThread(Thread):
     def __init__(self, **kwargs):
         """Initialize the thread."""
         super().__init__(**kwargs)
+        self.started = Event()
+        self.stopped = Event()
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
         self._tasks: Queue[Callable[[], Awaitable[None]] | None] = Queue()
@@ -31,6 +33,7 @@ class BaseThread(Thread):
 
     async def _main(self) -> None:
         async with create_task_group() as tg:
+            self.started.set()
             while True:
                 task = await to_thread.run_sync(self._tasks.get)
                 if task is None:
@@ -44,3 +47,4 @@ class BaseThread(Thread):
         This method is threadsafe.
         """
         self._tasks.put(None)
+        self.stopped.set()

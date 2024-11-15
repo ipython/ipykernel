@@ -16,6 +16,7 @@ import typing as t
 import uuid
 import warnings
 from datetime import datetime
+from functools import partial
 from signal import SIGINT, SIGTERM, Signals
 
 from .thread import CONTROL_THREAD_NAME
@@ -536,7 +537,7 @@ class Kernel(SingletonConfigurable):
             self.control_stop = threading.Event()
             if not self._is_test and self.control_socket is not None:
                 if self.control_thread:
-                    self.control_thread.add_task(self.control_main)
+                    self.control_thread.start_soon(self.control_main)
                     self.control_thread.start()
                 else:
                     tg.start_soon(self.control_main)
@@ -551,11 +552,11 @@ class Kernel(SingletonConfigurable):
 
                 # Assign tasks to and start shell channel thread.
                 manager = self.shell_channel_thread.manager
-                self.shell_channel_thread.add_task(self.shell_channel_thread_main)
-                self.shell_channel_thread.add_task(
-                    manager.listen_from_control, self.shell_main, self.shell_channel_thread
+                self.shell_channel_thread.start_soon(self.shell_channel_thread_main)
+                self.shell_channel_thread.start_soon(
+                    partial(manager.listen_from_control, self.shell_main, self.shell_channel_thread)
                 )
-                self.shell_channel_thread.add_task(manager.listen_from_subshells)
+                self.shell_channel_thread.start_soon(manager.listen_from_subshells)
                 self.shell_channel_thread.start()
             else:
                 if not self._is_test and self.shell_socket is not None:
@@ -1085,7 +1086,7 @@ class Kernel(SingletonConfigurable):
         # This should only be called in the control thread if it exists.
         # Request is passed to shell channel thread to process.
         other_socket = await self.shell_channel_thread.manager.get_control_other_socket(
-            self.control_thread.get_task_group()
+            self.control_thread
         )
         await other_socket.asend_json({"type": "create"})
         reply = await other_socket.arecv_json()
@@ -1109,7 +1110,7 @@ class Kernel(SingletonConfigurable):
         # This should only be called in the control thread if it exists.
         # Request is passed to shell channel thread to process.
         other_socket = await self.shell_channel_thread.manager.get_control_other_socket(
-            self.control_thread.get_task_group()
+            self.control_thread
         )
         await other_socket.asend_json({"type": "delete", "subshell_id": subshell_id})
         reply = await other_socket.arecv_json()
@@ -1126,7 +1127,7 @@ class Kernel(SingletonConfigurable):
         # This should only be called in the control thread if it exists.
         # Request is passed to shell channel thread to process.
         other_socket = await self.shell_channel_thread.manager.get_control_other_socket(
-            self.control_thread.get_task_group()
+            self.control_thread
         )
         await other_socket.asend_json({"type": "list"})
         reply = await other_socket.arecv_json()

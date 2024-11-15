@@ -28,7 +28,7 @@ class ShellChannelThread(BaseThread):
     def manager(self) -> SubshellManager:
         # Lazy initialisation.
         if self._manager is None:
-            self._manager = SubshellManager(self._context, self._shell_socket, self.get_task_group)
+            self._manager = SubshellManager(self._context, self._shell_socket)
         return self._manager
 
     def run(self) -> None:

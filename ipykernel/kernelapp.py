@@ -16,6 +16,7 @@ from functools import partial
 from io import FileIO, TextIOWrapper
 from logging import StreamHandler
 from pathlib import Path
+from typing import Optional
 
 import zmq
 import zmq.asyncio
@@ -54,6 +55,7 @@ from .iostream import IOPubThread
 from .ipkernel import IPythonKernel
 from .parentpoller import ParentPollerUnix, ParentPollerWindows
 from .shellchannel import ShellChannelThread
+from .thread import BaseThread
 from .zmqshell import ZMQInteractiveShell
 
 # -----------------------------------------------------------------------------
@@ -142,9 +144,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     debug_shell_socket = Any()
     stdin_socket = Any()
     iopub_socket = Any()
-    iopub_thread = Any()
-    control_thread = Any()
-    shell_channel_thread = Any()
+
+    iopub_thread: Optional[IOPubThread] = Instance(IOPubThread, allow_none=True)  # type:ignore[assignment]
+    control_thread: Optional[BaseThread] = Instance(BaseThread, allow_none=True)  # type:ignore[assignment]
+    shell_channel_thread: Optional[BaseThread] = Instance(BaseThread, allow_none=True)  # type:ignore[assignment]
 
     _ports = Dict()
 
@@ -261,7 +264,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                     raise
         return None
 
-    def write_connection_file(self):
+    def write_connection_file(self, **kwargs: t.Any) -> None:
         """write connection info to JSON file"""
         cf = self.abs_connection_file
         connection_info = dict(
@@ -401,15 +404,15 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.heartbeat:
             self.log.debug("Closing heartbeat channel")
             self.heartbeat.context.term()
-        if self.iopub_thread:
+        if self.iopub_thread is not None:
             self.log.debug("Closing iopub channel")
             self.iopub_thread.stop()
             self.iopub_thread.close()
-        if self.control_thread and self.control_thread.is_alive():
+        if self.control_thread is not None and self.control_thread.is_alive():
             self.log.debug("Closing control thread")
             self.control_thread.stop()
             self.control_thread.join()
-        if self.shell_channel_thread and self.shell_channel_thread.is_alive():
+        if self.shell_channel_thread is not None and self.shell_channel_thread.is_alive():
             self.log.debug("Closing shell channel thread")
             self.shell_channel_thread.stop()
             self.shell_channel_thread.join()

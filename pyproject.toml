@@ -192,6 +192,9 @@ filterwarnings= [
 
   # ignore unclosed sqlite in traits
   "ignore:unclosed database in <sqlite3.Connection:ResourceWarning",
+
+  # ignore timeout cancel coroutine not awaited in zmq-anyio
+  "ignore: coroutine 'Poller._apoll.<locals>.trigger_timeout' was never awaited",
 ]
 
 [tool.coverage.report]

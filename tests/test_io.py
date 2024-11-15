@@ -67,7 +67,6 @@ async def test_io_isatty(iopub_thread):
     assert stream.isatty()
 
 
-@pytest.mark.skip(reason="FIXME")
 async def test_io_thread(anyio_backend, iopub_thread):
     thread = iopub_thread
     thread._setup_pipe_in()
@@ -80,8 +79,6 @@ async def test_io_thread(anyio_backend, iopub_thread):
     thread._really_send([b"hi"])
     ctx1.destroy()
     thread.stop()
-    thread.close()
-    thread._really_send(None)
 
 
 async def test_background_socket(anyio_backend, iopub_thread):
@@ -197,8 +194,7 @@ async def subprocess_test_echo_watch():
 
 
 @pytest.mark.anyio()
-# @pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
-@pytest.mark.skip(reason="FIXME")
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="Windows")
 async def test_echo_watch(ctx):
     """Test echo on underlying FD while capturing the same FD
 
@@ -218,7 +214,7 @@ async def test_echo_watch(ctx):
             [
                 sys.executable,
                 "-c",
-                f"import {__name__}; {__name__}.subprocess_test_echo_watch()",
+                f"import {__name__}, anyio; anyio.run({__name__}.subprocess_test_echo_watch)",
             ],
             env=env,
             capture_output=True,

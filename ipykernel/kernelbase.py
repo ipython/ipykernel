@@ -895,7 +895,7 @@ class Kernel(SingletonConfigurable):
             "language_info": self.language_info,
             "banner": self.banner,
             "help_links": self.help_links,
-            "supported_features": supported_features
+            "supported_features": supported_features,
         }
 
     async def kernel_info_request(self, socket, ident, parent):

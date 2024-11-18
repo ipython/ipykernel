@@ -891,6 +891,12 @@ class Kernel(SingletonConfigurable):
         }
         if self._supports_kernel_subshells:
             info["supported_features"] = ["kernel subshells"]
+
+        from .debugger import _is_debugpy_available
+
+        if _is_debugpy_available:
+            info["supported_features"].append("debugger")
+
         return info
 
     async def kernel_info_request(self, socket, ident, parent):

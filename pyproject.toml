@@ -63,7 +63,6 @@ test = [
     "pre-commit",
     "pytest-timeout",
     "trio",
-    "pytest-asyncio>=0.23.5",
 ]
 cov = [
   "coverage[toml]",

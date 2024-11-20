@@ -43,18 +43,21 @@ jobs:
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
+          hatch run test:python --version
           hatch run cov:test --cov-fail-under 50 || hatch run test:test --lf
 
       - name: Run the tests on pypy
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
+          hatch run test:python --version
           hatch run test:nowarn || hatch run test:nowarn --lf
 
       - name: Run the tests on Windows
         timeout-minutes: 15
         if: ${{  startsWith(matrix.os, 'windows') }}
         run: |
+          hatch run test:python --version
           hatch run cov:nowarn || hatch run test:nowarn --lf
 
       - name: Check Launcher

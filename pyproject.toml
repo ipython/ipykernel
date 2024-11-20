@@ -321,3 +321,6 @@ ignore = ["W002"]
 
 [tool.repo-review]
 ignore = ["PY007", "PP308", "GH102", "MY101"]
+
+[tool.hatch.metadata]
+allow-direct-references = true

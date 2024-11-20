@@ -36,8 +36,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install hatch
+        run: |
+          python --version
+          python -m pip install hatch
 
       - name: Run the tests
         timeout-minutes: 15

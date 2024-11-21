@@ -16,6 +16,7 @@ import typing as t
 import uuid
 import warnings
 from datetime import datetime
+from functools import partial
 from signal import SIGINT, SIGTERM, Signals
 
 from .thread import CONTROL_THREAD_NAME
@@ -529,7 +530,7 @@ class Kernel(SingletonConfigurable):
             self.control_stop = threading.Event()
             if not self._is_test and self.control_socket is not None:
                 if self.control_thread:
-                    self.control_thread.add_task(self.control_main)
+                    self.control_thread.start_soon(self.control_main)
                     self.control_thread.start()
                 else:
                     tg.start_soon(self.control_main)
@@ -544,9 +545,11 @@ class Kernel(SingletonConfigurable):
 
                 # Assign tasks to and start shell channel thread.
                 manager = self.shell_channel_thread.manager
-                self.shell_channel_thread.add_task(self.shell_channel_thread_main)
-                self.shell_channel_thread.add_task(manager.listen_from_control, self.shell_main)
-                self.shell_channel_thread.add_task(manager.listen_from_subshells)
+                self.shell_channel_thread.start_soon(self.shell_channel_thread_main)
+                self.shell_channel_thread.start_soon(
+                    partial(manager.listen_from_control, self.shell_main)
+                )
+                self.shell_channel_thread.start_soon(manager.listen_from_subshells)
                 self.shell_channel_thread.start()
             else:
                 if not self._is_test and self.shell_socket is not None:

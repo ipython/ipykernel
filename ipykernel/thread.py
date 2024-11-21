@@ -1,6 +1,10 @@
 """Base class for threads."""
-import typing as t
+from __future__ import annotations
+
+from collections.abc import Awaitable
+from queue import Queue
 from threading import Event, Thread
+from typing import Callable
 
 from anyio import create_task_group, run, to_thread
 
@@ -14,24 +18,27 @@ class BaseThread(Thread):
     def __init__(self, **kwargs):
         """Initialize the thread."""
         super().__init__(**kwargs)
+        self.started = Event()
+        self.stopped = Event()
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
-        self.__stop = Event()
-        self._tasks_and_args: list[tuple[t.Any, t.Any]] = []
+        self._tasks: Queue[Callable[[], Awaitable[None]] | None] = Queue()
 
-    def add_task(self, task: t.Any, *args: t.Any) -> None:
-        # May only add tasks before the thread is started.
-        self._tasks_and_args.append((task, args))
+    def start_soon(self, task: Callable[[], Awaitable[None]] | None) -> None:
+        self._tasks.put(task)
 
-    def run(self) -> t.Any:
+    def run(self) -> None:
         """Run the thread."""
-        return run(self._main)
+        run(self._main)
 
     async def _main(self) -> None:
         async with create_task_group() as tg:
-            for task, args in self._tasks_and_args:
-                tg.start_soon(task, *args)
-            await to_thread.run_sync(self.__stop.wait)
+            self.started.set()
+            while True:
+                task = await to_thread.run_sync(self._tasks.get)
+                if task is None:
+                    break
+                tg.start_soon(task)
             tg.cancel_scope.cancel()
 
     def stop(self) -> None:
@@ -39,4 +46,5 @@ class BaseThread(Thread):
 
         This method is threadsafe.
         """
-        self.__stop.set()
+        self._tasks.put(None)
+        self.stopped.set()

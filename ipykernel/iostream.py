@@ -16,12 +16,14 @@ import warnings
 from binascii import b2a_hex
 from collections import defaultdict, deque
 from io import StringIO, TextIOBase
-from threading import Event, Thread, local
+from threading import local
 from typing import Any, Callable
 
 import zmq
-from anyio import create_task_group, run, sleep, to_thread
+from anyio import sleep
 from jupyter_client.session import extract_header
+
+from .thread import BaseThread
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -35,38 +37,6 @@ PIPE_BUFFER_SIZE = 1000
 # -----------------------------------------------------------------------------
 # IO classes
 # -----------------------------------------------------------------------------
-
-
-class _IOPubThread(Thread):
-    """A thread for a IOPub."""
-
-    def __init__(self, tasks, **kwargs):
-        """Initialize the thread."""
-        super().__init__(name="IOPub", **kwargs)
-        self._tasks = tasks
-        self.pydev_do_not_trace = True
-        self.is_pydev_daemon_thread = True
-        self.daemon = True
-        self.__stop = Event()
-
-    def run(self):
-        """Run the thread."""
-        self.name = "IOPub"
-        run(self._main)
-
-    async def _main(self):
-        async with create_task_group() as tg:
-            for task in self._tasks:
-                tg.start_soon(task)
-            await to_thread.run_sync(self.__stop.wait)
-            tg.cancel_scope.cancel()
-
-    def stop(self):
-        """Stop the thread.
-
-        This method is threadsafe.
-        """
-        self.__stop.set()
 
 
 class IOPubThread:
@@ -111,7 +81,9 @@ class IOPubThread:
         tasks = [self._handle_event, self._run_event_pipe_gc]
         if pipe:
             tasks.append(self._handle_pipe_msgs)
-        self.thread = _IOPubThread(tasks)
+        self.thread = BaseThread(name="IOPub", daemon=True)
+        for task in tasks:
+            self.thread.start_soon(task)
 
     def _setup_event_pipe(self):
         """Create the PULL socket listening for events that should fire in this thread."""
@@ -181,7 +153,7 @@ class IOPubThread:
                     event_f = self._events.popleft()
                     event_f()
         except Exception:
-            if self.thread.__stop.is_set():
+            if self.thread.stopped.is_set():
                 return
             raise
 
@@ -215,7 +187,7 @@ class IOPubThread:
             while True:
                 await self._handle_pipe_msg()
         except Exception:
-            if self.thread.__stop.is_set():
+            if self.thread.stopped.is_set():
                 return
             raise
 

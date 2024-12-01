@@ -382,7 +382,7 @@ class Kernel(SingletonConfigurable):
                             subshell_id
                         )
                         assert socket is not None
-                        socket.send_multipart(msg, copy=False)
+                        await socket.asend_multipart(msg, copy=False)
                     except Exception:
                         self.log.error("Invalid message", exc_info=True)  # noqa: G201
             except BaseException:

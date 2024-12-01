@@ -366,7 +366,7 @@ class Kernel(SingletonConfigurable):
         assert self.shell_channel_thread is not None
         assert threading.current_thread() == self.shell_channel_thread
 
-        async with self.shell_socket:
+        async with self.shell_socket, create_task_group() as tg:
             try:
                 while True:
                     msg = await self.shell_socket.arecv_multipart(copy=False)
@@ -382,6 +382,8 @@ class Kernel(SingletonConfigurable):
                             subshell_id
                         )
                         assert socket is not None
+                        if not socket.started.is_set():
+                            await tg.start(socket.start)
                         await socket.asend_multipart(msg, copy=False)
                     except Exception:
                         self.log.error("Invalid message", exc_info=True)  # noqa: G201

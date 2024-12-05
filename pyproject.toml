@@ -34,7 +34,7 @@ dependencies = [
     "psutil>=5.7",
     "packaging>=22",
     "anyio>=4.2.0",
-    "zmq-anyio >=0.2.3",
+    "zmq-anyio >=0.2.4",
 ]
 
 [project.urls]

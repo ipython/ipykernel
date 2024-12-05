@@ -67,9 +67,6 @@ jobs:
         timeout-minutes: 15
         if: ${{  startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run test:pip install git+https://github.com/davidbrochart/zmq-anyio.git@anyio-selector-thread#egg=zmq_anyio --ignore-installed
-          # hatch run test:pip install git+https://github.com/davidbrochart/anyio.git@selector-thread#egg=anyio --ignore-installed
-          hatch run test:pip install git+https://github.com/agronholm/anyio.git@selector-thread-alternate#egg=anyio --ignore-installed
           hatch run test:pip list
           hatch run test:python --version
           hatch run test:pytest -v

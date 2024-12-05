@@ -7,20 +7,22 @@ from __future__ import annotations
 import typing as t
 import uuid
 from dataclasses import dataclass
+from functools import partial
 from threading import Lock, current_thread, main_thread
 
 import zmq
-import zmq.asyncio
+import zmq_anyio
 from anyio import create_memory_object_stream, create_task_group
+from anyio.abc import TaskGroup
 
 from .subshell import SubshellThread
-from .thread import SHELL_CHANNEL_THREAD_NAME
+from .thread import SHELL_CHANNEL_THREAD_NAME, BaseThread
 
 
 @dataclass
 class Subshell:
     thread: SubshellThread
-    shell_channel_socket: zmq.asyncio.Socket
+    shell_channel_socket: zmq_anyio.Socket
 
 
 class SubshellManager:
@@ -38,10 +40,14 @@ class SubshellManager:
     against multiple subshells attempting to send at the same time.
     """
 
-    def __init__(self, context: zmq.asyncio.Context, shell_socket: zmq.asyncio.Socket):
+    def __init__(
+        self,
+        context: zmq.Context,  # type: ignore[type-arg]
+        shell_socket: zmq_anyio.Socket,
+    ):
         assert current_thread() == main_thread()
 
-        self._context: zmq.asyncio.Context = context
+        self._context: zmq.Context = context  # type: ignore[type-arg]
         self._shell_socket = shell_socket
         self._cache: dict[str, Subshell] = {}
         self._lock_cache = Lock()
@@ -83,10 +89,13 @@ class SubshellManager:
                     break
                 self._stop_subshell(subshell)
 
-    def get_control_other_socket(self) -> zmq.asyncio.Socket:
+    async def get_control_other_socket(self, thread: BaseThread) -> zmq_anyio.Socket:
+        if not self._control_other_socket.started.is_set():
+            thread.start_soon(self._control_other_socket.start)
+            await self._control_other_socket.started.wait()
         return self._control_other_socket
 
-    def get_other_socket(self, subshell_id: str | None) -> zmq.asyncio.Socket:
+    def get_other_socket(self, subshell_id: str | None) -> zmq_anyio.Socket:
         """Return the other inproc pair socket for a subshell.
 
         This socket is accessed from the subshell thread.
@@ -98,7 +107,7 @@ class SubshellManager:
             assert socket is not None
             return socket
 
-    def get_shell_channel_socket(self, subshell_id: str | None) -> zmq.asyncio.Socket:
+    def get_shell_channel_socket(self, subshell_id: str | None) -> zmq_anyio.Socket:
         """Return the shell channel inproc pair socket for a subshell.
 
         This socket is accessed from the shell channel thread.
@@ -116,17 +125,20 @@ class SubshellManager:
         with self._lock_cache:
             return list(self._cache)
 
-    async def listen_from_control(self, subshell_task: t.Any) -> None:
+    async def listen_from_control(self, subshell_task: t.Any, thread: BaseThread) -> None:
         """Listen for messages on the control inproc socket, handle those messages and
         return replies on the same socket.  Runs in the shell channel thread.
         """
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
+        if not self._control_shell_channel_socket.started.is_set():
+            thread.start_soon(self._control_shell_channel_socket.start)
+            await self._control_shell_channel_socket.started.wait()
         socket = self._control_shell_channel_socket
         while True:
-            request = await socket.recv_json()  # type: ignore[misc]
+            request = await socket.arecv_json()
             reply = await self._process_control_request(request, subshell_task)
-            await socket.send_json(reply)  # type: ignore[func-returns-value]
+            await socket.asend_json(reply)
 
     async def listen_from_subshells(self) -> None:
         """Listen for reply messages on inproc sockets of all subshells and resend
@@ -137,9 +149,9 @@ class SubshellManager:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         async with create_task_group() as tg:
-            tg.start_soon(self._listen_for_subshell_reply, None)
+            tg.start_soon(self._listen_for_subshell_reply, None, tg)
             async for subshell_id in self._receive_stream:
-                tg.start_soon(self._listen_for_subshell_reply, subshell_id)
+                tg.start_soon(self._listen_for_subshell_reply, subshell_id, tg)
 
     def subshell_id_from_thread_id(self, thread_id: int) -> str | None:
         """Return subshell_id of the specified thread_id.
@@ -159,10 +171,10 @@ class SubshellManager:
 
     def _create_inproc_pair_socket(
         self, name: str | None, shell_channel_end: bool
-    ) -> zmq.asyncio.Socket:
+    ) -> zmq_anyio.Socket:
         """Create and return a single ZMQ inproc pair socket."""
         address = self._get_inproc_socket_address(name)
-        socket = self._context.socket(zmq.PAIR)
+        socket = zmq_anyio.Socket(self._context, zmq.PAIR)
         if shell_channel_end:
             socket.bind(address)
         else:
@@ -186,8 +198,8 @@ class SubshellManager:
         await self._send_stream.send(subshell_id)
 
         address = self._get_inproc_socket_address(subshell_id)
-        thread.add_task(thread.create_pair_socket, self._context, address)
-        thread.add_task(subshell_task, subshell_id)
+        thread.start_soon(partial(thread.create_pair_socket, self._context, address))
+        thread.start_soon(partial(subshell_task, subshell_id))
         thread.start()
 
         return subshell_id
@@ -208,7 +220,7 @@ class SubshellManager:
         full_name = f"subshell-{name}" if name else "subshell"
         return f"inproc://{full_name}"
 
-    def _get_shell_channel_socket(self, subshell_id: str | None) -> zmq.asyncio.Socket:
+    def _get_shell_channel_socket(self, subshell_id: str | None) -> zmq_anyio.Socket:
         if subshell_id is None:
             return self._parent_shell_channel_socket
         with self._lock_cache:
@@ -220,7 +232,9 @@ class SubshellManager:
         with self._lock_cache:
             return subshell_id in self._cache
 
-    async def _listen_for_subshell_reply(self, subshell_id: str | None) -> None:
+    async def _listen_for_subshell_reply(
+        self, subshell_id: str | None, task_group: TaskGroup
+    ) -> None:
         """Listen for reply messages on specified subshell inproc socket and
         resend to the client via the shell_socket.
 
@@ -230,11 +244,13 @@ class SubshellManager:
 
         shell_channel_socket = self._get_shell_channel_socket(subshell_id)
 
+        task_group.start_soon(shell_channel_socket.start)
+        await shell_channel_socket.started.wait()
         try:
             while True:
-                msg = await shell_channel_socket.recv_multipart(copy=False)
+                msg = await shell_channel_socket.arecv_multipart(copy=False)
                 with self._lock_shell_socket:
-                    await self._shell_socket.send_multipart(msg)
+                    await self._shell_socket.asend_multipart(msg)
         except BaseException:
             if not self._is_subshell(subshell_id):
                 # Subshell no longer exists so exit gracefully

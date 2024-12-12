@@ -510,13 +510,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
             if hasattr(sys.stderr, "_original_stdstream_copy"):
                 for handler in self.log.handlers:
-                    if (isinstance(handler, StreamHandler)
-                            and (buffer := getattr(handler.stream, "buffer"))
-                            and (fileno := getattr(buffer, "fileno"))
-                            and fileno() == sys.stderr._original_stdstream_fd):
-                        self.log.debug(
-                            "Seeing logger to stderr, rerouting to raw filedescriptor."
-                        )
+                    if (
+                        isinstance(handler, StreamHandler)
+                        and (buffer := handler.stream.buffer)
+                        and (fileno := buffer.fileno)
+                        and fileno() == sys.stderr._original_stdstream_fd
+                    ):
+                        self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
 
                         handler.stream = TextIOWrapper(
                             FileIO(
@@ -540,18 +540,17 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             return
         stdout, stderr, displayhook = sys.stdout, sys.stderr, sys.displayhook
         sys.stdout, sys.stderr, sys.displayhook = self._original_io
-        if (finish_displayhook := getattr(displayhook, "finish_displayhook",
-                                          None)):
+        if finish_displayhook := getattr(displayhook, "finish_displayhook", None):
             finish_displayhook()
         if hasattr(sys.stderr, "_original_stdstream_copy"):
             for handler in self.log.handlers:
-                if (isinstance(handler, StreamHandler)
-                        and (buffer := getattr(handler.stream, "buffer"))
-                        and (fileno := getattr(buffer, "fileno"))
-                        and fileno() == sys.stderr._original_stdstream_copy):
-                    self.log.debug(
-                        "Seeing logger to raw filedescriptor, rerouting back to stderr"
-                    )
+                if (
+                    isinstance(handler, StreamHandler)
+                    and (buffer := handler.stream.buffer)
+                    and (fileno := buffer.fileno)
+                    and fileno() == sys.stderr._original_stdstream_copy
+                ):
+                    self.log.debug("Seeing logger to raw filedescriptor, rerouting back to stderr")
 
                     handler.stream = TextIOWrapper(
                         FileIO(

@@ -23,6 +23,7 @@ from traitlets import Any, Bool, HasTraits, Instance, List, Type, default, obser
 from .comm.comm import BaseComm
 from .comm.manager import CommManager
 from .compiler import XCachingCompiler
+from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
 from .iostream import OutStream
 from .kernelbase import Kernel as KernelBase
@@ -71,6 +72,8 @@ class IPythonKernel(KernelBase):
     shell = Instance("IPython.core.interactiveshell.InteractiveShellABC", allow_none=True)
     shell_class = Type(ZMQInteractiveShell)
 
+    debugger_class = Type(Debugger)
+
     use_experimental_completions = Bool(
         True,
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
@@ -110,11 +113,9 @@ class IPythonKernel(KernelBase):
 
         self.executing_blocking_code_in_main_shell = False
 
-        from .debugger import Debugger, _is_debugpy_available
-
         # Initialize the Debugger
         if _is_debugpy_available:
-            self.debugger = Debugger(
+            self.debugger = self.debugger_class(
                 self.log,
                 self.debugpy_socket,
                 self._publish_debug_event,

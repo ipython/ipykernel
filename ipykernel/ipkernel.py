@@ -71,6 +71,8 @@ class IPythonKernel(KernelBase):
     shell = Instance("IPython.core.interactiveshell.InteractiveShellABC", allow_none=True)
     shell_class = Type(ZMQInteractiveShell)
 
+    debugger_class = Type(Debugger)
+
     use_experimental_completions = Bool(
         True,
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
@@ -114,7 +116,7 @@ class IPythonKernel(KernelBase):
 
         # Initialize the Debugger
         if _is_debugpy_available:
-            self.debugger = Debugger(
+            self.debugger = self.debugger_class(
                 self.log,
                 self.debugpy_socket,
                 self._publish_debug_event,

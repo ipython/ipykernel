@@ -23,7 +23,6 @@ from traitlets import Any, Bool, HasTraits, Instance, List, Type, default, obser
 from .comm.comm import BaseComm
 from .comm.manager import CommManager
 from .compiler import XCachingCompiler
-from .debugger import Debugger, _is_debugpy_available
 from .eventloops import _use_appnope
 from .iostream import OutStream
 from .kernelbase import Kernel as KernelBase
@@ -72,7 +71,9 @@ class IPythonKernel(KernelBase):
     shell = Instance("IPython.core.interactiveshell.InteractiveShellABC", allow_none=True)
     shell_class = Type(ZMQInteractiveShell)
 
-    debugger_class = Type(Debugger)
+    # use fully-qualified name to ensure lazy import and prevent the issue from
+    # https://github.com/ipython/ipykernel/issues/1198
+    debugger_class = Type("ipykernel.debugger.Debugger")
 
     use_experimental_completions = Bool(
         True,
@@ -112,6 +113,8 @@ class IPythonKernel(KernelBase):
         super().__init__(**kwargs)
 
         self.executing_blocking_code_in_main_shell = False
+
+        from .debugger import _is_debugpy_available
 
         # Initialize the Debugger
         if _is_debugpy_available:

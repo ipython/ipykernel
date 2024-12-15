@@ -74,6 +74,8 @@ class IPythonKernel(KernelBase):
     # use fully-qualified name to ensure lazy import and prevent the issue from
     # https://github.com/ipython/ipykernel/issues/1198
     debugger_class = Type("ipykernel.debugger.Debugger")
+    
+    compiler_class = Type(XCachingCompiler)
 
     use_experimental_completions = Bool(
         True,
@@ -134,7 +136,7 @@ class IPythonKernel(KernelBase):
             user_module=self.user_module,
             user_ns=self.user_ns,
             kernel=self,
-            compiler_class=XCachingCompiler,
+            compiler_class=self.compiler_class,
         )
         self.shell.displayhook.session = self.session  # type:ignore[attr-defined]
 

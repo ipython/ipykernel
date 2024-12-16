@@ -736,9 +736,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.subapp.start()
         if self.poller is not None:
             self.poller.start()
-        backend = "trio" if self.trio_loop else "asyncio"
-        run(self.main, backend=backend)
-        return
+        if self.kernel is not None:
+            backend = "trio" if self.trio_loop else "asyncio"
+            run(self.main, backend=backend)
 
     async def _wait_to_enter_eventloop(self):
         await self.kernel._eventloop_set.wait()

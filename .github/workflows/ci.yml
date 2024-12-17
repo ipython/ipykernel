@@ -69,7 +69,7 @@ jobs:
         run: |
           hatch run test:pip list
           hatch run test:python --version
-          hatch run test:python -m pip install pip install git+https://github.com/ipython/ipython@92dd9e47fe8862ee38770744c165b680cb5241b1
+          hatch run test:python -m pip install git+https://github.com/ipython/ipython@92dd9e47fe8862ee38770744c165b680cb5241b1
           PYTHONTRACEMALLOC=20 hatch run test:pytest -v
 
       - name: Check Launcher

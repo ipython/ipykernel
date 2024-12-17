@@ -56,14 +56,38 @@ class SubshellManager:
         # Inproc pair sockets for control channel and main shell (parent subshell).
         # Each inproc pair has a "shell_channel" socket used in the shell channel
         # thread, and an "other" socket used in the other thread.
-        self._control_shell_channel_socket = self._create_inproc_pair_socket("control", True)
-        self._control_other_socket = self._create_inproc_pair_socket("control", False)
-        self._parent_shell_channel_socket = self._create_inproc_pair_socket(None, True)
-        self._parent_other_socket = self._create_inproc_pair_socket(None, False)
+        self.__control_shell_channel_socket: zmq_anyio.Socket | None = None
+        self.__control_other_socket: zmq_anyio.Socket | None = None
+        self.__parent_shell_channel_socket: zmq_anyio.Socket | None = None
+        self.__parent_other_socket: zmq_anyio.Socket | None = None
 
         # anyio memory object stream for async queue-like communication between tasks.
         # Used by _create_subshell to tell listen_from_subshells to spawn a new task.
         self._send_stream, self._receive_stream = create_memory_object_stream[str]()
+
+    @property
+    def _control_shell_channel_socket(self) -> zmq_anyio.Socket:
+        if self.__control_shell_channel_socket is None:
+            self.__control_shell_channel_socket = self._create_inproc_pair_socket("control", True)
+        return self.__control_shell_channel_socket
+
+    @property
+    def _control_other_socket(self) -> zmq_anyio.Socket:
+        if self.__control_other_socket is None:
+            self.__control_other_socket = self._create_inproc_pair_socket("control", False)
+        return self.__control_other_socket
+
+    @property
+    def _parent_shell_channel_socket(self) -> zmq_anyio.Socket:
+        if self.__parent_shell_channel_socket is None:
+            self.__parent_shell_channel_socket = self._create_inproc_pair_socket(None, True)
+        return self.__parent_shell_channel_socket
+
+    @property
+    def _parent_other_socket(self) -> zmq_anyio.Socket:
+        if self.__parent_other_socket is None:
+            self.__parent_other_socket = self._create_inproc_pair_socket(None, False)
+        return self.__parent_other_socket
 
     def close(self) -> None:
         """Stop all subshells and close all resources."""
@@ -73,10 +97,10 @@ class SubshellManager:
         self._receive_stream.close()
 
         for socket in (
-            self._control_shell_channel_socket,
-            self._control_other_socket,
-            self._parent_shell_channel_socket,
-            self._parent_other_socket,
+            self.__control_shell_channel_socket,
+            self.__control_other_socket,
+            self.__parent_shell_channel_socket,
+            self.__parent_other_socket,
         ):
             if socket is not None:
                 socket.close()

@@ -32,6 +32,12 @@ jobs:
             python-version: "3.11"
           - os: ubuntu-latest
             python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.10"
+          - os: windows-latest
+            python-version: "3.11"
+          - os: windows-latest
+            python-version: "3.12"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,19 +55,22 @@ jobs:
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test --cov-fail-under 50 || hatch run test:test --lf
+          PYTHONTRACEMALLOC=20 hatch run cov:test --cov-fail-under 50 || PYTHONTRACEMALLOC=20 hatch run test:test --lf
 
       - name: Run the tests on pypy
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
-          hatch run test:nowarn || hatch run test:nowarn --lf
+          PYTHONTRACEMALLOC=20 hatch run test:nowarn || PYTHONTRACEMALLOC=20 hatch run test:nowarn --lf
 
       - name: Run the tests on Windows
         timeout-minutes: 15
         if: ${{  startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:nowarn || hatch run test:nowarn --lf
+          hatch run test:pip list
+          hatch run test:python --version
+          hatch run test:python -m pip install git+https://github.com/ipython/ipython@92dd9e47fe8862ee38770744c165b680cb5241b1
+          PYTHONTRACEMALLOC=20 hatch run test:pytest -v
 
       - name: Check Launcher
         run: |
@@ -144,7 +153,7 @@ jobs:
 
       - name: Run the tests
         timeout-minutes: 15
-        run: pytest -W default -vv || pytest --vv -W default --lf
+        run: PYTHONTRACEMALLOC=20 pytest -W default -vv || PYTHONTRACEMALLOC=20 pytest --vv -W default --lf
 
   test_miniumum_versions:
     name: Test Minimum Versions

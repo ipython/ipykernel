@@ -734,6 +734,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Start the application."""
         if self.subapp is not None:
             self.subapp.start()
+            return
         if self.poller is not None:
             self.poller.start()
         backend = "trio" if self.trio_loop else "asyncio"

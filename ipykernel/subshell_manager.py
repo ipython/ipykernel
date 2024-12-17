@@ -125,20 +125,18 @@ class SubshellManager:
         with self._lock_cache:
             return list(self._cache)
 
-    async def listen_from_control(self, subshell_task: t.Any, thread: BaseThread) -> None:
+    async def listen_from_control(self, subshell_task: t.Any) -> None:
         """Listen for messages on the control inproc socket, handle those messages and
         return replies on the same socket.  Runs in the shell channel thread.
         """
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
-        if not self._control_shell_channel_socket.started.is_set():
-            thread.start_soon(self._control_shell_channel_socket.start)
-            await self._control_shell_channel_socket.started.wait()
         socket = self._control_shell_channel_socket
-        while True:
-            request = await socket.arecv_json()
-            reply = await self._process_control_request(request, subshell_task)
-            await socket.asend_json(reply)
+        async with socket:
+            while True:
+                request = await socket.arecv_json()
+                reply = await self._process_control_request(request, subshell_task)
+                await socket.asend_json(reply)
 
     async def listen_from_subshells(self) -> None:
         """Listen for reply messages on inproc sockets of all subshells and resend

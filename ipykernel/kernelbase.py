@@ -556,7 +556,7 @@ class Kernel(SingletonConfigurable):
                 manager = self.shell_channel_thread.manager
                 self.shell_channel_thread.start_soon(self.shell_channel_thread_main)
                 self.shell_channel_thread.start_soon(
-                    partial(manager.listen_from_control, self.shell_main, self.shell_channel_thread)
+                    partial(manager.listen_from_control, self.shell_main)
                 )
                 self.shell_channel_thread.start_soon(manager.listen_from_subshells)
                 self.shell_channel_thread.start()

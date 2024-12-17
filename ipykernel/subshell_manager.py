@@ -91,7 +91,7 @@ class SubshellManager:
 
     async def get_control_other_socket(self, thread: BaseThread) -> zmq_anyio.Socket:
         if not self._control_other_socket.started.is_set():
-            thread.start_soon(self._control_other_socket.start)
+            thread.task_group.start_soon(self._control_other_socket.start)
             await self._control_other_socket.started.wait()
         return self._control_other_socket
 

@@ -536,8 +536,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         restores state after init_io
         """
-        if self.closed:
-            return
         stdout, stderr, displayhook = sys.stdout, sys.stderr, sys.displayhook
         sys.stdout, sys.stderr, sys.displayhook = self._original_io
         if finish_displayhook := getattr(displayhook, "finish_displayhook", None):

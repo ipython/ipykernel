@@ -559,10 +559,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                             "w",
                         )
                     )
-        stderr.close()
-        stdout.close()
+        if hasattr(sys.stderr, "_original_stdstream_copy"):
+            stderr.close()
+        if hasattr(sys.stdout, "_original_stdstream_copy"):
+            stdout.close()
         if self._blackhole:
-            # already closed by above but no harm calling again
             self._blackhole.close()
 
     def patch_io(self):

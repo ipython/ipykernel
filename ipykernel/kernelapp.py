@@ -151,6 +151,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     _ports = Dict()
 
+    _original_io = Any()
+    _io_modified = Bool(False)
+    _blackhole = Any()
+
     subcommands = {
         "install": (
             "ipykernel.kernelspec.InstallIPythonKernelSpecApp",
@@ -204,10 +208,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         Interrupt this process when the parent is signaled.
         """,
     ).tag(config=True)
-    closed = Bool(
-        True,
-        help="whether this is closed",
-    )
 
     def init_crash_handler(self):
         """Initialize the crash handler."""
@@ -401,9 +401,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.heartbeat.start()
 
     def close(self):
-        if self.closed:
-            return
-        self.closed = True
         """Close zmq sockets in an orderly fashion"""
         # un-capture IO before we start closing channels
         self.reset_io()
@@ -477,6 +474,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def init_blackhole(self):
         """redirects stdout/stderr to devnull if necessary"""
+        self._save_io()
         if self.no_stdout or self.no_stderr:
             # keep reference around so that it would not accidentally close the pipe fds
             self._blackhole = open(os.devnull, "w")  # noqa: SIM115
@@ -491,6 +489,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def init_io(self):
         """Redirect input streams and set a display hook."""
+        self._save_io()
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
 
@@ -531,34 +530,42 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         self.patch_io()
 
+    def _save_io(self):
+        if not self._io_modified:
+            self._original_io = sys.stdout, sys.stderr, sys.displayhook
+            self._io_modified = True
+
     def reset_io(self):
         """restore original io
 
         restores state after init_io
         """
+        if not self._io_modified:
+            return
         stdout, stderr, displayhook = sys.stdout, sys.stderr, sys.displayhook
         sys.stdout, sys.stderr, sys.displayhook = self._original_io
+        self._io_modified = False
         if finish_displayhook := getattr(displayhook, "finish_displayhook", None):
             finish_displayhook()
-        if hasattr(sys.stderr, "_original_stdstream_copy"):
+        if hasattr(stderr, "_original_stdstream_copy"):
             for handler in self.log.handlers:
                 if (
                     isinstance(handler, StreamHandler)
                     and (buffer := handler.stream.buffer)
                     and (fileno := buffer.fileno)
-                    and fileno() == sys.stderr._original_stdstream_copy
+                    and fileno() == stderr._original_stdstream_copy
                 ):
                     self.log.debug("Seeing logger to raw filedescriptor, rerouting back to stderr")
 
                     handler.stream = TextIOWrapper(
                         FileIO(
-                            sys.stderr._original_stdstream_fd,
+                            stderr._original_stdstream_fd,
                             "w",
                         )
                     )
-        if hasattr(sys.stderr, "_original_stdstream_copy"):
+        if hasattr(stderr, "_original_stdstream_copy"):
             stderr.close()
-        if hasattr(sys.stdout, "_original_stdstream_copy"):
+        if hasattr(stdout, "_original_stdstream_copy"):
             stdout.close()
         if self._blackhole:
             self._blackhole.close()
@@ -735,9 +742,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     @catch_config_error
     def initialize(self, argv=None):
         """Initialize the application."""
-        self.closed = False
-        self._blackhole = None
-        self._original_io = sys.stdout, sys.stderr, sys.displayhook
         self._init_asyncio_patch()
         super().initialize(argv)
         if self.subapp is not None:

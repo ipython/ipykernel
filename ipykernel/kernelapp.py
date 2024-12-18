@@ -482,11 +482,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             if self.no_stdout:
                 if sys.stdout is not None:
                     sys.stdout.flush()
-                sys.stdout = self._blackhole  # type:ignore[misc]
+                sys.stdout = self._blackhole
             if self.no_stderr:
                 if sys.stderr is not None:
                     sys.stderr.flush()
-                sys.stderr = self._blackhole  # type:ignore[misc]
+                sys.stderr = self._blackhole
 
     def init_io(self):
         """Redirect input streams and set a display hook."""
@@ -514,7 +514,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                         isinstance(handler, StreamHandler)
                         and (buffer := getattr(handler.stream, "buffer", None))
                         and (fileno := getattr(buffer, "fileno", None))
-                        and fileno() == sys.stderr._original_stdstream_fd
+                        and fileno() == sys.stderr._original_stdstream_fd  # type:ignore[attr-defined]
                     ):
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
                         io_wrapper = TextIOWrapper(

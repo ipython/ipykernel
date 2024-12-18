@@ -204,6 +204,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         Interrupt this process when the parent is signaled.
         """,
     ).tag(config=True)
+    closed = Bool(
+        True,
+        help="whether this is closed",
+    )
 
     def init_crash_handler(self):
         """Initialize the crash handler."""
@@ -532,6 +536,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         restores state after init_io
         """
+        if self.closed:
+            return
         stdout, stderr, displayhook = sys.stdout, sys.stderr, sys.displayhook
         sys.stdout, sys.stderr, sys.displayhook = self._original_io
         if (finish_displayhook := getattr(displayhook, "finish_displayhook",

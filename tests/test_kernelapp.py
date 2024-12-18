@@ -31,6 +31,7 @@ def test_blackhole():
     app.no_stderr = True
     app.no_stdout = True
     app.init_blackhole()
+    app.close()
 
 
 def test_start_app():

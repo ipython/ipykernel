@@ -491,7 +491,7 @@ class IPythonKernel(KernelBase):
 
         return reply_content
 
-    def do_complete(self, code, cursor_pos):
+    async def do_complete(self, code, cursor_pos):
         """Handle code completion."""
         if _use_experimental_60_completion and self.use_experimental_completions:
             return self._experimental_do_complete(code, cursor_pos)
@@ -625,7 +625,7 @@ class IPythonKernel(KernelBase):
             "history": list(hist),
         }
 
-    def do_shutdown(self, restart):
+    async def do_shutdown(self, restart):
         """Handle kernel shutdown."""
         if self.shell:
             self.shell.exit_now = True

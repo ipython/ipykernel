@@ -152,6 +152,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     _ports = Dict()
 
     _original_io = Any()
+    _log_map = Any()
     _io_modified = Bool(False)
     _blackhole = Any()
 
@@ -511,18 +512,16 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                 for handler in self.log.handlers:
                     if (
                         isinstance(handler, StreamHandler)
-                        and (buffer := handler.stream.buffer)
-                        and (fileno := buffer.fileno)
+                        and (buffer := getattr(handler.stream, "buffer", None))
+                        and (fileno := getattr(buffer, "fileno", None))
                         and fileno() == sys.stderr._original_stdstream_fd
                     ):
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
-
-                        handler.stream = TextIOWrapper(
-                            FileIO(
-                                sys.stderr._original_stdstream_copy,
-                                "w",
-                            )
+                        io_wrapper = TextIOWrapper(
+                            FileIO(sys.stderr._original_stdstream_copy, "w", closefd=False)
                         )
+                        self._log_map[id(io_wrapper)] = handler.stream
+                        handler.stream = io_wrapper
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             self.displayhook = displayhook_factory(self.session, self.iopub_socket)
@@ -533,6 +532,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     def _save_io(self):
         if not self._io_modified:
             self._original_io = sys.stdout, sys.stderr, sys.displayhook
+            self._log_map = {}
             self._io_modified = True
 
     def reset_io(self):
@@ -544,29 +544,22 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             return
         stdout, stderr, displayhook = sys.stdout, sys.stderr, sys.displayhook
         sys.stdout, sys.stderr, sys.displayhook = self._original_io
+        self._original_io = None
         self._io_modified = False
         if finish_displayhook := getattr(displayhook, "finish_displayhook", None):
             finish_displayhook()
         if hasattr(stderr, "_original_stdstream_copy"):
             for handler in self.log.handlers:
-                if (
-                    isinstance(handler, StreamHandler)
-                    and (buffer := handler.stream.buffer)
-                    and (fileno := buffer.fileno)
-                    and fileno() == stderr._original_stdstream_copy
-                ):
-                    self.log.debug("Seeing logger to raw filedescriptor, rerouting back to stderr")
-
-                    handler.stream = TextIOWrapper(
-                        FileIO(
-                            stderr._original_stdstream_fd,
-                            "w",
-                        )
-                    )
-        if hasattr(stderr, "_original_stdstream_copy"):
-            stderr.close()
-        if hasattr(stdout, "_original_stdstream_copy"):
-            stdout.close()
+                if orig_stream := self._log_map.get(id(handler.stream)):
+                    self.log.debug("Seeing modified logger, rerouting back to stderr")
+                    handler.stream = orig_stream
+            self._log_map = None
+        if self.outstream_class:
+            outstream_factory = import_item(str(self.outstream_class))
+            if isinstance(stderr, outstream_factory):
+                stderr.close()
+            if isinstance(stdout, outstream_factory):
+                stdout.close()
         if self._blackhole:
             self._blackhole.close()
 

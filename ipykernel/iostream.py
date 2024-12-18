@@ -398,8 +398,8 @@ class OutStream(TextIOBase):
         """
         Things like subprocess will peak and write to the fileno() of stderr/stdout.
         """
-        if getattr(self, "_original_stdstream_copy", None) is not None:
-            return self._original_stdstream_copy
+        if getattr(self, "_original_stdstream_fd", None) is not None:
+            return self._original_stdstream_fd
         msg = "fileno"
         raise io.UnsupportedOperation(msg)
 
@@ -527,10 +527,7 @@ class OutStream(TextIOBase):
                         # echo on the _copy_ we made during
                         # this is the actual terminal FD now
                         echo = io.TextIOWrapper(
-                            io.FileIO(
-                                self._original_stdstream_copy,
-                                "w",
-                            )
+                            io.FileIO(self._original_stdstream_copy, "w", closefd=False)
                         )
                 self.echo = echo
             else:
@@ -598,6 +595,7 @@ class OutStream(TextIOBase):
             if self.watch_fd_thread is not None and self.watch_fd_thread.is_alive():
                 os.write(self._original_stdstream_fd, b"\0")
                 self.watch_fd_thread.join()
+            self.echo = None
             # restore original FDs
             os.dup2(self._original_stdstream_copy, self._original_stdstream_fd)
             os.close(self._original_stdstream_copy)

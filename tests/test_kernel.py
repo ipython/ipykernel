@@ -106,7 +106,9 @@ def test_print_to_correct_cell_from_child_thread():
 
     def parent_target():
         sleep({interval})
-        Thread(target=child_target).start()
+        thread = Thread(target=child_target)
+        thread.start()
+        thread.join()
 
     Thread(target=parent_target).start()
     """

@@ -55,13 +55,13 @@ jobs:
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
-          PYTHONTRACEMALLOC=20 hatch run cov:test --cov-fail-under 50 -k test_print_to_correct_cell_from_child_thread || PYTHONTRACEMALLOC=20 hatch run test:test --lf -k test_print_to_correct_cell_from_child_thread
+          PYTHONTRACEMALLOC=20 hatch run cov:test --cov-fail-under 50 || PYTHONTRACEMALLOC=20 hatch run test:test --lf
 
       - name: Run the tests on pypy
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
-          PYTHONTRACEMALLOC=20 hatch run test:nowarn -k test_print_to_correct_cell_from_child_thread || PYTHONTRACEMALLOC=20 hatch run test:nowarn --lf -k test_print_to_correct_cell_from_child_thread
+          PYTHONTRACEMALLOC=20 hatch run test:nowarn || PYTHONTRACEMALLOC=20 hatch run test:nowarn --lf
 
       - name: Run the tests on Windows
         timeout-minutes: 15
@@ -70,7 +70,7 @@ jobs:
           hatch run test:pip list
           hatch run test:python --version
           #hatch run test:python -m pip install git+https://github.com/ipython/ipython@92dd9e47fe8862ee38770744c165b680cb5241b1
-          PYTHONTRACEMALLOC=20 hatch run test:pytest -v -k test_print_to_correct_cell_from_child_thread
+          PYTHONTRACEMALLOC=20 hatch run test:pytest -v
 
       - name: Check Launcher
         run: |

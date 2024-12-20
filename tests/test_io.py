@@ -35,8 +35,9 @@ async def iopub_thread(ctx):
             thread.start()
 
             yield thread
-            thread.stop()
+
             thread.close()
+            thread.stop()
     except Exception:
         pass
 

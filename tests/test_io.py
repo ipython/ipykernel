@@ -29,17 +29,11 @@ def ctx():
 
 @pytest.fixture()
 async def iopub_thread(ctx):
-    try:
-        async with zmq_anyio.Socket(ctx.socket(zmq.PUB)) as pub:
-            thread = IOPubThread(pub)
-            thread.start()
+    async with zmq_anyio.Socket(ctx.socket(zmq.PUB)) as pub:
+        thread = IOPubThread(pub)
+        thread.start()
 
-            yield thread
-
-            thread.close()
-            thread.stop()
-    except Exception:
-        pass
+        yield thread
 
 
 async def test_io_api(iopub_thread):

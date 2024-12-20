@@ -105,8 +105,10 @@ def test_print_to_correct_cell_from_child_thread():
             sleep({interval})
 
     def parent_target():
-        Thread(target=child_target).start()
-        sleep({interval * iterations})
+        sleep({interval})
+        thread = Thread(target=child_target)
+        thread.start()
+        thread.join()
 
     Thread(target=parent_target).start()
     """

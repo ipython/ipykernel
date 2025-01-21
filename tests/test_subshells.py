@@ -166,7 +166,7 @@ def test_run_concurrently_sequence(are_subshells, overlap):
                 delete_subshell_helper(kc, subshell_id)
 
         for reply in replies:
-            assert reply["content"]["status"] == "ok"
+            assert reply["content"]["status"] == "ok", reply
 
 
 @pytest.mark.parametrize("include_main_shell", [True, False])

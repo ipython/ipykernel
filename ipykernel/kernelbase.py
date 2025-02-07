@@ -35,7 +35,7 @@ except ImportError:
 
 import psutil
 import zmq
-from anyio import TASK_STATUS_IGNORED, Event, create_task_group, sleep, to_thread
+from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
 from anyio.abc import TaskStatus
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -226,7 +226,7 @@ class Kernel(SingletonConfigurable):
         "list_subshell_request",
     ]
 
-    _eventloop_set: Event = Event()
+    _eventloop_set: threading.Event = threading.Event()
 
     def __init__(self, **kwargs):
         """Initialize the kernel."""
@@ -553,9 +553,8 @@ class Kernel(SingletonConfigurable):
                     tg.start_soon(self.shell_main, None)
 
     def stop(self):
-        if not self._eventloop_set.is_set():
-            # Stop the async task that is waiting for the eventloop to be set.
-            self._eventloop_set.set()
+        # Stop the async task that is waiting for the eventloop to be set.
+        self._eventloop_set.set()
 
         self.shell_stop.set()
         self.control_stop.set()

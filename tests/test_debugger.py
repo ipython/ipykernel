@@ -96,6 +96,17 @@ def test_debug_initialize(kernel):
         assert reply == {}
 
 
+def test_supported_features(kernel_with_debug):
+    kernel_with_debug.kernel_info()
+    reply = kernel_with_debug.get_shell_msg(timeout=TIMEOUT)
+    supported_features = reply["content"]["supported_features"]
+
+    if debugpy:
+        assert "debugger" in supported_features
+    else:
+        assert "debugger" not in supported_features
+
+
 def test_attach_debug(kernel_with_debug):
     reply = wait_for_debug_request(
         kernel_with_debug, "evaluate", {"expression": "'a' + 'b'", "context": "repl"}

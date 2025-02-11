@@ -74,7 +74,7 @@ class IPythonKernel(KernelBase):
     # use fully-qualified name to ensure lazy import and prevent the issue from
     # https://github.com/ipython/ipykernel/issues/1198
     debugger_class = Type("ipykernel.debugger.Debugger")
-    
+
     compiler_class = Type(XCachingCompiler)
 
     use_experimental_completions = Bool(

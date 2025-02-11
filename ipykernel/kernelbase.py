@@ -269,7 +269,7 @@ class Kernel(SingletonConfigurable):
         assert self.session is not None
         assert self.control_thread is None or threading.current_thread() == self.control_thread
 
-        msg = msg or await self.control_socket.arecv_multipart()
+        msg = msg or await self.control_socket.arecv_multipart().wait()
         idents, msg = self.session.feed_identities(msg)
         try:
             msg = self.session.deserialize(msg, content=True)
@@ -369,7 +369,7 @@ class Kernel(SingletonConfigurable):
         async with self.shell_socket, create_task_group() as tg:
             try:
                 while True:
-                    msg = await self.shell_socket.arecv_multipart(copy=False)
+                    msg = await self.shell_socket.arecv_multipart(copy=False).wait()
                     # deserialize only the header to get subshell_id
                     # Keep original message to send to subshell_id unmodified.
                     _, msg2 = self.session.feed_identities(msg, copy=False)
@@ -384,7 +384,7 @@ class Kernel(SingletonConfigurable):
                         assert socket is not None
                         if not socket.started.is_set():
                             await tg.start(socket.start)
-                        await socket.asend_multipart(msg, copy=False)
+                        socket.asend_multipart(msg, copy=False)
                     except Exception:
                         self.log.error("Invalid message", exc_info=True)  # noqa: G201
             except BaseException:
@@ -444,8 +444,8 @@ class Kernel(SingletonConfigurable):
             assert socket is None
             socket = self.shell_socket
 
-        no_msg = msg is None if self._is_test else not await socket.apoll(0)
-        msg = msg or await socket.arecv_multipart(copy=False)
+        no_msg = msg is None if self._is_test else not await socket.apoll(0).wait()
+        msg = msg or await socket.arecv_multipart(copy=False).wait()
 
         received_time = time.monotonic()
         copy = not isinstance(msg[0], zmq.Message)
@@ -499,7 +499,7 @@ class Kernel(SingletonConfigurable):
             try:
                 result = handler(socket, idents, msg)
                 if inspect.isawaitable(result):
-                    result = await result
+                    await result
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)  # noqa: G201
             except KeyboardInterrupt:
@@ -1090,8 +1090,8 @@ class Kernel(SingletonConfigurable):
         other_socket = await self.shell_channel_thread.manager.get_control_other_socket(
             self.control_thread
         )
-        await other_socket.asend_json({"type": "create"})
-        reply = await other_socket.arecv_json()
+        await other_socket.asend_json({"type": "create"}).wait()
+        reply = await other_socket.arecv_json().wait()
 
         self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
@@ -1114,8 +1114,8 @@ class Kernel(SingletonConfigurable):
         other_socket = await self.shell_channel_thread.manager.get_control_other_socket(
             self.control_thread
         )
-        await other_socket.asend_json({"type": "delete", "subshell_id": subshell_id})
-        reply = await other_socket.arecv_json()
+        await other_socket.asend_json({"type": "delete", "subshell_id": subshell_id}).wait()
+        reply = await other_socket.arecv_json().wait()
 
         self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
@@ -1131,8 +1131,8 @@ class Kernel(SingletonConfigurable):
         other_socket = await self.shell_channel_thread.manager.get_control_other_socket(
             self.control_thread
         )
-        await other_socket.asend_json({"type": "list"})
-        reply = await other_socket.arecv_json()
+        await other_socket.asend_json({"type": "list"}).wait()
+        reply = await other_socket.arecv_json().wait()
 
         self.session.send(socket, "list_subshell_reply", reply, parent, ident)
 

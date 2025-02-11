@@ -236,7 +236,7 @@ class IPythonKernel(KernelBase):
 
         if msg is None:
             assert self.debugpy_socket is not None
-            msg = await self.debugpy_socket.arecv_multipart()
+            msg = await self.debugpy_socket.arecv_multipart().wait()
         # The first frame is the socket id, we can drop it
         frame = msg[1].decode("utf-8")
         self.log.debug("Debugpy received: %s", frame)

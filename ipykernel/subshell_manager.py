@@ -158,9 +158,9 @@ class SubshellManager:
         socket = self._control_shell_channel_socket
         async with socket:
             while True:
-                request = await socket.arecv_json()
+                request = await socket.arecv_json().wait()
                 reply = await self._process_control_request(request, subshell_task)
-                await socket.asend_json(reply)
+                await socket.asend_json(reply).wait()
 
     async def listen_from_subshells(self) -> None:
         """Listen for reply messages on inproc sockets of all subshells and resend
@@ -270,9 +270,9 @@ class SubshellManager:
         await shell_channel_socket.started.wait()
         try:
             while True:
-                msg = await shell_channel_socket.arecv_multipart(copy=False)
+                msg = await shell_channel_socket.arecv_multipart(copy=False).wait()
                 with self._lock_shell_socket:
-                    await self._shell_socket.asend_multipart(msg)
+                    await self._shell_socket.asend_multipart(msg).wait()
         except BaseException:
             if not self._is_subshell(subshell_id):
                 # Subshell no longer exists so exit gracefully

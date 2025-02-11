@@ -83,8 +83,6 @@ def test_print_to_correct_cell_from_thread():
             msg = kc.get_iopub_msg(timeout=interval * 2)
             if msg["msg_type"] != "stream":
                 continue
-            print(f"{thread_msg_id=}")
-            print(f"{msg=}")
             content = msg["content"]
             assert content["name"] == "stdout"
             assert content["text"] == str(received)
@@ -123,8 +121,6 @@ def test_print_to_correct_cell_from_child_thread():
             msg = kc.get_iopub_msg(timeout=interval * 2)
             if msg["msg_type"] != "stream":
                 continue
-            print(f"{thread_msg_id=}")
-            print(f"{msg=}")
             content = msg["content"]
             assert content["name"] == "stdout"
             assert content["text"] == str(received)
@@ -157,8 +153,6 @@ def test_print_to_correct_cell_from_asyncio():
             msg = kc.get_iopub_msg(timeout=interval * 2)
             if msg["msg_type"] != "stream":
                 continue
-            print(f"{thread_msg_id=}")
-            print(f"{msg=}")
             content = msg["content"]
             assert content["name"] == "stdout"
             assert content["text"] == str(received)

@@ -221,8 +221,8 @@ async def test_echo_watch(ctx):
         print(f"{p.stdout=}")
         print(f"{p.stderr}=", file=sys.stderr)
         assert p.returncode == 0
-        while await s.apoll(timeout=100):
-            msg = await s.arecv_multipart()
+        while await s.apoll(timeout=100).wait():
+            msg = await s.arecv_multipart().wait()
             ident, msg = session.feed_identities(msg, copy=True)
             msg = session.deserialize(msg, content=True, copy=True)
             assert msg is not None  # for type narrowing

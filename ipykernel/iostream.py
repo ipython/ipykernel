@@ -143,7 +143,7 @@ class IOPubThread:
         async with pipe_in:
             try:
                 while True:
-                    await pipe_in.arecv()
+                    await pipe_in.arecv().wait()
                     # freeze event count so new writes don't extend the queue
                     # while we are processing
                     n_events = len(self._events)
@@ -189,7 +189,7 @@ class IOPubThread:
 
     async def _handle_pipe_msg(self, msg=None):
         """handle a pipe message from a subprocess"""
-        msg = msg or await self._pipe_in1.arecv_multipart()
+        msg = msg or await self._pipe_in1.arecv_multipart().wait()
         if not self._pipe_flag or not self._is_main_process():
             return
         if msg[0] != self._pipe_uuid:

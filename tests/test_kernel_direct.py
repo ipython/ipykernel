@@ -3,9 +3,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import asyncio
 import os
-import warnings
 
 import pytest
 
@@ -108,19 +106,6 @@ async def test_direct_debug_request(kernel):
     assert reply["header"]["msg_type"] == "debug_reply"
 
 
-@pytest.mark.skip("Shell streams don't exist anymore")
-async def test_deprecated_features(kernel):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        header = kernel._parent_header
-        assert isinstance(header, dict)
-        shell_streams = kernel.shell_streams
-        assert len(shell_streams) == 1
-        assert shell_streams[0] == kernel.shell_stream
-        warnings.simplefilter("ignore", RuntimeWarning)
-        kernel.shell_streams = [kernel.shell_stream, kernel.shell_stream]
-
-
 async def test_process_control(kernel):
     from jupyter_client.session import DELIM
 
@@ -142,12 +127,6 @@ async def test_dispatch_shell(kernel):
     await kernel.process_shell_message(msg)
 
 
-@pytest.mark.skip("kernelbase.do_one_iteration doesn't exist anymore")
-async def test_do_one_iteration(kernel):
-    kernel.msg_queue = asyncio.Queue()
-    await kernel.do_one_iteration()
-
-
 async def test_publish_debug_event(kernel):
     kernel._publish_debug_event({})
 
@@ -160,7 +139,7 @@ async def test_send_interrupt_children(kernel):
     kernel._send_interrupt_children()
 
 
-# TODO: this causes deadlock
-# async def test_direct_usage_request(kernel):
-#     reply = await kernel.test_control_message("usage_request", {})
-#     assert reply['header']['msg_type'] == 'usage_reply'
+@pytest.mark.skip(reason="this causes deadlock")
+async def test_direct_usage_request(kernel):
+    reply = await kernel.test_control_message("usage_request", {})
+    assert reply["header"]["msg_type"] == "usage_reply"

@@ -1,6 +1,5 @@
 """Test IPythonKernel directly"""
 
-import asyncio
 import os
 
 import pytest
@@ -152,47 +151,10 @@ async def test_direct_clear(ipkernel):
     ipkernel.do_clear()
 
 
-@pytest.mark.skip("ipykernel._cancel_on_sigint doesn't exist anymore")
-async def test_cancel_on_sigint(ipkernel: IPythonKernel) -> None:
-    future: asyncio.Future = asyncio.Future()
-    # with ipkernel._cancel_on_sigint(future):
-    #     pass
-    future.set_result(None)
-
-
 async def test_dispatch_debugpy(ipkernel: IPythonKernel) -> None:
     msg = ipkernel.session.msg("debug_request", {})
     msg_list = ipkernel.session.serialize(msg)
     await ipkernel.receive_debugpy_message(msg_list)
-
-
-@pytest.mark.skip("Queues don't exist anymore")
-async def test_start(ipkernel: IPythonKernel) -> None:
-    shell_future: asyncio.Future = asyncio.Future()
-
-    async def fake_dispatch_queue():
-        shell_future.set_result(None)
-
-    ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
-    ipkernel.start()
-    ipkernel.debugpy_stream = None
-    ipkernel.start()
-    await ipkernel.process_one(False)
-    await shell_future
-
-
-@pytest.mark.skip("Queues don't exist anymore")
-async def test_start_no_debugpy(ipkernel: IPythonKernel) -> None:
-    shell_future: asyncio.Future = asyncio.Future()
-
-    async def fake_dispatch_queue():
-        shell_future.set_result(None)
-
-    ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
-    ipkernel.debugpy_stream = None
-    ipkernel.start()
-
-    await shell_future
 
 
 def test_create_comm():

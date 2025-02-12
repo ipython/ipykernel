@@ -772,15 +772,23 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         sys.stdout.flush()
         sys.stderr.flush()
 
-    def start(self) -> None:
-        """Start the application."""
+    async def _start(self) -> None:
+        """
+        Async version of start, when the loop is not controlled by IPykernel
+
+        For example to be used in test suite with @pytest.mark.trio
+        """
         if self.subapp is not None:
             self.subapp.start()
-            return
+            return None
         if self.poller is not None:
             self.poller.start()
+        return await self.main()
+
+    def start(self) -> None:
+        """Start the application."""
         backend = "trio" if self.trio_loop else "asyncio"
-        run(self.main, backend=backend)
+        run(self._start, backend=backend)
         return
 
     async def _wait_to_enter_eventloop(self):

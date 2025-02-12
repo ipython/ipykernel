@@ -384,7 +384,7 @@ class Kernel(SingletonConfigurable):
                         assert socket is not None
                         if not socket.started.is_set():
                             await tg.start(socket.start)
-                        socket.asend_multipart(msg, copy=False)
+                        await socket.asend_multipart(msg, copy=False).wait()
                     except Exception:
                         self.log.error("Invalid message", exc_info=True)  # noqa: G201
             except BaseException:

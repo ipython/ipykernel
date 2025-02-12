@@ -357,7 +357,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
         self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
 
-        self.debugpy_socket = zmq_anyio.Socket(context, zmq.STREAM)
+        self.debugpy_socket = zmq_anyio.Socket(context.socket(zmq.STREAM))
         self.debugpy_socket.linger = 1000
 
         self.debug_shell_socket = zmq_anyio.Socket(context.socket(zmq.DEALER))
@@ -701,14 +701,24 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.poller is not None:
             self.poller.start()
         backend = "trio" if self.trio_loop else "asyncio"
-        run(self.main, backend=backend)
+        run(partial(self.main, backend), backend=backend)
         return
 
     async def _wait_to_enter_eventloop(self):
         await self.kernel._eventloop_set.wait()
         await self.kernel.enter_eventloop()
 
-    async def main(self):
+    async def main(self, backend: str):
+        if backend == "asyncio" and sys.platform == "win32":
+            import asyncio
+
+            policy = asyncio.get_event_loop_policy()
+            if policy.__class__.__name__ == "WindowsProactorEventLoopPolicy":
+                from anyio._core._asyncio_selector_thread import get_selector
+                selector = get_selector()
+                selector._thread.pydev_do_not_trace = True
+                #selector._thread.is_pydev_daemon_thread = True
+
         async with create_task_group() as tg:
             tg.start_soon(self._wait_to_enter_eventloop)
             tg.start_soon(self.kernel.start)

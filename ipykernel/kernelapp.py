@@ -715,9 +715,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             policy = asyncio.get_event_loop_policy()
             if policy.__class__.__name__ == "WindowsProactorEventLoopPolicy":
                 from anyio._core._asyncio_selector_thread import get_selector
+
                 selector = get_selector()
                 selector._thread.pydev_do_not_trace = True
-                #selector._thread.is_pydev_daemon_thread = True
+                # selector._thread.is_pydev_daemon_thread = True
 
         async with create_task_group() as tg:
             tg.start_soon(self._wait_to_enter_eventloop)

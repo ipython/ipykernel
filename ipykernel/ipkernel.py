@@ -160,7 +160,10 @@ class IPythonKernel(KernelBase):
         self._new_threads_parent_header = {}
         self._initialize_thread_hooks()
 
-        gc.callbacks.append(self._clean_thread_parent_frames)
+        if hasattr(gc, "callbacks"):
+            # while `gc.callbacks` exists since Python 3.3, pypy does not
+            # implement it even as of 3.10.
+            gc.callbacks.append(self._clean_thread_parent_frames)
 
     help_links = List(
         [

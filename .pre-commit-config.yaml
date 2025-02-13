@@ -44,7 +44,6 @@ repos:
     hooks:
       - id: mypy
         files: ipykernel
-        stages: [manual]
         args: ["--install-types", "--non-interactive"]
         additional_dependencies:
           [

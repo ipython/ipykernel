@@ -826,7 +826,7 @@ class Kernel(SingletonConfigurable):
         matches = json_clean(matches)
         self.session.send(socket, "complete_reply", matches, parent, ident)
 
-    async def do_complete(self, code, cursor_pos):
+    def do_complete(self, code, cursor_pos):
         """Override in subclasses to find completions."""
         return {
             "matches": [],

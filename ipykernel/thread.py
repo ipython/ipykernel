@@ -1,4 +1,5 @@
 """Base class for threads."""
+from __future__ import annotations
 
 import typing as t
 from threading import Event, Thread

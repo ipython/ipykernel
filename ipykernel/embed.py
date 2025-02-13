@@ -54,3 +54,4 @@ def embed_kernel(module=None, local_ns=None, **kwargs):
     app.kernel.user_ns = local_ns
     app.shell.set_completer_frame()  # type:ignore[union-attr]
     app.start()
+    app.close()

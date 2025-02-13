@@ -501,11 +501,13 @@ class OutStream(TextIOBase):
         self._local = local()
 
         if (
-            watchfd
-            and (
-                (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
-                # Pytest set its own capture. Don't redirect from within pytest.
-                and ("PYTEST_CURRENT_TEST" not in os.environ)
+            (
+                watchfd
+                and (
+                    (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
+                    # Pytest set its own capture. Don't redirect from within pytest.
+                    and ("PYTEST_CURRENT_TEST" not in os.environ)
+                )
             )
             # allow forcing watchfd (mainly for tests)
             or watchfd == "force"

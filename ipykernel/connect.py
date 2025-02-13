@@ -133,8 +133,8 @@ def connect_qtconsole(
 
 
 __all__ = [
-    "write_connection_file",
+    "connect_qtconsole",
     "get_connection_file",
     "get_connection_info",
-    "connect_qtconsole",
+    "write_connection_file",
 ]

@@ -1012,7 +1012,7 @@ class Kernel(SingletonConfigurable):
 
         self.stop()
 
-    async def do_shutdown(self, restart):
+    def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the
         kernel.
         """

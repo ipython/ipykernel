@@ -40,7 +40,7 @@ repos:
         types_or: [yaml, html, json]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.8.0"
+    rev: "v1.15.0"
     hooks:
       - id: mypy
         files: ipykernel

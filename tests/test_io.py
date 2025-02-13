@@ -10,6 +10,7 @@ import warnings
 from concurrent.futures import Future, ThreadPoolExecutor
 from unittest import mock
 
+from anyio import create_task_group
 import pytest
 import zmq
 import zmq_anyio
@@ -29,11 +30,17 @@ def ctx():
 
 @pytest.fixture()
 async def iopub_thread(ctx):
-    async with zmq_anyio.Socket(ctx.socket(zmq.PUB)) as pub:
+    async with create_task_group() as tg:
+        pub = zmq_anyio.Socket(ctx.socket(zmq.PUB))
+        await tg.start(pub.start)
         thread = IOPubThread(pub)
         thread.start()
 
         yield thread
+
+        await pub.stop()
+        thread.stop()
+        thread.close()
 
 
 async def test_io_api(iopub_thread):

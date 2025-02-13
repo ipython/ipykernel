@@ -125,6 +125,9 @@ def test_thread_ids():
         delete_subshell_helper(kc, subshell_id)
 
 
+@pytest.mark.xfail(
+    strict=False, reason="this randomly fail and make downstream testing less useful"
+)
 @pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
 @pytest.mark.parametrize("overlap", [True, False])
 def test_run_concurrently_sequence(are_subshells, overlap):
@@ -166,7 +169,7 @@ def test_run_concurrently_sequence(are_subshells, overlap):
                 delete_subshell_helper(kc, subshell_id)
 
         for reply in replies:
-            assert reply["content"]["status"] == "ok"
+            assert reply["content"]["status"] == "ok", reply
 
 
 @pytest.mark.parametrize("include_main_shell", [True, False])

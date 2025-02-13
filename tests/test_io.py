@@ -42,7 +42,7 @@ async def iopub_thread(ctx):
             await pub.stop()
             thread.stop()
             thread.close()
-    except Exception:
+    except BaseException:
         pass
 
 

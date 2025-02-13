@@ -15,9 +15,10 @@ import traceback
 import warnings
 from binascii import b2a_hex
 from collections import defaultdict, deque
+from collections.abc import Callable
 from io import StringIO, TextIOBase
 from threading import Event, Thread, local
-from typing import Any, Callable
+from typing import Any
 
 import zmq
 from anyio import create_task_group, run, sleep, to_thread

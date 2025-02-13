@@ -1,9 +1,9 @@
 """Base class for threads."""
 from __future__ import annotations
 
+import typing as t
 from collections.abc import Awaitable
 from queue import Queue
-import typing as t
 from threading import Event, Thread
 
 from anyio import create_task_group, run, to_thread

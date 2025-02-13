@@ -34,7 +34,6 @@ def _setup_env():
 
 
 class Reference(HasTraits):
-
     """
     Base class for message spec specification testing.
 

@@ -4,7 +4,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: check-case-conflict
       - id: check-ast
@@ -22,7 +22,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.27.4
+    rev: 0.31.1
     hooks:
       - id: check-github-workflows
 
@@ -40,7 +40,7 @@ repos:
         types_or: [yaml, html, json]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.8.0"
+    rev: "v1.15.0"
     hooks:
       - id: mypy
         files: ipykernel
@@ -55,7 +55,7 @@ repos:
           ]
 
   - repo: https://github.com/adamchainz/blacken-docs
-    rev: "1.16.0"
+    rev: "1.19.1"
     hooks:
       - id: blacken-docs
         additional_dependencies: [black==23.7.0]

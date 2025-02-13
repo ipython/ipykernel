@@ -51,6 +51,7 @@ repos:
             "ipython>=8.16.1",
             "jupyter_client>=8.5",
             "appnope",
+            "types-psutil",
           ]
 
   - repo: https://github.com/adamchainz/blacken-docs

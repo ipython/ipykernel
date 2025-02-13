@@ -25,6 +25,11 @@ class BaseThread(Thread):
         self.is_pydev_daemon_thread = True
         self._tasks: Queue[tuple[str, Callable[[], Awaitable[Any]]] | None] = Queue()
         self._result: Queue[Any] = Queue()
+        self._exception: Exception | None = None
+
+    @property
+    def exception(self) -> Exception | None:
+        return self._exception
 
     @property
     def task_group(self) -> TaskGroup:
@@ -45,8 +50,8 @@ class BaseThread(Thread):
         """Run the thread."""
         try:
             run(self._main)
-        except Exception:
-            pass
+        except Exception as exc:
+            self._exception = exc
 
     async def _main(self) -> None:
         async with create_task_group() as tg:

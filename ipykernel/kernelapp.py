@@ -733,7 +733,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             pdb.set_trace = debugger.set_trace
 
     @catch_config_error
-    def initialize(self, argv=None):
+    def initialize(self, argv=None) -> None:
         """Initialize the application."""
         self._init_asyncio_patch()
         super().initialize(argv)
@@ -780,22 +780,21 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """
         if self.subapp is not None:
             self.subapp.start()
-            return None
+            return
         if self.poller is not None:
             self.poller.start()
-        return await self.main()
+        await self.main()
 
     def start(self) -> None:
         """Start the application."""
         backend = "trio" if self.trio_loop else "asyncio"
         run(self._start, backend=backend)
-        return
 
-    async def _wait_to_enter_eventloop(self):
+    async def _wait_to_enter_eventloop(self) -> None:
         await self.kernel._eventloop_set.wait()
         await self.kernel.enter_eventloop()
 
-    async def main(self):
+    async def main(self) -> None:
         async with create_task_group() as tg:
             tg.start_soon(self._wait_to_enter_eventloop)
             tg.start_soon(self.kernel.start)
@@ -803,7 +802,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.kernel.eventloop:
             self.kernel._eventloop_set.set()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the kernel, thread-safe."""
         self.kernel.stop()
 

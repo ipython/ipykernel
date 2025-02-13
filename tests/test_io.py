@@ -30,20 +30,20 @@ def ctx():
 
 @pytest.fixture()
 async def iopub_thread(ctx):
-    async with create_task_group() as tg:
-        pub = zmq_anyio.Socket(ctx.socket(zmq.PUB))
-        await tg.start(pub.start)
-        thread = IOPubThread(pub)
-        thread.start()
+    try:
+        async with create_task_group() as tg:
+            pub = zmq_anyio.Socket(ctx.socket(zmq.PUB))
+            await tg.start(pub.start)
+            thread = IOPubThread(pub)
+            thread.start()
 
-        yield thread
+            yield thread
 
-        try:
             await pub.stop()
             thread.stop()
             thread.close()
-        except Exception:
-            pass
+    except Exception:
+        pass
 
 
 async def test_io_api(iopub_thread):

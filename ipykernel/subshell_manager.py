@@ -124,9 +124,9 @@ class SubshellManager:
 
         socket = self._control_shell_channel_socket
         while True:
-            request = await socket.recv_json()  # type: ignore[misc]
+            request = await socket.recv_json()
             reply = await self._process_control_request(request, subshell_task)
-            await socket.send_json(reply)  # type: ignore[func-returns-value]
+            await socket.send_json(reply)
 
     async def listen_from_subshells(self) -> None:
         """Listen for reply messages on inproc sockets of all subshells and resend

@@ -20,7 +20,7 @@ import threading
 import warnings
 from pathlib import Path
 
-from IPython.core import page, payloadpage
+from IPython.core import page
 from IPython.core.autocall import ZMQExitAutocall
 from IPython.core.displaypub import DisplayPublisher
 from IPython.core.error import UsageError
@@ -533,10 +533,38 @@ class ZMQInteractiveShell(InteractiveShell):
         env["PAGER"] = "cat"
         env["GIT_PAGER"] = "cat"
 
+    def payloadpage_page(self, strg, start=0, screen_lines=0, pager_cmd=None):
+        """Print a string, piping through a pager.
+
+        This version ignores the screen_lines and pager_cmd arguments and uses
+        IPython's payload system instead.
+
+        Parameters
+        ----------
+        strg : str or mime-dict
+            Text to page, or a mime-type keyed dict of already formatted data.
+        start : int
+            Starting line at which to place the display.
+        """
+
+        # Some routines may auto-compute start offsets incorrectly and pass a
+        # negative value.  Offset to 0 for robustness.
+        start = max(0, start)
+
+        data = strg if isinstance(strg, dict) else {"text/plain": strg}
+
+        payload = dict(
+            source="page",
+            data=data,
+            start=start,
+        )
+        assert self.payload_manager is not None
+        self.payload_manager.write_payload(payload)
+
     def init_hooks(self):
         """Initialize hooks."""
         super().init_hooks()
-        self.set_hook("show_in_pager", page.as_hook(payloadpage.page), 99)
+        self.set_hook("show_in_pager", page.as_hook(self.payloadpage_page), 99)
 
     def init_data_pub(self):
         """Delay datapub init until request, for deprecation warnings"""

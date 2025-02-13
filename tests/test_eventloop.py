@@ -54,12 +54,6 @@ def _setup_env():
     KM.shutdown_kernel(now=True)
 
 
-async_code = """
-from tests._asyncio_utils import async_func
-async_func()
-"""
-
-
 windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")
 
 

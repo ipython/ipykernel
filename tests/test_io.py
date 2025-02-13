@@ -10,10 +10,10 @@ import warnings
 from concurrent.futures import Future, ThreadPoolExecutor
 from unittest import mock
 
-from anyio import create_task_group
 import pytest
 import zmq
 import zmq_anyio
+from anyio import create_task_group
 from jupyter_client.session import Session
 
 from ipykernel.iostream import _PARENT, BackgroundSocket, IOPubThread, OutStream

@@ -11,6 +11,9 @@
 # Imports
 # -----------------------------------------------------------------------------
 
+
+from typing import Any
+
 from jupyter_client.client import KernelClient
 from jupyter_client.clientabc import KernelClientABC
 
@@ -54,9 +57,9 @@ class InProcessKernelClient(KernelClient):
 
         return BlockingInProcessKernelClient
 
-    def get_connection_info(self):
+    def get_connection_info(self, session: bool = False):
         """Get the connection info for the client."""
-        d = super().get_connection_info()
+        d = super().get_connection_info(session=session)
         d["kernel"] = self.kernel  # type:ignore[assignment]
         return d
 
@@ -99,9 +102,18 @@ class InProcessKernelClient(KernelClient):
     # Methods for sending specific messages
     # -------------------------------------
 
-    async def execute(
-        self, code, silent=False, store_history=True, user_expressions=None, allow_stdin=None
-    ):
+    # Feb 2025: superclass in jupyter-Client is sync,
+    # it should likely be made all consistent and push
+    # jupyter_client async as well
+    async def execute(  # type:ignore [override]
+        self,
+        code: str,
+        silent: bool = False,
+        store_history: bool = True,
+        user_expressions: dict[str, Any] | None = None,
+        allow_stdin: bool | None = None,
+        stop_on_error: bool = True,
+    ) -> str:
         """Execute code on the client."""
         if allow_stdin is None:
             allow_stdin = self.allow_stdin
@@ -114,7 +126,9 @@ class InProcessKernelClient(KernelClient):
         )
         msg = self.session.msg("execute_request", content)
         await self._dispatch_to_kernel(msg)
-        return msg["header"]["msg_id"]
+        res = msg["header"]["msg_id"]
+        assert isinstance(res, str)
+        return res
 
     async def complete(self, code, cursor_pos=None):
         """Get code completion."""

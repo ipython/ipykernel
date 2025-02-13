@@ -1,4 +1,5 @@
 """A thread for a shell channel."""
+
 import zmq.asyncio
 
 from .subshell_manager import SubshellManager

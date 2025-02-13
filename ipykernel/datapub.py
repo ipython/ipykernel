@@ -1,8 +1,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-"""Publishing native (typically pickled) objects.
-"""
+"""Publishing native (typically pickled) objects."""
 
 import warnings
 

@@ -1,4 +1,4 @@
-""" Defines a dummy socket implementing (part of) the zmq.Socket interface. """
+"""Defines a dummy socket implementing (part of) the zmq.Socket interface."""
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.

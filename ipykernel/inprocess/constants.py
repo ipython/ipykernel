@@ -1,5 +1,4 @@
-"""Shared constants.
-"""
+"""Shared constants."""
 
 # Because inprocess communication is not networked, we can use a common Session
 # key everywhere. This is not just the empty bytestring to avoid tripping

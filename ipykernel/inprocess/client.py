@@ -11,7 +11,6 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-
 from jupyter_client.client import KernelClient
 from jupyter_client.clientabc import KernelClientABC
 

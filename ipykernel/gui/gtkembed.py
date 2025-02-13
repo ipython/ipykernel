@@ -1,5 +1,4 @@
-"""GUI support for the IPython ZeroMQ kernel - GTK toolkit support.
-"""
+"""GUI support for the IPython ZeroMQ kernel - GTK toolkit support."""
 # -----------------------------------------------------------------------------
 #  Copyright (C) 2010-2011  The IPython Development Team
 #

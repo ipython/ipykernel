@@ -38,9 +38,12 @@ async def iopub_thread(ctx):
 
         yield thread
 
-        await pub.stop()
-        thread.stop()
-        thread.close()
+        try:
+            await pub.stop()
+            thread.stop()
+            thread.close()
+        except Exception:
+            pass
 
 
 async def test_io_api(iopub_thread):

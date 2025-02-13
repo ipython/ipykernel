@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Awaitable
 from queue import Queue
+import typing as t
 from threading import Event, Thread
-from typing import Any, Callable
 
 from anyio import create_task_group, run, to_thread
 from anyio.abc import TaskGroup
@@ -23,21 +23,21 @@ class BaseThread(Thread):
         self.stopped = Event()
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
-        self._tasks: Queue[tuple[str, Callable[[], Awaitable[Any]]] | None] = Queue()
-        self._result: Queue[Any] = Queue()
+        self._tasks: Queue[tuple[str, t.Callable[[], Awaitable[t.Any]]] | None] = Queue()
+        self._result: Queue[t.Any] = Queue()
 
     @property
     def task_group(self) -> TaskGroup:
         return self._task_group
 
-    def start_soon(self, coro: Callable[[], Awaitable[Any]]) -> None:
+    def start_soon(self, coro: t.Callable[[], Awaitable[t.Any]]) -> None:
         self._tasks.put(("start_soon", coro))
 
-    def run_async(self, coro: Callable[[], Awaitable[Any]]) -> Any:
+    def run_async(self, coro: t.Callable[[], Awaitable[t.Any]]) -> t.Any:
         self._tasks.put(("run_async", coro))
         return self._result.get()
 
-    def run_sync(self, func: Callable[..., Any]) -> Any:
+    def run_sync(self, func: t.Callable[..., t.Any]) -> t.Any:
         self._tasks.put(("run_sync", func))
         return self._result.get()
 

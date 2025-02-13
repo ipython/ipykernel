@@ -151,6 +151,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     _ports = Dict()
 
+    _original_io = Any()
+    _log_map = Any()
+    _io_modified = Bool(False)
+    _blackhole = Any()
+
     subcommands = {
         "install": (
             "ipykernel.kernelspec.InstallIPythonKernelSpecApp",
@@ -471,41 +476,53 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def init_blackhole(self):
         """redirects stdout/stderr to devnull if necessary"""
+        self._save_io()
         if self.no_stdout or self.no_stderr:
-            blackhole = open(os.devnull, "w")  # noqa: SIM115
+            # keep reference around so that it would not accidentally close the pipe fds
+            self._blackhole = open(os.devnull, "w")  # noqa: SIM115
             if self.no_stdout:
-                sys.stdout = sys.__stdout__ = blackhole  # type:ignore[misc]
+                if sys.stdout is not None:
+                    sys.stdout.flush()
+                sys.stdout = self._blackhole
             if self.no_stderr:
-                sys.stderr = sys.__stderr__ = blackhole  # type:ignore[misc]
+                if sys.stderr is not None:
+                    sys.stderr.flush()
+                sys.stderr = self._blackhole
 
     def init_io(self):
         """Redirect input streams and set a display hook."""
+        self._save_io()
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
-            if sys.stdout is not None:
-                sys.stdout.flush()
 
-            e_stdout = None if self.quiet else sys.__stdout__
-            e_stderr = None if self.quiet else sys.__stderr__
+            e_stdout = None if self.quiet else sys.stdout
+            e_stderr = None if self.quiet else sys.stderr
 
             if not self.capture_fd_output:
                 outstream_factory = partial(outstream_factory, watchfd=False)
 
+            if sys.stdout is not None:
+                sys.stdout.flush()
             sys.stdout = outstream_factory(self.session, self.iopub_thread, "stdout", echo=e_stdout)
+
             if sys.stderr is not None:
                 sys.stderr.flush()
             sys.stderr = outstream_factory(self.session, self.iopub_thread, "stderr", echo=e_stderr)
+
             if hasattr(sys.stderr, "_original_stdstream_copy"):
                 for handler in self.log.handlers:
-                    if isinstance(handler, StreamHandler) and (handler.stream.buffer.fileno() == 2):
+                    if (
+                        isinstance(handler, StreamHandler)
+                        and (buffer := getattr(handler.stream, "buffer", None))
+                        and (fileno := getattr(buffer, "fileno", None))
+                        and fileno() == sys.stderr._original_stdstream_fd  # type:ignore[attr-defined]
+                    ):
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
-
-                        handler.stream = TextIOWrapper(
-                            FileIO(
-                                sys.stderr._original_stdstream_copy,
-                                "w",
-                            )
+                        io_wrapper = TextIOWrapper(
+                            FileIO(sys.stderr._original_stdstream_copy, "w", closefd=False)
                         )
+                        self._log_map[id(io_wrapper)] = handler.stream
+                        handler.stream = io_wrapper
         if self.displayhook_class:
             displayhook_factory = import_item(str(self.displayhook_class))
             self.displayhook = displayhook_factory(self.session, self.iopub_socket)
@@ -513,14 +530,39 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         self.patch_io()
 
+    def _save_io(self):
+        if not self._io_modified:
+            self._original_io = sys.stdout, sys.stderr, sys.displayhook
+            self._log_map = {}
+            self._io_modified = True
+
     def reset_io(self):
         """restore original io
 
         restores state after init_io
         """
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-        sys.displayhook = sys.__displayhook__
+        if not self._io_modified:
+            return
+        stdout, stderr, displayhook = sys.stdout, sys.stderr, sys.displayhook
+        sys.stdout, sys.stderr, sys.displayhook = self._original_io
+        self._original_io = None
+        self._io_modified = False
+        if finish_displayhook := getattr(displayhook, "finish_displayhook", None):
+            finish_displayhook()
+        if hasattr(stderr, "_original_stdstream_copy"):
+            for handler in self.log.handlers:
+                if orig_stream := self._log_map.get(id(handler.stream)):
+                    self.log.debug("Seeing modified logger, rerouting back to stderr")
+                    handler.stream = orig_stream
+            self._log_map = None
+        if self.outstream_class:
+            outstream_factory = import_item(str(self.outstream_class))
+            if isinstance(stderr, outstream_factory):
+                stderr.close()
+            if isinstance(stdout, outstream_factory):
+                stdout.close()
+        if self._blackhole:
+            self._blackhole.close()
 
     def patch_io(self):
         """Patch important libraries that can't handle sys.stdout forwarding"""

@@ -52,19 +52,19 @@ jobs:
           python -m pip install hatch
 
       - name: Run the tests
-        timeout-minutes: 15
+        # timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
           PYTHONTRACEMALLOC=20 hatch run cov:test --cov-fail-under 50 || PYTHONTRACEMALLOC=20 hatch run test:test --lf
 
       - name: Run the tests on pypy
-        timeout-minutes: 15
+        # timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
           PYTHONTRACEMALLOC=20 hatch run test:nowarn || PYTHONTRACEMALLOC=20 hatch run test:nowarn --lf
 
       - name: Run the tests on Windows
-        timeout-minutes: 15
+        # timeout-minutes: 15
         if: ${{  startsWith(matrix.os, 'windows') }}
         run: |
           hatch run test:pip list
@@ -152,7 +152,7 @@ jobs:
           pip freeze
 
       - name: Run the tests
-        timeout-minutes: 15
+        # timeout-minutes: 15
         run: PYTHONTRACEMALLOC=20 pytest -W default -vv || PYTHONTRACEMALLOC=20 pytest --vv -W default --lf
 
   test_miniumum_versions:

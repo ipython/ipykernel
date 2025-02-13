@@ -12,11 +12,6 @@ from ipykernel.kernelapp import IPKernelApp
 from .conftest import MockKernel
 from .utils import TemporaryWorkingDirectory
 
-try:
-    import trio
-except ImportError:
-    trio = None
-
 
 @pytest.mark.skipif(os.name == "nt", reason="requires ipc")
 def test_init_ipc_socket():
@@ -118,21 +113,22 @@ def test_merge_connection_file():
         os.remove(cf)
 
 
-# FIXME: @pytest.mark.skipif(trio is None, reason="requires trio")
-@pytest.mark.skip()
-def test_trio_loop():
+@pytest.mark.skip("Something wrong with CI")
+@pytest.mark.parametrize("anyio_backend", ["trio"])
+async def test_trio_loop(anyio_backend):
+    import trio
+
     app = IPKernelApp(trio_loop=True)
 
-    def trigger_stop():
-        time.sleep(1)
+    async def trigger_stop():
+        await trio.sleep(1)
         app.stop()
-
-    thread = threading.Thread(target=trigger_stop)
-    thread.start()
 
     app.kernel = MockKernel()
     app.init_sockets()
-    app.start()
+    async with trio.open_nursery() as nursery:
+        nursery.start_soon(app._start)
+        nursery.start_soon(trigger_stop)
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()

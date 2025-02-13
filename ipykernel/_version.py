@@ -1,6 +1,7 @@
 """
 store the current version info of the server.
 """
+
 import re
 
 # Version string must appear intact for hatch versioning

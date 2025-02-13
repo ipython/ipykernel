@@ -1,4 +1,5 @@
 """Base class for threads."""
+
 import typing as t
 from threading import Event, Thread
 

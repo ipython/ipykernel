@@ -852,7 +852,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="inspect_request"),
+                _AWAITABLE_MESSAGE.format(func_name="do_inspect"),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -877,7 +877,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="history_request"),
+                _AWAITABLE_MESSAGE.format(func_name="do_history"),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -1030,7 +1030,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_execute"),
+                _AWAITABLE_MESSAGE.format(func_name="do_is_complete"),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -1052,7 +1052,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="debug_request"),
+                _AWAITABLE_MESSAGE.format(func_name="do_debug_request"),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )

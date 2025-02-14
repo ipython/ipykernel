@@ -60,7 +60,7 @@ from .iostream import OutStream
 _AWAITABLE_MESSAGE: str = (
     "For consistency across implementations, it is recommended that `{func_name}`"
     " either be a coroutine function (`async def`) or return an awaitable object"
-    " (like a Future). It might become a requirement in the future."
+    " (like an `asyncio.Future`). It might become a requirement in the future."
     " Coroutine functions and awaitables have been supported since"
     " ipykernel 6.0 (2021)."
 )

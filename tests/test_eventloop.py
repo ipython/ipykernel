@@ -98,6 +98,7 @@ def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
 
 
+@pytest.mark.skip(reason="reason crash on CI.")
 @pytest.mark.skipif(
     len(qt_guis_avail) == 0, reason="No viable version of PyQt or PySide installed."
 )

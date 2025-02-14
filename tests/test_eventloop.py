@@ -98,13 +98,10 @@ def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
 
 
-@pytest.mark.skip(reason="reason crash on CI.")
-@pytest.mark.skipif(
-    len(qt_guis_avail) == 0, reason="No viable version of PyQt or PySide installed."
-)
-def test_qt_enable_gui(kernel, capsys):
-    gui = qt_guis_avail[0]
-
+@pytest.mark.parametrize("gui", qt_guis_avail)
+def test_qt_enable_gui(gui, kernel, capsys):
+    if os.getenv("GITHUB_ACTIONS", None) == "true" and gui == "qt5":
+        pytest.skip("Qt5 and GitHub action crash CPython")
     enable_gui(gui, kernel)
 
     # We store the `QApplication` instance in the kernel.

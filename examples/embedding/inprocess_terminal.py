@@ -1,4 +1,5 @@
 """An in-process terminal example."""
+
 import os
 
 from anyio import run

@@ -281,6 +281,9 @@ ignore = [
   "PTH123",
   # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python
   "UP007",
+  "UP031", # Use format specifiers instead of percent format
+  "PT023", # Use `@pytest.mark.skip` over `@pytest.mark.skip()`
+  "PT001", # autofixable: Use `@pytest.fixture` over `@pytest.fixture()`
 ]
 unfixable = [
   # Don't touch print statements

@@ -1,4 +1,5 @@
 """An in-process qt console app."""
+
 import os
 
 import tornado

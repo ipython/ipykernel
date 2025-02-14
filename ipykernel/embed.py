@@ -1,5 +1,4 @@
-"""Simple function for embedding an IPython kernel
-"""
+"""Simple function for embedding an IPython kernel"""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------

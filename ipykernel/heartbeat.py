@@ -1,5 +1,4 @@
-"""The client and server for a basic ping-pong style heartbeat.
-"""
+"""The client and server for a basic ping-pong style heartbeat."""
 
 # -----------------------------------------------------------------------------
 #  Copyright (C) 2008-2011  The IPython Development Team

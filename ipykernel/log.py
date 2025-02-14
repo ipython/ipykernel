@@ -1,4 +1,5 @@
 """A PUB log handler."""
+
 import warnings
 
 from zmq.log.handlers import PUBHandler

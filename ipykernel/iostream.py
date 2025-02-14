@@ -177,7 +177,6 @@ class IOPubThread:
 
     async def _handle_pipe_msgs(self):
         """handle pipe messages from a subprocess"""
-        # create async wrapper within coroutine
         async with self._pipe_in1:
             try:
                 while True:

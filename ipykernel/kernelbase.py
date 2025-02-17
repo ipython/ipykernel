@@ -62,7 +62,7 @@ _AWAITABLE_MESSAGE: str = (
     " either be a coroutine function (`async def`) or return an awaitable object"
     " (like an `asyncio.Future`). It might become a requirement in the future."
     " Coroutine functions and awaitables have been supported since"
-    " ipykernel 6.0 (2021)."
+    " ipykernel 6.0 (2021). {target} does not seem to return an awaitable"
 )
 
 
@@ -752,7 +752,9 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="execute_request"),
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_execute", target=self.do_execute
+                ),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -818,7 +820,9 @@ class Kernel(SingletonConfigurable):
             matches = await matches
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_complete"),
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_complete", target=self.do_complete
+                ),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -852,7 +856,9 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_inspect"),
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_inspect", target=self.do_inspect
+                ),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -877,7 +883,9 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_history"),
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_history", target=self.do_history
+                ),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -1000,7 +1008,9 @@ class Kernel(SingletonConfigurable):
             content = await content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_shutdown"),
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_shutdown", target=self.do_shutdown
+                ),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -1030,7 +1040,9 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_is_complete"),
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_is_complete", target=self.do_is_complete
+                ),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -1052,7 +1064,9 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_debug_request"),
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_debug_request", target=self.do_debug_request
+                ),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )

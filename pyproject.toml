@@ -194,6 +194,11 @@ filterwarnings= [
   # ignore timeout cancel coroutine not awaited in zmq-anyio
   "ignore: coroutine 'Poller._apoll.<locals>.trigger_timeout' was never awaited",
   "ignore: Unclosed socket"
+
+  # ignore deprecated non async during tests:
+  "always:For consistency across implementations, it is recommended that:PendingDeprecationWarning",
+
+
 ]
 
 [tool.coverage.report]

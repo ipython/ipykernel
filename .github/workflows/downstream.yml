@@ -132,7 +132,7 @@ jobs:
       - name: Install System Packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libegl1-mesa
+          sudo apt-get install -y --no-install-recommends libgl1 libglx-mesa0
       - name: Install spyder-kernels dependencies
         shell: bash -l {0}
         run: |

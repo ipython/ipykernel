@@ -752,9 +752,9 @@ class IPythonKernel(KernelBase):
             for stream in [stdout, stderr]:
                 if isinstance(stream, OutStream):
                     if parent == kernel_thread_ident:
-                        stream._thread_to_parent_header[
-                            self.ident
-                        ] = kernel._new_threads_parent_header
+                        stream._thread_to_parent_header[self.ident] = (
+                            kernel._new_threads_parent_header
+                        )
                     else:
                         stream._thread_to_parent[self.ident] = parent
             _threading_Thread_run(self)

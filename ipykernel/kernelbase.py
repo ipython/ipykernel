@@ -752,9 +752,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(
-                    func_name="do_execute", target=self.do_execute
-                ),
+                _AWAITABLE_MESSAGE.format(func_name="do_execute", target=self.do_execute),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -820,9 +818,7 @@ class Kernel(SingletonConfigurable):
             matches = await matches
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(
-                    func_name="do_complete", target=self.do_complete
-                ),
+                _AWAITABLE_MESSAGE.format(func_name="do_complete", target=self.do_complete),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -856,9 +852,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(
-                    func_name="do_inspect", target=self.do_inspect
-                ),
+                _AWAITABLE_MESSAGE.format(func_name="do_inspect", target=self.do_inspect),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -883,9 +877,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(
-                    func_name="do_history", target=self.do_history
-                ),
+                _AWAITABLE_MESSAGE.format(func_name="do_history", target=self.do_history),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -1008,9 +1000,7 @@ class Kernel(SingletonConfigurable):
             content = await content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(
-                    func_name="do_shutdown", target=self.do_shutdown
-                ),
+                _AWAITABLE_MESSAGE.format(func_name="do_shutdown", target=self.do_shutdown),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
@@ -1040,9 +1030,7 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
         else:
             warnings.warn(
-                _AWAITABLE_MESSAGE.format(
-                    func_name="do_is_complete", target=self.do_is_complete
-                ),
+                _AWAITABLE_MESSAGE.format(func_name="do_is_complete", target=self.do_is_complete),
                 PendingDeprecationWarning,
                 stacklevel=1,
             )

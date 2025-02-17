@@ -275,8 +275,6 @@ ignore = [
   "ARG001",
   # Unused method argument:
   "ARG002",
-  # Logging statement uses `%`
-  "G002",
   # `open()` should be replaced by `Path.open()`
   "PTH123",
   # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python

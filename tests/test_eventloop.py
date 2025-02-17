@@ -132,10 +132,7 @@ def test_qt_enable_gui(kernel, capsys):
 
     enable_gui(not_gui, kernel)
     captured = capsys.readouterr()
-    assert (
-        captured.out
-        == f"Cannot switch Qt versions for this session; you must use {gui}.\n"
-    )
+    assert captured.out == f"Cannot switch Qt versions for this session; you must use {gui}.\n"
 
     # Check 'qt' gui, which means "the best available"
     enable_gui(None, kernel)

@@ -20,7 +20,7 @@ except ImportError:
 from jupyter_client.session import Session, extract_header
 
 warnings.warn(
-    "ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
+    "ipykernel.datapub is deprecated since ipykernel 4.3.0 (2016). It has moved to ipyparallel.datapub",
     DeprecationWarning,
     stacklevel=2,
 )
@@ -73,7 +73,7 @@ def publish_data(data):
         The data to be published. Think of it as a namespace.
     """
     warnings.warn(
-        "ipykernel.datapub is deprecated. It has moved to ipyparallel.datapub",
+        "ipykernel.datapub is deprecated since ipykernel 4.3.0 (2016). It has moved to ipyparallel.datapub",
         DeprecationWarning,
         stacklevel=2,
     )

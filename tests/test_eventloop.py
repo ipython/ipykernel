@@ -7,8 +7,8 @@ import threading
 import time
 
 import pytest
-
 from anyio import sleep
+
 from ipykernel.eventloops import (
     enable_gui,
     loop_asyncio,

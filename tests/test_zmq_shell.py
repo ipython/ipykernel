@@ -1,4 +1,4 @@
-""" Tests for zmq shell / display publisher. """
+"""Tests for zmq shell / display publisher."""
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.

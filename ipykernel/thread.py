@@ -1,8 +1,14 @@
 """Base class for threads."""
-import typing as t
+
+from __future__ import annotations
+
+from collections.abc import Awaitable
+from queue import Queue
 from threading import Event, Thread
+from typing import Any, Callable
 
 from anyio import create_task_group, run, to_thread
+from anyio.abc import TaskGroup
 
 CONTROL_THREAD_NAME = "Control"
 SHELL_CHANNEL_THREAD_NAME = "Shell channel"
@@ -14,24 +20,58 @@ class BaseThread(Thread):
     def __init__(self, **kwargs):
         """Initialize the thread."""
         super().__init__(**kwargs)
+        self.started = Event()
+        self.stopped = Event()
         self.pydev_do_not_trace = True
         self.is_pydev_daemon_thread = True
-        self.__stop = Event()
-        self._tasks_and_args: list[tuple[t.Any, t.Any]] = []
+        self._tasks: Queue[tuple[str, Callable[[], Awaitable[Any]]] | None] = Queue()
+        self._result: Queue[Any] = Queue()
+        self._exception: Exception | None = None
 
-    def add_task(self, task: t.Any, *args: t.Any) -> None:
-        # May only add tasks before the thread is started.
-        self._tasks_and_args.append((task, args))
+    @property
+    def exception(self) -> Exception | None:
+        return self._exception
 
-    def run(self) -> t.Any:
+    @property
+    def task_group(self) -> TaskGroup:
+        return self._task_group
+
+    def start_soon(self, coro: Callable[[], Awaitable[Any]]) -> None:
+        self._tasks.put(("start_soon", coro))
+
+    def run_async(self, coro: Callable[[], Awaitable[Any]]) -> Any:
+        self._tasks.put(("run_async", coro))
+        return self._result.get()
+
+    def run_sync(self, func: Callable[..., Any]) -> Any:
+        self._tasks.put(("run_sync", func))
+        return self._result.get()
+
+    def run(self) -> None:
         """Run the thread."""
-        return run(self._main)
+        try:
+            run(self._main)
+        except Exception as exc:
+            self._exception = exc
 
     async def _main(self) -> None:
         async with create_task_group() as tg:
-            for task, args in self._tasks_and_args:
-                tg.start_soon(task, *args)
-            await to_thread.run_sync(self.__stop.wait)
+            self._task_group = tg
+            self.started.set()
+            while True:
+                task = await to_thread.run_sync(self._tasks.get)
+                if task is None:
+                    break
+                func, arg = task
+                if func == "start_soon":
+                    tg.start_soon(arg)
+                elif func == "run_async":
+                    res = await arg
+                    self._result.put(res)
+                else:  # func == "run_sync"
+                    res = arg()
+                    self._result.put(res)
+
             tg.cancel_scope.cancel()
 
     def stop(self) -> None:
@@ -39,4 +79,5 @@ class BaseThread(Thread):
 
         This method is threadsafe.
         """
-        self.__stop.set()
+        self._tasks.put(None)
+        self.stopped.set()

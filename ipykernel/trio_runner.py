@@ -1,4 +1,5 @@
 """A trio loop runner."""
+
 import builtins
 import logging
 import signal
@@ -29,7 +30,7 @@ class TrioRunner:
         bg_thread.start()
 
     def interrupt(self, signum, frame):
-        """Interuppt the runner."""
+        """Interrupt the runner."""
         if self._cell_cancel_scope:
             self._cell_cancel_scope.cancel()
         else:

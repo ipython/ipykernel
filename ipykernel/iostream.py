@@ -17,12 +17,14 @@ from binascii import b2a_hex
 from collections import defaultdict, deque
 from collections.abc import Callable
 from io import StringIO, TextIOBase
-from threading import Event, Thread, local
-from typing import Any
+from threading import local
+from typing import Any, Callable
 
 import zmq
-from anyio import create_task_group, run, sleep, to_thread
+from anyio import sleep
 from jupyter_client.session import extract_header
+
+from .thread import BaseThread
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -36,38 +38,6 @@ PIPE_BUFFER_SIZE = 1000
 # -----------------------------------------------------------------------------
 # IO classes
 # -----------------------------------------------------------------------------
-
-
-class _IOPubThread(Thread):
-    """A thread for a IOPub."""
-
-    def __init__(self, tasks, **kwargs):
-        """Initialize the thread."""
-        super().__init__(name="IOPub", **kwargs)
-        self._tasks = tasks
-        self.pydev_do_not_trace = True
-        self.is_pydev_daemon_thread = True
-        self.daemon = True
-        self.__stop = Event()
-
-    def run(self):
-        """Run the thread."""
-        self.name = "IOPub"
-        run(self._main)
-
-    async def _main(self):
-        async with create_task_group() as tg:
-            for task in self._tasks:
-                tg.start_soon(task)
-            await to_thread.run_sync(self.__stop.wait)
-            tg.cancel_scope.cancel()
-
-    def stop(self):
-        """Stop the thread.
-
-        This method is threadsafe.
-        """
-        self.__stop.set()
 
 
 class IOPubThread:
@@ -112,7 +82,9 @@ class IOPubThread:
         tasks = [self._handle_event, self._run_event_pipe_gc]
         if pipe:
             tasks.append(self._handle_pipe_msgs)
-        self.thread = _IOPubThread(tasks)
+        self.thread = BaseThread(name="IOPub", daemon=True)
+        for task in tasks:
+            self.thread.start_soon(task)
 
     def _setup_event_pipe(self):
         """Create the PULL socket listening for events that should fire in this thread."""
@@ -182,7 +154,7 @@ class IOPubThread:
                     event_f = self._events.popleft()
                     event_f()
         except Exception:
-            if self.thread.__stop.is_set():
+            if self.thread.stopped.is_set():
                 return
             raise
 
@@ -216,7 +188,7 @@ class IOPubThread:
             while True:
                 await self._handle_pipe_msg()
         except Exception:
-            if self.thread.__stop.is_set():
+            if self.thread.stopped.is_set():
                 return
             raise
 
@@ -399,8 +371,8 @@ class OutStream(TextIOBase):
         """
         Things like subprocess will peak and write to the fileno() of stderr/stdout.
         """
-        if getattr(self, "_original_stdstream_copy", None) is not None:
-            return self._original_stdstream_copy
+        if getattr(self, "_original_stdstream_fd", None) is not None:
+            return self._original_stdstream_fd
         msg = "fileno"
         raise io.UnsupportedOperation(msg)
 
@@ -502,11 +474,13 @@ class OutStream(TextIOBase):
         self._local = local()
 
         if (
-            watchfd
-            and (
-                (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
-                # Pytest set its own capture. Don't redirect from within pytest.
-                and ("PYTEST_CURRENT_TEST" not in os.environ)
+            (
+                watchfd
+                and (
+                    (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
+                    # Pytest set its own capture. Don't redirect from within pytest.
+                    and ("PYTEST_CURRENT_TEST" not in os.environ)
+                )
             )
             # allow forcing watchfd (mainly for tests)
             or watchfd == "force"
@@ -528,10 +502,7 @@ class OutStream(TextIOBase):
                         # echo on the _copy_ we made during
                         # this is the actual terminal FD now
                         echo = io.TextIOWrapper(
-                            io.FileIO(
-                                self._original_stdstream_copy,
-                                "w",
-                            )
+                            io.FileIO(self._original_stdstream_copy, "w", closefd=False)
                         )
                 self.echo = echo
             else:
@@ -596,9 +567,10 @@ class OutStream(TextIOBase):
             self._should_watch = False
             # thread won't wake unless there's something to read
             # writing something after _should_watch will not be echoed
-            os.write(self._original_stdstream_fd, b"\0")
-            if self.watch_fd_thread is not None:
+            if self.watch_fd_thread is not None and self.watch_fd_thread.is_alive():
+                os.write(self._original_stdstream_fd, b"\0")
                 self.watch_fd_thread.join()
+            self.echo = None
             # restore original FDs
             os.dup2(self._original_stdstream_copy, self._original_stdstream_fd)
             os.close(self._original_stdstream_copy)

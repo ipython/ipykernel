@@ -147,12 +147,12 @@ def test_run_concurrently_sequence(are_subshells, overlap):
         if overlap:
             codes = [
                 f"b.wait(); start0=True; end0=False; time.sleep({sleep}); end0=True",
-                f"b.wait(); time.sleep({sleep/2}); assert start0; assert not end0; time.sleep({sleep}); assert end0",
+                f"b.wait(); time.sleep({sleep / 2}); assert start0; assert not end0; time.sleep({sleep}); assert end0",
             ]
         else:
             codes = [
                 f"b.wait(); start0=True; end0=False; time.sleep({sleep}); assert end1",
-                f"b.wait(); time.sleep({sleep/2}); assert start0; assert not end0; end1=True",
+                f"b.wait(); time.sleep({sleep / 2}); assert start0; assert not end0; end1=True",
             ]
 
         msgs = []

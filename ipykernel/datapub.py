@@ -1,8 +1,7 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-"""Publishing native (typically pickled) objects.
-"""
+"""Publishing native (typically pickled) objects."""
 
 import warnings
 
@@ -30,7 +29,7 @@ warnings.warn(
 class ZMQDataPublisher(Configurable):
     """A zmq data publisher."""
 
-    topic = topic = CBytes(b"datapub")
+    topic = CBytes(b"datapub")
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
     parent_header = Dict({})

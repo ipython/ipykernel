@@ -7,6 +7,7 @@ import threading
 import time
 
 import pytest
+from anyio import sleep
 
 from ipykernel.eventloops import (
     enable_gui,
@@ -79,13 +80,15 @@ def test_tk_loop(kernel):
 
 
 @windows_skip
-def test_asyncio_loop(kernel):
+@pytest.mark.parametrize("anyio_backend", ["asyncio"])
+async def test_asyncio_loop(kernel):
     def do_thing():
         loop.call_later(0.01, loop.stop)
 
     loop = asyncio.get_event_loop()
     loop.call_soon(do_thing)
     loop_asyncio(kernel)
+    await sleep(0.02)
 
 
 @windows_skip

@@ -35,7 +35,7 @@ except ImportError:
 from jupyter_client.session import MAX_BYTES, MAX_ITEMS
 
 warnings.warn(
-    "ipykernel.serialize is deprecated. It has moved to ipyparallel.serialize",
+    "ipykernel.serialize is deprecated since ipykernel 4.3.0 (2016). It has moved to ipyparallel.serialize",
     DeprecationWarning,
     stacklevel=2,
 )

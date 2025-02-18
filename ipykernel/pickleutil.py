@@ -20,7 +20,7 @@ from traitlets.log import get_logger
 from traitlets.utils.importstring import import_item
 
 warnings.warn(
-    "ipykernel.pickleutil is deprecated. It has moved to ipyparallel.",
+    "ipykernel.pickleutil is deprecated since IPykernel 4.3.0 (2016). It has moved to ipyparallel.",
     DeprecationWarning,
     stacklevel=2,
 )

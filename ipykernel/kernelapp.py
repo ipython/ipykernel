@@ -733,7 +733,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             pdb.set_trace = debugger.set_trace
 
     @catch_config_error
-    def initialize(self, argv=None):
+    def initialize(self, argv=None) -> None:
         """Initialize the application."""
         self._init_asyncio_patch()
         super().initialize(argv)
@@ -772,22 +772,29 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         sys.stdout.flush()
         sys.stderr.flush()
 
-    def start(self) -> None:
-        """Start the application."""
+    async def _start(self) -> None:
+        """
+        Async version of start, when the loop is not controlled by IPykernel
+
+        For example to be used in test suite with @pytest.mark.trio
+        """
         if self.subapp is not None:
             self.subapp.start()
             return
         if self.poller is not None:
             self.poller.start()
-        backend = "trio" if self.trio_loop else "asyncio"
-        run(self.main, backend=backend)
-        return
+        await self.main()
 
-    async def _wait_to_enter_eventloop(self):
+    def start(self) -> None:
+        """Start the application."""
+        backend = "trio" if self.trio_loop else "asyncio"
+        run(self._start, backend=backend)
+
+    async def _wait_to_enter_eventloop(self) -> None:
         await self.kernel._eventloop_set.wait()
         await self.kernel.enter_eventloop()
 
-    async def main(self):
+    async def main(self) -> None:
         async with create_task_group() as tg:
             tg.start_soon(self._wait_to_enter_eventloop)
             tg.start_soon(self.kernel.start)
@@ -795,7 +802,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.kernel.eventloop:
             self.kernel._eventloop_set.set()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the kernel, thread-safe."""
         self.kernel.stop()
 

@@ -257,18 +257,10 @@ ignore = [
   "PLR",    # Design related pylint codes
   # Allow non-abstract empty methods in abstract base classes
   "B027",
-  # Use of `assert` detected
-  "S101",
-  # Possible hardcoded password
-  "S105", "S106",
-  # `print` found
-  "T201",
+  "T201", # `print` found
   # Unnecessary `dict` call (rewrite as a literal)
   "C408",
-  # Use `contextlib.suppress(ValueError)` instead of try-except-pass
-  "SIM105",
-  # `try`-`except`-`pass` detected
-  "S110",
+  "SIM105", # Use `contextlib.suppress(ValueError)` instead of try-except-pass
   # Mutable class attributes should be annotated with `typing.ClassVar`
   "RUF012",
   # Unused function argument:
@@ -277,20 +269,10 @@ ignore = [
   "ARG002",
   # `open()` should be replaced by `Path.open()`
   "PTH123",
-  # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python
-  "UP007",
+  "UP007", # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python
   "UP031", # Use format specifiers instead of percent format
   "PT023", # Use `@pytest.mark.skip` over `@pytest.mark.skip()`
   "PT001", # autofixable: Use `@pytest.fixture` over `@pytest.fixture()`
-]
-unfixable = [
-  # Don't touch print statements
-  "T201",
-  # Don't touch noqa lines
-  "RUF100",
-  # Don't touch imports
-  "F401",
-  "F403"
 ]
 
 [tool.ruff.lint.per-file-ignores]

@@ -249,7 +249,12 @@ def test_zmq_interactive_shell(kernel):
     if os.name == "posix":
         shell.system_piped("ls")
     else:
-        shell.system_piped("dir")
+        # This should be fixed by https://github.com/ipython/ipython/pull/14749,
+        # but may take some time to be released,
+        # once old, enough remove this catch warnings.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed file")
+            shell.system_piped("dir")
     shell.ask_exit()
 
 

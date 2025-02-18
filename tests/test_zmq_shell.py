@@ -211,26 +211,26 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
 
 
 def test_magics(tmp_path):
-    context = zmq.Context()
-    socket = context.socket(zmq.PUB)
     shell = InteractiveShell()
     shell.user_ns["hi"] = 1
     magics = KernelMagics(shell)
 
     tmp_file = tmp_path / "test.txt"
     tmp_file.write_text("hi", "utf8")
-    magics.edit(str(tmp_file))
-    payload = shell.payload_manager.read_payload()[0]
-    assert payload["filename"] == str(tmp_file)
+    # This should be fixed by https://github.com/ipython/ipython/pull/14749,
+    # but may take some time to be released,
+    # once old, enough remove this catch warnings.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed file")
+        magics.edit(str(tmp_file))
+        payload = shell.payload_manager.read_payload()[0]
+        assert payload["filename"] == str(tmp_file)
 
-    magics.clear([])
-    magics.less(str(tmp_file))
-    if os.name == "posix":
-        magics.man("ls")
-    magics.autosave("10")
-
-    socket.close()
-    context.destroy()
+        magics.clear([])
+        magics.less(str(tmp_file))
+        if os.name == "posix":
+            magics.man("ls")
+        magics.autosave("10")
 
 
 def test_zmq_interactive_shell(kernel):
@@ -249,7 +249,12 @@ def test_zmq_interactive_shell(kernel):
     if os.name == "posix":
         shell.system_piped("ls")
     else:
-        shell.system_piped("dir")
+        # This should be fixed by https://github.com/ipython/ipython/pull/14749,
+        # but may take some time to be released,
+        # once old, enough remove this catch warnings.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=ResourceWarning, message="unclosed file")
+            shell.system_piped("dir")
     shell.ask_exit()
 
 

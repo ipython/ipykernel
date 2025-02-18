@@ -83,7 +83,11 @@ def test_asyncio_loop(kernel):
     def do_thing():
         loop.call_later(0.01, loop.stop)
 
-    loop = asyncio.get_event_loop()
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
     loop.call_soon(do_thing)
     loop_asyncio(kernel)
 

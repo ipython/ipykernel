@@ -211,8 +211,6 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
 
 
 def test_magics(tmp_path):
-    context = zmq.Context()
-    socket = context.socket(zmq.PUB)
     shell = InteractiveShell()
     shell.user_ns["hi"] = 1
     magics = KernelMagics(shell)
@@ -233,9 +231,6 @@ def test_magics(tmp_path):
         if os.name == "posix":
             magics.man("ls")
         magics.autosave("10")
-
-    socket.close()
-    context.destroy()
 
 
 def test_zmq_interactive_shell(kernel):

@@ -1105,7 +1105,7 @@ class Kernel(SingletonConfigurable):
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
-        self.session.send(socket, "shutdown_reply", content, parent, ident=ident)
+        self.session.send(stream, "shutdown_reply", content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg("shutdown_reply", content, parent)
 

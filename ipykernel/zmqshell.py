@@ -78,12 +78,16 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def publish(
+    # Feb: 2025 IPython has a deprecated, `source` parameter, marked for removal that
+    # triggers typing errors.
+    def publish(  # type: ignore [override]
         self,
         data,
         metadata=None,
+        *,
         transient=None,
         update=False,
+        **kwargs,
     ):
         """Publish a display-data message
 
@@ -508,7 +512,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     # Over ZeroMQ, GUI control isn't done with PyOS_InputHook as there is no
     # interactive input being read; we provide event loop support in ipkernel
-    def enable_gui(self, gui):
+    def enable_gui(self, gui=None):
         """Enable a given guil."""
         from .eventloops import enable_gui as real_enable_gui
 
@@ -654,14 +658,10 @@ class ZMQInteractiveShell(InteractiveShell):
         self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
         if hasattr(self, "_data_pub"):
             self.data_pub.set_parent(parent)
-        try:
-            sys.stdout.set_parent(parent)  # type:ignore[attr-defined]
-        except AttributeError:
-            pass
-        try:
-            sys.stderr.set_parent(parent)  # type:ignore[attr-defined]
-        except AttributeError:
-            pass
+        if hasattr(sys.stdout, "set_parent"):
+            sys.stdout.set_parent(parent)
+        if hasattr(sys.stderr, "set_parent"):
+            sys.stderr.set_parent(parent)
 
     def get_parent(self):
         """Get the parent header."""

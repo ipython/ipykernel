@@ -514,7 +514,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                         isinstance(handler, StreamHandler)
                         and (buffer := getattr(handler.stream, "buffer", None))
                         and (fileno := getattr(buffer, "fileno", None))
-                        and fileno() == sys.stderr._original_stdstream_fd  # type:ignore[attr-defined]
+                        and fileno() == sys.stderr._original_stdstream_fd
                     ):
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
                         io_wrapper = TextIOWrapper(

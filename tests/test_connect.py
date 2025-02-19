@@ -22,11 +22,16 @@ from .utils import TemporaryWorkingDirectory
 
 @pytest.fixture(scope="module", autouse=True)
 def _enable_tracemalloc():
-    import tracemalloc
-
-    tracemalloc.start()
+    try:
+        import tracemalloc
+    except ModuleNotFoundError:
+        # pypy
+        tracemalloc = None
+    if tracemalloc is not None:
+        tracemalloc.start()
     yield
-    tracemalloc.stop()
+    if tracemalloc is not None:
+        tracemalloc.stop()
 
 
 sample_info: dict = {

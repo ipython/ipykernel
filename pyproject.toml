@@ -60,7 +60,6 @@ test = [
     "pytest-asyncio>=0.23.5",
     "pytest-cov",
     "pytest-timeout",
-    "anyio[trio]",
     "pytest>=7.0,<9",
     "trio",
 ]

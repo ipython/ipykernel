@@ -78,7 +78,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    # Feb: 2025IPython has a deprecated, `source` parameter, marked for removal that
+    # Feb: 2025 IPython has a deprecated, `source` parameter, marked for removal that
     # triggers typing errors.
     def publish(  # type: ignore [override]
         self,

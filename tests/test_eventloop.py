@@ -106,7 +106,7 @@ def test_qt_enable_gui(gui, kernel, capsys):
         pytest.skip(
             "qt6 fails on 3.9 with AttributeError: module 'PySide6.QtPrintSupport' has no attribute 'QApplication'"
         )
-    if sys.platform == "posix" and gui == "qt6" and os.getenv("GITHUB_ACTIONS", None) == "true":
+    if sys.platform == "linux" and gui == "qt6" and os.getenv("GITHUB_ACTIONS", None) == "true":
         pytest.skip("qt6 fails on github CI with missing libEGL.so.1")
     enable_gui(gui, kernel)
 

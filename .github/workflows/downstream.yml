@@ -116,7 +116,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd ${GITHUB_WORKSPACE}/../qtconsole
-          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes -k "not test_execute" qtconsole
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -vv -s --full-trace --color=yes -k "not test_execute" qtconsole
 
   spyder_kernels:
     runs-on: ubuntu-latest
@@ -147,4 +147,4 @@ jobs:
         shell: bash -l {0}
         run: |
           cd ${GITHUB_WORKSPACE}/../spyder-kernels
-          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes -k "not test_interrupt" spyder_kernels
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -vv -s --full-trace --color=yes -k "not test_interrupt" spyder_kernels

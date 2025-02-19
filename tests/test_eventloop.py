@@ -102,6 +102,10 @@ def test_cocoa_loop(kernel):
 def test_qt_enable_gui(gui, kernel, capsys):
     if os.getenv("GITHUB_ACTIONS", None) == "true" and gui == "qt5":
         pytest.skip("Qt5 and GitHub action crash CPython")
+    if sys.platform == "win32" and gui == "qt6" and sys.version_info < (3, 10):
+        pytest.skip(
+            "win+qt6 fails on 3.9 with AttributeError: module 'PySide6.QtPrintSupport' has no attribute 'QApplication'"
+        )
     enable_gui(gui, kernel)
 
     # We store the `QApplication` instance in the kernel.

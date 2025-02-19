@@ -12,7 +12,7 @@
 # -----------------------------------------------------------------------------
 
 
-from typing import Any
+from typing import Any, Optional
 
 from jupyter_client.client import KernelClient
 from jupyter_client.clientabc import KernelClientABC
@@ -110,8 +110,8 @@ class InProcessKernelClient(KernelClient):
         code: str,
         silent: bool = False,
         store_history: bool = True,
-        user_expressions: dict[str, Any] | None = None,
-        allow_stdin: bool | None = None,
+        user_expressions: Optional[dict[str, Any]] = None,
+        allow_stdin: Optional[bool] = None,
         stop_on_error: bool = True,
     ) -> str:
         """Execute code on the client."""

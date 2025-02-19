@@ -19,6 +19,16 @@ from ipykernel.kernelapp import IPKernelApp
 
 from .utils import TemporaryWorkingDirectory
 
+
+@pytest.fixture(scope="module", autouse=True)
+def _enable_tracemalloc():
+    import tracemalloc
+
+    tracemalloc.start()
+    yield
+    tracemalloc.stop()
+
+
 sample_info: dict = {
     "ip": "1.2.3.4",
     "transport": "ipc",

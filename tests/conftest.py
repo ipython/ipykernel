@@ -116,7 +116,6 @@ class KernelMixin:
     @no_type_check
     async def test_shell_message(self, *args, **kwargs):
         msg_list = self._prep_msg(*args, **kwargs)
-        print(msg_list)
         await self.process_shell_message(msg_list)
         receive_stream: MemoryObjectReceiveStream[Any] = self.session._streams[self.shell_socket][
             "receive"

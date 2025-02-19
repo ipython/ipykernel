@@ -427,7 +427,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.debug_shell_socket and not self.debug_shell_socket.closed:
             self.debug_shell_socket.close()
 
-        for channel in ("shell", "control", "stdin", "iopub"):
+        for channel in ("shell", "control", "stdin"):
             self.log.debug("Closing %s channel", channel)
             socket = getattr(self, channel + "_socket", None)
             if socket and not socket.closed:

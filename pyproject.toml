@@ -56,14 +56,13 @@ docs = [
   "trio"
 ]
 test = [
-    "pytest>=7.0,<9",
-    "pytest-cov",
     "flaky",
     "ipyparallel",
     "pre-commit",
+    "pytest-cov",
     "pytest-timeout",
+    "pytest>=7.0,<9",
     "trio",
-    "pytest-asyncio>=0.23.5",
 ]
 cov = [
   "coverage[toml]",

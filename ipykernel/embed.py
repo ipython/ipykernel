@@ -48,9 +48,10 @@ def embed_kernel(module=None, local_ns=None, **kwargs):
     if module is None:
         module = caller_module
     if local_ns is None:
-        local_ns = caller_locals
+        local_ns = dict(**caller_locals)
 
     app.kernel.user_module = module
+    assert isinstance(local_ns, dict)
     app.kernel.user_ns = local_ns
     app.shell.set_completer_frame()  # type:ignore[union-attr]
     app.start()

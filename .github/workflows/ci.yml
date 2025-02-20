@@ -46,19 +46,19 @@ jobs:
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test --cov-fail-under 50 || hatch run test:test --lf
+          hatch run cov:test --cov-fail-under 50
 
       - name: Run the tests on pypy
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
-          hatch run test:nowarn || hatch run test:nowarn --lf
+          hatch run test:nowarn
 
       - name: Run the tests on Windows
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:nowarn || hatch run test:nowarn --lf
+          hatch run cov:nowarn
 
       - name: Check Launcher
         run: |
@@ -141,7 +141,7 @@ jobs:
 
       - name: Run the tests
         timeout-minutes: 15
-        run: pytest -W default -vv || pytest --vv -W default --lf
+        run: pytest -W default -vv
 
   test_miniumum_versions:
     name: Test Minimum Versions
@@ -161,7 +161,7 @@ jobs:
 
       - name: Run the unit tests
         run: |
-          hatch -v run test:nowarn || hatch run test:nowarn --lf
+          hatch -v run test:nowarn
 
   test_prereleases:
     name: Test Prereleases
@@ -176,7 +176,7 @@ jobs:
           dependency_type: pre
       - name: Run the tests
         run: |
-          hatch run test:nowarn || hatch run test:nowarn --lf
+          hatch run test:nowarn
 
   make_sdist:
     name: Make SDist

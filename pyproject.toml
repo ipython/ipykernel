@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "ipykernel"
 dynamic = ["version"]
-authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
+authors = [{name = "IPython Development Team", email = "ipython-dev@python.org"}]
 license = {file = "LICENSE"}
 readme = "README.md"
 description = "IPython Kernel for Jupyter"
@@ -45,7 +45,9 @@ Tracker = "https://github.com/ipython/ipykernel/issues"
 
 [project.optional-dependencies]
 docs = [
-  "sphinx",
+  # Sphinx pinned until `sphinx-autodoc-typehints` issue is resolved:
+  # https://github.com/tox-dev/sphinx-autodoc-typehints/issues/523
+  "sphinx<8.2.0",
   "myst_parser",
   "pydata_sphinx_theme",
   "sphinxcontrib_github_alt",
@@ -55,12 +57,12 @@ docs = [
   "trio"
 ]
 test = [
-    "pytest>=7.0,<9",
-    "pytest-cov",
     "flaky",
     "ipyparallel",
     "pre-commit",
+    "pytest-cov",
     "pytest-timeout",
+    "pytest>=7.0,<9",
     "trio",
 ]
 cov = [
@@ -193,7 +195,10 @@ filterwarnings= [
 
   # ignore timeout cancel coroutine not awaited in zmq-anyio
   "ignore: coroutine 'Poller._apoll.<locals>.trigger_timeout' was never awaited",
-  "ignore: Unclosed socket"
+  "ignore: Unclosed socket",
+
+  # ignore deprecated non async during tests:
+  "always:For consistency across implementations, it is recommended that:PendingDeprecationWarning",
 ]
 
 [tool.coverage.report]
@@ -257,42 +262,22 @@ ignore = [
   "PLR",    # Design related pylint codes
   # Allow non-abstract empty methods in abstract base classes
   "B027",
-  # Use of `assert` detected
-  "S101",
-  # Possible hardcoded password
-  "S105", "S106",
-  # `print` found
-  "T201",
+  "T201", # `print` found
   # Unnecessary `dict` call (rewrite as a literal)
   "C408",
-  # Use `contextlib.suppress(ValueError)` instead of try-except-pass
-  "SIM105",
-  # `try`-`except`-`pass` detected
-  "S110",
+  "SIM105", # Use `contextlib.suppress(ValueError)` instead of try-except-pass
   # Mutable class attributes should be annotated with `typing.ClassVar`
   "RUF012",
   # Unused function argument:
   "ARG001",
   # Unused method argument:
   "ARG002",
-  # Logging statement uses `%`
-  "G002",
   # `open()` should be replaced by `Path.open()`
   "PTH123",
-  # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python
-  "UP007",
+  "UP007", # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python
   "UP031", # Use format specifiers instead of percent format
   "PT023", # Use `@pytest.mark.skip` over `@pytest.mark.skip()`
   "PT001", # autofixable: Use `@pytest.fixture` over `@pytest.fixture()`
-]
-unfixable = [
-  # Don't touch print statements
-  "T201",
-  # Don't touch noqa lines
-  "RUF100",
-  # Don't touch imports
-  "F401",
-  "F403"
 ]
 
 [tool.ruff.lint.per-file-ignores]

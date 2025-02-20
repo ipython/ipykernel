@@ -159,7 +159,7 @@ class MockKernel(KernelMixin, Kernel):  # type:ignore
         self.control_stop = Event()
         super().__init__(*args, **kwargs)
 
-    def do_execute(
+    async def do_execute(
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False
     ):
         if not silent:

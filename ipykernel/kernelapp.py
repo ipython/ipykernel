@@ -339,12 +339,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.shell_socket = zmq_anyio.Socket(context.socket(zmq.ROUTER))
         self.shell_socket.linger = 1000
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
-        self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
+        self.log.debug("shell ROUTER Channel on port: %i", self.shell_port)
 
         self.stdin_socket = context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
-        self.log.debug("stdin ROUTER Channel on port: %i" % self.stdin_port)
+        self.log.debug("stdin ROUTER Channel on port: %i", self.stdin_port)
 
         if hasattr(zmq, "ROUTER_HANDOVER"):
             # set router-handover to workaround zeromq reconnect problems
@@ -360,7 +360,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.control_socket = zmq_anyio.Socket(context.socket(zmq.ROUTER))
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
-        self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
+        self.log.debug("control ROUTER Channel on port: %i", self.control_port)
 
         self.debugpy_socket = zmq_anyio.Socket(context.socket(zmq.STREAM))
         self.debugpy_socket.linger = 1000
@@ -385,7 +385,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.iopub_socket = zmq_anyio.Socket(context.socket(zmq.PUB))
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
-        self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
+        self.log.debug("iopub PUB Channel on port: %i", self.iopub_port)
         self.configure_tornado_logger()
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True)
         self.iopub_thread.start()
@@ -399,7 +399,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         hb_ctx = zmq.Context()
         self.heartbeat = Heartbeat(hb_ctx, (self.transport, self.ip, self.hb_port))
         self.hb_port = self.heartbeat.port
-        self.log.debug("Heartbeat REP Channel on port: %i" % self.hb_port)
+        self.log.debug("Heartbeat REP Channel on port: %i", self.hb_port)
         self.heartbeat.start()
 
     def close(self):
@@ -515,7 +515,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                         isinstance(handler, StreamHandler)
                         and (buffer := getattr(handler.stream, "buffer", None))
                         and (fileno := getattr(buffer, "fileno", None))
-                        and fileno() == sys.stderr._original_stdstream_fd  # type:ignore[attr-defined]
+                        and fileno() == sys.stderr._original_stdstream_fd
                     ):
                         self.log.debug("Seeing logger to stderr, rerouting to raw filedescriptor.")
                         io_wrapper = TextIOWrapper(
@@ -697,7 +697,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             pdb.set_trace = debugger.set_trace
 
     @catch_config_error
-    def initialize(self, argv=None):
+    def initialize(self, argv=None) -> None:
         """Initialize the application."""
         super().initialize(argv)
         if self.subapp is not None:
@@ -735,22 +735,18 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         sys.stdout.flush()
         sys.stderr.flush()
 
-    def start(self) -> None:
-        """Start the application."""
+    async def _start(self, backend: str) -> None:
+        """
+        Async version of start, when the loop is not controlled by IPykernel
+
+        For example to be used in test suite with @pytest.mark.trio
+        """
         if self.subapp is not None:
             self.subapp.start()
             return
         if self.poller is not None:
             self.poller.start()
-        backend = "trio" if self.trio_loop else "asyncio"
-        run(partial(self.main, backend), backend=backend)
-        return
 
-    async def _wait_to_enter_eventloop(self):
-        await self.kernel._eventloop_set.wait()
-        await self.kernel.enter_eventloop()
-
-    async def main(self, backend: str):
         if backend == "asyncio" and sys.platform == "win32":
             import asyncio
 
@@ -760,8 +756,19 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
                 selector = get_selector()
                 selector._thread.pydev_do_not_trace = True
-                # selector._thread.is_pydev_daemon_thread = True
 
+        await self.main()
+
+    def start(self) -> None:
+        """Start the application."""
+        backend = "trio" if self.trio_loop else "asyncio"
+        run(partial(self._start, backend), backend=backend)
+
+    async def _wait_to_enter_eventloop(self) -> None:
+        await self.kernel._eventloop_set.wait()
+        await self.kernel.enter_eventloop()
+
+    async def main(self) -> None:
         async with create_task_group() as tg:
             tg.start_soon(self._wait_to_enter_eventloop)
             tg.start_soon(self.kernel.start)
@@ -769,7 +776,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.kernel.eventloop:
             self.kernel._eventloop_set.set()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the kernel, thread-safe."""
         self.kernel.stop()
 

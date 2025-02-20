@@ -69,6 +69,7 @@ class BlockingInProcessStdInChannel(BlockingInProcessChannel):
             _raw_input = self.client.kernel._sys_raw_input
             prompt = msg["content"]["prompt"]
             print(prompt, end="", file=sys.__stdout__)
+            assert sys.__stdout__ is not None
             sys.__stdout__.flush()
             self.client.input(_raw_input())
 

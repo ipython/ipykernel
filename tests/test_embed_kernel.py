@@ -93,10 +93,10 @@ def setup_kernel(cmd):
 
 @flaky(max_runs=3)
 def test_embed_kernel_basic():
-    """IPython.embed_kernel() is basically functional"""
+    """ipykernel.embed.embed_kernel() is basically functional"""
     cmd = "\n".join(
         [
-            "from IPython import embed_kernel",
+            "from ipykernel.embed import embed_kernel",
             "def go():",
             "    a=5",
             '    b="hi there"',
@@ -132,10 +132,10 @@ def test_embed_kernel_basic():
 
 @flaky(max_runs=3)
 def test_embed_kernel_namespace():
-    """IPython.embed_kernel() inherits calling namespace"""
+    """ipykernel.embed.embed_kernel() inherits calling namespace"""
     cmd = "\n".join(
         [
-            "from IPython import embed_kernel",
+            "from ipykernel.embed import embed_kernel",
             "def go():",
             "    a=5",
             '    b="hi there"',
@@ -180,10 +180,10 @@ def test_embed_kernel_namespace():
 
 @flaky(max_runs=3)
 def test_embed_kernel_reentrant():
-    """IPython.embed_kernel() can be called multiple times"""
+    """ipykernel.embed.embed_kernel() can be called multiple times"""
     cmd = "\n".join(
         [
-            "from IPython import embed_kernel",
+            "from ipykernel.embed import embed_kernel",
             "count = 0",
             "def go():",
             "    global count",

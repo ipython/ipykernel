@@ -167,7 +167,6 @@ filterwarnings= [
 
   # Ignore our own warnings
   "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
-  "ignore:has moved to ipyparallel:DeprecationWarning",
 
   # IPython warnings
   "ignore: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`:PendingDeprecationWarning",
@@ -175,16 +174,7 @@ filterwarnings= [
   "ignore: backend2gui is deprecated since IPython 8.24, backends are managed in matplotlib and can be externally registered.:DeprecationWarning",
 
   # Ignore jupyter_client warnings
-  "ignore:unclosed <socket.socket:ResourceWarning",
-  "ignore:unclosed event loop:ResourceWarning",
-  "ignore:There is no current event loop:DeprecationWarning",
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
-
-  # Ignore datetime warning.
-  "ignore:datetime.datetime.utc:DeprecationWarning",
-
-  # https://github.com/python-trio/trio/issues/3053
-  "ignore:The `hash` argument is deprecated in favor of `unsafe_hash` and will be removed in or after August 2025.",
 
   # ignore unclosed sqlite in traits
   "ignore:unclosed database in <sqlite3.Connection:ResourceWarning",

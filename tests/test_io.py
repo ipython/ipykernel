@@ -18,8 +18,6 @@ from jupyter_client.session import Session
 
 from ipykernel.iostream import _PARENT, BackgroundSocket, IOPubThread, OutStream
 
-pytestmark = pytest.mark.anyio
-
 
 @pytest.fixture()
 def ctx():

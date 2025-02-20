@@ -49,7 +49,7 @@ class IOPubThread:
     whose IO is always run in a thread.
     """
 
-    def __init__(self, socket: zmq_anyio.Socket, pipe=False):
+    def __init__(self, socket: zmq_anyio.Socket, pipe: bool = False):
         """Create IOPub thread
 
         Parameters

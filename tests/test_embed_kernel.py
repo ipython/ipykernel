@@ -109,10 +109,7 @@ def test_embed_kernel_basic():
     with setup_kernel(cmd) as client:
         # oinfo a (int)
         client.inspect("a")
-        while True:
-            msg = client.get_shell_msg(timeout=TIMEOUT)
-            if msg["msg_type"] == "inspect_reply":
-                break
+        msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg["content"]
         assert content["found"]
 

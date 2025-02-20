@@ -241,7 +241,10 @@ class IOPubThread:
         """Close the IOPub thread."""
         if self.closed:
             return
-        self._pipe_in0.close()
+        try:
+            self._pipe_in0.close()
+        except Exception:
+            pass
         if self._pipe_flag:
             self._pipe_in1.close()
         if self.socket is not None:

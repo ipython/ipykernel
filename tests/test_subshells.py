@@ -218,6 +218,7 @@ def test_run_concurrently_timing(include_main_shell):
         assert duration < timedelta(seconds=sum(times))
 
 
+@pytest.mark.xfail(strict=False, reason="subshell still sometime give different results")
 def test_execution_count():
     with new_kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]

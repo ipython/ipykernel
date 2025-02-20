@@ -426,7 +426,7 @@ class Kernel(SingletonConfigurable):
 
     async def process_shell(self, socket=None):
         # socket=None is valid if kernel subshells are not supported.
-        _socket = self.shell_socket if socket is None else socket
+        _socket = t.cast(zmq_anyio.Socket, self.shell_socket if socket is None else socket)
         async with _socket:
             try:
                 while True:

@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import os
+import tracemalloc
+import warnings
 from math import inf
 from typing import Any, Callable, no_type_check
 from unittest.mock import MagicMock
@@ -207,3 +209,35 @@ async def ipkernel(anyio_backend):
         yield kernel
         kernel.destroy()
         ZMQInteractiveShell.clear_instance()
+
+
+@pytest.fixture()
+def tracemalloc_resource_warning(recwarn, N=10):
+    """fixture to enable tracemalloc for a single test, and report the
+    location of the leaked resource
+
+    We cannot only enable tracemalloc, as otherwise it is stopped just after the
+    test, the frame cache is cleared by tracemalloc.stop() and thus the warning
+    printing code get None when doing
+    `tracemalloc.get_object_traceback(r.source)`.
+
+    So we need to both filter the warnings to enable ResourceWarning, and loop
+    through it print the stack before we stop tracemalloc and continue.
+
+    """
+
+    tracemalloc.start(N)
+    with warnings.catch_warnings():
+        warnings.simplefilter("always", category=ResourceWarning)
+        yield None
+    try:
+        for r in recwarn:
+            if r.category is ResourceWarning and r.source is not None:
+                tb = tracemalloc.get_object_traceback(r.source)
+                if tb:
+                    info = f"Leaking resource (-):{r}\n |" + "\n |".join(tb.format())
+                    # technically an Error and not a failure as we fail in the fixture
+                    # and not the test
+                    pytest.fail(info)
+    finally:
+        tracemalloc.stop()

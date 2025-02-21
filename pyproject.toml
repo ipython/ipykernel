@@ -173,6 +173,10 @@ filterwarnings= [
   # Ignore jupyter_client warnings
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
 
+  # we do not want to raise on resources warnings, or we will not have a chance to
+  # collect the messages and print the location of the leak
+  "always::ResourceWarning",
+
   # ignore unclosed sqlite in traits
   "ignore:unclosed database in <sqlite3.Connection:ResourceWarning",
 

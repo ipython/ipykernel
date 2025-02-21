@@ -761,7 +761,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def start(self) -> None:
         """Start the application."""
-        backend = "trio" if self.trio_loop else "asyncio"
+        backend = "trio"# if self.trio_loop else "asyncio"
         run(partial(self._start, backend), backend=backend)
 
     async def _wait_to_enter_eventloop(self) -> None:

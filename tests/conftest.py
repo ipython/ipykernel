@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import tracemalloc
 import warnings
 from math import inf
 from typing import Any, Callable, no_type_check
@@ -23,6 +22,11 @@ try:
 except ImportError:
     # Windows
     resource = None  # type:ignore
+
+try:
+    import tracemalloc
+except ModuleNotFoundError:
+    tracemalloc = None
 
 
 @pytest.fixture()
@@ -225,6 +229,9 @@ def tracemalloc_resource_warning(recwarn, N=10):
     through it print the stack before we stop tracemalloc and continue.
 
     """
+    if tracemalloc is None:
+        yield
+        return
 
     tracemalloc.start(N)
     with warnings.catch_warnings():
@@ -235,7 +242,7 @@ def tracemalloc_resource_warning(recwarn, N=10):
             if r.category is ResourceWarning and r.source is not None:
                 tb = tracemalloc.get_object_traceback(r.source)
                 if tb:
-                    info = f"Leaking resource (-):{r}\n |" + "\n |".join(tb.format())
+                    info = f"Leaking resource:{r}\n |" + "\n |".join(tb.format())
                     # technically an Error and not a failure as we fail in the fixture
                     # and not the test
                     pytest.fail(info)

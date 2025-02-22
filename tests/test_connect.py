@@ -19,21 +19,6 @@ from ipykernel.kernelapp import IPKernelApp
 
 from .utils import TemporaryWorkingDirectory
 
-
-@pytest.fixture(scope="module", autouse=True)
-def _enable_tracemalloc():
-    try:
-        import tracemalloc
-    except ModuleNotFoundError:
-        # pypy
-        tracemalloc = None
-    if tracemalloc is not None:
-        tracemalloc.start()
-    yield
-    if tracemalloc is not None:
-        tracemalloc.stop()
-
-
 sample_info: dict = {
     "ip": "1.2.3.4",
     "transport": "ipc",
@@ -133,7 +118,7 @@ def test_port_bind_failure_recovery(request):
             app.init_sockets()
 
 
-def test_port_bind_failure_gives_up_retries(request):
+def test_port_bind_failure_gives_up_retries(request, tracemalloc_resource_warning):
     cfg = Config()
     with TemporaryWorkingDirectory() as d:
         cfg.ProfileDir.location = d

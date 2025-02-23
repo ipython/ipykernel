@@ -51,7 +51,7 @@ async def test_direct_execute_request_aborting(ipkernel):
     assert reply["content"]["status"] == "aborted"
 
 
-async def test_complete_request(ipkernel):
+async def test_complete_request(ipkernel, tracemalloc_resource_warning):
     reply = await ipkernel.test_shell_message("complete_request", dict(code="hello", cursor_pos=0))
     assert reply["header"]["msg_type"] == "complete_reply"
     ipkernel.use_experimental_completions = False

@@ -132,11 +132,61 @@ build = [
 [tool.mypy]
 files = "ipykernel"
 strict = true
+#disable_error_code = [ "import-not-found"]
 disable_error_code = ["no-untyped-def", "no-untyped-call", "import-not-found"]
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 follow_imports = "normal"
-pretty = true
+#pretty = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+    "ipykernel._eventloop_macos",
+    "ipykernel.comm.comm",
+    "ipykernel.comm.manager",
+    "ipykernel.compiler",
+    "ipykernel.connect",
+    "ipykernel.control",
+    "ipykernel.datapub",
+    "ipykernel.debugger",
+    "ipykernel.displayhook",
+    "ipykernel.embed",
+    "ipykernel.eventloops",
+    "ipykernel.gui.gtk3embed",
+    "ipykernel.gui.gtkembed",
+    "ipykernel.heartbeat",
+    "ipykernel.inprocess.blocking",
+    "ipykernel.inprocess.channels",
+    "ipykernel.inprocess.client",
+    "ipykernel.inprocess.ipkernel",
+    "ipykernel.inprocess.manager",
+    "ipykernel.inprocess.session",
+    "ipykernel.inprocess.socket",
+    "ipykernel.iostream",
+    "ipykernel.ipkernel",
+    "ipykernel.jsonutil",
+    "ipykernel.kernelapp",
+    "ipykernel.kernelbase",
+    "ipykernel.log",
+    "ipykernel.parentpoller",
+    "ipykernel.pickleutil",
+    "ipykernel.serialize",
+    "ipykernel.shellchannel",
+    "ipykernel.subshell",
+    "ipykernel.subshell_manager",
+    "ipykernel.thread",
+    "ipykernel.trio_runner",
+    "ipykernel.zmqshell"
+]
+#check_untyped_defs = false
+#disallow_incomplete_defs = false
+#disallow_untyped_calls = false
+#disallow_untyped_decorators = false
+#disallow_untyped_defs = false
+#ignore_missing_imports = true
+#follow_untyped_imports = false
+
+
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -173,6 +223,10 @@ filterwarnings= [
 
   # Ignore jupyter_client warnings
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
+
+  # we do not want to raise on resources warnings, or we will not have a chance to
+  # collect the messages and print the location of the leak
+  "always::ResourceWarning",
 
   # ignore unclosed sqlite in traits
   "ignore:unclosed database in <sqlite3.Connection:ResourceWarning",

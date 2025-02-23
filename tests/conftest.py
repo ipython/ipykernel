@@ -1,5 +1,4 @@
 import logging
-import os
 import warnings
 from math import inf
 from threading import Event

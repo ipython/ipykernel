@@ -1,6 +1,7 @@
 """
 store the current version info of the server.
 """
+
 from __future__ import annotations
 
 import re

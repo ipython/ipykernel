@@ -14,6 +14,14 @@ if os.name == "nt":
 
 @flaky(max_runs=3)
 def test_ipython_start_kernel_userns():
+    import IPython
+
+    if IPython.version_info > (9, 0):  # noqa:SIM108
+        EXPECTED = "IPythonMainModule"
+    else:
+        # not this since https://github.com/ipython/ipython/pull/14754
+        EXPECTED = "DummyMod"
+
     cmd = dedent(
         """
         from ipykernel.kernelapp import launch_new_instance
@@ -40,7 +48,7 @@ def test_ipython_start_kernel_userns():
         content = msg["content"]
         assert content["found"]
         text = content["data"]["text/plain"]
-        assert "DummyMod" in text
+        assert EXPECTED in text
 
 
 @flaky(max_runs=3)

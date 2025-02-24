@@ -20,7 +20,7 @@ def test_ipython_start_kernel_userns():
         EXPECTED = "IPythonMainModule"
     else:
         # not this since https://github.com/ipython/ipython/pull/14754
-        EXPECTED = "DummyModule"
+        EXPECTED = "DummyMod"
 
     cmd = dedent(
         """

@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import ast
+import gc
 import os.path
 import platform
 import signal
@@ -601,6 +602,7 @@ def test_control_thread_priority():
 
 
 def test_sequential_control_messages():
+    gc.collect()
     with new_kernel() as kc:
         msg_id = kc.execute("import time")
         get_reply(kc, msg_id)

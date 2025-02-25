@@ -419,15 +419,6 @@ class Kernel(SingletonConfigurable):
 
         async with create_task_group() as tg:
             tg.start_soon(self.process_shell, socket)
-            if subshell_id is None:
-                # Main subshell.
-                await to_thread.run_sync(self.shell_stop.wait)
-
-                if not self._eventloop_set.is_set():
-                    # Stop the async task that is waiting for the eventloop to be set.
-                    self._eventloop_set.set()
-
-                tg.cancel_scope.cancel()
 
     async def process_shell(self, socket=None):
         # socket=None is valid if kernel subshells are not supported.
@@ -576,6 +567,14 @@ class Kernel(SingletonConfigurable):
             else:
                 if not self._is_test and self.shell_socket is not None:
                     tg.start_soon(self.shell_main, None)
+
+            await to_thread.run_sync(self.shell_stop.wait)
+
+            if not self._eventloop_set.is_set():
+                # Stop the async task that is waiting for the eventloop to be set.
+                self._eventloop_set.set()
+
+            tg.cancel_scope.cancel()
 
     def stop(self):
         self.shell_stop.set()

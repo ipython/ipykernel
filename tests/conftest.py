@@ -21,6 +21,9 @@ from ipykernel.zmqshell import ZMQInteractiveShell
 
 # ensure we don't leak history managers
 if os.name != "nt":
+    import tracemalloc
+
+    tracemalloc.start(20)
     HistoryManager._max_inst = 1
 
 

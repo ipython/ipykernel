@@ -7,7 +7,6 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
 
 
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_comm(kernel: Kernel) -> None:
     manager = CommManager(kernel=kernel)
     kernel.comm_manager = manager  # type:ignore
@@ -35,7 +34,6 @@ def test_comm(kernel: Kernel) -> None:
     assert c.target_name == "bar"
 
 
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_comm_manager(kernel: Kernel) -> None:
     manager = CommManager(kernel=kernel)
     msgs = []
@@ -101,7 +99,6 @@ def test_comm_manager(kernel: Kernel) -> None:
     assert comm._closed
 
 
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_comm_in_manager(ipkernel: IPythonKernel) -> None:
     with pytest.deprecated_call():
         comm = Comm()

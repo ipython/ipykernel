@@ -19,13 +19,6 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
 from ipykernel.zmqshell import ZMQInteractiveShell
 
-# ensure we don't leak history managers
-if os.name != "nt":
-    import tracemalloc
-
-    tracemalloc.start(20)
-    HistoryManager._max_inst = 1
-
 
 @pytest.fixture(scope="session", autouse=True)
 def _garbage_collection(request):
@@ -42,6 +35,10 @@ try:
     import tracemalloc
 except ModuleNotFoundError:
     tracemalloc = None
+
+# ensure we don't leak history managers
+if os.name != "nt":
+    HistoryManager._max_inst = 1
 
 
 pytestmark = pytest.mark.anyio
@@ -225,8 +222,6 @@ async def ipkernel(anyio_backend):
             yield kernel
         finally:
             kernel.destroy()
-            kernel.shell._atexit_once()
-            kernel.shell.configurables = []
             ZMQInteractiveShell.clear_instance()
 
 

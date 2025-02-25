@@ -59,7 +59,6 @@ windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on w
 
 @windows_skip
 @pytest.mark.skipif(sys.platform == "darwin", reason="hangs on macos")
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_tk_loop(kernel):
     def do_thing():
         time.sleep(1)
@@ -91,19 +90,16 @@ def test_asyncio_loop(kernel):
 
 
 @windows_skip
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_enable_gui(kernel):
     enable_gui("tk", kernel)
 
 
 @pytest.mark.skipif(sys.platform != "darwin", reason="MacOS-only")
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
 
 
 @pytest.mark.parametrize("gui", qt_guis_avail)
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_qt_enable_gui(gui, kernel, capsys):
     if os.getenv("GITHUB_ACTIONS", None) == "true" and gui == "qt5":
         pytest.skip("Qt5 and GitHub action crash CPython")

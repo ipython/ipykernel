@@ -22,16 +22,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.13"]
-        include:
-          - os: ubuntu-latest
-            python-version: "pypy-3.9"
-          - os: macos-latest
-            python-version: "3.10"
-          - os: ubuntu-latest
-            python-version: "3.11"
-          - os: ubuntu-latest
-            python-version: "3.12"
+        python-version:
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "pypy-3.10"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,7 +56,7 @@ jobs:
 
       - name: Run the tests on Windows
         timeout-minutes: 15
-        if: ${{  startsWith(matrix.os, 'windows') }}
+        if: ${{ !startsWith( matrix.python-version, 'pypy' ) && startsWith(matrix.os, 'windows') }}
         run: |
           hatch run cov:nowarn || hatch run test:nowarn --lf
 

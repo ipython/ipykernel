@@ -207,8 +207,10 @@ async def kernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockKernel()
         tg.start_soon(kernel.start)
-        yield kernel
-        kernel.destroy()
+        try:
+            yield kernel
+        finally:
+            kernel.destroy()
 
 
 @pytest.fixture()
@@ -216,9 +218,13 @@ async def ipkernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockIPyKernel()
         tg.start_soon(kernel.start)
-        yield kernel
-        kernel.destroy()
-        ZMQInteractiveShell.clear_instance()
+        try:
+            yield kernel
+        finally:
+            kernel.destroy()
+            kernel.shell.history_manager = None
+            kernel.shell.configurables = []
+            ZMQInteractiveShell.clear_instance()
 
 
 @pytest.fixture()

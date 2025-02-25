@@ -233,7 +233,7 @@ def test_magics(tmp_path):
         socket.close()
         context.destroy()
     finally:
-        shell.history_manager = None
+        shell._atexit_once()
         shell.configurables = []
         InteractiveShell.clear_instance()
 
@@ -258,7 +258,7 @@ def test_zmq_interactive_shell(kernel):
             shell.system_piped("dir")
         shell.ask_exit()
     finally:
-        shell.history_manager = None
+        shell._atexit_once()
         shell.configurables = []
         ZMQInteractiveShell.clear_instance()
 

@@ -225,7 +225,7 @@ async def ipkernel(anyio_backend):
             yield kernel
         finally:
             kernel.destroy()
-            kernel.shell.history_manager = None
+            kernel.shell._atexit_once()
             kernel.shell.configurables = []
             ZMQInteractiveShell.clear_instance()
 

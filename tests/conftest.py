@@ -1,4 +1,5 @@
 import logging
+import os
 import warnings
 from math import inf
 from threading import Event
@@ -10,11 +11,16 @@ import zmq
 import zmq_anyio
 from anyio import create_memory_object_stream, create_task_group, sleep
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
+from IPython.core.history import HistoryManager
 from jupyter_client.session import Session
 
 from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
 from ipykernel.zmqshell import ZMQInteractiveShell
+
+# ensure we don't leak History managers
+if os.name != "nt":
+    HistoryManager._max_inst = 1
 
 try:
     import resource

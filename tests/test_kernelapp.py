@@ -1,4 +1,3 @@
-import gc
 import json
 import os
 import threading
@@ -31,7 +30,6 @@ def test_blackhole():
 
 
 def test_start_app():
-    gc.collect()
     app = IPKernelApp()
     app.kernel = MockKernel()
 

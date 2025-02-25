@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 import warnings
@@ -18,9 +19,15 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.kernelbase import Kernel
 from ipykernel.zmqshell import ZMQInteractiveShell
 
-# ensure we don't leak History managers
+# ensure we don't leak history managers
 if os.name != "nt":
     HistoryManager._max_inst = 1
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _garbage_collection(request):
+    gc.collect()
+
 
 try:
     import resource

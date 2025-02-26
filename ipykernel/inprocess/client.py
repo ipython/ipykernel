@@ -11,7 +11,6 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-
 from typing import Any, Optional
 
 from jupyter_client.client import KernelClient

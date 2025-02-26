@@ -36,11 +36,14 @@ def test_start_app():
     def trigger_stop():
         time.sleep(1)
         app.stop()
+        print("stopped from thread")
 
     thread = threading.Thread(target=trigger_stop)
     thread.start()
     app.init_sockets()
+    print("starting")
     app.start()
+    print("stopped")
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()

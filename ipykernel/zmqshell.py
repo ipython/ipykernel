@@ -483,9 +483,7 @@ class ZMQInteractiveShell(InteractiveShell):
         # don't like it but we have few other choices.
         # See https://github.com/tqdm/tqdm/pull/1628
         if "IPKernelApp" not in self.config:
-            self.config["IPKernelApp"] = Config(
-                {"tqdm": "dummy value for https://github.com/tqdm/tqdm/pull/1628"}
-            )
+            self.config.IPKernelApp.tqdm = "dummy value for https://github.com/tqdm/tqdm/pull/1628"
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)

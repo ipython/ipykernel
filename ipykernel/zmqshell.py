@@ -34,7 +34,6 @@ from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
 from traitlets import Any, CBool, CBytes, Dict, Instance, Type, default, observe
-from traitlets.config import Config
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook

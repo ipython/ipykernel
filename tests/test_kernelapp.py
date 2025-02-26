@@ -38,9 +38,12 @@ def test_start_app():
         app.stop()
 
     thread = threading.Thread(target=trigger_stop)
+    t0 = time.time()
     thread.start()
     app.init_sockets()
     app.start()
+    t1 = time.time()
+    assert t1 - t0 >= 1
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()

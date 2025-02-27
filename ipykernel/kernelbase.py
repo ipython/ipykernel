@@ -424,11 +424,6 @@ class Kernel(SingletonConfigurable):
             if subshell_id is None:
                 # Main subshell.
                 await to_thread.run_sync(self.shell_stop.wait)
-
-                if not self._eventloop_set.is_set():
-                    # Stop the async task that is waiting for the eventloop to be set.
-                    self._eventloop_set.set()
-
                 tg.cancel_scope.cancel()
 
     async def process_shell(self, socket=None):
@@ -580,6 +575,10 @@ class Kernel(SingletonConfigurable):
                     tg.start_soon(self.shell_main, None)
 
     def stop(self):
+        if not self._eventloop_set.is_set():
+            # Stop the async task that is waiting for the eventloop to be set.
+            self._eventloop_set.set()
+
         self.shell_stop.set()
         self.control_stop.set()
 

@@ -37,7 +37,7 @@ except ImportError:
 import psutil
 import zmq
 import zmq_anyio
-from anyio import TASK_STATUS_IGNORED, Event, create_task_group, sleep, to_thread
+from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
 from anyio.abc import TaskStatus
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -236,11 +236,13 @@ class Kernel(SingletonConfigurable):
         "list_subshell_request",
     ]
 
-    _eventloop_set: Event = Event()
+    _eventloop_set: threading.Event
 
     def __init__(self, **kwargs):
         """Initialize the kernel."""
         super().__init__(**kwargs)
+
+        self._eventloop_set = threading.Event()
 
         # Kernel application may swap stdout and stderr to OutStream,
         # which is the case in `IPKernelApp.init_io`, hence `sys.stdout`

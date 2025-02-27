@@ -174,11 +174,9 @@ class MockKernel(KernelMixin, Kernel):  # type:ignore
     def __init__(self, *args, **kwargs):
         self._initialize()
         self.shell = MagicMock()
-        #self.shell_stop = Event()
-        #self.control_stop = Event()
+        self.shell_stop = Event()
+        self.control_stop = Event()
         super().__init__(*args, **kwargs)
-        print(f"{self.shell_stop=}")
-        print(f"{self.control_stop=}")
 
     async def do_execute(
         self, code, silent, store_history=True, user_expressions=None, allow_stdin=False

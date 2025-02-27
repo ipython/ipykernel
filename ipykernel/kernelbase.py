@@ -235,11 +235,13 @@ class Kernel(SingletonConfigurable):
         "list_subshell_request",
     ]
 
-    _eventloop_set = threading.Event()
+    _eventloop_set: threading.Event
 
     def __init__(self, **kwargs):
         """Initialize the kernel."""
         super().__init__(**kwargs)
+
+        self._eventloop_set = threading.Event()
 
         # Kernel application may swap stdout and stderr to OutStream,
         # which is the case in `IPKernelApp.init_io`, hence `sys.stdout`

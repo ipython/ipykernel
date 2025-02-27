@@ -1,4 +1,5 @@
 """A thread for a shell channel."""
+
 import zmq
 import zmq_anyio
 

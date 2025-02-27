@@ -235,7 +235,7 @@ class Kernel(SingletonConfigurable):
         "list_subshell_request",
     ]
 
-    _eventloop_set: Event = Event()
+    _eventloop_set = threading.Event()
 
     def __init__(self, **kwargs):
         """Initialize the kernel."""

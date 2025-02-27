@@ -36,7 +36,7 @@ except ImportError:
 
 import psutil
 import zmq
-from anyio import TASK_STATUS_IGNORED, Event, create_task_group, sleep, to_thread
+from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
 from anyio.abc import TaskStatus
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session

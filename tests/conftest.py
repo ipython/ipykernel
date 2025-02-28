@@ -12,7 +12,6 @@ import zmq
 import zmq_anyio
 from anyio import create_memory_object_stream, create_task_group, sleep
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
-from IPython.core.history import HistoryManager
 from jupyter_client.session import Session
 
 from ipykernel.ipkernel import IPythonKernel
@@ -35,11 +34,6 @@ try:
     import tracemalloc
 except ModuleNotFoundError:
     tracemalloc = None
-
-# ensure we don't leak history managers
-if os.name != "nt":
-    HistoryManager._max_inst = 1
-
 
 pytestmark = pytest.mark.anyio
 

@@ -37,11 +37,12 @@ async def iopub_thread(ctx):
             thread = IOPubThread(pub)
             thread.start()
 
-            yield thread
-
-            await pub.stop()
-            thread.stop()
-            thread.close()
+            try:
+                yield thread
+            finally:
+                await pub.stop()
+                thread.stop()
+                thread.close()
     except BaseException:
         pass
 

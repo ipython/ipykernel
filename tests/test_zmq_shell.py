@@ -229,10 +229,9 @@ def test_magics(tmp_path):
         if os.name == "posix":
             magics.man("ls")
         magics.autosave("10")
-
+    finally:
         socket.close()
         context.destroy()
-    finally:
         shell.configurables = []
         InteractiveShell.clear_instance()
 

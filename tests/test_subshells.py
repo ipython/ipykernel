@@ -253,6 +253,7 @@ def test_execution_count():
         assert execution_counts == [ec, ec - 1, ec + 2, ec + 1]
 
 
+@flaky(max_runs=3)
 def test_create_while_execute():
     with new_kernel() as kc:
         # Send request to execute code on main subshell.

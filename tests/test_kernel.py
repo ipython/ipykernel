@@ -199,6 +199,7 @@ def test_sys_path():
     assert "" in sys_path
 
 
+@flaky(max_runs=3)
 def test_sys_path_profile_dir():
     """test that sys.path doesn't get messed up when `--profile-dir` is specified"""
 

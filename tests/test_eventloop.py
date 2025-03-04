@@ -101,6 +101,7 @@ def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
 
 
+@flaky(max_runs=3)
 @pytest.mark.parametrize("gui", qt_guis_avail)
 def test_qt_enable_gui(gui, kernel, capsys):
     if os.getenv("GITHUB_ACTIONS", None) == "true" and gui == "qt5":

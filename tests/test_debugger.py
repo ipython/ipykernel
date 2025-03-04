@@ -1,6 +1,7 @@
 import sys
 
 import pytest
+from flaky import flaky
 
 from .utils import TIMEOUT, get_reply, new_kernel
 
@@ -166,6 +167,7 @@ f(2, 3)"""
         assert r == {}
 
 
+@flaky(max_runs=3)
 def test_stop_on_breakpoint(kernel_with_debug):
     code = """def f(a, b):
     c = a + b

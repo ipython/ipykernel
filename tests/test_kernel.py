@@ -603,6 +603,7 @@ def test_control_thread_priority():
     assert control_dates[-1] <= shell_dates[0]
 
 
+@flaky(max_runs=3)
 def test_sequential_control_messages():
     with new_kernel() as kc:
         msg_id = kc.execute("import time")

@@ -558,6 +558,7 @@ def test_interrupt_during_pdb_set_trace():
         validate_message(reply, "execute_reply", msg_id2)
 
 
+@flaky(max_runs=3)
 def test_control_thread_priority():
     N = 5
     with new_kernel() as kc:

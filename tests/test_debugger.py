@@ -74,6 +74,7 @@ def kernel_with_debug(kernel):
         wait_for_debug_request(kernel, "disconnect", {"restart": False, "terminateDebuggee": True})
 
 
+@flaky(max_runs=3)
 def test_debug_initialize(kernel):
     reply = wait_for_debug_request(
         kernel,

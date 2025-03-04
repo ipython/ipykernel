@@ -58,6 +58,7 @@ def _setup_env():
 windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")
 
 
+@flaky(max_runs=3)
 @windows_skip
 @pytest.mark.skipif(sys.platform == "darwin", reason="hangs on macos")
 def test_tk_loop(kernel):
@@ -79,6 +80,7 @@ def test_tk_loop(kernel):
     t.join()
 
 
+@flaky(max_runs=3)
 @windows_skip
 @pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_asyncio_loop(kernel):

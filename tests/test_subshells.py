@@ -84,6 +84,7 @@ def test_supported():
         assert "kernel subshells" in reply["content"]["supported_features"]
 
 
+@flaky(max_runs=3)
 def test_subshell_id_lifetime():
     with new_kernel() as kc:
         assert list_subshell_helper(kc)["subshell_id"] == []

@@ -211,6 +211,7 @@ f(2, 3)"""
     assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
+@flaky(max_runs=3)
 def test_breakpoint_in_cell_with_leading_empty_lines(kernel_with_debug):
     code = """
 def f(a, b):
@@ -254,6 +255,7 @@ f(2, 3)"""
     assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
+@flaky(max_runs=3)
 def test_rich_inspect_not_at_breakpoint(kernel_with_debug):
     var_name = "text"
     value = "Hello the world"

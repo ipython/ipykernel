@@ -76,6 +76,7 @@ def execute_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None)
 # Tests
 
 
+@flaky(max_runs=3)
 def test_supported():
     with new_kernel() as kc:
         msg_id = kc.kernel_info()

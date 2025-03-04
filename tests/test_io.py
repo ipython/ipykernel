@@ -102,7 +102,8 @@ async def test_background_socket(iopub_thread):
     sock.send(b"hi")
 
 
-async def test_outstream1(iopub_thread):
+@flaky(max_runs=3)
+async def test_outstream(iopub_thread):
     session = Session()
     pub = iopub_thread.socket
 
@@ -116,21 +117,16 @@ async def test_outstream1(iopub_thread):
         stream = OutStream(session, iopub_thread, "stdout", watchfd=False)
         stream.close()
 
-
-@flaky(max_runs=3)
-async def test_outstream2(iopub_thread):
-    session = Session()
     stream = OutStream(session, iopub_thread, "stdout", isatty=True, echo=io.StringIO())
 
-    with pytest.raises(io.UnsupportedOperation):
-        stream.fileno()
-    stream._watch_pipe_fd()
-    stream.flush()
-    stream.write("hi")
-    stream.writelines(["ab", "cd"])
-    assert stream.writable()
-
-    stream.close()
+    with stream:
+        with pytest.raises(io.UnsupportedOperation):
+            stream.fileno()
+        stream._watch_pipe_fd()
+        stream.flush()
+        stream.write("hi")
+        stream.writelines(["ab", "cd"])
+        assert stream.writable()
 
 
 async def test_event_pipe_gc(iopub_thread):

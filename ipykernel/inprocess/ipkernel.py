@@ -207,7 +207,7 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
         """Activate pylab support at runtime."""
         if not gui:
             gui = self.kernel.gui
-        return super().enable_pylab(gui, import_all, welcome_message)
+        return super().enable_pylab(gui, import_all, welcome_message)  # type: ignore[call-arg]
 
 
 InteractiveShellABC.register(InProcessInteractiveShell)

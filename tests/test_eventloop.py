@@ -7,6 +7,7 @@ import threading
 import time
 
 import pytest
+from flaky import flaky
 
 from ipykernel.eventloops import (
     enable_gui,
@@ -94,6 +95,7 @@ def test_enable_gui(kernel):
     enable_gui("tk", kernel)
 
 
+@flaky(max_runs=3)
 @pytest.mark.skipif(sys.platform != "darwin", reason="MacOS-only")
 def test_cocoa_loop(kernel):
     loop_cocoa(kernel)

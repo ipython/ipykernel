@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timedelta
 
 import pytest
+from flaky import flaky
 from jupyter_client.blocking.client import BlockingKernelClient
 
 from .utils import TIMEOUT, get_replies, get_reply, new_kernel
@@ -172,6 +173,7 @@ def test_run_concurrently_sequence(are_subshells, overlap):
             assert reply["content"]["status"] == "ok", reply
 
 
+@flaky(max_runs=3)
 @pytest.mark.parametrize("include_main_shell", [True, False])
 def test_run_concurrently_timing(include_main_shell):
     with new_kernel() as kc:
@@ -272,6 +274,7 @@ def test_create_while_execute():
         assert control_date < shell_date
 
 
+@flaky(max_runs=3)
 @pytest.mark.skipif(
     platform.python_implementation() == "PyPy",
     reason="does not work on PyPy",

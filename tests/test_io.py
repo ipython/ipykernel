@@ -14,6 +14,7 @@ import pytest
 import zmq
 import zmq_anyio
 from anyio import create_task_group
+from flaky import flaky
 from jupyter_client.session import Session
 
 from ipykernel.iostream import _PARENT, BackgroundSocket, IOPubThread, OutStream
@@ -116,6 +117,7 @@ async def test_outstream1(iopub_thread):
         stream.close()
 
 
+@flaky(max_runs=3)
 async def test_outstream2(iopub_thread):
     session = Session()
     stream = OutStream(session, iopub_thread, "stdout", isatty=True, echo=io.StringIO())

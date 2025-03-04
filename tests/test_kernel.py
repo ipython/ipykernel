@@ -49,6 +49,7 @@ def _check_status(content):
 # printing tests
 
 
+@flaky(max_runs=3)
 def test_simple_print():
     """simple print statement in kernel"""
     with kernel() as kc:

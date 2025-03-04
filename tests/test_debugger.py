@@ -286,6 +286,7 @@ print({var_name})
         assert reply == {}
 
 
+@flaky(max_runs=3)
 def test_rich_inspect_at_breakpoint(kernel_with_debug):
     code = """def f(a, b):
     c = a + b

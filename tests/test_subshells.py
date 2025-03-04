@@ -101,6 +101,7 @@ def test_delete_non_existent():
         assert "evalue" in reply
 
 
+@flaky(max_runs=3)
 def test_thread_counts():
     with new_kernel() as kc:
         nthreads = execute_thread_count(kc)

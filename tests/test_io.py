@@ -122,14 +122,15 @@ async def test_outstream2(iopub_thread):
     session = Session()
     stream = OutStream(session, iopub_thread, "stdout", isatty=True, echo=io.StringIO())
 
-    with stream:
-        with pytest.raises(io.UnsupportedOperation):
-            stream.fileno()
-        stream._watch_pipe_fd()
-        stream.flush()
-        stream.write("hi")
-        stream.writelines(["ab", "cd"])
-        assert stream.writable()
+    with pytest.raises(io.UnsupportedOperation):
+        stream.fileno()
+    stream._watch_pipe_fd()
+    stream.flush()
+    stream.write("hi")
+    stream.writelines(["ab", "cd"])
+    assert stream.writable()
+
+    stream.close()
 
 
 async def test_event_pipe_gc(iopub_thread):

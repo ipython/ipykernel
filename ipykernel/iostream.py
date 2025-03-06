@@ -97,11 +97,11 @@ class IOPubThread:
         while True:
             await sleep(self._event_pipe_gc_seconds)
             try:
-                await self._event_pipe_gc()
+                self._event_pipe_gc()
             except Exception as e:
                 print(f"Exception in IOPubThread._event_pipe_gc: {e}", file=sys.__stderr__)
 
-    async def _event_pipe_gc(self):
+    def _event_pipe_gc(self):
         """run a single garbage collection on event pipes"""
         if not self._event_pipes:
             # don't acquire the lock if there's nothing to do

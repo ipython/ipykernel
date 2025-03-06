@@ -430,7 +430,6 @@ class Kernel(SingletonConfigurable):
 
     async def process_shell(self, socket=None):
         # socket=None is valid if kernel subshells are not supported.
-        _socket = t.cast(zmq_anyio.Socket, self.shell_socket if socket is None else socket)
         try:
             while True:
                 await self.process_shell_message(socket=socket)
@@ -567,7 +566,7 @@ class Kernel(SingletonConfigurable):
                 manager = self.shell_channel_thread.manager
                 self.shell_channel_thread.start_soon(self.shell_channel_thread_main)
                 self.shell_channel_thread.start_soon(
-                    partial(manager.listen_from_control, self.shell_main)
+                    partial(manager.listen_from_control, self.shell_main, self.shell_channel_thread)
                 )
                 self.shell_channel_thread.start_soon(manager.listen_from_subshells)
                 self.shell_channel_thread.start()

@@ -118,6 +118,11 @@ class SubshellManager:
             await thread.task_group.start(self._control_other_socket.start)
         return self._control_other_socket
 
+    async def get_control_shell_channel_socket(self, thread: BaseThread) -> zmq_anyio.Socket:
+        if not self._control_shell_channel_socket.started.is_set():
+            await thread.task_group.start(self._control_shell_channel_socket.start)
+        return self._control_shell_channel_socket
+
     def get_other_socket(self, subshell_id: str | None) -> zmq_anyio.Socket:
         """Return the other inproc pair socket for a subshell.
 
@@ -148,18 +153,17 @@ class SubshellManager:
         with self._lock_cache:
             return list(self._cache)
 
-    async def listen_from_control(self, subshell_task: t.Any) -> None:
+    async def listen_from_control(self, subshell_task: t.Any, thread: BaseThread) -> None:
         """Listen for messages on the control inproc socket, handle those messages and
         return replies on the same socket.  Runs in the shell channel thread.
         """
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
-        socket = self._control_shell_channel_socket
-        async with socket:
-            while True:
-                request = await socket.arecv_json().wait()
-                reply = await self._process_control_request(request, subshell_task)
-                await socket.asend_json(reply).wait()
+        socket = await self.get_control_shell_channel_socket(thread)
+        while True:
+            request = await socket.arecv_json().wait()
+            reply = await self._process_control_request(request, subshell_task)
+            await socket.asend_json(reply).wait()
 
     async def listen_from_subshells(self) -> None:
         """Listen for reply messages on inproc sockets of all subshells and resend
@@ -265,8 +269,8 @@ class SubshellManager:
 
         shell_channel_socket = self._get_shell_channel_socket(subshell_id)
 
-        task_group.start_soon(shell_channel_socket.start)
-        await shell_channel_socket.started.wait()
+        if not shell_channel_socket.started.is_set():
+            await task_group.start(shell_channel_socket.start)
         try:
             while True:
                 msg = await shell_channel_socket.arecv_multipart(copy=False).wait()

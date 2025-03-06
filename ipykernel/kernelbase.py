@@ -420,6 +420,8 @@ class Kernel(SingletonConfigurable):
             socket = None
 
         async with create_task_group() as tg:
+            if not socket.started.is_set():
+                await tg.start(socket.start)
             tg.start_soon(self.process_shell, socket)
             if subshell_id is None:
                 # Main subshell.
@@ -429,14 +431,13 @@ class Kernel(SingletonConfigurable):
     async def process_shell(self, socket=None):
         # socket=None is valid if kernel subshells are not supported.
         _socket = t.cast(zmq_anyio.Socket, self.shell_socket if socket is None else socket)
-        async with _socket:
-            try:
-                while True:
-                    await self.process_shell_message(socket=socket)
-            except BaseException:
-                if self.shell_stop.is_set():
-                    return
-                raise
+        try:
+            while True:
+                await self.process_shell_message(socket=socket)
+        except BaseException:
+            if self.shell_stop.is_set():
+                return
+            raise
 
     async def process_shell_message(self, msg=None, socket=None):
         # If socket is None kernel subshells are not supported so use socket=shell_socket.

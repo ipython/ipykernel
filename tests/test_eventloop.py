@@ -7,7 +7,6 @@ import threading
 import time
 
 import pytest
-from flaky import flaky
 
 from ipykernel.eventloops import (
     enable_gui,
@@ -58,7 +57,6 @@ def _setup_env():
 windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")
 
 
-@flaky(max_runs=3)
 @windows_skip
 @pytest.mark.skipif(sys.platform == "darwin", reason="hangs on macos")
 def test_tk_loop(kernel):
@@ -80,7 +78,6 @@ def test_tk_loop(kernel):
     t.join()
 
 
-@flaky(max_runs=3)
 @windows_skip
 @pytest.mark.parametrize("anyio_backend", ["asyncio"])
 def test_asyncio_loop(kernel):
@@ -97,13 +94,11 @@ def test_enable_gui(kernel):
     enable_gui("tk", kernel)
 
 
-@flaky(max_runs=3)
 @pytest.mark.skipif(sys.platform != "darwin", reason="MacOS-only")
 def test_cocoa_loop(kernel):
     loop_cocoa(kernel)
 
 
-@flaky(max_runs=3)
 @pytest.mark.parametrize("gui", qt_guis_avail)
 def test_qt_enable_gui(gui, kernel, capsys):
     if os.getenv("GITHUB_ACTIONS", None) == "true" and gui == "qt5":

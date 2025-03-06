@@ -49,7 +49,6 @@ def _check_status(content):
 # printing tests
 
 
-@flaky(max_runs=3)
 def test_simple_print():
     """simple print statement in kernel"""
     with kernel() as kc:
@@ -200,7 +199,6 @@ def test_sys_path():
     assert "" in sys_path
 
 
-@flaky(max_runs=3)
 def test_sys_path_profile_dir():
     """test that sys.path doesn't get messed up when `--profile-dir` is specified"""
 
@@ -558,7 +556,6 @@ def test_interrupt_during_pdb_set_trace():
         validate_message(reply, "execute_reply", msg_id2)
 
 
-@flaky(max_runs=3)
 def test_control_thread_priority():
     N = 5
     with new_kernel() as kc:
@@ -603,7 +600,6 @@ def test_control_thread_priority():
     assert control_dates[-1] <= shell_dates[0]
 
 
-@flaky(max_runs=3)
 def test_sequential_control_messages():
     with new_kernel() as kc:
         msg_id = kc.execute("import time")

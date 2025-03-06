@@ -9,7 +9,6 @@ import time
 from datetime import datetime, timedelta
 
 import pytest
-from flaky import flaky
 from jupyter_client.blocking.client import BlockingKernelClient
 
 from .utils import TIMEOUT, get_replies, get_reply, new_kernel
@@ -76,7 +75,6 @@ def execute_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None)
 # Tests
 
 
-@flaky(max_runs=3)
 def test_supported():
     with new_kernel() as kc:
         msg_id = kc.kernel_info()
@@ -85,7 +83,6 @@ def test_supported():
         assert "kernel subshells" in reply["content"]["supported_features"]
 
 
-@flaky(max_runs=3)
 def test_subshell_id_lifetime():
     with new_kernel() as kc:
         assert list_subshell_helper(kc)["subshell_id"] == []
@@ -102,7 +99,6 @@ def test_delete_non_existent():
         assert "evalue" in reply
 
 
-@flaky(max_runs=3)
 def test_thread_counts():
     with new_kernel() as kc:
         nthreads = execute_thread_count(kc)
@@ -176,7 +172,6 @@ def test_run_concurrently_sequence(are_subshells, overlap):
             assert reply["content"]["status"] == "ok", reply
 
 
-@flaky(max_runs=3)
 @pytest.mark.parametrize("include_main_shell", [True, False])
 def test_run_concurrently_timing(include_main_shell):
     with new_kernel() as kc:
@@ -256,7 +251,6 @@ def test_execution_count():
         assert execution_counts == [ec, ec - 1, ec + 2, ec + 1]
 
 
-@flaky(max_runs=3)
 def test_create_while_execute():
     with new_kernel() as kc:
         # Send request to execute code on main subshell.
@@ -278,7 +272,6 @@ def test_create_while_execute():
         assert control_date < shell_date
 
 
-@flaky(max_runs=3)
 @pytest.mark.skipif(
     platform.python_implementation() == "PyPy",
     reason="does not work on PyPy",

@@ -1,7 +1,6 @@
 import sys
 
 import pytest
-from flaky import flaky
 
 from .utils import TIMEOUT, get_reply, new_kernel
 
@@ -74,7 +73,6 @@ def kernel_with_debug(kernel):
         wait_for_debug_request(kernel, "disconnect", {"restart": False, "terminateDebuggee": True})
 
 
-@flaky(max_runs=3)
 def test_debug_initialize(kernel):
     reply = wait_for_debug_request(
         kernel,
@@ -168,7 +166,6 @@ f(2, 3)"""
         assert r == {}
 
 
-@flaky(max_runs=3)
 def test_stop_on_breakpoint(kernel_with_debug):
     code = """def f(a, b):
     c = a + b
@@ -211,7 +208,6 @@ f(2, 3)"""
     assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
-@flaky(max_runs=3)
 def test_breakpoint_in_cell_with_leading_empty_lines(kernel_with_debug):
     code = """
 def f(a, b):
@@ -255,7 +251,6 @@ f(2, 3)"""
     assert msg["content"]["body"]["reason"] == "breakpoint"
 
 
-@flaky(max_runs=3)
 def test_rich_inspect_not_at_breakpoint(kernel_with_debug):
     var_name = "text"
     value = "Hello the world"
@@ -288,7 +283,6 @@ print({var_name})
         assert reply == {}
 
 
-@flaky(max_runs=3)
 def test_rich_inspect_at_breakpoint(kernel_with_debug):
     code = """def f(a, b):
     c = a + b

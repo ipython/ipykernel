@@ -14,7 +14,6 @@ import pytest
 import zmq
 import zmq_anyio
 from anyio import create_task_group
-from flaky import flaky
 from jupyter_client.session import Session
 
 from ipykernel.iostream import _PARENT, BackgroundSocket, IOPubThread, OutStream
@@ -102,7 +101,6 @@ async def test_background_socket(iopub_thread):
     sock.send(b"hi")
 
 
-@flaky(max_runs=3)
 async def test_outstream(iopub_thread):
     session = Session()
     pub = iopub_thread.socket

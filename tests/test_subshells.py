@@ -130,7 +130,10 @@ def test_thread_ids():
 )
 @pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
 @pytest.mark.parametrize("overlap", [True, False])
-def test_run_concurrently_sequence(are_subshells, overlap):
+def test_run_concurrently_sequence(are_subshells, overlap, request):
+    if request.config.getvalue("--cov"):
+        pytest.skip("Skip time-sensitive subshell tests if measuring coverage")
+
     with new_kernel() as kc:
         subshell_ids = [
             create_subshell_helper(kc)["subshell_id"] if is_subshell else None
@@ -173,7 +176,10 @@ def test_run_concurrently_sequence(are_subshells, overlap):
 
 
 @pytest.mark.parametrize("include_main_shell", [True, False])
-def test_run_concurrently_timing(include_main_shell):
+def test_run_concurrently_timing(include_main_shell, request):
+    if request.config.getvalue("--cov"):
+        pytest.skip("Skip time-sensitive subshell tests if measuring coverage")
+
     with new_kernel() as kc:
         subshell_ids = [
             None if include_main_shell else create_subshell_helper(kc)["subshell_id"],

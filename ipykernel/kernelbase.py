@@ -19,6 +19,7 @@ from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals
 
+from ._selector_thread import _set_selector_windows
 from .thread import CONTROL_THREAD_NAME
 
 if sys.platform != "win32":
@@ -545,6 +546,7 @@ class Kernel(SingletonConfigurable):
 
     async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Process messages on shell and control channels"""
+        _set_selector_windows()
         async with create_task_group() as tg:
             self.control_stop = threading.Event()
             if not self._is_test and self.control_socket is not None:

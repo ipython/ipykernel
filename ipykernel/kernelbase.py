@@ -428,6 +428,8 @@ class Kernel(SingletonConfigurable):
                 await to_thread.run_sync(self.shell_stop.wait)
                 tg.cancel_scope.cancel()
 
+        await socket.stop()
+
     async def process_shell(self, socket=None):
         # socket=None is valid if kernel subshells are not supported.
         try:

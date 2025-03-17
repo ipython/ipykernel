@@ -70,7 +70,7 @@ _AWAITABLE_MESSAGE: str = (
 
 def _accepts_parameters(meth, param_names):
     parameters = inspect.signature(meth).parameters
-    accepts = {param: False for param in param_names}
+    accepts = dict.fromkeys(param_names, False)
 
     for param in param_names:
         param_spec = parameters.get(param)

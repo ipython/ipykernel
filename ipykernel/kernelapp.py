@@ -46,9 +46,8 @@ from traitlets.traitlets import (
 from traitlets.utils import filefind
 from traitlets.utils.importstring import import_item
 
-from .connect import get_connection_info, write_connection_file
-
 # local imports
+from .connect import get_connection_info, write_connection_file
 from .control import ControlThread
 from .heartbeat import Heartbeat
 from .iostream import IOPubThread
@@ -735,7 +734,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         sys.stdout.flush()
         sys.stderr.flush()
 
-    async def _start(self, backend: str) -> None:
+    async def _start(self) -> None:
         """
         Async version of start, when the loop is not controlled by IPykernel
 
@@ -747,22 +746,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.poller is not None:
             self.poller.start()
 
-        if backend == "asyncio" and sys.platform == "win32":
-            import asyncio
-
-            policy = asyncio.get_event_loop_policy()
-            if policy.__class__.__name__ == "WindowsProactorEventLoopPolicy":
-                from anyio._core._asyncio_selector_thread import get_selector
-
-                selector = get_selector()
-                selector._thread.pydev_do_not_trace = True
-
         await self.main()
 
     def start(self) -> None:
         """Start the application."""
         backend = "trio" if self.trio_loop else "asyncio"
-        run(partial(self._start, backend), backend=backend)
+        run(self._start, backend=backend)
 
     async def _wait_to_enter_eventloop(self) -> None:
         await to_thread.run_sync(self.kernel._eventloop_set.wait)

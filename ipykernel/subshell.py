@@ -32,11 +32,4 @@ class SubshellThread(BaseThread):
         self._pair_socket = zmq_anyio.Socket(context, zmq.PAIR)
         self._pair_socket.connect(address)
         self.start_soon(self._pair_socket.start)
-
-    def run(self) -> None:
-        try:
-            super().run()
-        finally:
-            if self._pair_socket is not None:
-                self._pair_socket.close()
-                self._pair_socket = None
+        self.add_teardown_callback(self._pair_socket.stop)

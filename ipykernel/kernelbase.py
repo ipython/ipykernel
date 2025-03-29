@@ -37,7 +37,13 @@ except ImportError:
 import psutil
 import zmq
 import zmq_anyio
-from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
+from anyio import (
+    TASK_STATUS_IGNORED,
+    create_memory_object_stream,
+    create_task_group,
+    sleep,
+    to_thread,
+)
 from anyio.abc import TaskStatus
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -418,27 +424,39 @@ class Kernel(SingletonConfigurable):
             assert subshell_id is None
             assert threading.current_thread() == threading.main_thread()
             socket = None
-
+        send_stream, receive_stream = create_memory_object_stream()
         async with create_task_group() as tg:
             if not socket.started.is_set():
                 await tg.start(socket.start)
-            tg.start_soon(self.process_shell, socket)
+            tg.start_soon(self.process_shell, socket, send_stream)
+            tg.start_soon(self._execute_request_handler, receive_stream)
             if subshell_id is None:
                 # Main subshell.
                 await to_thread.run_sync(self.shell_stop.wait)
                 tg.cancel_scope.cancel()
 
-    async def process_shell(self, socket=None):
+    async def _execute_request_handler(self, receive_stream):
+        async with receive_stream:
+            async for handler, (socket, idents, msg) in receive_stream:
+                try:
+                    result = handler(socket, idents, msg)
+                    self.set_parent(idents, msg, channel="shell")
+                    if inspect.isawaitable(result):
+                        await result
+                except Exception as e:
+                    self.log.exception("Execute request", exc_info=e)
+
+    async def process_shell(self, socket, send_stream):
         # socket=None is valid if kernel subshells are not supported.
         try:
             while True:
-                await self.process_shell_message(socket=socket)
+                await self.process_shell_message(socket=socket, send_stream=send_stream)
         except BaseException:
             if self.shell_stop.is_set():
                 return
             raise
 
-    async def process_shell_message(self, msg=None, socket=None):
+    async def process_shell_message(self, msg=None, socket=None, send_stream=None):
         # If socket is None kernel subshells are not supported so use socket=shell_socket.
         # If msg is set, process that message.
         # If msg is None, await the next message to arrive on the socket.
@@ -507,9 +525,12 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                result = handler(socket, idents, msg)
-                if inspect.isawaitable(result):
-                    await result
+                if msg_type == "execute_request" and send_stream:
+                    await send_stream.send((handler, (socket, idents, msg)))
+                else:
+                    result = handler(socket, idents, msg)
+                    if inspect.isawaitable(result):
+                        await result
             except Exception:
                 self.log.error("Exception in message handler:", exc_info=True)  # noqa: G201
             except KeyboardInterrupt:

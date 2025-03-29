@@ -7,6 +7,7 @@ from __future__ import annotations
 import inspect
 import itertools
 import logging
+import math
 import os
 import queue
 import sys
@@ -424,7 +425,7 @@ class Kernel(SingletonConfigurable):
             assert subshell_id is None
             assert threading.current_thread() == threading.main_thread()
             socket = None
-        send_stream, receive_stream = create_memory_object_stream()
+        send_stream, receive_stream = create_memory_object_stream(max_buffer_size=math.inf)
         async with create_task_group() as tg:
             if not socket.started.is_set():
                 await tg.start(socket.start)

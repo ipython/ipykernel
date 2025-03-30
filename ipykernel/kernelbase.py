@@ -440,11 +440,14 @@ class Kernel(SingletonConfigurable):
         async with receive_stream:
             async for handler, (socket, idents, msg) in receive_stream:
                 try:
+                    if self._aborting:
+                        await self._send_abort_reply(socket, msg, idents)
+                        continue
                     result = handler(socket, idents, msg)
                     self.set_parent(idents, msg, channel="shell")
                     if inspect.isawaitable(result):
                         await result
-                except Exception as e:
+                except BaseException as e:
                     self.log.exception("Execute request", exc_info=e)
 
     async def process_shell(self, socket, send_stream):

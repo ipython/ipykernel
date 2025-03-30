@@ -46,6 +46,7 @@ from anyio import (
     to_thread,
 )
 from anyio.abc import TaskStatus
+from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
 from traitlets.config.configurable import SingletonConfigurable
@@ -92,7 +93,7 @@ def _accepts_parameters(meth, param_names):
 class Kernel(SingletonConfigurable):
     """The base kernel class."""
 
-    _aborted_time: float
+    _aborted_time: float = time.monotonic()
 
     # ---------------------------------------------------------------------------
     # Kernel interface
@@ -436,11 +437,11 @@ class Kernel(SingletonConfigurable):
                 await to_thread.run_sync(self.shell_stop.wait)
                 tg.cancel_scope.cancel()
 
-    async def _execute_request_handler(self, receive_stream):
+    async def _execute_request_handler(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:
-            async for handler, (socket, idents, msg) in receive_stream:
+            async for handler, (received_time, socket, idents, msg) in receive_stream:
                 try:
-                    if self._aborting:
+                    if received_time < self._aborted_time:
                         await self._send_abort_reply(socket, msg, idents)
                         continue
                     result = handler(socket, idents, msg)
@@ -450,7 +451,7 @@ class Kernel(SingletonConfigurable):
                 except BaseException as e:
                     self.log.exception("Execute request", exc_info=e)
 
-    async def process_shell(self, socket, send_stream):
+    async def process_shell(self, socket, send_stream: MemoryObjectSendStream):
         # socket=None is valid if kernel subshells are not supported.
         try:
             while True:
@@ -460,7 +461,9 @@ class Kernel(SingletonConfigurable):
                 return
             raise
 
-    async def process_shell_message(self, msg=None, socket=None, send_stream=None):
+    async def process_shell_message(
+        self, msg=None, socket=None, *, send_stream: MemoryObjectSendStream
+    ):
         # If socket is None kernel subshells are not supported so use socket=shell_socket.
         # If msg is set, process that message.
         # If msg is None, await the next message to arrive on the socket.
@@ -476,10 +479,8 @@ class Kernel(SingletonConfigurable):
             assert socket is None
             socket = self.shell_socket
 
-        no_msg = msg is None if self._is_test else not await socket.apoll(0).wait()
         msg = msg or await socket.arecv_multipart(copy=False).wait()
 
-        received_time = time.monotonic()
         copy = not isinstance(msg[0], zmq.Message)
         idents, msg = self.session.feed_identities(msg, copy=copy)
         try:
@@ -493,18 +494,6 @@ class Kernel(SingletonConfigurable):
         self._publish_status("busy", "shell")
 
         msg_type = msg["header"]["msg_type"]
-
-        # Only abort execute requests
-        if self._aborting and msg_type == "execute_request":
-            if not self.stop_on_error_timeout:
-                if no_msg:
-                    self._aborting = False
-            elif received_time - self._aborted_time > self.stop_on_error_timeout:
-                self._aborting = False
-            if self._aborting:
-                await self._send_abort_reply(socket, msg, idents)
-                self._publish_status("idle", "shell")
-                return
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each
@@ -529,8 +518,8 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                if msg_type == "execute_request" and send_stream:
-                    await send_stream.send((handler, (socket, idents, msg)))
+                if msg_type == "execute_request":
+                    await send_stream.send((handler, (time.monotonic(), socket, idents, msg)))
                 else:
                     result = handler(socket, idents, msg)
                     if inspect.isawaitable(result):
@@ -824,9 +813,7 @@ class Kernel(SingletonConfigurable):
 
         assert reply_msg is not None
         if not silent and reply_msg["content"]["status"] == "error" and stop_on_error:
-            # while this flag is true,
-            # execute requests will be aborted
-            self._aborting = True
+            # execute requests will be aborted if the received time is prior to the _aborted_time
             self._aborted_time = time.monotonic()
             self.log.info("Aborting queue")
 

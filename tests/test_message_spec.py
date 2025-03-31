@@ -402,20 +402,12 @@ def test_non_execute_stop_on_error():
     """test that non-execute_request's are not aborted after an error"""
     flush_channels()
 
-    fail = "\n".join(
-        [
-            # sleep to ensure subsequent message is waiting in the queue to be aborted
-            "import time",
-            "time.sleep(0.5)",
-            "raise ValueError",
-        ]
-    )
-    KC.execute(code=fail)
+    KC.execute(code="raise ValueError")
+    reply = KC.get_shell_msg(timeout=TIMEOUT)  # execute
+    assert reply["content"]["status"] == "error"
     KC.kernel_info()
     KC.comm_info()
     KC.inspect(code="print")
-    reply = KC.get_shell_msg(timeout=TIMEOUT)  # execute
-    assert reply["content"]["status"] == "error"
     reply = KC.get_shell_msg(timeout=TIMEOUT)  # kernel_info
     assert reply["content"]["status"] == "ok"
     reply = KC.get_shell_msg(timeout=TIMEOUT)  # comm_info
@@ -427,8 +419,9 @@ def test_non_execute_stop_on_error():
 def test_user_expressions():
     flush_channels()
 
-    msg_id, reply = execute(code="x=1", user_expressions=dict(foo="x+1"))
-    user_expressions = reply["user_expressions"]
+    msg_id = KC.execute(code="x=1", user_expressions=dict(foo="x+1"))
+    reply = get_reply(KC, msg_id, TIMEOUT)  # execute
+    user_expressions = reply["content"]["user_expressions"]
     assert user_expressions == {
         "foo": {
             "status": "ok",

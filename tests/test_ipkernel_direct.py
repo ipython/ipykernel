@@ -1,6 +1,7 @@
 """Test IPythonKernel directly"""
 
 import os
+import time
 
 import pytest
 from IPython.core.history import DummyDB
@@ -45,7 +46,7 @@ async def test_direct_execute_request(ipkernel: MockIPyKernel) -> None:
 
 
 async def test_direct_execute_request_aborting(ipkernel):
-    ipkernel._aborting = True
+    ipkernel._aborted_time = time.monotonic() + 10  # Set in the future
     reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
     assert reply["header"]["msg_type"] == "execute_reply"
     assert reply["content"]["status"] == "aborted"

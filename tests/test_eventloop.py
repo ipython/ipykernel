@@ -80,13 +80,16 @@ def test_tk_loop(kernel):
 
 @windows_skip
 @pytest.mark.parametrize("anyio_backend", ["asyncio"])
-def test_asyncio_loop(kernel):
+async def test_asyncio_loop(kernel):
+    okay = asyncio.Event()
+
     def do_thing():
-        loop.call_later(0.01, loop.stop)
+        okay.set()
 
     loop = asyncio.get_event_loop()
     loop.call_soon(do_thing)
     loop_asyncio(kernel)
+    await asyncio.wait_for(okay.wait(), 1)
 
 
 @windows_skip

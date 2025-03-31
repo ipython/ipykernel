@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
+import time
 
 import pytest
 
@@ -26,7 +27,7 @@ async def test_direct_execute_request(kernel):
 
 
 async def test_direct_execute_request_aborting(kernel):
-    kernel._aborting = True
+    kernel._aborted_time = time.monotonic() + 10
     reply = await kernel.test_shell_message("execute_request", dict(code="hello", silent=False))
     assert reply["header"]["msg_type"] == "execute_reply"
     assert reply["content"]["status"] == "aborted"

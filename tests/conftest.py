@@ -1,5 +1,7 @@
 import gc
 import logging
+import os
+import sys
 import warnings
 from math import inf
 from threading import Event
@@ -35,6 +37,11 @@ except ModuleNotFoundError:
     tracemalloc = None
 
 pytestmark = pytest.mark.anyio
+
+
+@pytest.hookimpl
+def pytest_configure(config):
+    os.environ["PYTEST_TIMEOUT"] = str(1e6) if "debugpy" in sys.modules else str(60)
 
 
 # Handle resource limit

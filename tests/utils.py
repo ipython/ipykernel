@@ -16,8 +16,8 @@ from time import time
 from jupyter_client import manager
 from jupyter_client.blocking.client import BlockingKernelClient
 
-STARTUP_TIMEOUT = 60
-TIMEOUT = 100
+STARTUP_TIMEOUT = 10 if "debugpy" not in sys.modules else 1e6
+TIMEOUT = 10 if "debugpy" not in sys.modules else 1e6
 
 KM: manager.KernelManager = None  # type:ignore
 KC: BlockingKernelClient = None  # type:ignore

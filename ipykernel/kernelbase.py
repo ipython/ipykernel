@@ -124,6 +124,9 @@ class Kernel(SingletonConfigurable):
     iopub_socket = Any()
     iopub_thread = Any()
     stdin_socket = Any()
+
+    _send_exec_request: Dict[dict[zmq_anyio.Socket, MemoryObjectSendStream]] = Dict()
+
     log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
     # identities:
@@ -426,16 +429,20 @@ class Kernel(SingletonConfigurable):
             assert subshell_id is None
             assert threading.current_thread() == threading.main_thread()
             socket = None
-        send_stream, receive_stream = create_memory_object_stream(max_buffer_size=math.inf)
-        async with create_task_group() as tg:
-            if not socket.started.is_set():
-                await tg.start(socket.start)
-            tg.start_soon(self.process_shell, socket, send_stream)
-            tg.start_soon(self._execute_request_handler, receive_stream)
-            if subshell_id is None:
-                # Main subshell.
-                await to_thread.run_sync(self.shell_stop.wait)
-                tg.cancel_scope.cancel()
+        socket = socket or self.shell_socket
+        if socket not in self._send_exec_request:
+            send_stream, receive_stream = create_memory_object_stream(max_buffer_size=math.inf)
+            self._send_exec_request[socket] = send_stream
+            async with create_task_group() as tg:
+                if not socket.started.is_set():
+                    await tg.start(socket.start)
+                tg.start_soon(self.process_shell, socket)
+                tg.start_soon(self._execute_request_handler, receive_stream)
+                if subshell_id is None:
+                    # Main subshell.
+                    await to_thread.run_sync(self.shell_stop.wait)
+                    tg.cancel_scope.cancel()
+            self._send_exec_request.pop(socket, None)
 
     async def _execute_request_handler(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:
@@ -444,9 +451,9 @@ class Kernel(SingletonConfigurable):
                     if received_time < self._aborted_time:
                         await self._send_abort_reply(socket, msg, idents)
                         continue
-                    result = handler(socket, idents, msg)
                     self.set_parent(idents, msg, channel="shell")
                     self._publish_status("busy", "shell")
+                    result = handler(socket, idents, msg)
                     if inspect.isawaitable(result):
                         await result
                     self.set_parent(idents, msg, channel="shell")
@@ -454,19 +461,17 @@ class Kernel(SingletonConfigurable):
                 except BaseException as e:
                     self.log.exception("Execute request", exc_info=e)
 
-    async def process_shell(self, socket, send_stream: MemoryObjectSendStream):
+    async def process_shell(self, socket):
         # socket=None is valid if kernel subshells are not supported.
         try:
             while True:
-                await self.process_shell_message(socket=socket, send_stream=send_stream)
+                await self.process_shell_message(socket=socket)
         except BaseException:
             if self.shell_stop.is_set():
                 return
             raise
 
-    async def process_shell_message(
-        self, msg=None, socket=None, *, send_stream: MemoryObjectSendStream
-    ):
+    async def process_shell_message(self, msg=None, socket=None):
         # If socket is None kernel subshells are not supported so use socket=shell_socket.
         # If msg is set, process that message.
         # If msg is None, await the next message to arrive on the socket.
@@ -479,7 +484,6 @@ class Kernel(SingletonConfigurable):
             assert socket is not None
         else:
             assert threading.current_thread() == threading.main_thread()
-            assert socket is None
             socket = self.shell_socket
 
         msg = msg or await socket.arecv_multipart(copy=False).wait()
@@ -522,6 +526,7 @@ class Kernel(SingletonConfigurable):
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
                 if msg_type == "execute_request":
+                    send_stream = self._send_exec_request[socket]
                     await send_stream.send((handler, (time.monotonic(), socket, idents, msg)))
                 else:
                     result = handler(socket, idents, msg)
@@ -577,9 +582,8 @@ class Kernel(SingletonConfigurable):
             self.shell_is_blocking = False
             self.shell_stop = threading.Event()
 
+            tg.start_soon(self.shell_main, None)
             if self.shell_channel_thread:
-                tg.start_soon(self.shell_main, None)
-
                 # Assign tasks to and start shell channel thread.
                 manager = self.shell_channel_thread.manager
                 self.shell_channel_thread.start_soon(self.shell_channel_thread_main)
@@ -588,9 +592,6 @@ class Kernel(SingletonConfigurable):
                 )
                 self.shell_channel_thread.start_soon(manager.listen_from_subshells)
                 self.shell_channel_thread.start()
-            else:
-                if not self._is_test and self.shell_socket is not None:
-                    tg.start_soon(self.shell_main, None)
 
     def stop(self):
         if not self._eventloop_set.is_set():
@@ -1218,8 +1219,6 @@ class Kernel(SingletonConfigurable):
     def _topic(self, topic):
         """prefixed topic for IOPub messages"""
         return (f"kernel.{self.ident}.{topic}").encode()
-
-    _aborting = Bool(False)
 
     async def _send_abort_reply(self, socket, msg, idents):
         """Send a reply to an aborted request"""

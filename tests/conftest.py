@@ -207,6 +207,7 @@ async def kernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockKernel()
         tg.start_soon(kernel.start)
+        await kernel._main_shell_ready.wait()
         try:
             yield kernel
         finally:
@@ -218,6 +219,7 @@ async def ipkernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockIPyKernel()
         tg.start_soon(kernel.start)
+        await kernel._main_shell_ready.wait()
         try:
             yield kernel
         finally:

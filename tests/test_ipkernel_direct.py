@@ -34,14 +34,19 @@ async def test_direct_kernel_info_request(ipkernel):
 
 
 async def test_direct_execute_request(ipkernel: MockIPyKernel) -> None:
-    reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
+    reply = await ipkernel.test_shell_message(
+        "execute_request", dict(code="invalid_call()", silent=False)
+    )
     assert reply["header"]["msg_type"] == "execute_reply"
+    ipkernel._aborted_time += 10
     reply = await ipkernel.test_shell_message(
         "execute_request", dict(code="trigger_error", silent=False)
     )
     assert reply["content"]["status"] == "aborted"
-
-    reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
+    ipkernel._aborted_time = time.monotonic()
+    reply = await ipkernel.test_shell_message(
+        "execute_request", dict(code="okay=True", silent=False)
+    )
     assert reply["header"]["msg_type"] == "execute_reply"
 
 

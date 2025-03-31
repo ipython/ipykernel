@@ -20,7 +20,7 @@ from typing import Optional
 
 import zmq
 import zmq_anyio
-from anyio import create_task_group, run, to_thread
+from anyio import create_task_group, run
 from IPython.core.application import (  # type:ignore[attr-defined]
     BaseIPythonApplication,
     base_aliases,
@@ -764,15 +764,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         backend = "trio" if self.trio_loop else "asyncio"
         run(partial(self._start, backend), backend=backend)
 
-    async def _wait_to_enter_eventloop(self) -> None:
-        await to_thread.run_sync(self.kernel._eventloop_set.wait)
-        await self.kernel.enter_eventloop()
-
     async def main(self) -> None:
         async with create_task_group() as tg:
-            tg.start_soon(self._wait_to_enter_eventloop)
             tg.start_soon(self.kernel.start)
-
         if self.kernel.eventloop:
             self.kernel._eventloop_set.set()
 

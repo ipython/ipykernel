@@ -40,6 +40,7 @@ import zmq
 import zmq_anyio
 from anyio import (
     TASK_STATUS_IGNORED,
+    Event,
     create_memory_object_stream,
     create_task_group,
     sleep,
@@ -126,6 +127,7 @@ class Kernel(SingletonConfigurable):
     stdin_socket = Any()
 
     _send_exec_request: Dict[dict[zmq_anyio.Socket, MemoryObjectSendStream]] = Dict()
+    _main_shell_ready = Instance(Event, ())
 
     log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
@@ -436,13 +438,15 @@ class Kernel(SingletonConfigurable):
             async with create_task_group() as tg:
                 if not socket.started.is_set():
                     await tg.start(socket.start)
-                tg.start_soon(self.process_shell, socket)
+                tg.start_soon(self._process_shell, socket)
                 tg.start_soon(self._execute_request_handler, receive_stream)
                 if subshell_id is None:
                     # Main subshell.
+                    self._main_shell_ready.set()
                     await to_thread.run_sync(self.shell_stop.wait)
                     tg.cancel_scope.cancel()
             self._send_exec_request.pop(socket, None)
+            await send_stream.aclose()
 
     async def _execute_request_handler(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:
@@ -461,8 +465,9 @@ class Kernel(SingletonConfigurable):
                 except BaseException as e:
                     self.log.exception("Execute request", exc_info=e)
 
-    async def process_shell(self, socket):
+    async def _process_shell(self, socket):
         # socket=None is valid if kernel subshells are not supported.
+        await self._main_shell_ready.wait()
         try:
             while True:
                 await self.process_shell_message(socket=socket)
@@ -476,15 +481,13 @@ class Kernel(SingletonConfigurable):
         # If msg is set, process that message.
         # If msg is None, await the next message to arrive on the socket.
         assert self.session is not None
+        socket = socket or self.shell_socket
         if self._supports_kernel_subshells:
             assert threading.current_thread() not in (
                 self.control_thread,
                 self.shell_channel_thread,
             )
             assert socket is not None
-        else:
-            assert threading.current_thread() == threading.main_thread()
-            socket = self.shell_socket
 
         msg = msg or await socket.arecv_multipart(copy=False).wait()
 
@@ -532,8 +535,8 @@ class Kernel(SingletonConfigurable):
                     result = handler(socket, idents, msg)
                     if inspect.isawaitable(result):
                         await result
-            except Exception:
-                self.log.error("Exception in message handler:", exc_info=True)  # noqa: G201
+            except Exception as e:
+                self.log.error("Exception in message handler:", exc_info=e)
             except KeyboardInterrupt:
                 # Ctrl-c shouldn't crash the kernel here.
                 self.log.error("KeyboardInterrupt caught in kernel.")
@@ -583,6 +586,7 @@ class Kernel(SingletonConfigurable):
             self.shell_stop = threading.Event()
 
             tg.start_soon(self.shell_main, None)
+            await self._main_shell_ready.wait()
             if self.shell_channel_thread:
                 # Assign tasks to and start shell channel thread.
                 manager = self.shell_channel_thread.manager

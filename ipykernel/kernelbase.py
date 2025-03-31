@@ -317,6 +317,9 @@ class Kernel(SingletonConfigurable):
                 result = handler(self.control_socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
+                else:
+                    # If the handler is not awaitable, ensure it completes before proceeding
+                    time.sleep(0.00001)  # Small delay to ensure sequential processing
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 

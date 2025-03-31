@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import platform
 import time
-from datetime import datetime, timedelta
 
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
@@ -186,7 +185,9 @@ def test_run_concurrently_timing(include_main_shell):
             kc, "import threading as t, time; b=t.Barrier(2); print('ok')", None
         )
 
-        times = (0.2, 0.2)
+        times = (0.4,) * 2
+        min_duration = times[0]
+        max_duration = sum(times)
         # Prepare messages, times are sleep times in seconds.
         # Identical times for both subshells is a harder test as preparing and sending
         # the execute_reply messages may overlap.
@@ -198,24 +199,27 @@ def test_run_concurrently_timing(include_main_shell):
             msgs.append(msg)
 
         # Send messages
-        start = datetime.now()
+        start = time.monotonic()
         for msg in msgs:
             kc.shell_channel.send(msg)
 
-        _ = get_replies(kc, [msg["msg_id"] for msg in msgs])
-        end = datetime.now()
+        replies = get_replies(kc, [msg["msg_id"] for msg in msgs])
+        end = time.monotonic()
+        for reply in replies:
+            assert reply["content"]["status"] == "ok"
 
         for subshell_id in subshell_ids:
             if subshell_id:
                 delete_subshell_helper(kc, subshell_id)
 
         duration = end - start
-        assert duration >= timedelta(seconds=max(times))
+        assert duration >= min_duration
         # Care is needed with this test as runtime conditions such as gathering
         # coverage can slow it down causing the following assert to fail.
         # The sleep time of 0.2 is empirically determined to run OK in CI, but
         # consider increasing it if the following fails.
-        assert duration < timedelta(seconds=sum(times))
+
+        assert duration < max_duration
 
 
 @pytest.mark.xfail(strict=False, reason="subshell still sometime give different results")

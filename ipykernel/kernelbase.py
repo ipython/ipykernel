@@ -249,13 +249,9 @@ class Kernel(SingletonConfigurable):
         "list_subshell_request",
     ]
 
-    _eventloop_set: threading.Event
-
     def __init__(self, **kwargs):
         """Initialize the kernel."""
         super().__init__(**kwargs)
-
-        self._eventloop_set = threading.Event()
 
         # Kernel application may swap stdout and stderr to OutStream,
         # which is the case in `IPKernelApp.init_io`, hence `sys.stdout`
@@ -601,10 +597,6 @@ class Kernel(SingletonConfigurable):
                 self.shell_channel_thread.start()
 
     def stop(self):
-        if not self._eventloop_set.is_set():
-            # Stop the async task that is waiting for the eventloop to be set.
-            self._eventloop_set.set()
-
         self.shell_stop.set()
         self.control_stop.set()
 

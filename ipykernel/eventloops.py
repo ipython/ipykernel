@@ -602,13 +602,3 @@ def enable_gui(gui, kernel=None):
         msg = "Cannot activate multiple GUI eventloops"  # type:ignore[unreachable]
         raise RuntimeError(msg)
     kernel.eventloop = loop
-    # We set `eventloop`; the function the user chose is executed in `Kernel.enter_eventloop`, thus
-    # any exceptions raised during the event loop will not be shown in the client.
-
-    # If running in async loop then set anyio event to trigger starting the eventloop.
-    # If not running in async loop do nothing as this will be handled in IPKernelApp.main().
-    try:
-        kernel._eventloop_set.set()
-    except RuntimeError:
-        # Expecting sniffio.AsyncLibraryNotFoundError but don't want to import sniffio just for that
-        pass

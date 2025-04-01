@@ -767,8 +767,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     async def main(self) -> None:
         async with create_task_group() as tg:
             tg.start_soon(self.kernel.start)
-        if self.kernel.eventloop:
-            self.kernel._eventloop_set.set()
 
     def stop(self) -> None:
         """Stop the kernel, thread-safe."""

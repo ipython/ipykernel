@@ -64,18 +64,20 @@ def test_tk_loop(kernel):
         time.sleep(1)
         try:
             kernel.app_wrapper.app.quit()
+            kernel.app_wrapper.app.destroy()
         # guard for tk failing to start (if there is no display)
         except AttributeError:
             pass
 
     t = threading.Thread(target=do_thing)
+    t.daemon = True
     t.start()
     # guard for tk failing to start (if there is no display)
     try:
         loop_tk(kernel)
     except Exception:
         pass
-    t.join()
+    t.join(1)
 
 
 @windows_skip

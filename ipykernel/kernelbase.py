@@ -127,7 +127,7 @@ class Kernel(SingletonConfigurable):
     stdin_socket = Any()
 
     _send_exec_request: Dict[dict[zmq_anyio.Socket, MemoryObjectSendStream]] = Dict()
-    _main_shell_ready = Instance(Event, ())
+    _main_subshell_ready = Instance(Event, ())
 
     log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
@@ -441,7 +441,7 @@ class Kernel(SingletonConfigurable):
                 tg.start_soon(self._execute_request_handler, receive_stream)
                 if subshell_id is None:
                     # Main subshell.
-                    self._main_shell_ready.set()
+                    self._main_subshell_ready.set()
                     await to_thread.run_sync(self.shell_stop.wait)
                     tg.cancel_scope.cancel()
             self._send_exec_request.pop(socket, None)
@@ -466,7 +466,7 @@ class Kernel(SingletonConfigurable):
 
     async def _process_shell(self, socket):
         # socket=None is valid if kernel subshells are not supported.
-        await self._main_shell_ready.wait()
+        await self._main_subshell_ready.wait()
         try:
             while True:
                 await self.process_shell_message(socket=socket)
@@ -585,7 +585,7 @@ class Kernel(SingletonConfigurable):
             self.shell_stop = threading.Event()
 
             tg.start_soon(self.shell_main, None)
-            await self._main_shell_ready.wait()
+            await self._main_subshell_ready.wait()
             if self.shell_channel_thread:
                 # Assign tasks to and start shell channel thread.
                 manager = self.shell_channel_thread.manager

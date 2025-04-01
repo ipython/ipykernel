@@ -4,6 +4,8 @@
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import inspect
 import itertools
 import logging
@@ -128,6 +130,7 @@ class Kernel(SingletonConfigurable):
 
     _send_exec_request: Dict[dict[zmq_anyio.Socket, MemoryObjectSendStream]] = Dict()
     _main_subshell_ready = Instance(Event, ())
+    asyncio_event_loop = Instance(asyncio.AbstractEventLoop, allow_none=True, read_only=True)  # type:ignore[call-overload]
 
     log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
@@ -441,10 +444,13 @@ class Kernel(SingletonConfigurable):
                 tg.start_soon(self._execute_request_handler, receive_stream)
                 if subshell_id is None:
                     # Main subshell.
+                    with contextlib.suppress(RuntimeError):
+                        self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
                     self._main_subshell_ready.set()
                     await to_thread.run_sync(self.shell_stop.wait)
                     tg.cancel_scope.cancel()
             self._send_exec_request.pop(socket, None)
+            self.set_trait("asyncio_event_loop", None)
             await send_stream.aclose()
 
     async def _execute_request_handler(self, receive_stream: MemoryObjectReceiveStream):
@@ -821,7 +827,7 @@ class Kernel(SingletonConfigurable):
             self._aborted_time = time.monotonic()
             self.log.info("Aborting queue")
 
-    def do_execute(
+    async def do_execute(
         self,
         code,
         silent,

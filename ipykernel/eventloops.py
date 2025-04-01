@@ -6,7 +6,6 @@
 import os
 import platform
 import sys
-from functools import partial
 
 import zmq
 from packaging.version import Version as V
@@ -400,63 +399,11 @@ def loop_cocoa_exit(kernel):
 
 @register_integration("asyncio")
 def loop_asyncio(kernel):
-    """Start a kernel with asyncio event loop support."""
-    import asyncio
+    """Verify the asyncio event loop is supported."""
 
-    loop = asyncio.get_event_loop()
-    # loop is already running (e.g. tornado 5), nothing left to do
-    if loop.is_running():
-        return
-
-    if loop.is_closed():
-        # main loop is closed, create a new one
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    loop._should_close = False  # type:ignore[attr-defined]
-
-    # pause eventloop when there's an event on a zmq socket
-    def process_stream_events(socket):
-        """fall back to main loop when there's a socket event"""
-        loop.stop()
-
-    notifier = partial(process_stream_events, kernel.shell_socket)
-    loop.add_reader(kernel.shell_socket.getsockopt(zmq.FD), notifier)
-    loop.call_soon(notifier)
-
-    while True:
-        error = None
-        try:
-            loop.run_forever()
-        except KeyboardInterrupt:
-            continue
-        except Exception as e:
-            error = e
-        if loop._should_close:  # type:ignore[attr-defined]
-            loop.close()
-        if error is not None:
-            raise error
-        break
-
-
-@loop_asyncio.exit
-def loop_asyncio_exit(kernel):
-    """Exit hook for asyncio"""
-    import asyncio
-
-    loop = asyncio.get_event_loop()
-
-    async def close_loop():
-        if hasattr(loop, "shutdown_asyncgens"):
-            yield loop.shutdown_asyncgens()
-        loop._should_close = True  # type:ignore[attr-defined]
-        loop.stop()
-
-    if loop.is_running():
-        close_loop()
-
-    elif not loop.is_closed():
-        loop.run_until_complete(close_loop)  # type:ignore[arg-type]
-        loop.close()
+    if not kernel.asyncio_event_loop or not kernel.asyncio_event_loop.is_running():
+        msg = "The asyncio event loop is not running so is not supported."
+        raise RuntimeError(msg)
 
 
 def set_qt_api_env_from_gui(gui):

@@ -186,11 +186,12 @@ def test_run_concurrently_timing(include_main_shell):
         )
 
         times = (0.4,) * 2
-        min_duration = times[0]
+        min_duration = max(times)
         max_duration = sum(times)
         # Prepare messages, times are sleep times in seconds.
         # Identical times for both subshells is a harder test as preparing and sending
         # the execute_reply messages may overlap.
+        time.sleep(1)  # sleep to let kernel achieve idle state
         msgs = []
         for id, sleep in zip(subshell_ids, times):
             code = f"b.wait(); time.sleep({sleep})"

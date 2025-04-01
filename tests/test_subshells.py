@@ -130,7 +130,10 @@ def test_thread_ids():
 )
 @pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
 @pytest.mark.parametrize("overlap", [True, False])
-def test_run_concurrently_sequence(are_subshells, overlap):
+def test_run_concurrently_sequence(are_subshells, overlap, request):
+    if request.config.getvalue("--cov"):
+        pytest.skip("Skip time-sensitive subshell tests if measuring coverage")
+
     with new_kernel() as kc:
         subshell_ids = [
             create_subshell_helper(kc)["subshell_id"] if is_subshell else None
@@ -143,7 +146,7 @@ def test_run_concurrently_sequence(are_subshells, overlap):
             kc, "import threading as t, time; b=t.Barrier(2); print('ok')", None
         )
 
-        sleep = 0.2
+        sleep = 0.5
         if overlap:
             codes = [
                 f"b.wait(); start0=True; end0=False; time.sleep({sleep}); end0=True",
@@ -173,7 +176,10 @@ def test_run_concurrently_sequence(are_subshells, overlap):
 
 
 @pytest.mark.parametrize("include_main_shell", [True, False])
-def test_run_concurrently_timing(include_main_shell):
+def test_run_concurrently_timing(include_main_shell, request):
+    if request.config.getvalue("--cov"):
+        pytest.skip("Skip time-sensitive subshell tests if measuring coverage")
+
     with new_kernel() as kc:
         subshell_ids = [
             None if include_main_shell else create_subshell_helper(kc)["subshell_id"],
@@ -186,7 +192,7 @@ def test_run_concurrently_timing(include_main_shell):
             kc, "import threading as t, time; b=t.Barrier(2); print('ok')", None
         )
 
-        times = (0.2, 0.2)
+        times = (0.5, 0.5)
         # Prepare messages, times are sleep times in seconds.
         # Identical times for both subshells is a harder test as preparing and sending
         # the execute_reply messages may overlap.
@@ -230,7 +236,7 @@ def test_execution_count():
         )
 
         # Prepare messages
-        times = (0.2, 0.1, 0.4, 0.15)  # Sleep seconds
+        times = (0.4, 0.2, 0.8, 0.3)  # Sleep seconds
         msgs = []
         for i, (id, sleep) in enumerate(zip((None, subshell_id, None, subshell_id), times)):
             code = f"b.wait(); time.sleep({sleep})" if i < 2 else f"time.sleep({sleep})"

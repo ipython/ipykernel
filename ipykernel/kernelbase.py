@@ -303,7 +303,7 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg, channel="control")
-        self._publish_status("busy", "control")
+        self._publish_status("busy", "control", parent=msg)
 
         header = msg["header"]
         msg_type = header["msg_type"]
@@ -462,12 +462,12 @@ class Kernel(SingletonConfigurable):
                         await self._send_abort_reply(socket, msg, idents)
                         continue
                     self.set_parent(idents, msg, channel="shell")
-                    self._publish_status("busy", "shell")
+                    self._publish_status("busy", "shell", parent=msg)
                     result = handler(socket, idents, msg)
                     if inspect.isawaitable(result):
                         await result
                     self.set_parent(idents, msg, channel="shell")
-                    self._publish_status("idle", "shell")
+                    self._publish_status("idle", "shell", parent=msg)
                 except BaseException as e:
                     self.log.exception("Execute request", exc_info=e)
 
@@ -507,9 +507,7 @@ class Kernel(SingletonConfigurable):
 
         msg_type = msg["header"]["msg_type"]
         if msg_type != "execute_request":
-            # Set the parent message for side effects.
-            self.set_parent(idents, msg, channel="shell")
-            self._publish_status("busy", "shell")
+            self._publish_status("busy", "shell", parent=msg)
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each
@@ -552,12 +550,7 @@ class Kernel(SingletonConfigurable):
                 except Exception:
                     self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
         if msg_type != "execute_request":
-            self.set_parent(idents, msg, channel="shell")
-            if sys.stdout is not None:
-                sys.stdout.flush()
-            if sys.stderr is not None:
-                sys.stderr.flush()
-            self._publish_status("idle", "shell")
+            self._publish_status("idle", "shell", parent=msg)
 
     async def control_main(self):
         assert self.control_socket is not None

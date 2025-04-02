@@ -42,13 +42,14 @@ import zmq
 import zmq_anyio
 from anyio import (
     TASK_STATUS_IGNORED,
+    CancelScope,
     Event,
     create_memory_object_stream,
     create_task_group,
     sleep,
     to_thread,
 )
-from anyio.abc import TaskStatus
+from anyio.abc import TaskGroup, TaskStatus
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -131,6 +132,7 @@ class Kernel(SingletonConfigurable):
     _send_exec_request: Dict[dict[zmq_anyio.Socket, MemoryObjectSendStream]] = Dict()
     _main_subshell_ready = Instance(Event, ())
     asyncio_event_loop = Instance(asyncio.AbstractEventLoop, allow_none=True, read_only=True)  # type:ignore[call-overload]
+    tg = Instance(TaskGroup, read_only=True)
 
     log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
@@ -441,23 +443,23 @@ class Kernel(SingletonConfigurable):
                 if not socket.started.is_set():
                     await tg.start(socket.start)
                 tg.start_soon(self._process_shell, socket)
-                tg.start_soon(self._execute_request_handler, receive_stream, subshell_id)
+                tg.start_soon(self._execute_request_loop, receive_stream)
                 if subshell_id is None:
                     # Main subshell.
-                    await to_thread.run_sync(self.shell_stop.wait)
-                    tg.cancel_scope.cancel()
+                    with contextlib.suppress(RuntimeError):
+                        self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
+                    async with create_task_group() as tg_main:
+                        with CancelScope(shield=True) as scope:
+                            self.set_trait("tg", tg_main)
+                            self._main_subshell_ready.set()
+                        await to_thread.run_sync(self.shell_stop.wait)
+                        scope.cancel()
+                        tg.cancel_scope.cancel()
             self._send_exec_request.pop(socket, None)
-            self.set_trait("asyncio_event_loop", None)
             await send_stream.aclose()
             await receive_stream.aclose()
 
-    async def _execute_request_handler(
-        self, receive_stream: MemoryObjectReceiveStream, subshell_id: str | None
-    ):
-        if subshell_id is None:
-            with contextlib.suppress(RuntimeError):
-                self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
-            self._main_subshell_ready.set()
+    async def _execute_request_loop(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:
             async for handler, (received_time, socket, idents, msg) in receive_stream:
                 try:

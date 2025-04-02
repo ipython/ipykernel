@@ -401,9 +401,9 @@ def loop_cocoa_exit(kernel):
 def loop_asyncio(kernel):
     """Verify the asyncio event loop is supported."""
 
-    if not kernel.asyncio_event_loop or not kernel.asyncio_event_loop.is_running():
-        msg = "The asyncio event loop is not running so is not supported."
-        raise RuntimeError(msg)
+    import asyncio
+
+    asyncio.get_running_loop()
 
 
 def set_qt_api_env_from_gui(gui):

@@ -441,12 +441,9 @@ class Kernel(SingletonConfigurable):
                 if not socket.started.is_set():
                     await tg.start(socket.start)
                 tg.start_soon(self._process_shell, socket)
-                tg.start_soon(self._execute_request_handler, receive_stream)
+                tg.start_soon(self._execute_request_handler, receive_stream, subshell_id)
                 if subshell_id is None:
                     # Main subshell.
-                    with contextlib.suppress(RuntimeError):
-                        self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
-                    self._main_subshell_ready.set()
                     await to_thread.run_sync(self.shell_stop.wait)
                     tg.cancel_scope.cancel()
             self._send_exec_request.pop(socket, None)
@@ -454,7 +451,13 @@ class Kernel(SingletonConfigurable):
             await send_stream.aclose()
             await receive_stream.aclose()
 
-    async def _execute_request_handler(self, receive_stream: MemoryObjectReceiveStream):
+    async def _execute_request_handler(
+        self, receive_stream: MemoryObjectReceiveStream, subshell_id: str | None
+    ):
+        if subshell_id is None:
+            with contextlib.suppress(RuntimeError):
+                self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
+            self._main_subshell_ready.set()
         async with receive_stream:
             async for handler, (received_time, socket, idents, msg) in receive_stream:
                 try:

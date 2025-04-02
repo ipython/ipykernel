@@ -452,6 +452,7 @@ class Kernel(SingletonConfigurable):
             self._send_exec_request.pop(socket, None)
             self.set_trait("asyncio_event_loop", None)
             await send_stream.aclose()
+            await receive_stream.aclose()
 
     async def _execute_request_handler(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:

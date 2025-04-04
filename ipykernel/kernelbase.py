@@ -42,7 +42,6 @@ import zmq
 import zmq_anyio
 from anyio import (
     TASK_STATUS_IGNORED,
-    CancelScope,
     Event,
     create_memory_object_stream,
     create_task_group,
@@ -441,17 +440,18 @@ class Kernel(SingletonConfigurable):
         if socket not in self._send_exec_request:
             send_stream, receive_stream = create_memory_object_stream(max_buffer_size=math.inf)
             self._send_exec_request[socket] = send_stream
-            async with create_task_group() as tg:
-                if not socket.started.is_set():
-                    await tg.start(socket.start)
-                tg.start_soon(self._process_shell, socket)
-                tg.start_soon(self._execute_request_loop, receive_stream)
-                if not subshell_id:
-                    # Main subshell
-                    with contextlib.suppress(RuntimeError):
-                        self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
-                    async with create_task_group() as tg_main:
-                        with CancelScope(shield=True) as scope:
+            try:
+                async with create_task_group() as tg:
+                    if not socket.started.is_set():
+                        await tg.start(socket.start)
+                    tg.start_soon(self._process_shell, socket)
+                    tg.start_soon(self._execute_request_loop, receive_stream)
+                    if not subshell_id:
+                        # Main subshell
+                        with contextlib.suppress(RuntimeError):
+                            self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
+                        async with create_task_group() as tg_main:
+                            tg_main.cancel_scope.shield = True
                             self._tg_main = tg_main
                             async with BlockingPortal() as portal:
                                 # Provide a portal for general threadsafe access
@@ -459,12 +459,15 @@ class Kernel(SingletonConfigurable):
                                 self._main_subshell_ready.set()
                                 await to_thread.run_sync(self.shell_stop.wait)
                                 await portal.stop(True)
-                            scope.cancel()
-                        tg_main.cancel_scope.cancel()
-                    tg.cancel_scope.cancel()
-            self._send_exec_request.pop(socket, None)
-            await send_stream.aclose()
-            await receive_stream.aclose()
+                            tg_main.cancel_scope.cancel()
+                        tg.cancel_scope.cancel()
+            except BaseException:
+                if not self.shell_stop.is_set():
+                    raise
+            finally:
+                self._send_exec_request.pop(socket, None)
+                await send_stream.aclose()
+                await receive_stream.aclose()
 
     async def _execute_request_loop(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:

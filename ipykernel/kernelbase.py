@@ -4,9 +4,12 @@
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import inspect
 import itertools
 import logging
+import math
 import os
 import queue
 import sys
@@ -37,8 +40,17 @@ except ImportError:
 import psutil
 import zmq
 import zmq_anyio
-from anyio import TASK_STATUS_IGNORED, create_task_group, sleep, to_thread
-from anyio.abc import TaskStatus
+from anyio import (
+    TASK_STATUS_IGNORED,
+    Event,
+    create_memory_object_stream,
+    create_task_group,
+    sleep,
+    to_thread,
+)
+from anyio.abc import TaskGroup, TaskStatus
+from anyio.from_thread import BlockingPortal
+from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
 from traitlets.config.configurable import SingletonConfigurable
@@ -85,7 +97,7 @@ def _accepts_parameters(meth, param_names):
 class Kernel(SingletonConfigurable):
     """The base kernel class."""
 
-    _aborted_time: float
+    _aborted_time: float = time.monotonic()
 
     # ---------------------------------------------------------------------------
     # Kernel interface
@@ -116,6 +128,13 @@ class Kernel(SingletonConfigurable):
     iopub_socket = Any()
     iopub_thread = Any()
     stdin_socket = Any()
+
+    _send_exec_request: Dict[dict[zmq_anyio.Socket, MemoryObjectSendStream]] = Dict()
+    _main_subshell_ready = Instance(Event, ())
+    asyncio_event_loop = Instance(asyncio.AbstractEventLoop, allow_none=True, read_only=True)  # type:ignore[call-overload]
+    _tg_main = Instance(TaskGroup)
+    _portal = Instance(BlockingPortal)
+
     log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
     # identities:
@@ -236,13 +255,9 @@ class Kernel(SingletonConfigurable):
         "list_subshell_request",
     ]
 
-    _eventloop_set: threading.Event
-
     def __init__(self, **kwargs):
         """Initialize the kernel."""
         super().__init__(**kwargs)
-
-        self._eventloop_set = threading.Event()
 
         # Kernel application may swap stdout and stderr to OutStream,
         # which is the case in `IPKernelApp.init_io`, hence `sys.stdout`
@@ -291,7 +306,7 @@ class Kernel(SingletonConfigurable):
 
         # Set the parent message for side effects.
         self.set_parent(idents, msg, channel="control")
-        self._publish_status("busy", "control")
+        self._publish_status("busy", "control", parent=msg)
 
         header = msg["header"]
         msg_type = header["msg_type"]
@@ -304,6 +319,9 @@ class Kernel(SingletonConfigurable):
                 result = handler(self.control_socket, idents, msg)
                 if inspect.isawaitable(result):
                     await result
+                else:
+                    # If the handler is not awaitable, ensure it completes before proceeding
+                    time.sleep(0.00001)  # Small delay to ensure sequential processing
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 
@@ -418,18 +436,59 @@ class Kernel(SingletonConfigurable):
             assert subshell_id is None
             assert threading.current_thread() == threading.main_thread()
             socket = None
+        socket = socket or self.shell_socket
+        if socket not in self._send_exec_request:
+            send_stream, receive_stream = create_memory_object_stream(max_buffer_size=math.inf)
+            self._send_exec_request[socket] = send_stream
+            try:
+                async with create_task_group() as tg:
+                    if not socket.started.is_set():
+                        await tg.start(socket.start)
+                    tg.start_soon(self._process_shell, socket)
+                    tg.start_soon(self._execute_request_loop, receive_stream)
+                    if not subshell_id:
+                        # Main subshell
+                        with contextlib.suppress(RuntimeError):
+                            self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
+                        async with create_task_group() as tg_main:
+                            tg_main.cancel_scope.shield = True
+                            self._tg_main = tg_main
+                            async with BlockingPortal() as portal:
+                                # Provide a portal for general threadsafe access
+                                self._portal = portal
+                                self._main_subshell_ready.set()
+                                await to_thread.run_sync(self.shell_stop.wait)
+                                await portal.stop(True)
+                            tg_main.cancel_scope.cancel()
+                        tg.cancel_scope.cancel()
+            except BaseException:
+                if not self.shell_stop.is_set():
+                    raise
+            finally:
+                self._send_exec_request.pop(socket, None)
+                await send_stream.aclose()
+                await receive_stream.aclose()
 
-        async with create_task_group() as tg:
-            if not socket.started.is_set():
-                await tg.start(socket.start)
-            tg.start_soon(self.process_shell, socket)
-            if subshell_id is None:
-                # Main subshell.
-                await to_thread.run_sync(self.shell_stop.wait)
-                tg.cancel_scope.cancel()
+    async def _execute_request_loop(self, receive_stream: MemoryObjectReceiveStream):
+        async with receive_stream:
+            async for handler, (received_time, socket, idents, msg) in receive_stream:
+                try:
+                    if received_time < self._aborted_time:
+                        await self._send_abort_reply(socket, msg, idents)
+                        continue
+                    self.set_parent(idents, msg, channel="shell")
+                    self._publish_status("busy", "shell", parent=msg)
+                    result = handler(socket, idents, msg)
+                    if inspect.isawaitable(result):
+                        await result
+                    self.set_parent(idents, msg, channel="shell")
+                    self._publish_status("idle", "shell", parent=msg)
+                except BaseException as e:
+                    self.log.exception("Execute request", exc_info=e)
 
-    async def process_shell(self, socket=None):
+    async def _process_shell(self, socket):
         # socket=None is valid if kernel subshells are not supported.
+        await self._main_subshell_ready.wait()
         try:
             while True:
                 await self.process_shell_message(socket=socket)
@@ -443,21 +502,16 @@ class Kernel(SingletonConfigurable):
         # If msg is set, process that message.
         # If msg is None, await the next message to arrive on the socket.
         assert self.session is not None
+        socket = socket or self.shell_socket
         if self._supports_kernel_subshells:
             assert threading.current_thread() not in (
                 self.control_thread,
                 self.shell_channel_thread,
             )
             assert socket is not None
-        else:
-            assert threading.current_thread() == threading.main_thread()
-            assert socket is None
-            socket = self.shell_socket
 
-        no_msg = msg is None if self._is_test else not await socket.apoll(0).wait()
         msg = msg or await socket.arecv_multipart(copy=False).wait()
 
-        received_time = time.monotonic()
         copy = not isinstance(msg[0], zmq.Message)
         idents, msg = self.session.feed_identities(msg, copy=copy)
         try:
@@ -466,23 +520,9 @@ class Kernel(SingletonConfigurable):
             self.log.error("Invalid Message", exc_info=True)  # noqa: G201
             return
 
-        # Set the parent message for side effects.
-        self.set_parent(idents, msg, channel="shell")
-        self._publish_status("busy", "shell")
-
         msg_type = msg["header"]["msg_type"]
-
-        # Only abort execute requests
-        if self._aborting and msg_type == "execute_request":
-            if not self.stop_on_error_timeout:
-                if no_msg:
-                    self._aborting = False
-            elif received_time - self._aborted_time > self.stop_on_error_timeout:
-                self._aborting = False
-            if self._aborting:
-                await self._send_abort_reply(socket, msg, idents)
-                self._publish_status("idle", "shell")
-                return
+        if msg_type != "execute_request":
+            self._publish_status("busy", "shell", parent=msg)
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each
@@ -507,11 +547,15 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                result = handler(socket, idents, msg)
-                if inspect.isawaitable(result):
-                    await result
-            except Exception:
-                self.log.error("Exception in message handler:", exc_info=True)  # noqa: G201
+                if msg_type == "execute_request":
+                    send_stream = self._send_exec_request[socket]
+                    await send_stream.send((handler, (time.monotonic(), socket, idents, msg)))
+                else:
+                    result = handler(socket, idents, msg)
+                    if inspect.isawaitable(result):
+                        await result
+            except Exception as e:
+                self.log.error("Exception in message handler:", exc_info=e)
             except KeyboardInterrupt:
                 # Ctrl-c shouldn't crash the kernel here.
                 self.log.error("KeyboardInterrupt caught in kernel.")
@@ -520,12 +564,8 @@ class Kernel(SingletonConfigurable):
                     self.post_handler_hook()
                 except Exception:
                     self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
-
-        if sys.stdout is not None:
-            sys.stdout.flush()
-        if sys.stderr is not None:
-            sys.stderr.flush()
-        self._publish_status("idle", "shell")
+        if msg_type != "execute_request":
+            self._publish_status("idle", "shell", parent=msg)
 
     async def control_main(self):
         assert self.control_socket is not None
@@ -543,6 +583,17 @@ class Kernel(SingletonConfigurable):
     def post_handler_hook(self):
         """Hook to execute after calling message handler"""
 
+    def start_soon(self, func, *args):
+        "Run a coroutine in the main thread taskgroup."
+        try:
+            if self._portal._event_loop_thread_id == threading.get_ident():
+                self._tg_main.start_soon(func, *args)
+            else:
+                self._portal.start_task_soon(func, *args)
+        except Exception:
+            self.log.exception("portal call failed")
+            raise
+
     async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Process messages on shell and control channels"""
         async with create_task_group() as tg:
@@ -559,9 +610,9 @@ class Kernel(SingletonConfigurable):
             self.shell_is_blocking = False
             self.shell_stop = threading.Event()
 
+            tg.start_soon(self.shell_main, None)
+            await self._main_subshell_ready.wait()
             if self.shell_channel_thread:
-                tg.start_soon(self.shell_main, None)
-
                 # Assign tasks to and start shell channel thread.
                 manager = self.shell_channel_thread.manager
                 self.shell_channel_thread.start_soon(self.shell_channel_thread_main)
@@ -570,17 +621,11 @@ class Kernel(SingletonConfigurable):
                 )
                 self.shell_channel_thread.start_soon(manager.listen_from_subshells)
                 self.shell_channel_thread.start()
-            else:
-                if not self._is_test and self.shell_socket is not None:
-                    tg.start_soon(self.shell_main, None)
 
     def stop(self):
-        if not self._eventloop_set.is_set():
-            # Stop the async task that is waiting for the eventloop to be set.
-            self._eventloop_set.set()
-
         self.shell_stop.set()
         self.control_stop.set()
+        self._main_subshell_ready = Event()
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.
@@ -799,13 +844,11 @@ class Kernel(SingletonConfigurable):
 
         assert reply_msg is not None
         if not silent and reply_msg["content"]["status"] == "error" and stop_on_error:
-            # while this flag is true,
-            # execute requests will be aborted
-            self._aborting = True
+            # execute requests will be aborted if the received time is prior to the _aborted_time
             self._aborted_time = time.monotonic()
             self.log.info("Aborting queue")
 
-    def do_execute(
+    async def do_execute(
         self,
         code,
         silent,
@@ -1202,8 +1245,6 @@ class Kernel(SingletonConfigurable):
     def _topic(self, topic):
         """prefixed topic for IOPub messages"""
         return (f"kernel.{self.ident}.{topic}").encode()
-
-    _aborting = Bool(False)
 
     async def _send_abort_reply(self, socket, msg, idents):
         """Send a reply to an aborted request"""

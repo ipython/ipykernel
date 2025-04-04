@@ -1,6 +1,7 @@
 """Test IPythonKernel directly"""
 
 import os
+import time
 
 import pytest
 from IPython.core.history import DummyDB
@@ -33,19 +34,24 @@ async def test_direct_kernel_info_request(ipkernel):
 
 
 async def test_direct_execute_request(ipkernel: MockIPyKernel) -> None:
-    reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
+    reply = await ipkernel.test_shell_message(
+        "execute_request", dict(code="invalid_call()", silent=False)
+    )
     assert reply["header"]["msg_type"] == "execute_reply"
+    ipkernel._aborted_time += 10
     reply = await ipkernel.test_shell_message(
         "execute_request", dict(code="trigger_error", silent=False)
     )
     assert reply["content"]["status"] == "aborted"
-
-    reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
+    ipkernel._aborted_time = time.monotonic()
+    reply = await ipkernel.test_shell_message(
+        "execute_request", dict(code="okay=True", silent=False)
+    )
     assert reply["header"]["msg_type"] == "execute_reply"
 
 
 async def test_direct_execute_request_aborting(ipkernel):
-    ipkernel._aborting = True
+    ipkernel._aborted_time = time.monotonic() + 10  # Set in the future
     reply = await ipkernel.test_shell_message("execute_request", dict(code="hello", silent=False))
     assert reply["header"]["msg_type"] == "execute_reply"
     assert reply["content"]["status"] == "aborted"
@@ -171,3 +177,32 @@ async def test_do_debug_request(ipkernel: IPythonKernel) -> None:
     msg = ipkernel.session.msg("debug_request", {})
     ipkernel.session.serialize(msg)
     await ipkernel.do_debug_request(msg)
+
+
+@pytest.mark.parametrize("mode", ["main", "external"])
+@pytest.mark.parametrize("exception", [True, False])
+async def test_start_soon(mode, exception: bool, ipkernel: IPythonKernel, anyio_backend: str):
+    # Test we can start coroutines from various scopes
+    import anyio
+    from anyio import to_thread
+
+    async def my_test(event: anyio.Event):
+        event.set()
+        if exception:
+            raise ValueError
+
+    events = []
+
+    async def start():
+        event = anyio.Event()
+        if mode == "main":
+            ipkernel.start_soon(my_test, event)
+        else:
+            await to_thread.run_sync(ipkernel.start_soon, my_test, event)
+        events.append(event)
+
+    for _ in range(50):
+        await start()
+
+    for event in events:
+        await event.wait()

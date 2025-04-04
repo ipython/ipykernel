@@ -583,13 +583,13 @@ class Kernel(SingletonConfigurable):
     def post_handler_hook(self):
         """Hook to execute after calling message handler"""
 
-    def start_soon(self, func, *args):
+    def start_soon(self, func, *args, name: str | None = None):
         "Run a coroutine in the main thread taskgroup."
         try:
             if self._portal._event_loop_thread_id == threading.get_ident():
-                self._tg_main.start_soon(func, *args)
+                self._tg_main.start_soon(func, *args, name=name)
             else:
-                self._portal.start_task_soon(func, *args)
+                self._portal.start_task_soon(func, *args, name=name)
         except Exception:
             self.log.exception("portal call failed")
             raise

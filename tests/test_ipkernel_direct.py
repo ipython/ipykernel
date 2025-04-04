@@ -177,3 +177,32 @@ async def test_do_debug_request(ipkernel: IPythonKernel) -> None:
     msg = ipkernel.session.msg("debug_request", {})
     ipkernel.session.serialize(msg)
     await ipkernel.do_debug_request(msg)
+
+
+@pytest.mark.parametrize("mode", ["main", "external"])
+@pytest.mark.parametrize("exception", [True, False])
+async def test_start_soon(mode, exception: bool, ipkernel: IPythonKernel, anyio_backend: str):
+    # Test we can start coroutines from various scopes
+    import anyio
+    from anyio import to_thread
+
+    async def my_test(event: anyio.Event):
+        event.set()
+        if exception:
+            raise ValueError
+
+    events = []
+
+    async def start():
+        event = anyio.Event()
+        if mode == "main":
+            ipkernel.start_soon(my_test, event)
+        else:
+            await to_thread.run_sync(ipkernel.start_soon, my_test, event)
+        events.append(event)
+
+    for _ in range(50):
+        await start()
+
+    for event in events:
+        await event.wait()

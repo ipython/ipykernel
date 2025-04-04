@@ -50,6 +50,7 @@ from anyio import (
     to_thread,
 )
 from anyio.abc import TaskGroup, TaskStatus
+from anyio.from_thread import BlockingPortal
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -132,7 +133,8 @@ class Kernel(SingletonConfigurable):
     _send_exec_request: Dict[dict[zmq_anyio.Socket, MemoryObjectSendStream]] = Dict()
     _main_subshell_ready = Instance(Event, ())
     asyncio_event_loop = Instance(asyncio.AbstractEventLoop, allow_none=True, read_only=True)  # type:ignore[call-overload]
-    tg = Instance(TaskGroup, read_only=True)
+    _tg_main = Instance(TaskGroup)
+    _portal = Instance(BlockingPortal)
 
     log: logging.Logger = Instance(logging.Logger, allow_none=True)  # type:ignore[assignment]
 
@@ -444,17 +446,22 @@ class Kernel(SingletonConfigurable):
                     await tg.start(socket.start)
                 tg.start_soon(self._process_shell, socket)
                 tg.start_soon(self._execute_request_loop, receive_stream)
-                if subshell_id is None:
-                    # Main subshell.
+                if not subshell_id:
+                    # Main subshell
                     with contextlib.suppress(RuntimeError):
                         self.set_trait("asyncio_event_loop", asyncio.get_running_loop())
                     async with create_task_group() as tg_main:
                         with CancelScope(shield=True) as scope:
-                            self.set_trait("tg", tg_main)
-                            self._main_subshell_ready.set()
-                        await to_thread.run_sync(self.shell_stop.wait)
-                        scope.cancel()
-                        tg.cancel_scope.cancel()
+                            self._tg_main = tg_main
+                            async with BlockingPortal() as portal:
+                                # Provide a portal for general threadsafe access
+                                self._portal = portal
+                                self._main_subshell_ready.set()
+                                await to_thread.run_sync(self.shell_stop.wait)
+                                await portal.stop(True)
+                            scope.cancel()
+                        tg_main.cancel_scope.cancel()
+                    tg.cancel_scope.cancel()
             self._send_exec_request.pop(socket, None)
             await send_stream.aclose()
             await receive_stream.aclose()
@@ -573,6 +580,17 @@ class Kernel(SingletonConfigurable):
     def post_handler_hook(self):
         """Hook to execute after calling message handler"""
 
+    def start_soon(self, func, *args):
+        "Run a coroutine in the main thread taskgroup."
+        try:
+            if self._portal._event_loop_thread_id == threading.get_ident():
+                self._tg_main.start_soon(func, *args)
+            else:
+                self._portal.start_task_soon(func, *args)
+        except Exception:
+            self.log.exception("portal call failed")
+            raise
+
     async def start(self, *, task_status: TaskStatus = TASK_STATUS_IGNORED) -> None:
         """Process messages on shell and control channels"""
         async with create_task_group() as tg:
@@ -604,6 +622,7 @@ class Kernel(SingletonConfigurable):
     def stop(self):
         self.shell_stop.set()
         self.control_stop.set()
+        self._main_subshell_ready = Event()
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.

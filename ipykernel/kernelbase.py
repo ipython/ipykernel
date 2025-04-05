@@ -472,19 +472,19 @@ class Kernel(SingletonConfigurable):
     async def _execute_request_loop(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:
             async for handler, (received_time, socket, idents, msg) in receive_stream:
+                self.set_parent(idents, msg, channel="shell")
+                self._publish_status("busy", "shell", parent=msg)
                 try:
                     if received_time < self._aborted_time:
                         await self._send_abort_reply(socket, msg, idents)
                         continue
-                    self.set_parent(idents, msg, channel="shell")
-                    self._publish_status("busy", "shell", parent=msg)
                     result = handler(socket, idents, msg)
                     if inspect.isawaitable(result):
                         await result
-                    self.set_parent(idents, msg, channel="shell")
-                    self._publish_status("idle", "shell", parent=msg)
                 except BaseException as e:
                     self.log.exception("Execute request", exc_info=e)
+                finally:
+                    self._publish_status("idle", "shell", parent=msg)
 
     async def _process_shell(self, socket):
         # socket=None is valid if kernel subshells are not supported.

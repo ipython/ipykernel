@@ -10,7 +10,6 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta
 from subprocess import Popen
 from tempfile import TemporaryDirectory
 
@@ -602,16 +601,20 @@ def test_control_thread_priority():
 
 def test_sequential_control_messages():
     with new_kernel() as kc:
-        msg_id = kc.execute("import time")
+        msg_id = kc.execute("import anyio")
         get_reply(kc, msg_id)
 
         # Send multiple messages on the control channel.
         # Using execute messages to vary duration.
-        sleeps = [0.6, 0.3, 0.1]
+        sleeps = [0.0, 0.6, 0.3, 0.1, 0.0, 0.0]
 
         # Prepare messages
         msgs = [
-            kc.session.msg("execute_request", {"code": f"time.sleep({sleep})"}) for sleep in sleeps
+            kc.session.msg(
+                "execute_request",
+                {"code": f"await anyio.sleep({sleep})", "user_expressions": {"i": str(i)}},
+            )
+            for i, sleep in enumerate(sleeps)
         ]
         msg_ids = [msg["header"]["msg_id"] for msg in msgs]
 
@@ -620,30 +623,9 @@ def test_sequential_control_messages():
             kc.control_channel.send(msg)
 
         # Get replies
-        replies = [get_reply(kc, msg_id, channel="control") for msg_id in msg_ids]
-
-        def ensure_datetime(arg):
-            # Support arg which is a datetime or str.
-            if isinstance(arg, str):
-                if sys.version_info[:2] < (3, 11) and arg.endswith("Z"):
-                    # Python < 3.11 doesn't support "Z" suffix in datetime.fromisoformat,
-                    # so use alternative timezone format.
-                    # https://github.com/python/cpython/issues/80010
-                    arg = arg[:-1] + "+00:00"
-                return datetime.fromisoformat(arg)
-            return arg
-
-        # Check messages are processed in order, one at a time, and of a sensible duration.
-        previous_end = None
-        for reply, sleep in zip(replies, sleeps):
-            start = ensure_datetime(reply["metadata"]["started"])
-            end = ensure_datetime(reply["header"]["date"])
-
-            if previous_end is not None:
-                assert start >= previous_end
-            previous_end = end
-
-            assert end >= start + timedelta(seconds=sleep)
+        for ii, reply in enumerate(get_reply(kc, msg_id, channel="control") for msg_id in msg_ids):
+            i = reply["content"]["user_expressions"]["i"]["data"]["text/plain"]
+            assert str(ii) == i
 
 
 def _child():

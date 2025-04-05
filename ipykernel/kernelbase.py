@@ -745,24 +745,6 @@ class Kernel(SingletonConfigurable):
             metadata,
         )
 
-    def init_metadata(self, parent):
-        """Initialize metadata.
-
-        Run at the beginning of execution requests.
-        """
-        # FIXME: `started` is part of ipyparallel
-        # Remove for ipykernel 5.0
-        return {
-            "started": now(),
-        }
-
-    def finish_metadata(self, parent, metadata, reply_content):
-        """Finish populating metadata.
-
-        Run after completing an execution request.
-        """
-        return metadata
-
     async def execute_request(self, socket, ident, parent):
         """handle an execute_request"""
         if not self.session:
@@ -781,8 +763,6 @@ class Kernel(SingletonConfigurable):
             return
 
         stop_on_error = content.get("stop_on_error", True)
-
-        metadata = self.init_metadata(parent)
 
         # Re-broadcast our input for the benefit of listening clients, and
         # start computing output
@@ -829,14 +809,12 @@ class Kernel(SingletonConfigurable):
 
         # Send the reply.
         reply_content = json_clean(reply_content)
-        metadata = self.finish_metadata(parent, metadata, reply_content)
 
         reply_msg = self.session.send(
             socket,
             "execute_reply",
             content=reply_content,
             parent=parent,
-            metadata=metadata,
             ident=ident,
         )
 
@@ -1253,15 +1231,11 @@ class Kernel(SingletonConfigurable):
         self.log.info("Aborting %s: %s", msg["header"]["msg_id"], msg["header"]["msg_type"])
         reply_type = msg["header"]["msg_type"].rsplit("_", 1)[0] + "_reply"
         status = {"status": "aborted"}
-        md = self.init_metadata(msg)
-        md = self.finish_metadata(msg, md, status)
-        md.update(status)
 
         assert self.session is not None
         self.session.send(
             socket,
             reply_type,
-            metadata=md,
             content=status,
             parent=msg,
             ident=idents,

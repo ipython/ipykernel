@@ -294,35 +294,6 @@ class IPythonKernel(KernelBase):
         if channel == "shell" and self.shell:
             self.shell.set_parent(parent)
 
-    def init_metadata(self, parent):
-        """Initialize metadata.
-
-        Run at the beginning of each execution request.
-        """
-        md = super().init_metadata(parent)
-        # FIXME: remove deprecated ipyparallel-specific code
-        # This is required for ipyparallel < 5.0
-        md.update(
-            {
-                "dependencies_met": True,
-                "engine": self.ident,
-            }
-        )
-        return md
-
-    def finish_metadata(self, parent, metadata, reply_content):
-        """Finish populating metadata.
-
-        Run after completing an execution request.
-        """
-        # FIXME: remove deprecated ipyparallel-specific code
-        # This is required by ipyparallel < 5.0
-        metadata["status"] = reply_content["status"]
-        if reply_content["status"] == "error" and reply_content["ename"] == "UnmetDependency":
-            metadata["dependencies_met"] = False
-
-        return metadata
-
     def _forward_input(self, allow_stdin=False):
         """Forward raw_input and getpass to the current frontend.
 
@@ -477,10 +448,6 @@ class IPythonKernel(KernelBase):
                     "evalue": str(err),
                 }
             )
-
-            # FIXME: deprecated piece for ipyparallel (remove in 5.0):
-            e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method="execute")
-            reply_content["engine_info"] = e_info
 
         # Return the execution counter so clients can display prompts
         reply_content["execution_count"] = shell.execution_count - 1
@@ -661,72 +628,6 @@ class IPythonKernel(KernelBase):
         if status == "incomplete":
             r["indent"] = " " * indent_spaces
         return r
-
-    def do_apply(self, content, bufs, msg_id, reply_metadata):
-        """Handle an apply request."""
-        try:
-            from ipyparallel.serialize import serialize_object, unpack_apply_message
-        except ImportError:
-            from .serialize import serialize_object, unpack_apply_message
-
-        shell = self.shell
-        assert shell is not None
-        try:
-            working = shell.user_ns
-
-            prefix = "_" + str(msg_id).replace("-", "") + "_"
-            f, args, kwargs = unpack_apply_message(bufs, working, copy=False)
-
-            fname = getattr(f, "__name__", "f")
-
-            fname = prefix + "f"
-            argname = prefix + "args"
-            kwargname = prefix + "kwargs"
-            resultname = prefix + "result"
-
-            ns = {fname: f, argname: args, kwargname: kwargs, resultname: None}
-            # print ns
-            working.update(ns)
-            code = f"{resultname} = {fname}(*{argname},**{kwargname})"
-            try:
-                exec(code, shell.user_global_ns, shell.user_ns)
-                result = working.get(resultname)
-            finally:
-                for key in ns:
-                    working.pop(key)
-
-            assert self.session is not None
-            result_buf = serialize_object(
-                result,
-                buffer_threshold=self.session.buffer_threshold,
-                item_threshold=self.session.item_threshold,
-            )
-
-        except BaseException as e:
-            # invoke IPython traceback formatting
-            shell.showtraceback()
-            reply_content = {
-                "traceback": shell._last_traceback or [],
-                "ename": str(type(e).__name__),
-                "evalue": str(e),
-            }
-            # FIXME: deprecated piece for ipyparallel (remove in 5.0):
-            e_info = dict(engine_uuid=self.ident, engine_id=self.int_id, method="apply")
-            reply_content["engine_info"] = e_info
-
-            self.send_response(
-                self.iopub_socket,
-                "error",
-                reply_content,
-                ident=self._topic("error"),
-            )
-            self.log.info("Exception in apply request:\n%s", "\n".join(reply_content["traceback"]))
-            result_buf = []
-            reply_content["status"] = "error"
-        else:
-            reply_content = {"status": "ok"}
-
-        return reply_content, result_buf
 
     def do_clear(self):
         """Clear the kernel."""

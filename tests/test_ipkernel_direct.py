@@ -137,17 +137,6 @@ async def test_is_complete_request(ipkernel: MockIPyKernel) -> None:
     assert reply["header"]["msg_type"] == "is_complete_reply"
 
 
-def test_do_apply(ipkernel: MockIPyKernel) -> None:
-    from ipyparallel import pack_apply_message
-
-    def hello():
-        pass
-
-    msg = pack_apply_message(hello, (), {})
-    ipkernel.do_apply(None, msg, "1", {})
-    ipkernel.do_apply(None, [], "1", {})
-
-
 async def test_direct_debug_request(ipkernel):
     reply = await ipkernel.test_control_message("debug_request", {})
     assert reply["header"]["msg_type"] == "debug_reply"
@@ -165,12 +154,6 @@ async def test_dispatch_debugpy(ipkernel: IPythonKernel) -> None:
 
 def test_create_comm():
     assert isinstance(_create_comm(), BaseComm)
-
-
-def test_finish_metadata(ipkernel: IPythonKernel) -> None:
-    reply_content = dict(status="error", ename="UnmetDependency")
-    metadata = ipkernel.finish_metadata({}, {}, reply_content)
-    assert metadata["dependencies_met"] is False
 
 
 async def test_do_debug_request(ipkernel: IPythonKernel) -> None:

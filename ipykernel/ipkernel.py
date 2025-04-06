@@ -286,12 +286,9 @@ class IPythonKernel(KernelBase):
         if self.debugpy_socket is not None:
             self.debugpy_stop.set()
 
-    def set_parent(self, ident, parent, channel="shell"):
-        """Overridden from parent to tell the display hook and output streams
-        about the parent message.
-        """
-        super().set_parent(ident, parent, channel)
-        if channel == "shell" and self.shell:
+    def _set_parent_ident(self, parent, ident):
+        super()._set_parent_ident(parent, ident)
+        if self.shell:
             self.shell.set_parent(parent)
 
     def _forward_input(self, allow_stdin=False):

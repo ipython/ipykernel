@@ -22,8 +22,6 @@ from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals
 
-from .thread import CONTROL_THREAD_NAME
-
 if sys.platform != "win32":
     from signal import SIGKILL
 else:
@@ -174,17 +172,6 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parents: Dict[str, t.Any] = Dict({"shell": {}, "control": {}})
-    _parent_ident = Dict({"shell": b"", "control": b""})
-
-    @property
-    def _parent_header(self):
-        warnings.warn(
-            "Kernel._parent_header is deprecated in ipykernel 6. Use .get_parent()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_parent()
 
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the
@@ -303,11 +290,7 @@ class Kernel(SingletonConfigurable):
             return
 
         self.log.debug("Control received: %s", msg)
-
-        # Set the parent message for side effects.
-        self.set_parent(idents, msg, channel="control")
-        self._publish_status("busy", "control", parent=msg)
-
+        self._publish_status("busy", msg)
         header = msg["header"]
         msg_type = header["msg_type"]
 
@@ -329,7 +312,7 @@ class Kernel(SingletonConfigurable):
             sys.stdout.flush()
         if sys.stderr is not None:
             sys.stderr.flush()
-        self._publish_status("idle", "control")
+        self._publish_status("idle", msg)
 
     def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
@@ -472,8 +455,8 @@ class Kernel(SingletonConfigurable):
     async def _execute_request_loop(self, receive_stream: MemoryObjectReceiveStream):
         async with receive_stream:
             async for handler, (received_time, socket, idents, msg) in receive_stream:
-                self.set_parent(idents, msg, channel="shell")
-                self._publish_status("busy", "shell", parent=msg)
+                self._set_parent_ident(msg, idents)
+                self._publish_status("busy", msg)
                 try:
                     if received_time < self._aborted_time:
                         await self._send_abort_reply(socket, msg, idents)
@@ -484,7 +467,7 @@ class Kernel(SingletonConfigurable):
                 except BaseException as e:
                     self.log.exception("Execute request", exc_info=e)
                 finally:
-                    self._publish_status("idle", "shell", parent=msg)
+                    self._publish_status("idle", msg)
 
     async def _process_shell(self, socket):
         # socket=None is valid if kernel subshells are not supported.
@@ -522,7 +505,7 @@ class Kernel(SingletonConfigurable):
 
         msg_type = msg["header"]["msg_type"]
         if msg_type != "execute_request":
-            self._publish_status("busy", "shell", parent=msg)
+            self._publish_status("busy", msg)
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each
@@ -565,7 +548,7 @@ class Kernel(SingletonConfigurable):
                 except Exception:
                     self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
         if msg_type != "execute_request":
-            self._publish_status("idle", "shell", parent=msg)
+            self._publish_status("idle", msg)
 
     async def control_main(self):
         assert self.control_socket is not None
@@ -651,7 +634,7 @@ class Kernel(SingletonConfigurable):
             ident=self._topic("execute_input"),
         )
 
-    def _publish_status(self, status, channel, parent=None):
+    def _publish_status(self, status: str, parent):
         """send status (busy/idle) on IOPub"""
         if not self.session:
             return
@@ -659,7 +642,7 @@ class Kernel(SingletonConfigurable):
             self.iopub_socket,
             "status",
             {"execution_state": status},
-            parent=parent or self.get_parent(channel),
+            parent=parent,
             ident=self._topic("status"),
         )
 
@@ -670,46 +653,35 @@ class Kernel(SingletonConfigurable):
             self.iopub_socket,
             "debug_event",
             event,
-            parent=self.get_parent(),
+            parent=self.parent_msg,
             ident=self._topic("debug_event"),
         )
 
-    def set_parent(self, ident, parent, channel="shell"):
-        """Set the current parent request
+    def _set_parent_ident(self, parent, ident):
+        self._parent_msg = parent
+        self._parent_ident = ident
 
-        Side effects (IOPub messages) and replies are associated with
-        the request that caused them via the parent_header.
+    @property
+    def parent_msg(self):
+        """The message of the most recent execution request.
 
-        The parent identity is used to route input_request messages
-        on the stdin channel.
+        .. versionadded:: 7
         """
-        self._parent_ident[channel] = ident
-        self._parents[channel] = parent
+        try:
+            return self._parent_msg
+        except AttributeError:
+            return {}
 
-    def get_parent(self, channel=None):
-        """Get the parent request associated with a channel.
+    @property
+    def parent_ident(self):
+        """The ident of the most recent execution request.
 
-        .. versionadded:: 6
-
-        Parameters
-        ----------
-        channel : str
-            the name of the channel ('shell' or 'control')
-
-        Returns
-        -------
-        message : dict
-            the parent message for the most recent request on the channel.
+        .. versionadded:: 7
         """
-
-        if channel is None:
-            # If a channel is not specified, get information from current thread
-            if threading.current_thread().name == CONTROL_THREAD_NAME:
-                channel = "control"
-            else:
-                channel = "shell"
-
-        return self._parents.get(channel, {})
+        try:
+            return self._parent_ident
+        except AttributeError:
+            return []
 
     def send_response(
         self,
@@ -721,28 +693,24 @@ class Kernel(SingletonConfigurable):
         track=False,
         header=None,
         metadata=None,
-        channel=None,
     ):
         """Send a response to the message we're currently processing.
 
         This accepts all the parameters of :meth:`jupyter_client.session.Session.send`
         except ``parent``.
-
-        This relies on :meth:`set_parent` having been called for the current
-        message.
         """
         if not self.session:
             return None
         return self.session.send(
             socket,
             msg_or_type,
-            content,
-            self.get_parent(channel),
-            ident,
-            buffers,
-            track,
-            header,
-            metadata,
+            content=content,
+            parent=self.parent_msg,
+            ident=ident,
+            buffers=buffers,
+            track=track,
+            header=header,
+            metadata=metadata,
         )
 
     async def execute_request(self, socket, ident, parent):
@@ -1265,12 +1233,7 @@ class Kernel(SingletonConfigurable):
                 UserWarning,
                 stacklevel=2,
             )
-        return self._input_request(
-            prompt,
-            self._parent_ident["shell"],
-            self.get_parent("shell"),
-            password=True,
-        )
+        return self._input_request(prompt, password=True)
 
     def raw_input(self, prompt=""):
         """Forward raw_input to frontends
@@ -1282,14 +1245,9 @@ class Kernel(SingletonConfigurable):
         if not self._allow_stdin:
             msg = "raw_input was called, but this frontend does not support input requests."
             raise StdinNotImplementedError(msg)
-        return self._input_request(
-            str(prompt),
-            self._parent_ident["shell"],
-            self.get_parent("shell"),
-            password=False,
-        )
+        return self._input_request(str(prompt), password=False)
 
-    def _input_request(self, prompt, ident, parent, password=False):
+    def _input_request(self, prompt, *, password=False):
         # Flush output before making the request.
         if sys.stdout is not None:
             sys.stdout.flush()
@@ -1308,7 +1266,13 @@ class Kernel(SingletonConfigurable):
         # Send the input request.
         assert self.session is not None
         content = json_clean(dict(prompt=prompt, password=password))
-        self.session.send(self.stdin_socket, "input_request", content, parent, ident=ident)
+        self.session.send(
+            self.stdin_socket,
+            "input_request",
+            content,
+            parent=self.parent_msg,
+            ident=self.parent_ident,
+        )
 
         # Await a response.
         while True:
@@ -1334,7 +1298,7 @@ class Kernel(SingletonConfigurable):
         try:
             value = reply["content"]["value"]  # type:ignore[index]
         except Exception:
-            self.log.error("Bad input_reply: %s", parent)
+            self.log.error("Bad input_reply: %s", self.parent_msg)
             value = ""
         if value == "\x04":
             # EOF

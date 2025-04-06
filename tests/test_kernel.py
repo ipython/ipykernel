@@ -601,18 +601,18 @@ def test_control_thread_priority():
 
 def test_sequential_control_messages():
     with new_kernel() as kc:
-        msg_id = kc.execute("import anyio")
+        msg_id = kc.execute("import time")
         get_reply(kc, msg_id)
 
         # Send multiple messages on the control channel.
         # Using execute messages to vary duration.
-        sleeps = [0.0, 0.6, 0.3, 0.1, 0.0, 0.0]
+        sleeps = [0.0, 0.6, 0.3, 0.1, 0.0]
 
         # Prepare messages
         msgs = [
             kc.session.msg(
                 "execute_request",
-                {"code": f"await anyio.sleep({sleep})", "user_expressions": {"i": str(i)}},
+                {"code": f"time.sleep({sleep})", "user_expressions": {"i": str(i)}},
             )
             for i, sleep in enumerate(sleeps)
         ]

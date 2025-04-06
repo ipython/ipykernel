@@ -259,7 +259,7 @@ def test_execution_count():
 def test_create_while_execute():
     with new_kernel() as kc:
         # Send request to execute code on main subshell.
-        msg = kc.session.msg("execute_request", {"code": "import time; time.sleep(0.05)"})
+        msg = kc.session.msg("execute_request", {"code": "import time; time.sleep(0.5)"})
         kc.shell_channel.send(msg)
 
         # Create subshell via control channel.

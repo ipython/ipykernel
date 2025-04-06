@@ -95,7 +95,7 @@ class InProcessKernel(IPythonKernel):
     def _abort_queues(self):
         """The in-process kernel doesn't abort requests."""
 
-    def _input_request(self, prompt, ident, parent, password=False):
+    def _input_request(self, prompt, *, password=False):
         # Flush output before making the request.
         self.raw_input_str = None
         if sys.stdout is not None:
@@ -106,10 +106,10 @@ class InProcessKernel(IPythonKernel):
         # Send the input request.
         content = json_clean(dict(prompt=prompt, password=password))
         assert self.session is not None
-        msg = self.session.msg("input_request", content, parent)
+        msg = self.session.msg("input_request", content, self.parent_msg)
         for frontend in self.frontends:
             assert frontend is not None
-            if frontend.session.session == parent["header"]["session"]:
+            if frontend.session.session == self.parent_msg["header"]["session"]:
                 frontend.stdin_channel.call_handlers(msg)
                 break
         else:

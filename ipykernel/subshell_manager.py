@@ -1,4 +1,5 @@
 """Manager of subshells in a kernel."""
+
 from __future__ import annotations
 
 import json

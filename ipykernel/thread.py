@@ -1,4 +1,5 @@
 """Base class for threads."""
+
 from threading import Thread
 
 from tornado.ioloop import IOLoop

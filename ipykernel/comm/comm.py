@@ -39,7 +39,7 @@ class BaseComm(comm.base_comm.BaseComm):  # type:ignore[misc]
             msg_type,
             content,
             metadata=json_clean(metadata),
-            parent=self.kernel.get_parent(),
+            parent=self.kernel.parent_msg,
             ident=self.topic,
             buffers=buffers,
         )

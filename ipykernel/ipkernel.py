@@ -378,7 +378,7 @@ class IPythonKernel(KernelBase):
 
         self._forward_input(allow_stdin)
 
-        reply_content: t.Dict[str, t.Any] = {}
+        reply_content: dict[str, t.Any] = {}
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
@@ -577,7 +577,7 @@ class IPythonKernel(KernelBase):
         """Handle code inspection."""
         name = token_at_cursor(code, cursor_pos)
 
-        reply_content: t.Dict[str, t.Any] = {"status": "ok"}
+        reply_content: dict[str, t.Any] = {"status": "ok"}
         reply_content["data"] = {}
         reply_content["metadata"] = {}
         assert self.shell is not None
@@ -773,7 +773,7 @@ class IPythonKernel(KernelBase):
         threading.Thread.run = run_closure  # type:ignore[method-assign]
 
     def _clean_thread_parent_frames(
-        self, phase: t.Literal["start", "stop"], info: t.Dict[str, t.Any]
+        self, phase: t.Literal["start", "stop"], info: dict[str, t.Any]
     ):
         """Clean parent frames of threads which are no longer running.
         This is meant to be invoked by garbage collector callback hook.

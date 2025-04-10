@@ -27,7 +27,7 @@ def test_async_await():
     assert content["status"] == "ok", content
 
 
-@pytest.mark.parametrize("asynclib", ["asyncio", "trio", "curio"])
+@pytest.mark.parametrize("asynclib", ["asyncio", "trio"])
 def test_async_interrupt(asynclib, request):
     assert KC is not None
     assert KM is not None

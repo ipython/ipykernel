@@ -153,7 +153,6 @@ addopts = [
 ]
 testpaths = [
     "tests",
-    "tests/inprocess"
 ]
 asyncio_mode = "auto"
 timeout = 300

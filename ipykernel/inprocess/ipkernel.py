@@ -193,11 +193,11 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
             gui = self.kernel.gui
         return super().enable_matplotlib(gui)
 
-    def enable_pylab(self, gui=None, import_all=True, welcome_message=False):
+    def enable_pylab(self, gui=None, import_all=True):
         """Activate pylab support at runtime."""
         if not gui:
             gui = self.kernel.gui
-        return super().enable_pylab(gui, import_all, welcome_message)
+        return super().enable_pylab(gui, import_all)
 
 
 InteractiveShellABC.register(InProcessInteractiveShell)

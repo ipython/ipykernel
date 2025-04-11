@@ -13,7 +13,9 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
+
+from intersphinx_registry import get_intersphinx_mapping
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -70,7 +72,7 @@ author = "IPython Development Team"
 # built documents.
 #
 
-version_ns: Dict[str, Any] = {}
+version_ns: dict[str, Any] = {}
 here = Path(__file__).parent.resolve()
 version_py = Path(here) / os.pardir / "ipykernel" / "_version.py"
 with open(version_py) as f:
@@ -159,7 +161,7 @@ html_theme_options = {"navigation_with_keys": False}
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path: List[str] = []
+html_static_path: list[str] = []
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -226,7 +228,7 @@ htmlhelp_basename = "ipykerneldoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements: Dict[str, object] = {}
+latex_elements: dict[str, object] = {}
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
@@ -303,11 +305,9 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3/", None),
-    "ipython": ("https://ipython.readthedocs.io/en/latest", None),
-    "jupyter": ("https://jupyter.readthedocs.io/en/latest", None),
-}
+
+
+intersphinx_mapping = get_intersphinx_mapping(packages={"ipython", "python", "jupyter"})
 
 
 def setup(app):

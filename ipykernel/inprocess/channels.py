@@ -3,8 +3,6 @@
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from typing import List
-
 from jupyter_client.channelsabc import HBChannelABC
 
 # -----------------------------------------------------------------------------
@@ -15,7 +13,7 @@ from jupyter_client.channelsabc import HBChannelABC
 class InProcessChannel:
     """Base class for in-process channels."""
 
-    proxy_methods: List[object] = []
+    proxy_methods: list[object] = []
 
     def __init__(self, client=None):
         """Initialize the channel."""

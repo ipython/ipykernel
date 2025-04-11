@@ -1,5 +1,7 @@
 """The IPython kernel implementation"""
 
+from __future__ import annotations
+
 import asyncio
 import builtins
 import gc
@@ -16,7 +18,7 @@ import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from jupyter_client.session import extract_header
-from traitlets import Any, Bool, HasTraits, Instance, List, Type, observe, observe_compat
+from traitlets import Any, Bool, HasTraits, Instance, List, Type, default, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm
@@ -52,7 +54,7 @@ def _create_comm(*args, **kwargs):
 
 # there can only be one comm manager in a ipykernel process
 _comm_lock = threading.Lock()
-_comm_manager: t.Optional[CommManager] = None
+_comm_manager: CommManager | None = None
 
 
 def _get_comm_manager(*args, **kwargs):
@@ -90,7 +92,11 @@ class IPythonKernel(KernelBase):
         if self.shell is not None:
             self.shell.user_module = change["new"]
 
-    user_ns = Instance(dict, args=None, allow_none=True)
+    user_ns = Instance("collections.abc.Mapping", allow_none=True)
+
+    @default("user_ns")
+    def _default_user_ns(self):
+        return dict()
 
     @observe("user_ns")
     @observe_compat
@@ -378,7 +384,7 @@ class IPythonKernel(KernelBase):
 
         self._forward_input(allow_stdin)
 
-        reply_content: t.Dict[str, t.Any] = {}
+        reply_content: dict[str, t.Any] = {}
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
@@ -577,7 +583,7 @@ class IPythonKernel(KernelBase):
         """Handle code inspection."""
         name = token_at_cursor(code, cursor_pos)
 
-        reply_content: t.Dict[str, t.Any] = {"status": "ok"}
+        reply_content: dict[str, t.Any] = {"status": "ok"}
         reply_content["data"] = {}
         reply_content["metadata"] = {}
         assert self.shell is not None
@@ -773,7 +779,7 @@ class IPythonKernel(KernelBase):
         threading.Thread.run = run_closure  # type:ignore[method-assign]
 
     def _clean_thread_parent_frames(
-        self, phase: t.Literal["start", "stop"], info: t.Dict[str, t.Any]
+        self, phase: t.Literal["start", "stop"], info: dict[str, t.Any]
     ):
         """Clean parent frames of threads which are no longer running.
         This is meant to be invoked by garbage collector callback hook.

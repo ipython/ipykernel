@@ -88,9 +88,6 @@ class InProcessKernel(IPythonKernel):
     def _abort_queues(self):
         """The in-process kernel doesn't abort requests."""
 
-    async def _flush_control_queue(self):
-        """No need to flush control queues for in-process"""
-
     def _input_request(self, prompt, ident, parent, password=False):
         # Flush output before making the request.
         self.raw_input_str = None
@@ -193,11 +190,11 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
             gui = self.kernel.gui
         return super().enable_matplotlib(gui)
 
-    def enable_pylab(self, gui=None, import_all=True, welcome_message=False):
+    def enable_pylab(self, gui=None, import_all=True):
         """Activate pylab support at runtime."""
         if not gui:
             gui = self.kernel.gui
-        return super().enable_pylab(gui, import_all, welcome_message)
+        return super().enable_pylab(gui, import_all)
 
 
 InteractiveShellABC.register(InProcessInteractiveShell)

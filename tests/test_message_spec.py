@@ -21,7 +21,8 @@ from .utils import TIMEOUT, execute, flush_channels, get_reply, start_global_ker
 KC: BlockingKernelClient = None  # type:ignore
 
 
-def setup():
+@pytest.fixture(autouse=True)
+def _setup_env():
     global KC
     KC = start_global_kernel()
 

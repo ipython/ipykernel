@@ -22,22 +22,28 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.8", "3.12"]
+        python-version: ["3.9", "3.13"]
         include:
-          - os: windows-latest
-            python-version: "3.9"
           - os: ubuntu-latest
             python-version: "pypy-3.9"
           - os: macos-latest
             python-version: "3.10"
           - os: ubuntu-latest
             python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install hatch
+        run: |
+          python --version
+          python -m pip install hatch
 
       - name: Run the tests
         timeout-minutes: 15
@@ -98,7 +104,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   test_docs:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
@@ -150,6 +156,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: minimum
+          python_version: "3.9"
 
       - name: List installed packages
         run: |
@@ -198,22 +205,3 @@ jobs:
       - uses: actions/checkout@v4
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - uses: jupyterlab/maintainer-tools/.github/actions/check-links@v1
-
-  tests_check: # This job does nothing and is only used for the branch protection
-    if: always()
-    needs:
-      - coverage
-      - test_docs
-      - test_without_debugpy
-      - test_miniumum_versions
-      - test_lint
-      - test_prereleases
-      - check_release
-      - link_check
-      - test_sdist
-    runs-on: ubuntu-latest
-    steps:
-      - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@release/v1
-        with:
-          jobs: ${{ toJSON(needs) }}

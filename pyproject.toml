@@ -57,7 +57,6 @@ docs = [
 ]
 test = [
     "flaky",
-    "ipyparallel",
     "pre-commit",
     "pytest-cov",
     "pytest-timeout",
@@ -210,7 +209,6 @@ testpaths = [
     # "tests/inprocess"
 ]
 norecursedirs = "tests/inprocess"
-timeout = 60
 # Restore this setting to debug failures
 # timeout_method = "thread"
 filterwarnings= [

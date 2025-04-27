@@ -1,6 +1,5 @@
 """Test eventloop integration"""
 
-import asyncio
 import os
 import sys
 import threading
@@ -64,29 +63,28 @@ def test_tk_loop(kernel):
         time.sleep(1)
         try:
             kernel.app_wrapper.app.quit()
+            kernel.app_wrapper.app.destroy()
         # guard for tk failing to start (if there is no display)
         except AttributeError:
             pass
 
     t = threading.Thread(target=do_thing)
+    t.daemon = True
     t.start()
     # guard for tk failing to start (if there is no display)
     try:
         loop_tk(kernel)
     except Exception:
         pass
-    t.join()
+    t.join(1)
 
 
-@windows_skip
-@pytest.mark.parametrize("anyio_backend", ["asyncio"])
-def test_asyncio_loop(kernel):
-    def do_thing():
-        loop.call_later(0.01, loop.stop)
-
-    loop = asyncio.get_event_loop()
-    loop.call_soon(do_thing)
-    loop_asyncio(kernel)
+async def test_asyncio_loop(kernel, anyio_backend):
+    if anyio_backend == "asyncio":
+        loop_asyncio(kernel)
+    else:
+        with pytest.raises(RuntimeError):
+            loop_asyncio(kernel)
 
 
 @windows_skip

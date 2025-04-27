@@ -1,5 +1,7 @@
 import gc
 import logging
+import os
+import sys
 import warnings
 from math import inf
 from threading import Event
@@ -35,6 +37,11 @@ except ModuleNotFoundError:
     tracemalloc = None
 
 pytestmark = pytest.mark.anyio
+
+
+@pytest.hookimpl
+def pytest_configure(config):
+    os.environ["PYTEST_TIMEOUT"] = str(1e6) if "debugpy" in sys.modules else str(60)
 
 
 # Handle resource limit
@@ -200,6 +207,7 @@ async def kernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockKernel()
         tg.start_soon(kernel.start)
+        await kernel._main_subshell_ready.wait()
         try:
             yield kernel
         finally:
@@ -211,6 +219,7 @@ async def ipkernel(anyio_backend):
     async with create_task_group() as tg:
         kernel = MockIPyKernel()
         tg.start_soon(kernel.start)
+        await kernel._main_subshell_ready.wait()
         try:
             yield kernel
         finally:

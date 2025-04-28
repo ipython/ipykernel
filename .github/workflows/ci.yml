@@ -47,18 +47,24 @@ jobs:
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
+          hatch run cov:pip install git+https://github.com/graingert/zmq-anyio.git@simplify-wait-readable-loop#egg=zmq-anyio --ignore-installed
+          hatch run cov:pip install git+https://github.com/agronholm/anyio.git@notify-closing#egg=anyio --ignore-installed
           hatch run cov:test --cov-fail-under 50
 
       - name: Run the tests on pypy
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
+          hatch run test:pip install git+https://github.com/graingert/zmq-anyio.git@simplify-wait-readable-loop#egg=zmq-anyio --ignore-installed
+          hatch run test:pip install git+https://github.com/agronholm/anyio.git@notify-closing#egg=anyio --ignore-installed
           hatch run test:nowarn
 
       - name: Run the tests on Windows
         timeout-minutes: 15
         if: ${{  startsWith(matrix.os, 'windows') }}
         run: |
+          hatch run cov:pip install git+https://github.com/graingert/zmq-anyio.git@simplify-wait-readable-loop#egg=zmq-anyio --ignore-installed
+          hatch run cov:pip install git+https://github.com/agronholm/anyio.git@notify-closing#egg=anyio --ignore-installed
           hatch run cov:nowarn
 
       - name: Check Launcher

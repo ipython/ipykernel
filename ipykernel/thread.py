@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
+from inspect import isawaitable
 from queue import Queue
 from threading import Event, Thread
 from typing import Any, Callable
@@ -26,6 +27,7 @@ class BaseThread(Thread):
         self.is_pydev_daemon_thread = True
         self._tasks: Queue[tuple[str, Callable[[], Awaitable[Any]]] | None] = Queue()
         self._result: Queue[Any] = Queue()
+        self._teardown_callbacks: list[Callable[[], Any] | Callable[[], Awaitable[Any]]] = []
         self._exception: Exception | None = None
 
     @property
@@ -47,6 +49,9 @@ class BaseThread(Thread):
         self._tasks.put(("run_sync", func))
         return self._result.get()
 
+    def add_teardown_callback(self, func: Callable[[], Any] | Callable[[], Awaitable[Any]]) -> None:
+        self._teardown_callbacks.append(func)
+
     def run(self) -> None:
         """Run the thread."""
         try:
@@ -55,24 +60,37 @@ class BaseThread(Thread):
             self._exception = exc
 
     async def _main(self) -> None:
-        async with create_task_group() as tg:
-            self._task_group = tg
-            self.started.set()
-            while True:
-                task = await to_thread.run_sync(self._tasks.get)
-                if task is None:
-                    break
-                func, arg = task
-                if func == "start_soon":
-                    tg.start_soon(arg)
-                elif func == "run_async":
-                    res = await arg
-                    self._result.put(res)
-                else:  # func == "run_sync"
-                    res = arg()
-                    self._result.put(res)
+        try:
+            async with create_task_group() as tg:
+                self._task_group = tg
+                self.started.set()
+                while True:
+                    task = await to_thread.run_sync(self._tasks.get)
+                    if task is None:
+                        break
+                    func, arg = task
+                    if func == "start_soon":
+                        tg.start_soon(arg)
+                    elif func == "run_async":
+                        res = await arg
+                        self._result.put(res)
+                    else:  # func == "run_sync"
+                        res = arg()
+                        self._result.put(res)
 
-            tg.cancel_scope.cancel()
+                tg.cancel_scope.cancel()
+        finally:
+            exception = None
+            for teardown_callback in self._teardown_callbacks[::-1]:
+                try:
+                    res = teardown_callback()
+                    if isawaitable(res):
+                        await res
+                except Exception as exc:
+                    if exception is None:
+                        exception = exc
+            if exception is not None:
+                raise exception
 
     def stop(self) -> None:
         """Stop the thread.

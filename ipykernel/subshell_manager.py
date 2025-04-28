@@ -116,11 +116,13 @@ class SubshellManager:
     async def get_control_other_socket(self, thread: BaseThread) -> zmq_anyio.Socket:
         if not self._control_other_socket.started.is_set():
             await thread.task_group.start(self._control_other_socket.start)
+            thread.add_teardown_callback(self._control_other_socket.stop)
         return self._control_other_socket
 
     async def get_control_shell_channel_socket(self, thread: BaseThread) -> zmq_anyio.Socket:
         if not self._control_shell_channel_socket.started.is_set():
             await thread.task_group.start(self._control_shell_channel_socket.start)
+            thread.add_teardown_callback(self._control_shell_channel_socket.stop)
         return self._control_shell_channel_socket
 
     def get_other_socket(self, subshell_id: str | None) -> zmq_anyio.Socket:
@@ -281,6 +283,8 @@ class SubshellManager:
                 # Subshell no longer exists so exit gracefully
                 return
             raise
+        finally:
+            await shell_channel_socket.stop()
 
     async def _process_control_request(
         self, request: dict[str, t.Any], subshell_task: t.Any

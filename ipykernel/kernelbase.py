@@ -592,7 +592,7 @@ class Kernel(SingletonConfigurable):
             parent=parent or self.get_parent(channel),
             ident=self._topic("status"),
         )
-    
+
     def _publish_status_and_flush(self, status, channel, stream, parent=None):
         """send status on IOPub and flush specified stream to ensure reply is sent before handling the next reply"""
         self._publish_status(status, channel, parent)

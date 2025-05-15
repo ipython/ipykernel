@@ -384,6 +384,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
         if not self.should_handle(self.shell_stream, msg, idents):
+            self._publish_status("idle", "shell")
             return
 
         handler = self.shell_handlers.get(msg_type, None)

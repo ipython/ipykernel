@@ -292,6 +292,13 @@ class Kernel(SingletonConfigurable):
         self._do_exec_accepted_params = _accepts_parameters(
             self.do_execute, ["cell_meta", "cell_id"]
         )
+    
+    def _publish_status_and_flush(self, status, channel, stream):
+        self._publish_status(status, channel)
+        # flush to ensure reply is sent before
+        # handling the next request
+        if stream:
+            stream.flush(zmq.POLLOUT)
 
     async def dispatch_control(self, msg):
         # Ensure only one control message is processed at a time
@@ -331,10 +338,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status("idle", "control")
-        # flush to ensure reply is sent
-        if self.control_stream:
-            self.control_stream.flush(zmq.POLLOUT)
+        self._publish_status_and_flush("idle", "control", self.control_stream)
 
     def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
@@ -370,11 +374,7 @@ class Kernel(SingletonConfigurable):
         # Only abort execute requests
         if self._aborting and msg_type == "execute_request":
             self._send_abort_reply(self.shell_stream, msg, idents)
-            self._publish_status("idle", "shell")
-            # flush to ensure reply is sent before
-            # handling the next request
-            if self.shell_stream:
-                self.shell_stream.flush(zmq.POLLOUT)
+            self._publish_status_and_flush("idle", "shell", self.shell_stream)
             return
 
         # Print some info about this message and leave a '--->' marker, so it's
@@ -384,7 +384,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
         if not self.should_handle(self.shell_stream, msg, idents):
-            self._publish_status("idle", "shell")
+            self._publish_status_and_flush("idle", "shell", self.shell_stream)
             return
 
         handler = self.shell_handlers.get(msg_type, None)
@@ -413,11 +413,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status("idle", "shell")
-        # flush to ensure reply is sent before
-        # handling the next request
-        if self.shell_stream:
-            self.shell_stream.flush(zmq.POLLOUT)
+        self._publish_status_and_flush("idle", "shell", self.shell_stream)
 
     def pre_handler_hook(self):
         """Hook to execute before calling message handler"""

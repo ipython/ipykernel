@@ -292,7 +292,7 @@ class Kernel(SingletonConfigurable):
         self._do_exec_accepted_params = _accepts_parameters(
             self.do_execute, ["cell_meta", "cell_id"]
         )
-    
+
     def _publish_status_and_flush(self, status, channel, stream):
         self._publish_status(status, channel)
         # flush to ensure reply is sent before

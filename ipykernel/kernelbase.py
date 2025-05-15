@@ -292,13 +292,6 @@ class Kernel(SingletonConfigurable):
         self._do_exec_accepted_params = _accepts_parameters(
             self.do_execute, ["cell_meta", "cell_id"]
         )
-    
-    def _publish_status_and_flush(self, status, channel, stream):
-        self._publish_status(status, channel)
-        # flush to ensure reply is sent before
-        # handling the next request
-        if stream:
-            stream.flush(zmq.POLLOUT)
 
     async def dispatch_control(self, msg):
         # Ensure only one control message is processed at a time
@@ -599,6 +592,12 @@ class Kernel(SingletonConfigurable):
             parent=parent or self.get_parent(channel),
             ident=self._topic("status"),
         )
+    
+    def _publish_status_and_flush(self, status, channel, stream, parent=None):
+        """send status on IOPub and flush specified stream to ensure reply is sent before handling the next reply"""
+        self._publish_status(status, channel, parent)
+        if stream:
+            stream.flush(zmq.POLLOUT)
 
     def _publish_debug_event(self, event):
         if not self.session:

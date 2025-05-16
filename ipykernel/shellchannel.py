@@ -1,4 +1,5 @@
 """A thread for a shell channel."""
+from __future__ import annotations
 
 from typing import Any
 

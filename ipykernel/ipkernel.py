@@ -361,6 +361,11 @@ class IPythonKernel(KernelBase):
             # restore the previous sigint handler
             signal.signal(signal.SIGINT, save_sigint)
 
+    @contextmanager
+    def _dummy_context_manager(self, *args):
+        # Signals only work in main thread, so cannot use _cancel_on_sigint in subshells.
+        yield
+
     async def execute_request(self, stream, ident, parent):
         """Override for cell output - cell reconciliation."""
         parent_header = extract_header(parent)
@@ -439,7 +444,12 @@ class IPythonKernel(KernelBase):
 
                 coro_future = asyncio.ensure_future(coro)
 
-                with self._cancel_on_sigint(coro_future):
+                cm = (
+                    self._cancel_on_sigint
+                    if threading.current_thread() == threading.main_thread()
+                    else self._dummy_context_manager
+                )
+                with cm(coro_future):  # type:ignore[operator]
                     res = None
                     try:
                         res = await coro_future

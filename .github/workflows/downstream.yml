@@ -104,7 +104,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd ${GITHUB_WORKSPACE}/..
-          git clone https://github.com/jupyter/qtconsole.git
+          git clone https://github.com/spyder-ide/qtconsole.git
           cd qtconsole
           ${pythonLocation}/bin/python -m pip install -e ".[test]"
           ${pythonLocation}/bin/python -m pip install pyqt5

@@ -209,7 +209,7 @@ def test_shutdown_with_subshell():
         assert not km.is_alive()
 
 
-@pytest.mark.parametrize("are_subshells", [(False, True)])
+@pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
 def test_execute_stop_on_error(are_subshells):
     # Based on test_message_spec.py::test_execute_stop_on_error, testing that exception
     # in one subshell aborts execution queue in that subshell but not others.
@@ -221,7 +221,6 @@ def test_execute_stop_on_error(are_subshells):
 
         msg_ids = []
 
-        # msg = execute_request(kc, "print('ok')", subshell_ids[0])
         msg = execute_request(
             kc, "import asyncio; await asyncio.sleep(1); raise ValueError()", subshell_ids[0]
         )

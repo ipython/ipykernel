@@ -113,6 +113,10 @@ class SubshellManager:
         with self._lock_cache:
             return self._cache[subshell_id].shell_channel_stream
 
+    def get_subshell_aborting(self, subshell_id: str) -> bool:
+        """Get the aborting flag of the specified subshell."""
+        return self._cache[subshell_id].aborting
+
     def list_subshell(self) -> list[str]:
         """Return list of current subshell ids.
 

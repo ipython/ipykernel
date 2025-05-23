@@ -393,10 +393,15 @@ class Kernel(SingletonConfigurable):
                 stream = self.shell_stream
 
         # Only abort execute requests
-        if self._aborting and msg_type == "execute_request":
-            self._send_abort_reply(self.shell_stream, msg, idents)
-            self._publish_status_and_flush("idle", "shell", stream)
-            return
+        if msg_type == "execute_request":
+            if subshell_id is None:
+                aborting = self._aborting  # type:ignore[unreachable]
+            else:
+                aborting = self.shell_channel_thread.manager.get_subshell_aborting(subshell_id)
+            if aborting:
+                self._send_abort_reply(self.shell_stream, msg, idents)
+                self._publish_status_and_flush("idle", "shell", stream)
+                return
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each

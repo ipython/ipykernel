@@ -399,7 +399,7 @@ class Kernel(SingletonConfigurable):
             else:
                 aborting = self.shell_channel_thread.manager.get_subshell_aborting(subshell_id)
             if aborting:
-                self._send_abort_reply(self.shell_stream, msg, idents)
+                self._send_abort_reply(stream, msg, idents)
                 self._publish_status_and_flush("idle", "shell", stream)
                 return
 
@@ -409,7 +409,7 @@ class Kernel(SingletonConfigurable):
         self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
-        if not self.should_handle(self.shell_stream, msg, idents):
+        if not self.should_handle(stream, msg, idents):
             self._publish_status_and_flush("idle", "shell", stream)
             return
 

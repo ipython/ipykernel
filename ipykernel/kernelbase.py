@@ -371,8 +371,6 @@ class Kernel(SingletonConfigurable):
                 self.control_thread,
                 self.shell_channel_thread,
             )
-        else:
-            assert threading.current_thread() == threading.main_thread()
 
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:

@@ -617,6 +617,9 @@ class Kernel(SingletonConfigurable):
         except Exception:
             self.log.error("Invalid message", exc_info=True)  # noqa: G201
 
+        if self.shell_stream:
+            self.shell_stream.flush()
+
     async def shell_main(self, subshell_id: str | None, msg):
         """Handler of shell messages for a single subshell"""
         if self._supports_kernel_subshells:
@@ -646,6 +649,7 @@ class Kernel(SingletonConfigurable):
                 partial(self.shell_main, subshell_id),
                 copy=False,
             )
+            stream.flush()
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.

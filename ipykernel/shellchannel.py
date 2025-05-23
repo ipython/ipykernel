@@ -33,7 +33,7 @@ class ShellChannelThread(BaseThread):
         if self._manager is None:
             self._manager = SubshellManager(
                 self._context,
-                self,
+                self.io_loop,
                 self._shell_socket,
             )
         return self._manager

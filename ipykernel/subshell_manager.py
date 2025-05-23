@@ -8,14 +8,12 @@ from functools import partial
 from threading import Lock, current_thread, main_thread
 
 import zmq
+from tornado.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .subshell import SubshellThread
 from .thread import SHELL_CHANNEL_THREAD_NAME
 from .utils import create_inproc_pair_socket
-
-if t.TYPE_CHECKING:
-    from .shellchannel import ShellChannelThread
 
 
 class SubshellManager:
@@ -36,13 +34,13 @@ class SubshellManager:
     def __init__(
         self,
         context: zmq.Context[t.Any],
-        shell_channel_thread: ShellChannelThread,
+        shell_channel_io_loop: IOLoop,
         shell_socket: zmq.Socket[t.Any],
     ):
         assert current_thread() == main_thread()
 
         self._context: zmq.Context[t.Any] = context
-        self._shell_channel_thread = shell_channel_thread
+        self._shell_channel_io_loop = shell_channel_io_loop
         self._shell_socket = shell_socket
         self._cache: dict[str, SubshellThread] = {}
         self._lock_cache = Lock()
@@ -53,7 +51,7 @@ class SubshellManager:
         # thread, and an "other" socket used in the other thread.
         control_shell_channel_socket = create_inproc_pair_socket(self._context, "control", True)
         self._control_shell_channel_stream = ZMQStream(
-            control_shell_channel_socket, self._shell_channel_thread.io_loop
+            control_shell_channel_socket, self._shell_channel_io_loop
         )
         self._control_shell_channel_stream.on_recv(self._process_control_request, copy=True)
 
@@ -61,7 +59,7 @@ class SubshellManager:
 
         parent_shell_channel_socket = create_inproc_pair_socket(self._context, None, True)
         self._parent_shell_channel_stream = ZMQStream(
-            parent_shell_channel_socket, self._shell_channel_thread.io_loop
+            parent_shell_channel_socket, self._shell_channel_io_loop
         )
         self._parent_shell_channel_stream.on_recv(self._send_on_shell_channel, copy=False)
 

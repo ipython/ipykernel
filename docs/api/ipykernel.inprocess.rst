@@ -7,49 +7,49 @@ Submodules
 
 .. automodule:: ipykernel.inprocess.blocking
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.inprocess.channels
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.inprocess.client
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.inprocess.constants
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.inprocess.ipkernel
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.inprocess.manager
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.inprocess.socket
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: ipykernel.inprocess
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

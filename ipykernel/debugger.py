@@ -17,6 +17,8 @@ try:
 except ImportError:
     from jupyter_client.jsonutil import date_default as json_default
 
+import threading
+
 from .compiler import get_file_name, get_tmp_directory, get_tmp_hash_seed
 
 try:
@@ -420,6 +422,10 @@ class Debugger:
             code = "import debugpy;"
             code += 'debugpy.listen(("' + host + '",' + port + "))"
             content = {"code": code, "silent": True}
+
+            #with open("debug.txt", "a") as f:
+            #    f.write(f"{threading.current_thread().ident} shell_socket execute_request\n")
+
             self.session.send(
                 self.shell_socket,
                 "execute_request",

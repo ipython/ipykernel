@@ -10,7 +10,7 @@ import time
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, get_replies, get_reply, new_kernel
+from .utils import TIMEOUT, assemble_output, get_replies, get_reply, new_kernel, wait_for_idle
 
 # Helpers
 
@@ -20,6 +20,7 @@ def create_subshell_helper(kc: BlockingKernelClient):
     kc.control_channel.send(msg)
     msg_id = msg["header"]["msg_id"]
     reply = get_reply(kc, msg_id, TIMEOUT, channel="control")
+    #wait_for_idle(kc, msg_id)
     return reply["content"]
 
 
@@ -28,6 +29,7 @@ def delete_subshell_helper(kc: BlockingKernelClient, subshell_id: str):
     kc.control_channel.send(msg)
     msg_id = msg["header"]["msg_id"]
     reply = get_reply(kc, msg_id, TIMEOUT, channel="control")
+    #wait_for_idle(kc, msg_id)
     return reply["content"]
 
 
@@ -36,6 +38,7 @@ def list_subshell_helper(kc: BlockingKernelClient):
     kc.control_channel.send(msg)
     msg_id = msg["header"]["msg_id"]
     reply = get_reply(kc, msg_id, TIMEOUT, channel="control")
+    #wait_for_idle(kc, msg_id)
     return reply["content"]
 
 
@@ -49,30 +52,35 @@ def execute_request(kc: BlockingKernelClient, code: str, subshell_id: str | None
 def execute_request_subshell_id(
     kc: BlockingKernelClient, code: str, subshell_id: str | None, terminator: str = "\n"
 ):
+
+    #with open("debug.txt", "a") as f:
+    #    f.write("CHECK 1\n")
+
     msg = execute_request(kc, code, subshell_id)
-    msg_id = msg["msg_id"]
-    stdout = ""
-    while True:
-        msg = kc.get_iopub_msg()
-        # Get the stream messages corresponding to msg_id
-        if (
-            msg["msg_type"] == "stream"
-            and msg["parent_header"]["msg_id"] == msg_id
-            and msg["content"]["name"] == "stdout"
-        ):
-            stdout += msg["content"]["text"]
-            if stdout.endswith(terminator):
-                break
+
+    #with open("debug.txt", "a") as f:
+    #    f.write("CHECK 2\n")
+
+    msg_id = msg["header"]["msg_id"]
+
+    #with open("debug.txt", "a") as f:
+    #    f.write("CHECK 3\n")
+
+    stdout, _ = assemble_output(kc.get_iopub_msg, None, msg_id)
+
+    #with open("debug.txt", "a") as f:
+    #    f.write("CHECK 4\n")
+
     return stdout.strip()
 
 
 def execute_thread_count(kc: BlockingKernelClient) -> int:
-    code = "import threading as t; print(t.active_count())"
+    code = "print(threading.active_count())"
     return int(execute_request_subshell_id(kc, code, None))
 
 
 def execute_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None) -> tuple[str, str]:
-    code = "import threading as t; print(t.get_ident(), t.main_thread().ident)"
+    code = "print(threading.get_ident(), threading.main_thread().ident)"
     return execute_request_subshell_id(kc, code, subshell_id).split()
 
 
@@ -98,6 +106,7 @@ def test_subshell_id_lifetime():
 
 def test_thread_counts():
     with new_kernel() as kc:
+        execute_request_subshell_id(kc, "import threading", None)
         nthreads = execute_thread_count(kc)
 
         subshell_id = create_subshell_helper(kc)["subshell_id"]
@@ -111,12 +120,13 @@ def test_thread_counts():
 
 def test_thread_ids():
     with new_kernel() as kc:
+        execute_request_subshell_id(kc, "import threading", None)
         subshell_id = create_subshell_helper(kc)["subshell_id"]
 
         thread_id, main_thread_id = execute_thread_ids(kc)
         assert thread_id == main_thread_id
 
-        thread_id, main_thread_id = execute_thread_ids(kc, subshell_id)
+        thread_id, main_thread_id = execute_thread_ids(kc, subshell_id)   # This is the problem
         assert thread_id != main_thread_id
 
         delete_subshell_helper(kc, subshell_id)
@@ -159,7 +169,7 @@ def test_run_concurrently_sequence(are_subshells, overlap, request):
             kc.shell_channel.send(msg)
             msgs.append(msg)
 
-        replies = get_replies(kc, [msg["msg_id"] for msg in msgs])
+        replies = get_replies(kc, [msg["msg_id"] for msg in msgs], timeout=None)
 
         for subshell_id in subshell_ids:
             if subshell_id:

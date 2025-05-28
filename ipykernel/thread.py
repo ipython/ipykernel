@@ -7,6 +7,9 @@ CONTROL_THREAD_NAME = "Control"
 SHELL_CHANNEL_THREAD_NAME = "Shell channel"
 
 
+import threading
+
+
 class BaseThread(Thread):
     """Base class for threads."""
 
@@ -20,6 +23,9 @@ class BaseThread(Thread):
     def run(self) -> None:
         """Run the thread."""
         try:
+            #with open("debug.txt", "a") as f:
+            #    f.write(f"{threading.current_thread().ident} io_loop - about to start\n")
+
             self.io_loop.start()
         finally:
             self.io_loop.close()

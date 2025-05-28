@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import builtins
 import sys
+import threading
 import typing as t
 
 from IPython.core.displayhook import DisplayHook
@@ -44,6 +45,10 @@ class ZMQDisplayHook:
             "data": {"text/plain": repr(obj)},
             "metadata": {},
         }
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} pub_socket execute_result\n")
+
         self.session.send(
             self.pub_socket, "execute_result", contents, parent=self.parent_header, ident=self.topic
         )
@@ -97,5 +102,8 @@ class ZMQShellDisplayHook(DisplayHook):
         sys.stdout.flush()
         sys.stderr.flush()
         if self.msg and self.msg["content"]["data"] and self.session:
+            #with open("debug.txt", "a") as f:
+            #    f.write(f"{threading.current_thread().ident} pub_socket ?finish_displayhook\n")
+
             self.session.send(self.pub_socket, self.msg, ident=self.topic)
         self.msg = None

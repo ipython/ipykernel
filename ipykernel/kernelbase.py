@@ -277,6 +277,8 @@ class Kernel(SingletonConfigurable):
         """Initialize the kernel."""
         super().__init__(**kwargs)
 
+        #self._iant_lock = threading.Lock()
+
         # Kernel application may swap stdout and stderr to OutStream,
         # which is the case in `IPKernelApp.init_io`, hence `sys.stdout`
         # can already by different from TextIO at initialization time.
@@ -571,6 +573,10 @@ class Kernel(SingletonConfigurable):
 
     def start(self):
         """register dispatchers for streams"""
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"--- kernelbase start --- {threading.main_thread().ident}\n")
+
         self.io_loop = ioloop.IOLoop.current()
         self.msg_queue: Queue[t.Any] = Queue()
         if not self.shell_channel_thread:
@@ -609,6 +615,11 @@ class Kernel(SingletonConfigurable):
             msg3 = self.session.deserialize(msg2, content=False, copy=False)
             subshell_id = msg3["header"].get("subshell_id")
 
+            #with open("debug.txt", "a") as f:
+            #    f.write(
+            #        f"{threading.current_thread().ident} shell_channel_thread_main msg received for {subshell_id}\n"
+            #    )
+
             # Find inproc pair socket to use to send message to correct subshell.
             subshell_manager = self.shell_channel_thread.manager
             socket = subshell_manager.get_shell_channel_stream(subshell_id)
@@ -622,6 +633,10 @@ class Kernel(SingletonConfigurable):
 
     async def shell_main(self, subshell_id: str | None, msg):
         """Handler of shell messages for a single subshell"""
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} shell_main msg recvd on {subshell_id}\n")
+
         if self._supports_kernel_subshells:
             if subshell_id is None:
                 assert threading.current_thread() == threading.main_thread()
@@ -667,6 +682,10 @@ class Kernel(SingletonConfigurable):
         """Publish the code request on the iopub stream."""
         if not self.session:
             return
+        #with self._iant_lock:
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} iopub_socket execute_input\n")
+
         self.session.send(
             self.iopub_socket,
             "execute_input",
@@ -679,6 +698,11 @@ class Kernel(SingletonConfigurable):
         """send status (busy/idle) on IOPub"""
         if not self.session:
             return
+        #with self._iant_lock:
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} iopub_socket status {status}\n")
+        #    f.write(f"SESSION {self.session}\n")
+
         self.session.send(
             self.iopub_socket,
             "status",
@@ -696,6 +720,10 @@ class Kernel(SingletonConfigurable):
     def _publish_debug_event(self, event):
         if not self.session:
             return
+        #with self._iant_lock:
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} iopub_socket debug_event\n")
+
         self.session.send(
             self.iopub_socket,
             "debug_event",
@@ -763,6 +791,10 @@ class Kernel(SingletonConfigurable):
         """
         if not self.session:
             return None
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? ?send_response\n")
+
         return self.session.send(
             stream,
             msg_or_type,
@@ -835,6 +867,14 @@ class Kernel(SingletonConfigurable):
         if self._do_exec_accepted_params["cell_id"]:
             do_execute_args["cell_id"] = cell_id
 
+        subshell_id = parent["header"].get("subshell_id")
+        msg_id = parent["header"].get("msg_id")
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(
+        #        f"{threading.current_thread().ident} about to execute_request {msg_id} {subshell_id} {code}\n"
+        #    )
+
         # Call do_execute with the appropriate arguments
         reply_content = self.do_execute(**do_execute_args)
 
@@ -853,6 +893,11 @@ class Kernel(SingletonConfigurable):
         # Send the reply.
         reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(
+        #        f"{threading.current_thread().ident} execute_reply            {msg_id} {subshell_id} {reply_content}\n"
+        #    )
 
         reply_msg: dict[str, t.Any] = self.session.send(  # type:ignore[assignment]
             stream,
@@ -943,6 +988,10 @@ class Kernel(SingletonConfigurable):
             reply_content = await reply_content
 
         reply_content = json_clean(reply_content)
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? history_reply\n")
+
         msg = self.session.send(stream, "history_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
@@ -967,6 +1016,10 @@ class Kernel(SingletonConfigurable):
             return
         content = self._recorded_ports.copy() if self._recorded_ports else {}
         content["status"] = "ok"
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? connect_reply\n")
+
         msg = self.session.send(stream, "connect_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
@@ -991,6 +1044,10 @@ class Kernel(SingletonConfigurable):
             return
         content = {"status": "ok"}
         content.update(self.kernel_info)
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? kernel_info_reply\n")
+
         msg = self.session.send(stream, "kernel_info_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
@@ -1058,6 +1115,10 @@ class Kernel(SingletonConfigurable):
         content = self.do_shutdown(parent["content"]["restart"])
         if inspect.isawaitable(content):
             content = await content
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? shutdown_reply\n")
+
         self.session.send(stream, "shutdown_reply", content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg("shutdown_reply", content, parent)
@@ -1108,6 +1169,10 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         reply_content = json_clean(reply_content)
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? debug_reply\n")
+
         reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
@@ -1170,6 +1235,9 @@ class Kernel(SingletonConfigurable):
             self.log.error("Subshells are not supported by this kernel")
             return
 
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? create_subshell_request\n")
+
         assert threading.current_thread().name == CONTROL_THREAD_NAME
 
         # This should only be called in the control thread if it exists.
@@ -1177,6 +1245,10 @@ class Kernel(SingletonConfigurable):
         other_socket = self.shell_channel_thread.manager.get_control_other_socket()
         other_socket.send_json({"type": "create"})
         reply = other_socket.recv_json()
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? create_subshell_reply\n")
+
         self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
     async def delete_subshell_request(self, socket, ident, parent) -> None:
@@ -1200,6 +1272,10 @@ class Kernel(SingletonConfigurable):
         other_socket = self.shell_channel_thread.manager.get_control_other_socket()
         other_socket.send_json({"type": "delete", "subshell_id": subshell_id})
         reply = other_socket.recv_json()
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? delete_subshell_reply\n")
+
         self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
     async def list_subshell_request(self, socket, ident, parent) -> None:
@@ -1216,6 +1292,10 @@ class Kernel(SingletonConfigurable):
         other_socket = self.shell_channel_thread.manager.get_control_other_socket()
         other_socket.send_json({"type": "list"})
         reply = other_socket.recv_json()
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? list_subshell_reply\n")
+
         self.session.send(socket, "list_subshell_reply", reply, parent, ident)
 
     # ---------------------------------------------------------------------------
@@ -1280,6 +1360,10 @@ class Kernel(SingletonConfigurable):
         content = dict(status="ok")
         if not self.session:
             return
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? abort_reply\n")
+
         reply_msg = self.session.send(
             stream, "abort_reply", content=content, parent=parent, ident=ident
         )
@@ -1377,6 +1461,9 @@ class Kernel(SingletonConfigurable):
         md = self.init_metadata(msg)
         md = self.finish_metadata(msg, md, status)
         md.update(status)
+
+        #with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} ? {reply_type}\n")
 
         self.session.send(
             stream,
@@ -1558,6 +1645,10 @@ class Kernel(SingletonConfigurable):
 
         finally:
             if self._shutdown_message is not None and self.session:
+                #with self._iant_lock:
+                #with open("debug.txt", "a") as f:
+                #    f.write(f"{threading.current_thread().ident} ? _shutdown\n")
+
                 self.session.send(
                     self.iopub_socket,
                     self._shutdown_message,

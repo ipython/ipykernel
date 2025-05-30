@@ -78,8 +78,14 @@ class IOPubThread:
         self.thread.is_pydev_daemon_thread = True  # type:ignore[attr-defined]
         self.thread.name = "IOPub"
 
+        # with open("debug.txt", "a") as f:
+        #    f.write("    IOPubThread.__init__\n")
+
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""
+
+        # with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} IOPubThread._thread_main\n")
 
         def _start_event_gc():
             self._event_pipe_gc_task = asyncio.ensure_future(self._run_event_pipe_gc())
@@ -279,6 +285,9 @@ class IOPubThread:
         """The callback that actually sends messages"""
         if self.closed:
             return
+
+        # with open("debug.txt", "a") as f:
+        #    f.write(f"{threading.current_thread().ident} _really_send iopub\n")
 
         mp_mode = self._check_mp_mode()
 
@@ -645,6 +654,9 @@ class OutStream(TextIOBase):
                     msg = hook(msg)
                     if msg is None:
                         return
+
+                # with open("debug.txt", "a") as f:
+                #    f.write(f"{threading.current_thread().ident} pub_thread ?OutStream.flush\n")
 
                 self.session.send(
                     self.pub_thread,

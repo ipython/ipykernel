@@ -46,7 +46,7 @@ class ZMQDisplayHook:
             "metadata": {},
         }
 
-        #with open("debug.txt", "a") as f:
+        # with open("debug.txt", "a") as f:
         #    f.write(f"{threading.current_thread().ident} pub_socket execute_result\n")
 
         self.session.send(
@@ -102,7 +102,7 @@ class ZMQShellDisplayHook(DisplayHook):
         sys.stdout.flush()
         sys.stderr.flush()
         if self.msg and self.msg["content"]["data"] and self.session:
-            #with open("debug.txt", "a") as f:
+            # with open("debug.txt", "a") as f:
             #    f.write(f"{threading.current_thread().ident} pub_socket ?finish_displayhook\n")
 
             self.session.send(self.pub_socket, self.msg, ident=self.topic)

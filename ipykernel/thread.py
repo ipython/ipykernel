@@ -23,7 +23,7 @@ class BaseThread(Thread):
     def run(self) -> None:
         """Run the thread."""
         try:
-            #with open("debug.txt", "a") as f:
+            # with open("debug.txt", "a") as f:
             #    f.write(f"{threading.current_thread().ident} io_loop - about to start\n")
 
             self.io_loop.start()

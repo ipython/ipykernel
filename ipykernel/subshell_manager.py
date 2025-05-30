@@ -224,15 +224,15 @@ class SubshellManager:
     def _send_on_shell_channel(self, msg) -> None:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
-        #with open("debug.txt", "a") as f:
+        # with open("debug.txt", "a") as f:
         #    f.write(f"{current_thread().ident} _send_on_shell_channel - start {msg}\n")
 
         with self._lock_shell_socket:
-            #with open("debug.txt", "a") as f:
+            # with open("debug.txt", "a") as f:
             #    f.write(f"   {self._shell_socket}\n")
             self._shell_socket.send_multipart(msg)
 
-        #with open("debug.txt", "a") as f:
+        # with open("debug.txt", "a") as f:
         #    f.write(f"{current_thread().ident} _send_on_shell_channel - end\n")
 
     def _stop_subshell(self, subshell_thread: SubshellThread) -> None:

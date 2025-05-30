@@ -423,7 +423,7 @@ class Debugger:
             code += 'debugpy.listen(("' + host + '",' + port + "))"
             content = {"code": code, "silent": True}
 
-            #with open("debug.txt", "a") as f:
+            # with open("debug.txt", "a") as f:
             #    f.write(f"{threading.current_thread().ident} shell_socket execute_request\n")
 
             self.session.send(

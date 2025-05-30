@@ -176,11 +176,11 @@ def assemble_output(get_msg, timeout=1, parent_msg_id: str | None = None):
     """assemble stdout/err from an execution"""
     stdout = ""
     stderr = ""
-    #with open("debug.txt", "a") as f:
+    # with open("debug.txt", "a") as f:
     #    f.write(f"  assemble output called {timeout} {parent_msg_id}\n")
     while True:
         msg = get_msg(timeout=timeout)
-        #with open("debug.txt", "a") as f:
+        # with open("debug.txt", "a") as f:
         #    f.write(f"  assembl output {msg}\n")
         msg_type = msg["msg_type"]
         content = msg["content"]
@@ -189,10 +189,7 @@ def assemble_output(get_msg, timeout=1, parent_msg_id: str | None = None):
             # Ignore message for wrong parent message
             continue
 
-        if (
-            msg_type == "status"
-            and content["execution_state"] == "idle"
-        ):
+        if msg_type == "status" and content["execution_state"] == "idle":
             # idle message signals end of output
             break
         elif msg["msg_type"] == "stream":
@@ -205,7 +202,7 @@ def assemble_output(get_msg, timeout=1, parent_msg_id: str | None = None):
         else:
             # other output, ignored
             pass
-    #with open("debug.txt", "a") as f:
+    # with open("debug.txt", "a") as f:
     #    f.write(f"  assemble output returns {stdout} {stderr}\n")
     return stdout, stderr
 

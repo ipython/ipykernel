@@ -20,7 +20,7 @@ def create_subshell_helper(kc: BlockingKernelClient):
     kc.control_channel.send(msg)
     msg_id = msg["header"]["msg_id"]
     reply = get_reply(kc, msg_id, TIMEOUT, channel="control")
-    #wait_for_idle(kc, msg_id)
+    # wait_for_idle(kc, msg_id)
     return reply["content"]
 
 
@@ -29,7 +29,7 @@ def delete_subshell_helper(kc: BlockingKernelClient, subshell_id: str):
     kc.control_channel.send(msg)
     msg_id = msg["header"]["msg_id"]
     reply = get_reply(kc, msg_id, TIMEOUT, channel="control")
-    #wait_for_idle(kc, msg_id)
+    # wait_for_idle(kc, msg_id)
     return reply["content"]
 
 
@@ -38,7 +38,7 @@ def list_subshell_helper(kc: BlockingKernelClient):
     kc.control_channel.send(msg)
     msg_id = msg["header"]["msg_id"]
     reply = get_reply(kc, msg_id, TIMEOUT, channel="control")
-    #wait_for_idle(kc, msg_id)
+    # wait_for_idle(kc, msg_id)
     return reply["content"]
 
 
@@ -52,23 +52,22 @@ def execute_request(kc: BlockingKernelClient, code: str, subshell_id: str | None
 def execute_request_subshell_id(
     kc: BlockingKernelClient, code: str, subshell_id: str | None, terminator: str = "\n"
 ):
-
-    #with open("debug.txt", "a") as f:
+    # with open("debug.txt", "a") as f:
     #    f.write("CHECK 1\n")
 
     msg = execute_request(kc, code, subshell_id)
 
-    #with open("debug.txt", "a") as f:
+    # with open("debug.txt", "a") as f:
     #    f.write("CHECK 2\n")
 
     msg_id = msg["header"]["msg_id"]
 
-    #with open("debug.txt", "a") as f:
+    # with open("debug.txt", "a") as f:
     #    f.write("CHECK 3\n")
 
     stdout, _ = assemble_output(kc.get_iopub_msg, None, msg_id)
 
-    #with open("debug.txt", "a") as f:
+    # with open("debug.txt", "a") as f:
     #    f.write("CHECK 4\n")
 
     return stdout.strip()
@@ -126,7 +125,7 @@ def test_thread_ids():
         thread_id, main_thread_id = execute_thread_ids(kc)
         assert thread_id == main_thread_id
 
-        thread_id, main_thread_id = execute_thread_ids(kc, subshell_id)   # This is the problem
+        thread_id, main_thread_id = execute_thread_ids(kc, subshell_id)  # This is the problem
         assert thread_id != main_thread_id
 
         delete_subshell_helper(kc, subshell_id)

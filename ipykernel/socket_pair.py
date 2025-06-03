@@ -16,7 +16,7 @@ class SocketPair:
 
     from_socket: zmq.Socket[Any]
     to_socket: zmq.Socket[Any]
-    to_stream: ZMQStream
+    to_stream: ZMQStream | None = None
     on_recv_callback: Any
     on_recv_copy: bool
 
@@ -38,14 +38,17 @@ class SocketPair:
         # io_loop is that of the 'to' thread.
         self.on_recv_callback = on_recv_callback
         self.on_recv_copy = copy
-        self.to_stream = ZMQStream(self.to_socket, io_loop)
+        if self.to_stream is None:
+            self.to_stream = ZMQStream(self.to_socket, io_loop)
         self.resume_on_recv()
 
     def pause_on_recv(self):
-        self.to_stream.stop_on_recv()
+        if self.to_stream is not None:
+            self.to_stream.stop_on_recv()
 
     def resume_on_recv(self):
-        self.to_stream.on_recv(self.on_recv_callback, copy=self.on_recv_copy)
+        if self.to_stream is not None:
+            self.to_stream.on_recv(self.on_recv_callback, copy=self.on_recv_copy)
 
     def _address(self, name) -> str:
         return f"inproc://subshell{name}"

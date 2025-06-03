@@ -116,6 +116,12 @@ Submodules
    :show-inheritance:
 
 
+.. automodule:: ipykernel.socket_pair
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 .. automodule:: ipykernel.subshell
    :members:
    :undoc-members:
@@ -135,12 +141,6 @@ Submodules
 
 
 .. automodule:: ipykernel.trio_runner
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-.. automodule:: ipykernel.utils
    :members:
    :undoc-members:
    :show-inheritance:

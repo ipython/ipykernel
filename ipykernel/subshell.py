@@ -3,10 +3,9 @@
 from typing import Any
 
 import zmq
-from zmq.eventloop.zmqstream import ZMQStream
 
+from .socket_pair import SocketPair
 from .thread import BaseThread
-from .utils import create_inproc_pair_socket
 
 
 class SubshellThread(BaseThread):
@@ -21,12 +20,8 @@ class SubshellThread(BaseThread):
         """Initialize the thread."""
         super().__init__(name=f"subshell-{subshell_id}", **kwargs)
 
-        shell_channel_socket = create_inproc_pair_socket(context, subshell_id, True)
-        # io_loop will be current io_loop which is of ShellChannelThread
-        self.shell_channel_stream = ZMQStream(shell_channel_socket)
-
-        subshell_socket = create_inproc_pair_socket(context, subshell_id, False)
-        self.subshell_stream = ZMQStream(subshell_socket, self.io_loop)
+        self.shell_channel_to_subshell = SocketPair(context, subshell_id)
+        self.subshell_to_shell_channel = SocketPair(context, subshell_id + "-reverse")
 
         # When aborting flag is set, execute_request messages to this subshell will be aborted.
         self.aborting = False
@@ -35,5 +30,5 @@ class SubshellThread(BaseThread):
         try:
             super().run()
         finally:
-            self.subshell_stream.close()
-            self.shell_channel_stream.close()
+            self.shell_channel_to_subshell.close()
+            self.subshell_to_shell_channel.close()

@@ -9,11 +9,10 @@ from threading import Lock, current_thread, main_thread
 
 import zmq
 from tornado.ioloop import IOLoop
-from zmq.eventloop.zmqstream import ZMQStream
 
+from .socket_pair import SocketPair
 from .subshell import SubshellThread
 from .thread import SHELL_CHANNEL_THREAD_NAME
-from .utils import create_inproc_pair_socket
 
 
 class SubshellManager:
@@ -46,26 +45,23 @@ class SubshellManager:
         self._lock_cache = Lock()
         self._lock_shell_socket = Lock()
 
-        # Inproc pair sockets for control channel and main shell (parent subshell).
-        # Each inproc pair has a "shell_channel" socket used in the shell channel
-        # thread, and an "other" socket used in the other thread.
-        control_shell_channel_socket = create_inproc_pair_socket(self._context, "control", True)
-        self._control_shell_channel_stream = ZMQStream(
-            control_shell_channel_socket, self._shell_channel_io_loop
+        # Inproc socket pair for communication from control thread to shell channel thread,
+        # such as for create_subshell_request messages. Reply messages are returned straight away.
+        self.control_to_shell_channel = SocketPair(self._context, "control")
+        self.control_to_shell_channel.on_recv(
+            self._shell_channel_io_loop, self._process_control_request, copy=True
         )
-        self._control_shell_channel_stream.on_recv(self._process_control_request, copy=True)
 
-        self._control_other_socket = create_inproc_pair_socket(self._context, "control", False)
+        # Inproc socket pair for communication from shell channel thread to main thread,
+        # such as for execute_request messages.
+        self._shell_channel_to_main = SocketPair(self._context, "main")
 
-        parent_shell_channel_socket = create_inproc_pair_socket(self._context, None, True)
-        self._parent_shell_channel_stream = ZMQStream(
-            parent_shell_channel_socket, self._shell_channel_io_loop
+        # Inproc socket pair for communication from main thread to shell channel thread.
+        # such as for execute_reply messages.
+        self._main_to_shell_channel = SocketPair(self._context, "main-reverse")
+        self._main_to_shell_channel.on_recv(
+            self._shell_channel_io_loop, self._send_on_shell_channel
         )
-        self._parent_shell_channel_stream.on_recv(self._send_on_shell_channel, copy=False)
-
-        # Initialised in set_on_recv_callback
-        self._on_recv_callback: t.Any = None  # Callback for ZMQStream.on_recv for "other" sockets.
-        self._parent_other_stream: ZMQStream | None = None
 
     def close(self) -> None:
         """Stop all subshells and close all resources."""
@@ -78,40 +74,24 @@ class SubshellManager:
                     break
                 self._stop_subshell(subshell_thread)
 
-        for socket_or_stream in (
-            self._control_shell_channel_stream,
-            self._parent_shell_channel_stream,
-            self._parent_other_stream,
-        ):
-            if socket_or_stream is not None:
-                socket_or_stream.close()
+        self.control_to_shell_channel.close()
+        self._main_to_shell_channel.close()
+        self._shell_channel_to_main.close()
 
-        if self._control_other_socket is not None:
-            self._control_other_socket.close()
-
-    def get_control_other_socket(self) -> zmq.Socket[t.Any]:
-        return self._control_other_socket
-
-    def get_other_stream(self, subshell_id: str | None) -> ZMQStream:
-        """Return the other inproc pair socket for a subshell.
-
-        This socket is accessed from the subshell thread.
-        """
+    def get_shell_channel_to_subshell_pair(self, subshell_id: str | None) -> SocketPair:
         if subshell_id is None:
-            assert self._parent_other_stream is not None
-            return self._parent_other_stream
+            return self._shell_channel_to_main
         with self._lock_cache:
-            return self._cache[subshell_id].subshell_stream
+            return self._cache[subshell_id].shell_channel_to_subshell
 
-    def get_shell_channel_stream(self, subshell_id: str | None) -> ZMQStream:
-        """Return the stream for the shell channel inproc pair socket for a subshell.
-
-        This stream is accessed from the shell channel thread.
-        """
+    def get_subshell_to_shell_channel_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
         if subshell_id is None:
-            return self._parent_shell_channel_stream
+            return self._main_to_shell_channel.from_socket
         with self._lock_cache:
-            return self._cache[subshell_id].shell_channel_stream
+            return self._cache[subshell_id].subshell_to_shell_channel.from_socket
+
+    def get_shell_channel_to_subshell_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
+        return self.get_shell_channel_to_subshell_pair(subshell_id).from_socket
 
     def get_subshell_aborting(self, subshell_id: str) -> bool:
         """Get the aborting flag of the specified subshell."""
@@ -128,13 +108,7 @@ class SubshellManager:
     def set_on_recv_callback(self, on_recv_callback):
         assert current_thread() == main_thread()
         self._on_recv_callback = on_recv_callback
-        if not self._parent_other_stream:
-            parent_other_socket = create_inproc_pair_socket(self._context, None, False)
-            self._parent_other_stream = ZMQStream(parent_other_socket)
-            self._parent_other_stream.on_recv(
-                partial(self._on_recv_callback, None),
-                copy=False,
-            )
+        self._shell_channel_to_main.on_recv(IOLoop.current(), partial(self._on_recv_callback, None))
 
     def set_subshell_aborting(self, subshell_id: str, aborting: bool) -> None:
         """Set the aborting flag of the specified subshell."""
@@ -168,11 +142,14 @@ class SubshellManager:
             assert subshell_id not in self._cache
             self._cache[subshell_id] = subshell_thread
 
-        subshell_thread.subshell_stream.on_recv(
+        subshell_thread.shell_channel_to_subshell.on_recv(
+            subshell_thread.io_loop,
             partial(self._on_recv_callback, subshell_id),
-            copy=False,
         )
-        subshell_thread.shell_channel_stream.on_recv(self._send_on_shell_channel, copy=False)
+
+        subshell_thread.subshell_to_shell_channel.on_recv(
+            self._shell_channel_io_loop, self._send_on_shell_channel
+        )
 
         subshell_thread.start()
         return subshell_id
@@ -219,7 +196,8 @@ class SubshellManager:
                 "evalue": str(err),
             }
 
-        self._control_shell_channel_stream.send_json(reply)
+        # Return the reply to the control thread.
+        self.control_to_shell_channel.to_socket.send_json(reply)
 
     def _send_on_shell_channel(self, msg) -> None:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME

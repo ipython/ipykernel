@@ -2,6 +2,7 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
 
 import atexit
 import os
@@ -65,7 +66,6 @@ def get_reply(kc, msg_id, timeout=TIMEOUT, channel="shell"):
 def get_replies(kc, msg_ids: list[str], timeout=TIMEOUT, channel="shell"):
     # Get replies which may arrive in any order as they may be running on different subshells.
     # Replies are returned in the same order as the msg_ids, not in the order of arrival.
-    t0 = time()
     count = 0
     replies = [None] * len(msg_ids)
     while count < len(msg_ids):
@@ -78,9 +78,6 @@ def get_replies(kc, msg_ids: list[str], timeout=TIMEOUT, channel="shell"):
         except ValueError:
             # Allow debugging ignored replies
             print(f"Ignoring reply not to any of {msg_ids}: {reply}")
-        t1 = time()
-        timeout -= t1 - t0
-        t0 = t1
     return replies
 
 
@@ -171,14 +168,19 @@ def new_kernel(argv=None):
     return manager.run_kernel(**kwargs)
 
 
-def assemble_output(get_msg):
+def assemble_output(get_msg, timeout=1, parent_msg_id: str | None = None):
     """assemble stdout/err from an execution"""
     stdout = ""
     stderr = ""
     while True:
-        msg = get_msg(timeout=1)
+        msg = get_msg(timeout=timeout)
         msg_type = msg["msg_type"]
         content = msg["content"]
+
+        if parent_msg_id is not None and msg["parent_header"]["msg_id"] != parent_msg_id:
+            # Ignore message for wrong parent message
+            continue
+
         if msg_type == "status" and content["execution_state"] == "idle":
             # idle message signals end of output
             break
@@ -195,12 +197,16 @@ def assemble_output(get_msg):
     return stdout, stderr
 
 
-def wait_for_idle(kc):
+def wait_for_idle(kc, parent_msg_id: str | None = None):
     while True:
         msg = kc.get_iopub_msg(timeout=1)
         msg_type = msg["msg_type"]
         content = msg["content"]
-        if msg_type == "status" and content["execution_state"] == "idle":
+        if (
+            msg_type == "status"
+            and content["execution_state"] == "idle"
+            and (parent_msg_id is None or msg["parent_header"]["msg_id"] == parent_msg_id)
+        ):
             break
 
 

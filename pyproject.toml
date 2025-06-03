@@ -158,7 +158,8 @@ testpaths = [
     "tests",
 ]
 asyncio_mode = "auto"
-timeout = 300
+#timeout = 300
+timeout = 30
 # Restore this setting to debug failures
 #timeout_method = "thread"
 filterwarnings= [

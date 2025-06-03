@@ -350,7 +350,7 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
-    async def dispatch_shell(self, msg, /, stream=None, subshell_id: str | None = None):
+    async def dispatch_shell(self, msg, /, subshell_id: str | None = None):
         """dispatch shell requests"""
         if len(msg) == 1 and msg[0].buffer == b"stop aborting":
             # Dummy "stop aborting" message to stop aborting execute requests on this subshell.
@@ -386,11 +386,12 @@ class Kernel(SingletonConfigurable):
         msg_type = msg["header"]["msg_type"]
         assert msg["header"].get("subshell_id") == subshell_id
 
-        if stream is None:
-            if self._supports_kernel_subshells:
-                stream = self.shell_channel_thread.manager.get_other_stream(subshell_id)
-            else:
-                stream = self.shell_stream
+        if self._supports_kernel_subshells:
+            stream = self.shell_channel_thread.manager.get_subshell_to_shell_channel_socket(
+                subshell_id
+            )
+        else:
+            stream = self.shell_stream
 
         # Only abort execute requests
         if msg_type == "execute_request":
@@ -611,7 +612,7 @@ class Kernel(SingletonConfigurable):
 
             # Find inproc pair socket to use to send message to correct subshell.
             subshell_manager = self.shell_channel_thread.manager
-            socket = subshell_manager.get_shell_channel_stream(subshell_id)
+            socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
             assert socket is not None
             socket.send_multipart(msg, copy=False)
         except Exception:
@@ -630,26 +631,25 @@ class Kernel(SingletonConfigurable):
                     self.shell_channel_thread,
                     threading.main_thread(),
                 )
-            # Inproc pair socket that this subshell uses to talk to shell channel thread.
-            stream = self.shell_channel_thread.manager.get_other_stream(subshell_id)
+            socket_pair = self.shell_channel_thread.manager.get_shell_channel_to_subshell_pair(
+                subshell_id
+            )
         else:
             assert subshell_id is None
             assert threading.current_thread() == threading.main_thread()
-            stream = self.shell_stream
+            socket_pair = None
 
         try:
             # Whilst executing a shell message, do not accept any other shell messages on the
             # same subshell, so that cells are run sequentially. Without this we can run multiple
             # async cells at the same time which would be a nice feature to have but is an API
             # change.
-            stream.stop_on_recv()
-            await self.dispatch_shell(msg, stream=stream, subshell_id=subshell_id)
+            if socket_pair:
+                socket_pair.pause_on_recv()
+            await self.dispatch_shell(msg, subshell_id=subshell_id)
         finally:
-            stream.on_recv(
-                partial(self.shell_main, subshell_id),
-                copy=False,
-            )
-            stream.flush()
+            if socket_pair:
+                socket_pair.resume_on_recv()
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.
@@ -690,7 +690,7 @@ class Kernel(SingletonConfigurable):
     def _publish_status_and_flush(self, status, channel, stream, parent=None):
         """send status on IOPub and flush specified stream to ensure reply is sent before handling the next reply"""
         self._publish_status(status, channel, parent)
-        if stream:
+        if stream and hasattr(stream, "flush"):
             stream.flush(zmq.POLLOUT)
 
     def _publish_debug_event(self, event):
@@ -834,6 +834,8 @@ class Kernel(SingletonConfigurable):
             do_execute_args["cell_meta"] = cell_meta
         if self._do_exec_accepted_params["cell_id"]:
             do_execute_args["cell_id"] = cell_id
+
+        subshell_id = parent["header"].get("subshell_id")
 
         # Call do_execute with the appropriate arguments
         reply_content = self.do_execute(**do_execute_args)
@@ -1174,9 +1176,9 @@ class Kernel(SingletonConfigurable):
 
         # This should only be called in the control thread if it exists.
         # Request is passed to shell channel thread to process.
-        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
-        other_socket.send_json({"type": "create"})
-        reply = other_socket.recv_json()
+        control_socket = self.shell_channel_thread.manager.control_to_shell_channel.from_socket
+        control_socket.send_json({"type": "create"})
+        reply = control_socket.recv_json()
         self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
     async def delete_subshell_request(self, socket, ident, parent) -> None:
@@ -1197,9 +1199,10 @@ class Kernel(SingletonConfigurable):
 
         # This should only be called in the control thread if it exists.
         # Request is passed to shell channel thread to process.
-        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
-        other_socket.send_json({"type": "delete", "subshell_id": subshell_id})
-        reply = other_socket.recv_json()
+        control_socket = self.shell_channel_thread.manager.control_to_shell_channel.from_socket
+        control_socket.send_json({"type": "delete", "subshell_id": subshell_id})
+        reply = control_socket.recv_json()
+
         self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
     async def list_subshell_request(self, socket, ident, parent) -> None:
@@ -1213,9 +1216,10 @@ class Kernel(SingletonConfigurable):
 
         # This should only be called in the control thread if it exists.
         # Request is passed to shell channel thread to process.
-        other_socket = self.shell_channel_thread.manager.get_control_other_socket()
-        other_socket.send_json({"type": "list"})
-        reply = other_socket.recv_json()
+        control_socket = self.shell_channel_thread.manager.control_to_shell_channel.from_socket
+        control_socket.send_json({"type": "list"})
+        reply = control_socket.recv_json()
+
         self.session.send(socket, "list_subshell_reply", reply, parent, ident)
 
     # ---------------------------------------------------------------------------
@@ -1315,7 +1319,7 @@ class Kernel(SingletonConfigurable):
         the _aborting flag.
         """
         subshell_manager = self.shell_channel_thread.manager
-        socket = subshell_manager.get_shell_channel_stream(subshell_id)
+        socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
         assert socket is not None
 
         msg = b"stop aborting"  # Magic string for dummy message.

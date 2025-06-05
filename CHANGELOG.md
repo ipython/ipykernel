@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.30.0a0
+
+Pre-release to allow further testing of subshell implementation.
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.5...5d90d9e10425886deb4b0f1676b14b1701522b3c))
+
+### Enhancements made
+
+- Subshells implemented using tornado event loops on 6.x branch [#1396](https://github.com/ipython/ipykernel/pull/1396) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- [Bugfix] Set shell idle when message skipped by "should_handle" in "dispatch_shell" [#1395](https://github.com/ipython/ipykernel/pull/1395) ([@dby-tmwctw](https://github.com/dby-tmwctw))
+
+### Maintenance and upkeep improvements
+
+- Backports and extra changes to fix CI on 6.x branch [#1390](https://github.com/ipython/ipykernel/pull/1390) ([@ianthomas23](https://github.com/ianthomas23))
+- Avoid a DeprecationWarning on Python 3.13+ [#1248](https://github.com/ipython/ipykernel/pull/1248) ([@hroncok](https://github.com/hroncok))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-07-01&to=2025-06-05&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2024-07-01..2025-06-05&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-07-01..2025-06-05&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-07-01..2025-06-05&type=Issues) | [@dby-tmwctw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adby-tmwctw+updated%3A2024-07-01..2025-06-05&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-07-01..2025-06-05&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2024-07-01..2025-06-05&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2024-07-01..2025-06-05&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-07-01..2025-06-05&type=Issues) | [@meeseeksmachine](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ameeseeksmachine+updated%3A2024-07-01..2025-06-05&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-07-01..2025-06-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.29.5
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.4...1e62d48298e353a9879fae99bc752f9bb48797ef))
@@ -19,8 +46,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-03-27&to=2024-06-29&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-03-27..2024-06-29&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-03-27..2024-06-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.4
 

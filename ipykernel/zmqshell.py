@@ -16,9 +16,9 @@ machinery.  This should thus be thought of as scaffolding.
 
 import os
 import sys
+import threading
 import warnings
 from pathlib import Path
-from threading import local
 
 from IPython.core import page, payloadpage
 from IPython.core.autocall import ZMQExitAutocall
@@ -69,7 +69,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
     @default("_thread_local")
     def _default_thread_local(self):
         """Initialize our thread local storage"""
-        return local()
+        return threading.local()
 
     @property
     def _hooks(self):
@@ -438,6 +438,39 @@ class KernelMagics(Magics):
             print("Autosaving every %i seconds" % interval)
         else:
             print("Autosave disabled")
+
+    @line_magic
+    def subshell(self, arg_s):
+        """
+        List all current subshells
+        """
+        from ipykernel.kernelapp import IPKernelApp
+
+        if not IPKernelApp.initialized():
+            msg = "Not in a running Kernel"
+            raise RuntimeError(msg)
+
+        app = IPKernelApp.instance()
+        kernel = app.kernel
+
+        if not getattr(kernel, "_supports_kernel_subshells", False):
+            print("Kernel does not support subshells")
+            return
+
+        thread_id = threading.current_thread().ident
+        manager = kernel.shell_channel_thread.manager
+        try:
+            subshell_id = manager.subshell_id_from_thread_id(thread_id)
+        except RuntimeError:
+            subshell_id = "unknown"
+        subshell_id_list = manager.list_subshell()
+
+        print(f"subshell id: {subshell_id}")
+        print(f"thread id: {thread_id}")
+        print(f"main thread id: {threading.main_thread().ident}")
+        print(f"pid: {os.getpid()}")
+        print(f"thread count: {threading.active_count()}")
+        print(f"subshell list: {subshell_id_list}")
 
 
 class ZMQInteractiveShell(InteractiveShell):

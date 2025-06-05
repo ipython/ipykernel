@@ -20,7 +20,7 @@ from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
 
-from .control import CONTROL_THREAD_NAME
+from .thread import CONTROL_THREAD_NAME
 
 if sys.platform != "win32":
     from signal import SIGKILL
@@ -144,6 +144,7 @@ class Kernel(SingletonConfigurable):
     debug_shell_socket = Any()
 
     control_thread = Any()
+    shell_channel_thread = Any()
     iopub_socket = Any()
     iopub_thread = Any()
     stdin_socket = Any()
@@ -267,6 +268,9 @@ class Kernel(SingletonConfigurable):
         "abort_request",
         "debug_request",
         "usage_request",
+        "create_subshell_request",
+        "delete_subshell_request",
+        "list_subshell_request",
     ]
 
     def __init__(self, **kwargs):
@@ -346,10 +350,27 @@ class Kernel(SingletonConfigurable):
             return False
         return True
 
-    async def dispatch_shell(self, msg):
+    async def dispatch_shell(self, msg, /, subshell_id: str | None = None):
         """dispatch shell requests"""
+        if len(msg) == 1 and msg[0].buffer == b"stop aborting":
+            # Dummy "stop aborting" message to stop aborting execute requests on this subshell.
+            # This dummy message implementation allows the subshell to abort messages that are
+            # already queued in the zmq sockets/streams without having to know any of their
+            # details in advance.
+            if subshell_id is None:
+                self._aborting = False
+            else:
+                self.shell_channel_thread.manager.set_subshell_aborting(subshell_id, False)
+            return
+
         if not self.session:
             return
+
+        if self._supports_kernel_subshells:
+            assert threading.current_thread() not in (
+                self.control_thread,
+                self.shell_channel_thread,
+            )
 
         idents, msg = self.session.feed_identities(msg, copy=False)
         try:
@@ -363,12 +384,25 @@ class Kernel(SingletonConfigurable):
         self._publish_status("busy", "shell")
 
         msg_type = msg["header"]["msg_type"]
+        assert msg["header"].get("subshell_id") == subshell_id
+
+        if self._supports_kernel_subshells:
+            stream = self.shell_channel_thread.manager.get_subshell_to_shell_channel_socket(
+                subshell_id
+            )
+        else:
+            stream = self.shell_stream
 
         # Only abort execute requests
-        if self._aborting and msg_type == "execute_request":
-            self._send_abort_reply(self.shell_stream, msg, idents)
-            self._publish_status_and_flush("idle", "shell", self.shell_stream)
-            return
+        if msg_type == "execute_request":
+            if subshell_id is None:
+                aborting = self._aborting  # type:ignore[unreachable]
+            else:
+                aborting = self.shell_channel_thread.manager.get_subshell_aborting(subshell_id)
+            if aborting:
+                self._send_abort_reply(stream, msg, idents)
+                self._publish_status_and_flush("idle", "shell", stream)
+                return
 
         # Print some info about this message and leave a '--->' marker, so it's
         # easier to trace visually the message chain when debugging.  Each
@@ -376,8 +410,8 @@ class Kernel(SingletonConfigurable):
         self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
-        if not self.should_handle(self.shell_stream, msg, idents):
-            self._publish_status_and_flush("idle", "shell", self.shell_stream)
+        if not self.should_handle(stream, msg, idents):
+            self._publish_status_and_flush("idle", "shell", stream)
             return
 
         handler = self.shell_handlers.get(msg_type, None)
@@ -390,7 +424,7 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.debug("Unable to signal in pre_handler_hook:", exc_info=True)
             try:
-                result = handler(self.shell_stream, idents, msg)
+                result = handler(stream, idents, msg)
                 if inspect.isawaitable(result):
                     await result
             except Exception:
@@ -406,7 +440,7 @@ class Kernel(SingletonConfigurable):
 
         sys.stdout.flush()
         sys.stderr.flush()
-        self._publish_status_and_flush("idle", "shell", self.shell_stream)
+        self._publish_status_and_flush("idle", "shell", stream)
 
     def pre_handler_hook(self):
         """Hook to execute before calling message handler"""
@@ -540,22 +574,82 @@ class Kernel(SingletonConfigurable):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
         self.msg_queue: Queue[t.Any] = Queue()
-        self.io_loop.add_callback(self.dispatch_queue)
+        if not self.shell_channel_thread:
+            self.io_loop.add_callback(self.dispatch_queue)
 
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
 
         if self.shell_stream:
-            self.shell_stream.on_recv(
-                partial(
-                    self.schedule_dispatch,
-                    self.dispatch_shell,
-                ),
-                copy=False,
-            )
+            if self.shell_channel_thread:
+                self.shell_channel_thread.manager.set_on_recv_callback(self.shell_main)
+                self.shell_stream.on_recv(self.shell_channel_thread_main, copy=False)
+            else:
+                self.shell_stream.on_recv(
+                    partial(
+                        self.schedule_dispatch,
+                        self.dispatch_shell,
+                    ),
+                    copy=False,
+                )
 
         # publish idle status
         self._publish_status("starting", "shell")
+
+    async def shell_channel_thread_main(self, msg):
+        """Handler for shell messages received on shell_channel_thread"""
+        assert threading.current_thread() == self.shell_channel_thread
+
+        if self.session is None:
+            return
+
+        # deserialize only the header to get subshell_id
+        # Keep original message to send to subshell_id unmodified.
+        _, msg2 = self.session.feed_identities(msg, copy=False)
+        try:
+            msg3 = self.session.deserialize(msg2, content=False, copy=False)
+            subshell_id = msg3["header"].get("subshell_id")
+
+            # Find inproc pair socket to use to send message to correct subshell.
+            subshell_manager = self.shell_channel_thread.manager
+            socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
+            assert socket is not None
+            socket.send_multipart(msg, copy=False)
+        except Exception:
+            self.log.error("Invalid message", exc_info=True)  # noqa: G201
+
+        if self.shell_stream:
+            self.shell_stream.flush()
+
+    async def shell_main(self, subshell_id: str | None, msg):
+        """Handler of shell messages for a single subshell"""
+        if self._supports_kernel_subshells:
+            if subshell_id is None:
+                assert threading.current_thread() == threading.main_thread()
+            else:
+                assert threading.current_thread() not in (
+                    self.shell_channel_thread,
+                    threading.main_thread(),
+                )
+            socket_pair = self.shell_channel_thread.manager.get_shell_channel_to_subshell_pair(
+                subshell_id
+            )
+        else:
+            assert subshell_id is None
+            assert threading.current_thread() == threading.main_thread()
+            socket_pair = None
+
+        try:
+            # Whilst executing a shell message, do not accept any other shell messages on the
+            # same subshell, so that cells are run sequentially. Without this we can run multiple
+            # async cells at the same time which would be a nice feature to have but is an API
+            # change.
+            if socket_pair:
+                socket_pair.pause_on_recv()
+            await self.dispatch_shell(msg, subshell_id=subshell_id)
+        finally:
+            if socket_pair:
+                socket_pair.resume_on_recv()
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.
@@ -596,7 +690,7 @@ class Kernel(SingletonConfigurable):
     def _publish_status_and_flush(self, status, channel, stream, parent=None):
         """send status on IOPub and flush specified stream to ensure reply is sent before handling the next reply"""
         self._publish_status(status, channel, parent)
-        if stream:
+        if stream and hasattr(stream, "flush"):
             stream.flush(zmq.POLLOUT)
 
     def _publish_debug_event(self, event):
@@ -741,6 +835,8 @@ class Kernel(SingletonConfigurable):
         if self._do_exec_accepted_params["cell_id"]:
             do_execute_args["cell_id"] = cell_id
 
+        subshell_id = parent["header"].get("subshell_id")
+
         # Call do_execute with the appropriate arguments
         reply_content = self.do_execute(**do_execute_args)
 
@@ -772,7 +868,8 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", reply_msg)
 
         if not silent and reply_msg["content"]["status"] == "error" and stop_on_error:
-            self._abort_queues()
+            subshell_id = parent["header"].get("subshell_id")
+            self._abort_queues(subshell_id)
 
     def do_execute(
         self,
@@ -877,14 +974,18 @@ class Kernel(SingletonConfigurable):
 
     @property
     def kernel_info(self):
-        return {
+        info = {
             "protocol_version": kernel_protocol_version,
             "implementation": self.implementation,
             "implementation_version": self.implementation_version,
             "language_info": self.language_info,
             "banner": self.banner,
             "help_links": self.help_links,
+            "supported_features": [],
         }
+        if self._supports_kernel_subshells:
+            info["supported_features"] = ["kernel subshells"]
+        return info
 
     async def kernel_info_request(self, stream, ident, parent):
         """Handle a kernel info request."""
@@ -971,7 +1072,8 @@ class Kernel(SingletonConfigurable):
             control_io_loop.add_callback(control_io_loop.stop)
 
         self.log.debug("Stopping shell ioloop")
-        if self.shell_stream:
+        self.io_loop.add_callback(self.io_loop.stop)
+        if self.shell_stream and self.shell_stream.io_loop != self.io_loop:
             shell_io_loop = self.shell_stream.io_loop
             shell_io_loop.add_callback(shell_io_loop.stop)
 
@@ -1063,6 +1165,63 @@ class Kernel(SingletonConfigurable):
     async def do_debug_request(self, msg):
         raise NotImplementedError
 
+    async def create_subshell_request(self, socket, ident, parent) -> None:
+        if not self.session:
+            return
+        if not self._supports_kernel_subshells:
+            self.log.error("Subshells are not supported by this kernel")
+            return
+
+        assert threading.current_thread().name == CONTROL_THREAD_NAME
+
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        control_socket = self.shell_channel_thread.manager.control_to_shell_channel.from_socket
+        control_socket.send_json({"type": "create"})
+        reply = control_socket.recv_json()
+        self.session.send(socket, "create_subshell_reply", reply, parent, ident)
+
+    async def delete_subshell_request(self, socket, ident, parent) -> None:
+        if not self.session:
+            return
+        if not self._supports_kernel_subshells:
+            self.log.error("KERNEL SUBSHELLS NOT SUPPORTED")
+            return
+
+        assert threading.current_thread().name == CONTROL_THREAD_NAME
+
+        try:
+            content = parent["content"]
+            subshell_id = content["subshell_id"]
+        except Exception:
+            self.log.error("Got bad msg from parent: %s", parent)
+            return
+
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        control_socket = self.shell_channel_thread.manager.control_to_shell_channel.from_socket
+        control_socket.send_json({"type": "delete", "subshell_id": subshell_id})
+        reply = control_socket.recv_json()
+
+        self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
+
+    async def list_subshell_request(self, socket, ident, parent) -> None:
+        if not self.session:
+            return
+        if not self._supports_kernel_subshells:
+            self.log.error("Subshells are not supported by this kernel")
+            return
+
+        assert threading.current_thread().name == CONTROL_THREAD_NAME
+
+        # This should only be called in the control thread if it exists.
+        # Request is passed to shell channel thread to process.
+        control_socket = self.shell_channel_thread.manager.control_to_shell_channel.from_socket
+        control_socket.send_json({"type": "list"})
+        reply = control_socket.recv_json()
+
+        self.session.send(socket, "list_subshell_reply", reply, parent, ident)
+
     # ---------------------------------------------------------------------------
     # Engine methods (DEPRECATED)
     # ---------------------------------------------------------------------------
@@ -1116,7 +1275,9 @@ class Kernel(SingletonConfigurable):
         if isinstance(msg_ids, str):
             msg_ids = [msg_ids]
         if not msg_ids:
-            self._abort_queues()
+            subshell_id = parent["header"].get("subshell_id")
+            self._abort_queues(subshell_id)
+
         for mid in msg_ids:
             self.aborted.add(str(mid))
 
@@ -1153,11 +1314,33 @@ class Kernel(SingletonConfigurable):
 
     _aborting = Bool(False)
 
-    def _abort_queues(self):
+    def _post_dummy_stop_aborting_message(self, subshell_id: str | None) -> None:
+        """Post a dummy message to the correct subshell that when handled will unset
+        the _aborting flag.
+        """
+        subshell_manager = self.shell_channel_thread.manager
+        socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
+        assert socket is not None
+
+        msg = b"stop aborting"  # Magic string for dummy message.
+        socket.send(msg, copy=False)
+
+    def _abort_queues(self, subshell_id: str | None = None):
         # while this flag is true,
         # execute requests will be aborted
-        self._aborting = True
+
+        if subshell_id is None:
+            self._aborting = True
+        else:
+            self.shell_channel_thread.manager.set_subshell_aborting(subshell_id, True)
         self.log.info("Aborting queue")
+
+        if self.shell_channel_thread:
+            # Only really need to do this if there are messages already queued
+            self.shell_channel_thread.io_loop.add_callback(
+                self._post_dummy_stop_aborting_message, subshell_id
+            )
+            return
 
         # flush streams, so all currently waiting messages
         # are added to the queue
@@ -1387,3 +1570,7 @@ class Kernel(SingletonConfigurable):
                 self.log.debug("%s", self._shutdown_message)
             if self.control_stream:
                 self.control_stream.flush(zmq.POLLOUT)
+
+    @property
+    def _supports_kernel_subshells(self):
+        return self.shell_channel_thread is not None

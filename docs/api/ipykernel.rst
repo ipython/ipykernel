@@ -16,115 +16,145 @@ Submodules
 
 .. automodule:: ipykernel.compiler
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.connect
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.control
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.debugger
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.displayhook
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.embed
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.eventloops
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.heartbeat
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.iostream
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.ipkernel
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.jsonutil
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.kernelapp
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.kernelbase
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.kernelspec
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.log
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.parentpoller
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.shellchannel
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.socket_pair
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.subshell
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.subshell_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: ipykernel.thread
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.trio_runner
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 
 .. automodule:: ipykernel.zmqshell
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: ipykernel
    :members:
-   :show-inheritance:
    :undoc-members:
+   :show-inheritance:

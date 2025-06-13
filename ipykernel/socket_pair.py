@@ -47,7 +47,7 @@ class SocketPair:
             self.to_stream.stop_on_recv()
 
     def resume_on_recv(self):
-        if self.to_stream is not None:
+        if self.to_stream is not None and not self.to_stream.closed():
             self.to_stream.on_recv(self.on_recv_callback, copy=self.on_recv_copy)
 
     def _address(self, name) -> str:

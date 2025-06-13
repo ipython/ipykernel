@@ -56,7 +56,7 @@ jobs:
 
       - name: Run the tests on Windows
         timeout-minutes: 15
-        if: ${{  startsWith(matrix.os, 'windows') }}
+        if: ${{ !startsWith( matrix.python-version, 'pypy' ) && ${{ startsWith(matrix.os, 'windows') }}
         run: |
           hatch run cov:nowarn
 

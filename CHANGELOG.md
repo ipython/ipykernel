@@ -14,7 +14,7 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Bugs fixed
 
-- [Bugfix] Set shell idle when message skipped by "should_handle" in "dispatch_shell" [#1395](https://github.com/ipython/ipykernel/pull/1395) ([@dby-tmwctw](https://github.com/dby-tmwctw))
+- \[Bugfix\] Set shell idle when message skipped by "should_handle" in "dispatch_shell" [#1395](https://github.com/ipython/ipykernel/pull/1395) ([@dby-tmwctw](https://github.com/dby-tmwctw))
 
 ### Maintenance and upkeep improvements
 

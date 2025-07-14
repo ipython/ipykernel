@@ -17,10 +17,11 @@ machinery.  This should thus be thought of as scaffolding.
 import os
 import sys
 import threading
+import typing
 import warnings
 from pathlib import Path
 
-from IPython.core import page, payloadpage
+from IPython.core import page
 from IPython.core.autocall import ZMQExitAutocall
 from IPython.core.displaypub import DisplayPublisher
 from IPython.core.error import UsageError
@@ -78,12 +79,16 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def publish(
+    # Feb: 2025 IPython has a deprecated, `source` parameter, marked for removal that
+    # triggers typing errors.
+    def publish(  # type:ignore[override]
         self,
         data,
         metadata=None,
+        *,
         transient=None,
         update=False,
+        **kwargs,
     ):
         """Publish a display-data message
 
@@ -125,7 +130,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         for hook in self._hooks:
             msg = hook(msg)
             if msg is None:
-                return  # type:ignore[unreachable]
+                return
 
         self.session.send(
             self.pub_socket,
@@ -153,7 +158,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         for hook in self._hooks:
             msg = hook(msg)
             if msg is None:
-                return  # type:ignore[unreachable]
+                return
 
         self.session.send(
             self.pub_socket,
@@ -398,14 +403,6 @@ class KernelMagics(Magics):
         Useful for connecting a qtconsole to running notebooks, for better
         debugging.
         """
-
-        # %qtconsole should imply bind_kernel for engines:
-        # FIXME: move to ipyparallel Kernel subclass
-        if "ipyparallel" in sys.modules:
-            from ipyparallel import bind_kernel
-
-            bind_kernel()
-
         try:
             connect_qtconsole(argv=arg_split(arg_s, os.name == "posix"))
         except Exception as e:
@@ -476,9 +473,21 @@ class KernelMagics(Magics):
 class ZMQInteractiveShell(InteractiveShell):
     """A subclass of InteractiveShell for ZMQ."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # tqdm has an incorrect detection of ZMQInteractiveShell when launch via
+        # a scheduler that bypass IPKernelApp Think of JupyterHub cluster
+        # spawners and co. as of end of Feb 2025, the maintainer has been
+        # unresponsive for 5 months, to our fix, so we implement a workaround. I
+        # don't like it but we have few other choices.
+        # See https://github.com/tqdm/tqdm/pull/1628
+        if "IPKernelApp" not in self.config:
+            self.config.IPKernelApp.tqdm = "dummy value for https://github.com/tqdm/tqdm/pull/1628"
+
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
-    data_pub_class = Any()  # type:ignore[assignment]
+    data_pub_class = Any()
     kernel = Any()
     parent_header = Any()
 
@@ -516,7 +525,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     # Over ZeroMQ, GUI control isn't done with PyOS_InputHook as there is no
     # interactive input being read; we provide event loop support in ipkernel
-    def enable_gui(self, gui):
+    def enable_gui(self, gui: typing.Any = None) -> None:
         """Enable a given guil."""
         from .eventloops import enable_gui as real_enable_gui
 
@@ -541,10 +550,38 @@ class ZMQInteractiveShell(InteractiveShell):
         env["PAGER"] = "cat"
         env["GIT_PAGER"] = "cat"
 
+    def payloadpage_page(self, strg, start=0, screen_lines=0, pager_cmd=None):
+        """Print a string, piping through a pager.
+
+        This version ignores the screen_lines and pager_cmd arguments and uses
+        IPython's payload system instead.
+
+        Parameters
+        ----------
+        strg : str or mime-dict
+            Text to page, or a mime-type keyed dict of already formatted data.
+        start : int
+            Starting line at which to place the display.
+        """
+
+        # Some routines may auto-compute start offsets incorrectly and pass a
+        # negative value.  Offset to 0 for robustness.
+        start = max(0, start)
+
+        data = strg if isinstance(strg, dict) else {"text/plain": strg}
+
+        payload = dict(
+            source="page",
+            data=data,
+            start=start,
+        )
+        assert self.payload_manager is not None
+        self.payload_manager.write_payload(payload)
+
     def init_hooks(self):
         """Initialize hooks."""
         super().init_hooks()
-        self.set_hook("show_in_pager", page.as_hook(payloadpage.page), 99)
+        self.set_hook("show_in_pager", page.as_hook(self.payloadpage_page), 99)
 
     def init_data_pub(self):
         """Delay datapub init until request, for deprecation warnings"""
@@ -558,7 +595,7 @@ class ZMQInteractiveShell(InteractiveShell):
                 stacklevel=2,
             )
 
-            self._data_pub = self.data_pub_class(parent=self)  # type:ignore[has-type]
+            self._data_pub = self.data_pub_class(parent=self)
             self._data_pub.session = self.display_pub.session  # type:ignore[attr-defined]
             self._data_pub.pub_socket = self.display_pub.pub_socket  # type:ignore[attr-defined]
         return self._data_pub
@@ -628,14 +665,10 @@ class ZMQInteractiveShell(InteractiveShell):
         self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
         if hasattr(self, "_data_pub"):
             self.data_pub.set_parent(parent)
-        try:
-            sys.stdout.set_parent(parent)  # type:ignore[attr-defined]
-        except AttributeError:
-            pass
-        try:
-            sys.stderr.set_parent(parent)  # type:ignore[attr-defined]
-        except AttributeError:
-            pass
+        if hasattr(sys.stdout, "set_parent"):
+            sys.stdout.set_parent(parent)
+        if hasattr(sys.stderr, "set_parent"):
+            sys.stderr.set_parent(parent)
 
     def get_parent(self):
         """Get the parent header."""

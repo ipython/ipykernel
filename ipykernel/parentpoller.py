@@ -22,9 +22,17 @@ class ParentPollerUnix(Thread):
     when the parent process no longer exists.
     """
 
-    def __init__(self):
-        """Initialize the poller."""
+    def __init__(self, parent_pid=0):
+        """Initialize the poller.
+
+        Parameters
+        ----------
+        parent_handle : int, optional
+            If provided, the program will terminate immediately when
+            process parent is no longer this original parent.
+        """
         super().__init__()
+        self.parent_pid = parent_pid
         self.daemon = True
 
     def run(self):
@@ -32,9 +40,23 @@ class ParentPollerUnix(Thread):
         # We cannot use os.waitpid because it works only for child processes.
         from errno import EINTR
 
+        # before start, check if the passed-in parent pid is valid
+        original_ppid = os.getppid()
+        if original_ppid != self.parent_pid:
+            self.parent_pid = 0
+
+        get_logger().debug(
+            "%s: poll for parent change with original parent pid=%d",
+            type(self).__name__,
+            self.parent_pid,
+        )
+
         while True:
             try:
-                if os.getppid() == 1:
+                ppid = os.getppid()
+                parent_is_init = not self.parent_pid and ppid == 1
+                parent_has_changed = self.parent_pid and ppid != self.parent_pid
+                if parent_is_init or parent_has_changed:
                     get_logger().warning("Parent appears to have exited, shutting down.")
                     os._exit(1)
                 time.sleep(1.0)

@@ -50,7 +50,6 @@ from traitlets.traitlets import (
     Instance,
     Integer,
     List,
-    Set,
     Unicode,
     default,
     observe,
@@ -62,10 +61,18 @@ from ipykernel.jsonutil import json_clean
 from ._version import kernel_protocol_version
 from .iostream import OutStream
 
+_AWAITABLE_MESSAGE: str = (
+    "For consistency across implementations, it is recommended that `{func_name}`"
+    " either be a coroutine function (`async def`) or return an awaitable object"
+    " (like an `asyncio.Future`). It might become a requirement in the future."
+    " Coroutine functions and awaitables have been supported since"
+    " ipykernel 6.0 (2021). {target} does not seem to return an awaitable"
+)
+
 
 def _accepts_parameters(meth, param_names):
     parameters = inspect.signature(meth).parameters
-    accepts = {param: False for param in param_names}
+    accepts = dict.fromkeys(param_names, False)
 
     for param in param_names:
         param_spec = parameters.get(param)
@@ -240,9 +247,6 @@ class Kernel(SingletonConfigurable):
     # by record_ports and used by connect_request.
     _recorded_ports = Dict()
 
-    # set of aborted msg_ids
-    aborted = Set()
-
     # Track execution count here. For IPython, we override this to use the
     # execution count we store in the shell.
     execution_count = 0
@@ -258,14 +262,12 @@ class Kernel(SingletonConfigurable):
         "shutdown_request",
         "is_complete_request",
         "interrupt_request",
-        # deprecated:
-        "apply_request",
     ]
-    # add deprecated ipyparallel control messages
+
+    # control channel accepts all shell messages
+    # and some of its own
     control_msg_types = [
         *msg_types,
-        "clear_request",
-        "abort_request",
         "debug_request",
         "usage_request",
         "create_subshell_request",
@@ -333,21 +335,21 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.error("Exception in control handler:", exc_info=True)  # noqa: G201
 
-        sys.stdout.flush()
-        sys.stderr.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
         self._publish_status_and_flush("idle", "control", self.control_stream)
 
     def should_handle(self, stream, msg, idents):
         """Check whether a shell-channel message should be handled
 
         Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
+
+        .. versionchanged:: 7
+            Subclass should_handle _may_ be async.
+            Base class implementation is not async.
         """
-        msg_id = msg["header"]["msg_id"]
-        if msg_id in self.aborted:
-            # is it safe to assume a msg_id will not be resubmitted?
-            self.aborted.remove(msg_id)
-            self._send_abort_reply(stream, msg, idents)
-            return False
         return True
 
     async def dispatch_shell(self, msg, /, subshell_id: str | None = None):
@@ -410,8 +412,12 @@ class Kernel(SingletonConfigurable):
         self.log.debug("\n*** MESSAGE TYPE:%s***", msg_type)
         self.log.debug("   Content: %s\n   --->\n   ", msg["content"])
 
-        if not self.should_handle(stream, msg, idents):
+        should_handle: bool | t.Awaitable[bool] = self.should_handle(stream, msg, idents)
+        if inspect.isawaitable(should_handle):
+            should_handle = await should_handle
+        if not should_handle:
             self._publish_status_and_flush("idle", "shell", stream)
+            self.log.debug("Not handling %s:%s", msg_type, msg["header"].get("msg_id"))
             return
 
         handler = self.shell_handlers.get(msg_type, None)
@@ -438,8 +444,10 @@ class Kernel(SingletonConfigurable):
                 except Exception:
                     self.log.debug("Unable to signal in post_handler_hook:", exc_info=True)
 
-        sys.stdout.flush()
-        sys.stderr.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
         self._publish_status_and_flush("idle", "shell", stream)
 
     def pre_handler_hook(self):
@@ -842,10 +850,18 @@ class Kernel(SingletonConfigurable):
 
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
+        else:
+            warnings.warn(
+                _AWAITABLE_MESSAGE.format(func_name="do_execute", target=self.do_execute),
+                PendingDeprecationWarning,
+                stacklevel=1,
+            )
 
         # Flush output before sending the reply.
-        sys.stdout.flush()
-        sys.stderr.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
         # FIXME: on rare occasions, the flush doesn't seem to make it to the
         # clients... This seems to mitigate the problem, but we definitely need
         # to better understand what's going on.
@@ -896,6 +912,12 @@ class Kernel(SingletonConfigurable):
         matches = self.do_complete(code, cursor_pos)
         if inspect.isawaitable(matches):
             matches = await matches
+        else:
+            warnings.warn(
+                _AWAITABLE_MESSAGE.format(func_name="do_complete", target=self.do_complete),
+                PendingDeprecationWarning,
+                stacklevel=1,
+            )
 
         matches = json_clean(matches)
         self.session.send(stream, "complete_reply", matches, parent, ident)
@@ -924,6 +946,12 @@ class Kernel(SingletonConfigurable):
         )
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
+        else:
+            warnings.warn(
+                _AWAITABLE_MESSAGE.format(func_name="do_inspect", target=self.do_inspect),
+                PendingDeprecationWarning,
+                stacklevel=1,
+            )
 
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
@@ -943,6 +971,12 @@ class Kernel(SingletonConfigurable):
         reply_content = self.do_history(**content)
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
+        else:
+            warnings.warn(
+                _AWAITABLE_MESSAGE.format(func_name="do_history", target=self.do_history),
+                PendingDeprecationWarning,
+                stacklevel=1,
+            )
 
         reply_content = json_clean(reply_content)
         msg = self.session.send(stream, "history_reply", reply_content, parent, ident)
@@ -974,18 +1008,23 @@ class Kernel(SingletonConfigurable):
 
     @property
     def kernel_info(self):
-        info = {
+        from .debugger import _is_debugpy_available
+
+        supported_features: list[str] = []
+        if self._supports_kernel_subshells:
+            supported_features.append("kernel subshells")
+        if _is_debugpy_available:
+            supported_features.append("debugger")
+
+        return {
             "protocol_version": kernel_protocol_version,
             "implementation": self.implementation,
             "implementation_version": self.implementation_version,
             "language_info": self.language_info,
             "banner": self.banner,
             "help_links": self.help_links,
-            "supported_features": [],
+            "supported_features": supported_features,
         }
-        if self._supports_kernel_subshells:
-            info["supported_features"] = ["kernel subshells"]
-        return info
 
     async def kernel_info_request(self, stream, ident, parent):
         """Handle a kernel info request."""
@@ -1060,6 +1099,12 @@ class Kernel(SingletonConfigurable):
         content = self.do_shutdown(parent["content"]["restart"])
         if inspect.isawaitable(content):
             content = await content
+        else:
+            warnings.warn(
+                _AWAITABLE_MESSAGE.format(func_name="do_shutdown", target=self.do_shutdown),
+                PendingDeprecationWarning,
+                stacklevel=1,
+            )
         self.session.send(stream, "shutdown_reply", content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg("shutdown_reply", content, parent)
@@ -1093,6 +1138,12 @@ class Kernel(SingletonConfigurable):
         reply_content = self.do_is_complete(code)
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
+        else:
+            warnings.warn(
+                _AWAITABLE_MESSAGE.format(func_name="do_is_complete", target=self.do_is_complete),
+                PendingDeprecationWarning,
+                stacklevel=1,
+            )
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, "is_complete_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
@@ -1109,6 +1160,14 @@ class Kernel(SingletonConfigurable):
         reply_content = self.do_debug_request(content)
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
+        else:
+            warnings.warn(
+                _AWAITABLE_MESSAGE.format(
+                    func_name="do_debug_request", target=self.do_debug_request
+                ),
+                PendingDeprecationWarning,
+                stacklevel=1,
+            )
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
@@ -1221,86 +1280,6 @@ class Kernel(SingletonConfigurable):
         reply = control_socket.recv_json()
 
         self.session.send(socket, "list_subshell_reply", reply, parent, ident)
-
-    # ---------------------------------------------------------------------------
-    # Engine methods (DEPRECATED)
-    # ---------------------------------------------------------------------------
-
-    async def apply_request(self, stream, ident, parent):  # pragma: no cover
-        """Handle an apply request."""
-        self.log.warning("apply_request is deprecated in kernel_base, moving to ipyparallel.")
-        try:
-            content = parent["content"]
-            bufs = parent["buffers"]
-            msg_id = parent["header"]["msg_id"]
-        except Exception:
-            self.log.error("Got bad msg: %s", parent, exc_info=True)  # noqa: G201
-            return
-
-        md = self.init_metadata(parent)
-
-        reply_content, result_buf = self.do_apply(content, bufs, msg_id, md)
-
-        # flush i/o
-        sys.stdout.flush()
-        sys.stderr.flush()
-
-        md = self.finish_metadata(parent, md, reply_content)
-        if not self.session:
-            return
-        self.session.send(
-            stream,
-            "apply_reply",
-            reply_content,
-            parent=parent,
-            ident=ident,
-            buffers=result_buf,
-            metadata=md,
-        )
-
-    def do_apply(self, content, bufs, msg_id, reply_metadata):
-        """DEPRECATED"""
-        raise NotImplementedError
-
-    # ---------------------------------------------------------------------------
-    # Control messages (DEPRECATED)
-    # ---------------------------------------------------------------------------
-
-    async def abort_request(self, stream, ident, parent):  # pragma: no cover
-        """abort a specific msg by id"""
-        self.log.warning(
-            "abort_request is deprecated in kernel_base. It is only part of IPython parallel"
-        )
-        msg_ids = parent["content"].get("msg_ids", None)
-        if isinstance(msg_ids, str):
-            msg_ids = [msg_ids]
-        if not msg_ids:
-            subshell_id = parent["header"].get("subshell_id")
-            self._abort_queues(subshell_id)
-
-        for mid in msg_ids:
-            self.aborted.add(str(mid))
-
-        content = dict(status="ok")
-        if not self.session:
-            return
-        reply_msg = self.session.send(
-            stream, "abort_reply", content=content, parent=parent, ident=ident
-        )
-        self.log.debug("%s", reply_msg)
-
-    async def clear_request(self, stream, idents, parent):  # pragma: no cover
-        """Clear our namespace."""
-        self.log.warning(
-            "clear_request is deprecated in kernel_base. It is only part of IPython parallel"
-        )
-        content = self.do_clear()
-        if self.session:
-            self.session.send(stream, "clear_reply", ident=idents, parent=parent, content=content)
-
-    def do_clear(self):
-        """DEPRECATED since 4.0.3"""
-        raise NotImplementedError
 
     # ---------------------------------------------------------------------------
     # Protected interface
@@ -1441,8 +1420,10 @@ class Kernel(SingletonConfigurable):
 
     def _input_request(self, prompt, ident, parent, password=False):
         # Flush output before making the request.
-        sys.stderr.flush()
-        sys.stdout.flush()
+        if sys.stdout is not None:
+            sys.stdout.flush()
+        if sys.stderr is not None:
+            sys.stderr.flush()
 
         # flush the stdin socket, to purge stale replies
         while True:

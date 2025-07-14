@@ -77,6 +77,12 @@ class IPythonKernel(KernelBase):
     shell = Instance("IPython.core.interactiveshell.InteractiveShellABC", allow_none=True)
     shell_class = Type(ZMQInteractiveShell)
 
+    # use fully-qualified name to ensure lazy import and prevent the issue from
+    # https://github.com/ipython/ipykernel/issues/1198
+    debugger_class = Type("ipykernel.debugger.Debugger")
+
+    compiler_class = Type(XCachingCompiler)
+
     use_experimental_completions = Bool(
         True,
         help="Set this flag to False to deactivate the use of experimental IPython completion APIs.",
@@ -114,11 +120,11 @@ class IPythonKernel(KernelBase):
         """Initialize the kernel."""
         super().__init__(**kwargs)
 
-        from .debugger import Debugger, _is_debugpy_available
+        from .debugger import _is_debugpy_available
 
         # Initialize the Debugger
         if _is_debugpy_available:
-            self.debugger = Debugger(
+            self.debugger = self.debugger_class(
                 self.log,
                 self.debugpy_stream,
                 self._publish_debug_event,
@@ -134,7 +140,7 @@ class IPythonKernel(KernelBase):
             user_module=self.user_module,
             user_ns=self.user_ns,
             kernel=self,
-            compiler_class=XCachingCompiler,
+            compiler_class=self.compiler_class,
         )
         self.shell.displayhook.session = self.session  # type:ignore[attr-defined]
 
@@ -225,7 +231,7 @@ class IPythonKernel(KernelBase):
             self.debugger.tcp_client.receive_dap_frame(frame)
 
     @property
-    def banner(self):
+    def banner(self):  # type:ignore[override]
         if self.shell:
             return self.shell.banner
         return None
@@ -449,7 +455,7 @@ class IPythonKernel(KernelBase):
                     if threading.current_thread() == threading.main_thread()
                     else self._dummy_context_manager
                 )
-                with cm(coro_future):  # type:ignore[operator]
+                with cm(coro_future):
                     res = None
                     try:
                         res = await coro_future
@@ -774,9 +780,9 @@ class IPythonKernel(KernelBase):
             for stream in [stdout, stderr]:
                 if isinstance(stream, OutStream):
                     if parent == kernel_thread_ident:
-                        stream._thread_to_parent_header[
-                            self.ident
-                        ] = kernel._new_threads_parent_header
+                        stream._thread_to_parent_header[self.ident] = (
+                            kernel._new_threads_parent_header
+                        )
                     else:
                         stream._thread_to_parent[self.ident] = parent
             _threading_Thread_run(self)

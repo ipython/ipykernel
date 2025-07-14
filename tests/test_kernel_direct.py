@@ -130,8 +130,7 @@ async def test_process_control(kernel):
 
 def test_should_handle(kernel):
     msg = kernel.session.msg("debug_request", {})
-    kernel.aborted.add(msg["header"]["msg_id"])
-    assert not kernel.should_handle(kernel.control_stream, msg, [])
+    assert kernel.should_handle(kernel.control_stream, msg, []) is True
 
 
 async def test_dispatch_shell(kernel):

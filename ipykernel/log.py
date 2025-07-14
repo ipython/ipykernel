@@ -1,10 +1,11 @@
 """A PUB log handler."""
+
 import warnings
 
 from zmq.log.handlers import PUBHandler
 
 warnings.warn(
-    "ipykernel.log is deprecated. It has moved to ipyparallel.engine.log",
+    "ipykernel.log is deprecated since ipykernel 4.3.0 (2016). It has moved to ipyparallel.engine.log",
     DeprecationWarning,
     stacklevel=2,
 )

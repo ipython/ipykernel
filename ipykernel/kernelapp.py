@@ -118,9 +118,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     """The IPYKernel application class."""
 
     name = "ipython-kernel"
-    aliases = Dict(kernel_aliases)  # type:ignore[assignment]
-    flags = Dict(kernel_flags)  # type:ignore[assignment]
-    classes = [IPythonKernel, ZMQInteractiveShell, ProfileDir, Session]
+    aliases = Dict(kernel_aliases)
+    flags = Dict(kernel_flags)
+    classes = [IPythonKernel, ZMQInteractiveShell, ProfileDir, Session]  # type:ignore[assignment]
     # the kernel class, as an importstring
     kernel_class = Type(
         "ipykernel.ipkernel.IPythonKernel",
@@ -220,7 +220,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # PID 1 (init) is special and will never go away,
             # only be reassigned.
             # Parent polling doesn't work if ppid == 1 to start with.
-            self.poller = ParentPollerUnix()
+            self.poller = ParentPollerUnix(parent_pid=self.parent_handle)
 
     def _try_bind_socket(self, s, port):
         iface = f"{self.transport}://{self.ip}"
@@ -261,7 +261,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                     raise
         return None
 
-    def write_connection_file(self):
+    def write_connection_file(self, **kwargs: Any) -> None:
         """write connection info to JSON file"""
         cf = self.abs_connection_file
         connection_info = dict(
@@ -331,12 +331,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
-        self.log.debug("shell ROUTER Channel on port: %i" % self.shell_port)
+        self.log.debug("shell ROUTER Channel on port: %i", self.shell_port)
 
         self.stdin_socket = context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
-        self.log.debug("stdin ROUTER Channel on port: %i" % self.stdin_port)
+        self.log.debug("stdin ROUTER Channel on port: %i", self.stdin_port)
 
         if hasattr(zmq, "ROUTER_HANDOVER"):
             # set router-handover to workaround zeromq reconnect problems
@@ -352,7 +352,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
-        self.log.debug("control ROUTER Channel on port: %i" % self.control_port)
+        self.log.debug("control ROUTER Channel on port: %i", self.control_port)
 
         self.debugpy_socket = context.socket(zmq.STREAM)
         self.debugpy_socket.linger = 1000
@@ -380,7 +380,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.iopub_socket = context.socket(zmq.PUB)
         self.iopub_socket.linger = 1000
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
-        self.log.debug("iopub PUB Channel on port: %i" % self.iopub_port)
+        self.log.debug("iopub PUB Channel on port: %i", self.iopub_port)
         self.configure_tornado_logger()
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True)
         self.iopub_thread.start()
@@ -394,7 +394,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         hb_ctx = zmq.Context()
         self.heartbeat = Heartbeat(hb_ctx, (self.transport, self.ip, self.hb_port))
         self.hb_port = self.heartbeat.port
-        self.log.debug("Heartbeat REP Channel on port: %i" % self.hb_port)
+        self.log.debug("Heartbeat REP Channel on port: %i", self.hb_port)
         self.heartbeat.start()
 
     def close(self):
@@ -666,7 +666,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                where asyncio.ProactorEventLoop supports add_reader and friends.
 
         """
-        if sys.platform.startswith("win") and sys.version_info >= (3, 8):
+        if sys.platform.startswith("win"):
             import asyncio
 
             try:

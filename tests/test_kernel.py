@@ -106,7 +106,9 @@ def test_print_to_correct_cell_from_child_thread():
 
     def parent_target():
         sleep({interval})
-        Thread(target=child_target).start()
+        thread = Thread(target=child_target)
+        thread.start()
+        thread.join()
 
     Thread(target=parent_target).start()
     """
@@ -212,7 +214,7 @@ def test_sys_path_profile_dir():
 
 @flaky(max_runs=3)
 @pytest.mark.skipif(
-    sys.platform == "win32" or (sys.platform == "darwin" and sys.version_info >= (3, 8)),
+    sys.platform == "win32" or (sys.platform == "darwin"),
     reason="subprocess prints fail on Windows and MacOS Python 3.8+",
 )
 def test_subprocess_print():
@@ -267,7 +269,7 @@ def test_subprocess_noprint():
 
 @flaky(max_runs=3)
 @pytest.mark.skipif(
-    sys.platform == "win32" or (sys.platform == "darwin" and sys.version_info >= (3, 8)),
+    (sys.platform == "win32") or (sys.platform == "darwin"),
     reason="subprocess prints fail on Windows and MacOS Python 3.8+",
 )
 def test_subprocess_error():

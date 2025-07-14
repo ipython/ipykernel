@@ -38,7 +38,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: ipywidgets
-          test_command: pytest -vv -raXxs -k \"not deprecation_fa_icons and not tooltip_deprecation and not on_submit_deprecation\" -W default --durations 10 --color=yes
+          test_command: pytest -vv -raXxs -W default --durations 10 --color=yes
 
   jupyter_client:
     runs-on: ubuntu-latest
@@ -56,6 +56,7 @@ jobs:
 
   ipyparallel:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -147,20 +148,3 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/../spyder-kernels
           xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes spyder_kernels
-
-  downstream_check: # This job does nothing and is only used for the branch protection
-    if: always()
-    needs:
-      - nbclient
-      - ipywidgets
-      - jupyter_client
-      - ipyparallel
-      - jupyter_kernel_test
-      - spyder_kernels
-      - qtconsole
-    runs-on: ubuntu-latest
-    steps:
-      - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@release/v1
-        with:
-          jobs: ${{ toJSON(needs) }}

@@ -383,6 +383,9 @@ class OutStream(TextIOBase):
 
         """
 
+        if self._fid is None:
+            return
+
         try:
             bts = os.read(self._fid, PIPE_BUFFER_SIZE)
             while bts and self._should_watch:
@@ -434,6 +437,7 @@ class OutStream(TextIOBase):
             )
         # This is necessary for compatibility with Python built-in streams
         self.session = session
+        self._fid = None
         if not isinstance(pub_thread, IOPubThread):
             # Backward-compat: given socket, not thread. Wrap in a thread.
             warnings.warn(
@@ -466,11 +470,13 @@ class OutStream(TextIOBase):
         self._local = local()
 
         if (
-            watchfd
-            and (
-                (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
-                # Pytest set its own capture. Don't redirect from within pytest.
-                and ("PYTEST_CURRENT_TEST" not in os.environ)
+            (
+                watchfd
+                and (
+                    (sys.platform.startswith("linux") or sys.platform.startswith("darwin"))
+                    # Pytest set its own capture. Don't redirect from within pytest.
+                    and ("PYTEST_CURRENT_TEST" not in os.environ)
+                )
             )
             # allow forcing watchfd (mainly for tests)
             or watchfd == "force"

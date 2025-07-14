@@ -10,8 +10,10 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from jupyter_client.client import KernelClient
 from jupyter_client.clientabc import KernelClientABC
@@ -39,11 +41,11 @@ class InProcessKernelClient(KernelClient):
     """
 
     # The classes to use for the various channels.
-    shell_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
-    iopub_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
-    stdin_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
-    control_channel_class = Type(InProcessChannel)  # type:ignore[arg-type]
-    hb_channel_class = Type(InProcessHBChannel)  # type:ignore[arg-type]
+    shell_channel_class = Type(InProcessChannel)  # type:ignore[assignment]
+    iopub_channel_class = Type(InProcessChannel)  # type:ignore[assignment]
+    stdin_channel_class = Type(InProcessChannel)  # type:ignore[assignment]
+    control_channel_class = Type(InProcessChannel)  # type:ignore[assignment]
+    hb_channel_class = Type(InProcessHBChannel)  # type:ignore[assignment]
 
     kernel = Instance("ipykernel.inprocess.ipkernel.InProcessKernel", allow_none=True)
 
@@ -57,9 +59,9 @@ class InProcessKernelClient(KernelClient):
 
         return BlockingInProcessKernelClient
 
-    def get_connection_info(self):
+    def get_connection_info(self, session: bool = False) -> dict[str, int | str | bytes]:
         """Get the connection info for the client."""
-        d = super().get_connection_info()
+        d = super().get_connection_info(session=session)
         d["kernel"] = self.kernel  # type:ignore[assignment]
         return d
 
@@ -72,39 +74,45 @@ class InProcessKernelClient(KernelClient):
     @property
     def shell_channel(self):
         if self._shell_channel is None:
-            self._shell_channel = self.shell_channel_class(self)  # type:ignore[abstract,call-arg]
+            self._shell_channel = self.shell_channel_class(self)
         return self._shell_channel
 
     @property
     def iopub_channel(self):
         if self._iopub_channel is None:
-            self._iopub_channel = self.iopub_channel_class(self)  # type:ignore[abstract,call-arg]
+            self._iopub_channel = self.iopub_channel_class(self)
         return self._iopub_channel
 
     @property
     def stdin_channel(self):
         if self._stdin_channel is None:
-            self._stdin_channel = self.stdin_channel_class(self)  # type:ignore[abstract,call-arg]
+            self._stdin_channel = self.stdin_channel_class(self)
         return self._stdin_channel
 
     @property
     def control_channel(self):
         if self._control_channel is None:
-            self._control_channel = self.control_channel_class(self)  # type:ignore[abstract,call-arg]
+            self._control_channel = self.control_channel_class(self)
         return self._control_channel
 
     @property
     def hb_channel(self):
         if self._hb_channel is None:
-            self._hb_channel = self.hb_channel_class(self)  # type:ignore[abstract,call-arg]
+            self._hb_channel = self.hb_channel_class(self)
         return self._hb_channel
 
     # Methods for sending specific messages
     # -------------------------------------
 
     def execute(
-        self, code, silent=False, store_history=True, user_expressions=None, allow_stdin=None
-    ):
+        self,
+        code: str,
+        silent: bool = False,
+        store_history: bool = True,
+        user_expressions: dict[str, Any] | None = None,
+        allow_stdin: bool | None = None,
+        stop_on_error: bool = True,
+    ) -> str:
         """Execute code on the client."""
         if allow_stdin is None:
             allow_stdin = self.allow_stdin
@@ -117,7 +125,9 @@ class InProcessKernelClient(KernelClient):
         )
         msg = self.session.msg("execute_request", content)
         self._dispatch_to_kernel(msg)
-        return msg["header"]["msg_id"]
+        res = msg["header"]["msg_id"]
+        assert isinstance(res, str)
+        return res
 
     def complete(self, code, cursor_pos=None):
         """Get code completion."""

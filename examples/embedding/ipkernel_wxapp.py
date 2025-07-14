@@ -16,6 +16,7 @@ they will notice that their kernel died.
 
 Ref: Modified from wxPython source code wxPython/samples/simple/simple.py
 """
+
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------

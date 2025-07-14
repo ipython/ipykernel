@@ -38,7 +38,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://ipython.org"
 Documentation = "https://ipykernel.readthedocs.io"
-Funding = "https://numfocus.org/donate"
 Source = "https://github.com/ipython/ipykernel"
 Tracker = "https://github.com/ipython/ipykernel/issues"
 
@@ -168,7 +167,6 @@ filterwarnings= [
 
   # Ignore our own warnings
   "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
-  "ignore:has moved to ipyparallel:DeprecationWarning",
 
   # IPython warnings
   "ignore: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`:PendingDeprecationWarning",
@@ -176,19 +174,14 @@ filterwarnings= [
   "ignore: backend2gui is deprecated since IPython 8.24, backends are managed in matplotlib and can be externally registered.:DeprecationWarning",
 
   # Ignore jupyter_client warnings
-  "ignore:unclosed <socket.socket:ResourceWarning",
-  "ignore:unclosed event loop:ResourceWarning",
-  "ignore:There is no current event loop:DeprecationWarning",
   "module:Jupyter is migrating its paths to use standard platformdirs:DeprecationWarning",
-
-  # Ignore datetime warning.
-  "ignore:datetime.datetime.utc:DeprecationWarning",
-
-  # https://github.com/python-trio/trio/issues/3053
-  "ignore:The `hash` argument is deprecated in favor of `unsafe_hash` and will be removed in or after August 2025.",
 
   # ignore unclosed sqlite in traits
   "ignore:unclosed database in <sqlite3.Connection:ResourceWarning",
+
+  # ignore deprecated non async during tests:
+  "always:For consistency across implementations, it is recommended that:PendingDeprecationWarning",
+
 ]
 
 [tool.coverage.report]
@@ -252,37 +245,22 @@ ignore = [
   "PLR",    # Design related pylint codes
   # Allow non-abstract empty methods in abstract base classes
   "B027",
-  # Use of `assert` detected
-  "S101",
-  # Possible hardcoded password
-  "S105", "S106",
-  # `print` found
-  "T201",
+  "T201", # `print` found
   # Unnecessary `dict` call (rewrite as a literal)
   "C408",
-  # Use `contextlib.suppress(ValueError)` instead of try-except-pass
-  "SIM105",
-  # `try`-`except`-`pass` detected
-  "S110",
+  "SIM105", # Use `contextlib.suppress(ValueError)` instead of try-except-pass
   # Mutable class attributes should be annotated with `typing.ClassVar`
   "RUF012",
   # Unused function argument:
   "ARG001",
   # Unused method argument:
   "ARG002",
-  # Logging statement uses `%`
-  "G002",
   # `open()` should be replaced by `Path.open()`
   "PTH123",
-]
-unfixable = [
-  # Don't touch print statements
-  "T201",
-  # Don't touch noqa lines
-  "RUF100",
-  # Don't touch imports
-  "F401",
-  "F403"
+  "UP007", # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python
+  "UP031", # Use format specifiers instead of percent format
+  "PT023", # Use `@pytest.mark.skip` over `@pytest.mark.skip()`
+  "PT001", # autofixable: Use `@pytest.fixture` over `@pytest.fixture()`
 ]
 
 [tool.ruff.lint.per-file-ignores]

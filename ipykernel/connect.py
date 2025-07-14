@@ -1,5 +1,5 @@
-"""Connection file-related utilities for the kernel
-"""
+"""Connection file-related utilities for the kernel"""
+
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
@@ -133,8 +133,8 @@ def connect_qtconsole(
 
 
 __all__ = [
-    "write_connection_file",
+    "connect_qtconsole",
     "get_connection_file",
     "get_connection_info",
-    "connect_qtconsole",
+    "write_connection_file",
 ]

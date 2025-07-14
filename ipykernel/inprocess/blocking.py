@@ -69,6 +69,7 @@ class BlockingInProcessStdInChannel(BlockingInProcessChannel):
             _raw_input = self.client.kernel._sys_raw_input
             prompt = msg["content"]["prompt"]
             print(prompt, end="", file=sys.__stdout__)
+            assert sys.__stdout__ is not None
             sys.__stdout__.flush()
             self.client.input(_raw_input())
 
@@ -77,9 +78,9 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
     """A blocking in-process kernel client."""
 
     # The classes to use for the various channels.
-    shell_channel_class = Type(BlockingInProcessChannel)  # type:ignore[arg-type]
-    iopub_channel_class = Type(BlockingInProcessChannel)  # type:ignore[arg-type]
-    stdin_channel_class = Type(BlockingInProcessStdInChannel)  # type:ignore[arg-type]
+    shell_channel_class = Type(BlockingInProcessChannel)
+    iopub_channel_class = Type(BlockingInProcessChannel)
+    stdin_channel_class = Type(BlockingInProcessStdInChannel)
 
     def wait_for_ready(self):
         """Wait for kernel info reply on shell channel."""

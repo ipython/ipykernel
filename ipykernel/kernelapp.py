@@ -118,9 +118,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     """The IPYKernel application class."""
 
     name = "ipython-kernel"
-    aliases = Dict(kernel_aliases)  # type:ignore[assignment]
-    flags = Dict(kernel_flags)  # type:ignore[assignment]
-    classes = [IPythonKernel, ZMQInteractiveShell, ProfileDir, Session]
+    aliases = Dict(kernel_aliases)
+    flags = Dict(kernel_flags)
+    classes = [IPythonKernel, ZMQInteractiveShell, ProfileDir, Session]  # type:ignore[assignment]
     # the kernel class, as an importstring
     kernel_class = Type(
         "ipykernel.ipkernel.IPythonKernel",
@@ -261,7 +261,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
                     raise
         return None
 
-    def write_connection_file(self):
+    def write_connection_file(self, **kwargs: Any) -> None:
         """write connection info to JSON file"""
         cf = self.abs_connection_file
         connection_info = dict(

@@ -17,6 +17,7 @@ machinery.  This should thus be thought of as scaffolding.
 import os
 import sys
 import threading
+import typing
 import warnings
 from pathlib import Path
 
@@ -78,12 +79,16 @@ class ZMQDisplayPublisher(DisplayPublisher):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def publish(
+    # Feb: 2025 IPython has a deprecated, `source` parameter, marked for removal that
+    # triggers typing errors.
+    def publish(  # type:ignore[override]
         self,
         data,
         metadata=None,
+        *,
         transient=None,
         update=False,
+        **kwargs,
     ):
         """Publish a display-data message
 
@@ -125,7 +130,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         for hook in self._hooks:
             msg = hook(msg)
             if msg is None:
-                return  # type:ignore[unreachable]
+                return
 
         self.session.send(
             self.pub_socket,
@@ -153,7 +158,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         for hook in self._hooks:
             msg = hook(msg)
             if msg is None:
-                return  # type:ignore[unreachable]
+                return
 
         self.session.send(
             self.pub_socket,
@@ -482,7 +487,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
-    data_pub_class = Any()  # type:ignore[assignment]
+    data_pub_class = Any()
     kernel = Any()
     parent_header = Any()
 
@@ -520,7 +525,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
     # Over ZeroMQ, GUI control isn't done with PyOS_InputHook as there is no
     # interactive input being read; we provide event loop support in ipkernel
-    def enable_gui(self, gui):
+    def enable_gui(self, gui: typing.Any = None) -> None:
         """Enable a given guil."""
         from .eventloops import enable_gui as real_enable_gui
 
@@ -590,7 +595,7 @@ class ZMQInteractiveShell(InteractiveShell):
                 stacklevel=2,
             )
 
-            self._data_pub = self.data_pub_class(parent=self)  # type:ignore[has-type]
+            self._data_pub = self.data_pub_class(parent=self)
             self._data_pub.session = self.display_pub.session  # type:ignore[attr-defined]
             self._data_pub.pub_socket = self.display_pub.pub_socket  # type:ignore[attr-defined]
         return self._data_pub
@@ -660,14 +665,10 @@ class ZMQInteractiveShell(InteractiveShell):
         self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
         if hasattr(self, "_data_pub"):
             self.data_pub.set_parent(parent)
-        try:
-            sys.stdout.set_parent(parent)  # type:ignore[attr-defined]
-        except AttributeError:
-            pass
-        try:
-            sys.stderr.set_parent(parent)  # type:ignore[attr-defined]
-        except AttributeError:
-            pass
+        if hasattr(sys.stdout, "set_parent"):
+            sys.stdout.set_parent(parent)
+        if hasattr(sys.stderr, "set_parent"):
+            sys.stderr.set_parent(parent)
 
     def get_parent(self):
         """Get the parent header."""

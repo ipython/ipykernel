@@ -2,6 +2,7 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
 
 import logging
 import sys
@@ -51,7 +52,7 @@ class InProcessKernel(IPythonKernel):
     _underlying_iopub_socket = Instance(DummySocket, ())
     iopub_thread: IOPubThread = Instance(IOPubThread)  # type:ignore[assignment]
 
-    shell_stream = Instance(DummySocket, ())  # type:ignore[arg-type]
+    shell_stream = Instance(DummySocket, ())  # type:ignore[assignment]
 
     @default("iopub_thread")
     def _default_iopub_thread(self):
@@ -65,7 +66,7 @@ class InProcessKernel(IPythonKernel):
     def _default_iopub_socket(self):
         return self.iopub_thread.background_socket
 
-    stdin_socket = Instance(DummySocket, ())  # type:ignore[assignment]
+    stdin_socket = Instance(DummySocket, ())
 
     def __init__(self, **traits):
         """Initialize the kernel."""
@@ -85,7 +86,7 @@ class InProcessKernel(IPythonKernel):
         if self.shell:
             self.shell.exit_now = False
 
-    def _abort_queues(self):
+    def _abort_queues(self, subshell_id: str | None = ...):
         """The in-process kernel doesn't abort requests."""
 
     def _input_request(self, prompt, ident, parent, password=False):

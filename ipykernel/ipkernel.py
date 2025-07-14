@@ -231,7 +231,7 @@ class IPythonKernel(KernelBase):
             self.debugger.tcp_client.receive_dap_frame(frame)
 
     @property
-    def banner(self):
+    def banner(self):  # type:ignore[override]
         if self.shell:
             return self.shell.banner
         return None
@@ -455,7 +455,7 @@ class IPythonKernel(KernelBase):
                     if threading.current_thread() == threading.main_thread()
                     else self._dummy_context_manager
                 )
-                with cm(coro_future):  # type:ignore[operator]
+                with cm(coro_future):
                     res = None
                     try:
                         res = await coro_future

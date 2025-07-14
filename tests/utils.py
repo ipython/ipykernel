@@ -137,7 +137,7 @@ def stop_global_kernel():
 def new_kernel(argv=None):
     """Context manager for a new kernel in a subprocess
 
-    Should only be used for tests where the kernel must not be re-used.
+    Should only be used for tests where the kernel must not be reused.
 
     Returns
     -------

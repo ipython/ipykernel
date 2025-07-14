@@ -14,7 +14,7 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Bugs fixed
 
-- \[Bugfix\] Set shell idle when message skipped by "should_handle" in "dispatch_shell" [#1395](https://github.com/ipython/ipykernel/pull/1395) ([@dby-tmwctw](https://github.com/dby-tmwctw))
+- [Bugfix] Set shell idle when message skipped by "should_handle" in "dispatch_shell" [#1395](https://github.com/ipython/ipykernel/pull/1395) ([@dby-tmwctw](https://github.com/dby-tmwctw))
 
 ### Maintenance and upkeep improvements
 
@@ -39,7 +39,7 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Maintenance and upkeep improvements
 
-- \[6.x\] Update Release Scripts  [#1251](https://github.com/ipython/ipykernel/pull/1251) ([@blink1073](https://github.com/blink1073))
+- [6.x] Update Release Scripts [#1251](https://github.com/ipython/ipykernel/pull/1251) ([@blink1073](https://github.com/blink1073))
 
 ### Contributors to this release
 
@@ -98,7 +98,7 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Bugs fixed
 
-- Fix: ipykernel_launcher, delete absolute sys.path\[0\] [#1206](https://github.com/ipython/ipykernel/pull/1206) ([@stdll00](https://github.com/stdll00))
+- Fix: ipykernel_launcher, delete absolute sys.path[0] [#1206](https://github.com/ipython/ipykernel/pull/1206) ([@stdll00](https://github.com/stdll00))
 
 ### Maintenance and upkeep improvements
 
@@ -366,7 +366,7 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Enhancements made
 
-- Support control\<>iopub messages to e.g. unblock comm_msg from command execution  [#1114](https://github.com/ipython/ipykernel/pull/1114) ([@tkrabel-db](https://github.com/tkrabel-db))
+- Support control\<>iopub messages to e.g. unblock comm_msg from command execution [#1114](https://github.com/ipython/ipykernel/pull/1114) ([@tkrabel-db](https://github.com/tkrabel-db))
 - Add outstream hook similar to display publisher [#1110](https://github.com/ipython/ipykernel/pull/1110) ([@maartenbreddels](https://github.com/maartenbreddels))
 
 ### Maintenance and upkeep improvements
@@ -776,10 +776,10 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Maintenance and upkeep improvements
 
-- \[pre-commit.ci\] pre-commit autoupdate [#989](https://github.com/ipython/ipykernel/pull/989) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#985](https://github.com/ipython/ipykernel/pull/985) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#989](https://github.com/ipython/ipykernel/pull/989) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#985](https://github.com/ipython/ipykernel/pull/985) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Add python logo in svg format [#984](https://github.com/ipython/ipykernel/pull/984) ([@steff456](https://github.com/steff456))
-- \[pre-commit.ci\] pre-commit autoupdate [#982](https://github.com/ipython/ipykernel/pull/982) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#982](https://github.com/ipython/ipykernel/pull/982) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -797,13 +797,13 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Maintenance and upkeep improvements
 
-- \[pre-commit.ci\] pre-commit autoupdate [#978](https://github.com/ipython/ipykernel/pull/978) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#977](https://github.com/ipython/ipykernel/pull/977) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#976](https://github.com/ipython/ipykernel/pull/976) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#974](https://github.com/ipython/ipykernel/pull/974) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#971](https://github.com/ipython/ipykernel/pull/971) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#968](https://github.com/ipython/ipykernel/pull/968) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#966](https://github.com/ipython/ipykernel/pull/966) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#978](https://github.com/ipython/ipykernel/pull/978) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#977](https://github.com/ipython/ipykernel/pull/977) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#976](https://github.com/ipython/ipykernel/pull/976) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#974](https://github.com/ipython/ipykernel/pull/974) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#971](https://github.com/ipython/ipykernel/pull/971) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#968](https://github.com/ipython/ipykernel/pull/968) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#966](https://github.com/ipython/ipykernel/pull/966) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -821,9 +821,9 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Maintenance and upkeep improvements
 
-- \[pre-commit.ci\] pre-commit autoupdate [#962](https://github.com/ipython/ipykernel/pull/962) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#961](https://github.com/ipython/ipykernel/pull/961) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#960](https://github.com/ipython/ipykernel/pull/960) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#962](https://github.com/ipython/ipykernel/pull/962) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#961](https://github.com/ipython/ipykernel/pull/961) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#960](https://github.com/ipython/ipykernel/pull/960) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -843,7 +843,7 @@ Pre-release to allow further testing of subshell implementation.
 
 - Back to top-level tornado IOLoop [#958](https://github.com/ipython/ipykernel/pull/958) ([@minrk](https://github.com/minrk))
 - Explicitly require pyzmq >= 17 [#957](https://github.com/ipython/ipykernel/pull/957) ([@minrk](https://github.com/minrk))
-- \[pre-commit.ci\] pre-commit autoupdate [#954](https://github.com/ipython/ipykernel/pull/954) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#954](https://github.com/ipython/ipykernel/pull/954) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -867,7 +867,7 @@ Pre-release to allow further testing of subshell implementation.
 ### Maintenance and upkeep improvements
 
 - Fix sphinx 5.0 support [#951](https://github.com/ipython/ipykernel/pull/951) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#950](https://github.com/ipython/ipykernel/pull/950) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#950](https://github.com/ipython/ipykernel/pull/950) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -886,18 +886,18 @@ Pre-release to allow further testing of subshell implementation.
 
 ### Maintenance and upkeep improvements
 
-- \[pre-commit.ci\] pre-commit autoupdate [#945](https://github.com/ipython/ipykernel/pull/945) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#945](https://github.com/ipython/ipykernel/pull/945) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Clean up typings [#939](https://github.com/ipython/ipykernel/pull/939) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#938](https://github.com/ipython/ipykernel/pull/938) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#938](https://github.com/ipython/ipykernel/pull/938) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Clean up types [#933](https://github.com/ipython/ipykernel/pull/933) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#932](https://github.com/ipython/ipykernel/pull/932) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#932](https://github.com/ipython/ipykernel/pull/932) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Switch to hatch backend [#931](https://github.com/ipython/ipykernel/pull/931) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#928](https://github.com/ipython/ipykernel/pull/928) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#926](https://github.com/ipython/ipykernel/pull/926) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#928](https://github.com/ipython/ipykernel/pull/928) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#926](https://github.com/ipython/ipykernel/pull/926) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 - Allow enforce PR label workflow to add labels [#921](https://github.com/ipython/ipykernel/pull/921) ([@blink1073](https://github.com/blink1073))
-- \[pre-commit.ci\] pre-commit autoupdate [#920](https://github.com/ipython/ipykernel/pull/920) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#919](https://github.com/ipython/ipykernel/pull/919) ([@pre-commit-ci](https://github.com/pre-commit-ci))
-- \[pre-commit.ci\] pre-commit autoupdate [#917](https://github.com/ipython/ipykernel/pull/917) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#920](https://github.com/ipython/ipykernel/pull/920) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#919](https://github.com/ipython/ipykernel/pull/919) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#917](https://github.com/ipython/ipykernel/pull/917) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -922,7 +922,7 @@ Pre-release to allow further testing of subshell implementation.
 - Add basic mypy support [#913](https://github.com/ipython/ipykernel/pull/913) ([@blink1073](https://github.com/blink1073))
 - Clean up pre-commit [#911](https://github.com/ipython/ipykernel/pull/911) ([@blink1073](https://github.com/blink1073))
 - Update setup.py [#909](https://github.com/ipython/ipykernel/pull/909) ([@tlinhart](https://github.com/tlinhart))
-- \[pre-commit.ci\] pre-commit autoupdate [#906](https://github.com/ipython/ipykernel/pull/906) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#906](https://github.com/ipython/ipykernel/pull/906) ([@pre-commit-ci](https://github.com/pre-commit-ci))
 
 ### Contributors to this release
 
@@ -1340,7 +1340,7 @@ Pre-release to allow further testing of subshell implementation.
 
 - Add watchfd keyword to InProcessKernel OutStream initialization [#727](https://github.com/ipython/ipykernel/pull/727) ([@rayosborn](https://github.com/rayosborn))
 - Fix typo in eventloops.py [#711](https://github.com/ipython/ipykernel/pull/711) ([@selasley](https://github.com/selasley))
-- \[bugfix\] fix in setup.py (comma before appnope) [#709](https://github.com/ipython/ipykernel/pull/709) ([@jstriebel](https://github.com/jstriebel))
+- [bugfix] fix in setup.py (comma before appnope) [#709](https://github.com/ipython/ipykernel/pull/709) ([@jstriebel](https://github.com/jstriebel))
 
 ### Maintenance and upkeep improvements
 

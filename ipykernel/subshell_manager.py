@@ -29,6 +29,8 @@ class SubshellManager:
 
     Sending reply messages via the shell_socket is wrapped by another lock to protect
     against multiple subshells attempting to send at the same time.
+
+    .. versionadded:: 7
     """
 
     def __init__(
@@ -37,6 +39,7 @@ class SubshellManager:
         shell_channel_io_loop: IOLoop,
         shell_socket: zmq.Socket[t.Any],
     ):
+        """Initialize the subshell manager."""
         assert current_thread() == main_thread()
 
         self._context: zmq.Context[t.Any] = context
@@ -80,22 +83,30 @@ class SubshellManager:
         self._shell_channel_to_main.close()
 
     def get_shell_channel_to_subshell_pair(self, subshell_id: str | None) -> SocketPair:
+        """Return the inproc socket pair used to send messages from the shell channel
+        to a particular subshell or main shell."""
         if subshell_id is None:
             return self._shell_channel_to_main
         with self._lock_cache:
             return self._cache[subshell_id].shell_channel_to_subshell
 
     def get_subshell_to_shell_channel_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
+        """Return the socket used by a particular subshell or main shell to send
+        messages to the shell channel.
+        """
         if subshell_id is None:
             return self._main_to_shell_channel.from_socket
         with self._lock_cache:
             return self._cache[subshell_id].subshell_to_shell_channel.from_socket
 
     def get_shell_channel_to_subshell_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
+        """Return the socket used by the shell channel to send messages to a particular
+        subshell or main shell.
+        """
         return self.get_shell_channel_to_subshell_pair(subshell_id).from_socket
 
     def get_subshell_aborting(self, subshell_id: str) -> bool:
-        """Get the aborting flag of the specified subshell."""
+        """Get the boolean aborting flag of the specified subshell."""
         return self._cache[subshell_id].aborting
 
     def list_subshell(self) -> list[str]:
@@ -107,6 +118,9 @@ class SubshellManager:
             return list(self._cache)
 
     def set_on_recv_callback(self, on_recv_callback):
+        """Set the callback used by the main shell and all subshells to receive
+        messages sent from the shell channel thread.
+        """
         assert current_thread() == main_thread()
         self._on_recv_callback = on_recv_callback
         self._shell_channel_to_main.on_recv(IOLoop.current(), partial(self._on_recv_callback, None))

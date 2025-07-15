@@ -300,7 +300,7 @@ class Kernel(SingletonConfigurable):
         )
 
     async def dispatch_control(self, msg):
-        # Ensure only one control message is processed at a time
+        """Dispatch a control request, ensuring only one message is processed at a time."""
         async with asyncio.Lock():
             await self.process_control(msg)
 
@@ -1225,6 +1225,10 @@ class Kernel(SingletonConfigurable):
         raise NotImplementedError
 
     async def create_subshell_request(self, socket, ident, parent) -> None:
+        """Handle a create subshell request.
+
+        .. versionadded:: 7
+        """
         if not self.session:
             return
         if not self._supports_kernel_subshells:
@@ -1241,6 +1245,10 @@ class Kernel(SingletonConfigurable):
         self.session.send(socket, "create_subshell_reply", reply, parent, ident)
 
     async def delete_subshell_request(self, socket, ident, parent) -> None:
+        """Handle a delete subshell request.
+
+        .. versionadded:: 7
+        """
         if not self.session:
             return
         if not self._supports_kernel_subshells:
@@ -1265,6 +1273,10 @@ class Kernel(SingletonConfigurable):
         self.session.send(socket, "delete_subshell_reply", reply, parent, ident)
 
     async def list_subshell_request(self, socket, ident, parent) -> None:
+        """Handle a list subshell request.
+
+        .. versionadded:: 7
+        """
         if not self.session:
             return
         if not self._supports_kernel_subshells:

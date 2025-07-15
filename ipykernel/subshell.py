@@ -9,7 +9,10 @@ from .thread import BaseThread
 
 
 class SubshellThread(BaseThread):
-    """A thread for a subshell."""
+    """A thread for a subshell.
+
+    .. versionadded:: 7
+    """
 
     def __init__(
         self,
@@ -27,6 +30,7 @@ class SubshellThread(BaseThread):
         self.aborting = False
 
     def run(self) -> None:
+        """Run the thread."""
         try:
             super().run()
         finally:

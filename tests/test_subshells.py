@@ -11,7 +11,7 @@ from queue import Empty
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, assemble_output, get_replies, get_reply, new_kernel, flush_channels
+from .utils import TIMEOUT, assemble_output, flush_channels, get_replies, get_reply, new_kernel
 
 # Helpers
 
@@ -40,7 +40,9 @@ def list_subshell_helper(kc: BlockingKernelClient):
     return reply["content"]
 
 
-def execute_request(kc: BlockingKernelClient, code: str, subshell_id: str | None, silent: bool = False):
+def execute_request(
+    kc: BlockingKernelClient, code: str, subshell_id: str | None, silent: bool = False
+):
     msg = kc.session.msg("execute_request", {"code": code, "silent": silent})
     msg["header"]["subshell_id"] = subshell_id
     kc.shell_channel.send(msg)
@@ -260,6 +262,7 @@ def test_execute_stop_on_error(are_subshells):
             if subshell_id:
                 delete_subshell_helper(kc, subshell_id)
 
+
 def test_silent_flag_in_subshells():
     """Verifies that the 'silent' flag suppresses output in main and subshell contexts."""
     with new_kernel() as kc:
@@ -267,13 +270,13 @@ def test_silent_flag_in_subshells():
         # Test silent execution in main shell
         msg_main_silent = execute_request(kc, "a=1", None, silent=True)
         reply_main_silent = get_reply(kc, msg_main_silent["header"]["msg_id"])
-        assert reply_main_silent['content']['status'] == 'ok'
+        assert reply_main_silent["content"]["status"] == "ok"
 
         # Test silent execution in subshell
         subshell_id = create_subshell_helper(kc)["subshell_id"]
         msg_sub_silent = execute_request(kc, "b=2", subshell_id, silent=True)
         reply_sub_silent = get_reply(kc, msg_sub_silent["header"]["msg_id"])
-        assert reply_sub_silent['content']['status'] == 'ok'
+        assert reply_sub_silent["content"]["status"] == "ok"
 
         # Check for no output from silent requests. We should only see status messages,
         # so we expect a timeout here when looking for other messages.
@@ -281,30 +284,38 @@ def test_silent_flag_in_subshells():
             try:
                 msg = kc.get_iopub_msg(timeout=0.2)
                 # We should only receive status messages
-                if msg['header']['msg_type'] == 'status':
+                if msg["header"]["msg_type"] == "status":
                     continue
                 # If we get anything else, it's a failure
-                pytest.fail(f"Silent execution produced an unexpected IOPub message: {msg['header']['msg_type']}")
+                pytest.fail(
+                    f"Silent execution produced an unexpected IOPub message: {msg['header']['msg_type']}"
+                )
             except Empty:
                 # No more messages, which is the expected behavior for silent execution
                 break
 
         # Test concurrent silent and non-silent execution
-        msg_silent = execute_request(kc, "import time; time.sleep(0.5); c=3", subshell_id, silent=True)
+        msg_silent = execute_request(
+            kc, "import time; time.sleep(0.5); c=3", subshell_id, silent=True
+        )
         msg_noisy = execute_request(kc, "print('noisy')", None, silent=False)
 
         # Get replies for both messages
-        replies = get_replies(kc, [msg_silent['header']['msg_id'], msg_noisy['header']['msg_id']])
+        replies = get_replies(kc, [msg_silent["header"]["msg_id"], msg_noisy["header"]["msg_id"]])
         assert len(replies) == 2
 
         # Verify that we only receive stream output from the noisy message
-        stdout, stderr = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_noisy['header']['msg_id'])
+        stdout, stderr = assemble_output(
+            kc.get_iopub_msg, parent_msg_id=msg_noisy["header"]["msg_id"]
+        )
         assert "noisy" in stdout
         assert not stderr
 
         # Verify there is no output from the silent message.
         try:
-            stdout, stderr = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_silent['header']['msg_id'])
+            stdout, stderr = assemble_output(
+                kc.get_iopub_msg, parent_msg_id=msg_silent["header"]["msg_id"]
+            )
             assert not stdout
             assert not stderr
         except Empty:

@@ -2,6 +2,56 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.30.0
+
+This release fixes three bugs but is primarily a maintenance release bringing support for Python 3.13 and updating dependencies. It does not include subshells which will be in the upcoming 7.0.0 release. Users and downstream libraries that wish to avoid subshells should pin to `ipykernel < 7`.
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/b1283b144...d9bd546a4dc49a41c3ad5fcc5d4a61f259973182))
+
+### Enhancements made
+
+- Remove control queue [#1210](https://github.com/ipython/ipykernel/pull/1210) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Set shell idle when message skipped by "should_handle" in "dispatch_shell" [#1395](https://github.com/ipython/ipykernel/pull/1395) ([@dby-tmwctw](https://github.com/dby-tmwctw))
+- Fixed error accessing sys.stdout/sys.stderr when those are None [#1247](https://github.com/ipython/ipykernel/pull/1247) ([@gregory-shklover](https://github.com/gregory-shklover))
+- Allow datetime or str in test_sequential_control_messages [#1219](https://github.com/ipython/ipykernel/pull/1219) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- 6.x backports [#1406](https://github.com/ipython/ipykernel/pull/1406) ([@ianthomas23](https://github.com/ianthomas23))
+- Update pre-commit and github actions [#1401](https://github.com/ipython/ipykernel/pull/1401) ([@ianthomas23](https://github.com/ianthomas23))
+- Test more python versions on 6.x branch [#1398](https://github.com/ipython/ipykernel/pull/1398) ([@davidbrochart](https://github.com/davidbrochart))
+- Backports and extra changes to fix CI on 6.x branch [#1390](https://github.com/ipython/ipykernel/pull/1390) ([@ianthomas23](https://github.com/ianthomas23))
+- Remove nose import. [#1368](https://github.com/ipython/ipykernel/pull/1368) ([@Carreau](https://github.com/Carreau))
+- Test more python versions [#1358](https://github.com/ipython/ipykernel/pull/1358) ([@davidbrochart](https://github.com/davidbrochart))
+- Fix expected text depending on IPython version. [#1354](https://github.com/ipython/ipykernel/pull/1354) ([@Carreau](https://github.com/Carreau))
+- Licence :: * trove classifers are deprecated [#1348](https://github.com/ipython/ipykernel/pull/1348) ([@Carreau](https://github.com/Carreau))
+- Try to fix spyder kernel install [#1337](https://github.com/ipython/ipykernel/pull/1337) ([@Carreau](https://github.com/Carreau))
+- Remove test_check job [#1335](https://github.com/ipython/ipykernel/pull/1335) ([@Carreau](https://github.com/Carreau))
+- Don't rerun test with --lf it hides failures. [#1324](https://github.com/ipython/ipykernel/pull/1324) ([@Carreau](https://github.com/Carreau))
+- Remove link to numfocus for funding. [#1320](https://github.com/ipython/ipykernel/pull/1320) ([@Carreau](https://github.com/Carreau))
+- Remove downstream_check [#1318](https://github.com/ipython/ipykernel/pull/1318) ([@Carreau](https://github.com/Carreau))
+- Copy payloadpage.page from IPython [#1317](https://github.com/ipython/ipykernel/pull/1317) ([@Carreau](https://github.com/Carreau))
+- Remove base setup [#1299](https://github.com/ipython/ipykernel/pull/1299) ([@davidbrochart](https://github.com/davidbrochart))
+- Rely on intrsphinx_registry to keep intersphinx up to date. [#1290](https://github.com/ipython/ipykernel/pull/1290) ([@Carreau](https://github.com/Carreau))
+- Drop support for Python 3.8 [#1284](https://github.com/ipython/ipykernel/pull/1284) ([@ianthomas23](https://github.com/ianthomas23))
+- Start testing on 3.13 [#1277](https://github.com/ipython/ipykernel/pull/1277) ([@Carreau](https://github.com/Carreau))
+- Build docs on ubuntu [#1257](https://github.com/ipython/ipykernel/pull/1257) ([@blink1073](https://github.com/blink1073))
+- Avoid a DeprecationWarning on Python 3.13+ [#1248](https://github.com/ipython/ipykernel/pull/1248) ([@hroncok](https://github.com/hroncok))
+- Catch IPython 8.24 DeprecationWarnings [#1242](https://github.com/ipython/ipykernel/pull/1242) ([@s-t-e-v-e-n-k](https://github.com/s-t-e-v-e-n-k))
+- Add compat with pytest 8 [#1231](https://github.com/ipython/ipykernel/pull/1231) ([@blink1073](https://github.com/blink1073))
+- Set all min deps [#1229](https://github.com/ipython/ipykernel/pull/1229) ([@blink1073](https://github.com/blink1073))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-07-01&to=2025-07-21&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2024-07-01..2025-07-21&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-07-01..2025-07-21&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-07-01..2025-07-21&type=Issues) | [@dby-tmwctw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adby-tmwctw+updated%3A2024-07-01..2025-07-21&type=Issues) | [@gregory-shklover](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Agregory-shklover+updated%3A2024-07-01..2025-07-21&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-07-01..2025-07-21&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2024-07-01..2025-07-21&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2024-07-01..2025-07-21&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-07-01..2025-07-21&type=Issues) | [@meeseeksmachine](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ameeseeksmachine+updated%3A2024-07-01..2025-07-21&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-07-01..2025-07-21&type=Issues) | [@nathanmcavoy](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anathanmcavoy+updated%3A2024-07-01..2025-07-21&type=Issues) | [@s-t-e-v-e-n-k](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3As-t-e-v-e-n-k+updated%3A2024-07-01..2025-07-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.29.5
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.4...1e62d48298e353a9879fae99bc752f9bb48797ef))
@@ -19,8 +69,6 @@
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-03-27&to=2024-06-29&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-03-27..2024-06-29&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-03-27..2024-06-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.4
 

@@ -256,6 +256,7 @@ ignore = [
   # Unused method argument:
   "ARG002",
   # `open()` should be replaced by `Path.open()`
+  "PLC0415", # `import` should be at the top-level of a file
   "PTH123",
   "UP007", # use `X | Y` for type annotations, this does not works for dynamic getting type hints on older python
   "UP031", # Use format specifiers instead of percent format

@@ -12,7 +12,6 @@ from contextlib import contextmanager
 from subprocess import PIPE, Popen
 
 import pytest
-from flaky import flaky
 from jupyter_client.blocking.client import BlockingKernelClient
 from jupyter_core import paths
 
@@ -91,7 +90,7 @@ def setup_kernel(cmd):
                 fid.close()
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 def test_embed_kernel_basic():
     """IPython.embed_kernel() is basically functional"""
     cmd = "\n".join(
@@ -127,7 +126,7 @@ def test_embed_kernel_basic():
         assert "10" in text
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 def test_embed_kernel_namespace():
     """IPython.embed_kernel() inherits calling namespace"""
     cmd = "\n".join(
@@ -166,7 +165,7 @@ def test_embed_kernel_namespace():
         assert not content["found"]
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 def test_embed_kernel_reentrant():
     """IPython.embed_kernel() can be called multiple times"""
     cmd = "\n".join(

@@ -4,7 +4,6 @@
 import unittest
 
 import pytest
-from flaky import flaky
 
 from ipykernel.inprocess.manager import InProcessKernelManager
 
@@ -21,7 +20,7 @@ class InProcessKernelManagerTestCase(unittest.TestCase):
         if self.km.has_kernel:
             self.km.shutdown_kernel()
 
-    @flaky
+    @pytest.mark.flaky
     def test_interface(self):
         """Does the in-process kernel manager implement the basic KM interface?"""
         km = self.km

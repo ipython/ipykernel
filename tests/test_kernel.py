@@ -17,7 +17,6 @@ from tempfile import TemporaryDirectory
 import IPython
 import psutil
 import pytest
-from flaky import flaky
 from IPython.paths import locate_profile
 
 from .utils import (
@@ -210,7 +209,7 @@ def test_sys_path_profile_dir():
     assert "" in sys_path
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 @pytest.mark.skipif(
     sys.platform == "win32" or (sys.platform == "darwin" and sys.version_info >= (3, 8)),
     reason="subprocess prints fail on Windows and MacOS Python 3.8+",
@@ -242,7 +241,7 @@ def test_subprocess_print():
         _check_master(kc, expected=True, stream="stderr")
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 def test_subprocess_noprint():
     """mp.Process without print doesn't trigger iostream mp_mode"""
     with kernel() as kc:
@@ -265,7 +264,7 @@ def test_subprocess_noprint():
         _check_master(kc, expected=True, stream="stderr")
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 @pytest.mark.skipif(
     sys.platform == "win32" or (sys.platform == "darwin" and sys.version_info >= (3, 8)),
     reason="subprocess prints fail on Windows and MacOS Python 3.8+",

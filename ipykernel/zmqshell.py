@@ -14,6 +14,7 @@ machinery.  This should thus be thought of as scaffolding.
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import contextvars
 import os
 import sys
 import threading
@@ -34,7 +35,7 @@ from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
-from traitlets import Any, CBool, CBytes, Dict, Instance, Type, default, observe
+from traitlets import Any, CBool, CBytes, Instance, Type, default, observe
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
@@ -50,7 +51,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
-    parent_header = Dict({})
+    _parent_header: contextvars.ContextVar[dict[str, Any]]
     topic = CBytes(b"display_data")
 
     # thread_local:
@@ -58,9 +59,18 @@ class ZMQDisplayPublisher(DisplayPublisher):
     # is processed. See ipykernel Issue 113 for a discussion.
     _thread_local = Any()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._parent_header = contextvars.ContextVar("parent_header")
+        self._parent_header.set({})
+
+    @property
+    def parent_header(self):
+        return self._parent_header.get()
+
     def set_parent(self, parent):
         """Set the parent for outbound messages."""
-        self.parent_header = extract_header(parent)
+        self._parent_header.set(extract_header(parent))
 
     def _flush_streams(self):
         """flush IO Streams prior to display"""
@@ -485,11 +495,14 @@ class ZMQInteractiveShell(InteractiveShell):
         if "IPKernelApp" not in self.config:
             self.config.IPKernelApp.tqdm = "dummy value for https://github.com/tqdm/tqdm/pull/1628"
 
+        self._parent_header = contextvars.ContextVar("parent_header")
+        self._parent_header.set({})
+
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
     data_pub_class = Any()
     kernel = Any()
-    parent_header = Any()
+    _parent_header: contextvars.ContextVar[dict[str, Any]]
 
     @default("banner1")
     def _default_banner1(self):
@@ -658,9 +671,13 @@ class ZMQInteractiveShell(InteractiveShell):
         )
         self.payload_manager.write_payload(payload)  # type:ignore[union-attr]
 
+    @property
+    def parent_header(self):
+        return self._parent_header.get()
+
     def set_parent(self, parent):
         """Set the parent header for associating output with its triggering input"""
-        self.parent_header = parent
+        self._parent_header.set(parent)
         self.displayhook.set_parent(parent)  # type:ignore[attr-defined]
         self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
         if hasattr(self, "_data_pub"):

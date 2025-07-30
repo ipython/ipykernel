@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import platform
 import time
+from collections import Counter
 
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
@@ -253,6 +254,56 @@ def test_execute_stop_on_error(are_subshells):
         reply = get_reply(kc, msg["msg_id"])
         assert reply["parent_header"]["subshell_id"] == subshell_ids[0]
         assert reply["content"]["status"] == "ok"
+
+        # Cleanup
+        for subshell_id in subshell_ids:
+            if subshell_id:
+                delete_subshell_helper(kc, subshell_id)
+
+
+@pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
+def test_idle_message_parent_headers(are_subshells):
+    with new_kernel() as kc:
+        # import time module on main shell.
+        msg = kc.session.msg("execute_request", {"code": "import time"})
+        kc.shell_channel.send(msg)
+
+        subshell_ids = [
+            create_subshell_helper(kc)["subshell_id"] if is_subshell else None
+            for is_subshell in are_subshells
+        ]
+
+        msg_ids = []
+        for subshell_id in subshell_ids:
+            msg = execute_request(kc, "time.sleep(0.5)", subshell_id)
+            msg_ids.append(msg["msg_id"])
+
+        # Expect 4 status messages (2 busy, 2 idle) on iopub channel for the two execute_requests
+        statuses = []
+        timeout = TIMEOUT  # Combined timeout to receive all the status messages
+        t0 = time.time()
+        while True:
+            status = kc.get_iopub_msg(timeout=timeout)
+            if status["msg_type"] != "status" or status["parent_header"]["msg_id"] not in msg_ids:
+                continue
+            statuses.append(status)
+            if len(statuses) == 4:
+                break
+            t1 = time.time()
+            timeout -= t1 - t0
+            t0 = t1
+
+        execution_states = Counter(msg["content"]["execution_state"] for msg in statuses)
+        assert execution_states["busy"] == 2
+        assert execution_states["idle"] == 2
+
+        parent_msg_ids = Counter(msg["parent_header"]["msg_id"] for msg in statuses)
+        assert parent_msg_ids[msg_ids[0]] == 2
+        assert parent_msg_ids[msg_ids[1]] == 2
+
+        parent_subshell_ids = Counter(msg["parent_header"].get("subshell_id") for msg in statuses)
+        assert parent_subshell_ids[subshell_ids[0]] == 2
+        assert parent_subshell_ids[subshell_ids[1]] == 2
 
         # Cleanup
         for subshell_id in subshell_ids:

@@ -7,10 +7,11 @@ from __future__ import annotations
 import builtins
 import sys
 import typing as t
+from contextvars import ContextVar
 
 from IPython.core.displayhook import DisplayHook
 from jupyter_client.session import Session, extract_header
-from traitlets import Any, Dict, Instance
+from traitlets import Any, Instance
 
 from ipykernel.jsonutil import encode_images, json_clean
 
@@ -25,7 +26,9 @@ class ZMQDisplayHook:
         """Initialize the hook."""
         self.session = session
         self.pub_socket = pub_socket
-        self.parent_header = {}
+
+        self._parent_header: ContextVar[dict[str, Any]] = ContextVar("parent_header")
+        self._parent_header.set({})
 
     def get_execution_count(self):
         """This method is replaced in kernelapp"""
@@ -45,12 +48,20 @@ class ZMQDisplayHook:
             "metadata": {},
         }
         self.session.send(
-            self.pub_socket, "execute_result", contents, parent=self.parent_header, ident=self.topic
+            self.pub_socket,
+            "execute_result",
+            contents,
+            parent=self.parent_header,
+            ident=self.topic,
         )
+
+    @property
+    def parent_header(self):
+        return self._parent_header.get()
 
     def set_parent(self, parent):
         """Set the parent header."""
-        self.parent_header = extract_header(parent)
+        self._parent_header.set(extract_header(parent))
 
 
 class ZMQShellDisplayHook(DisplayHook):
@@ -62,12 +73,21 @@ class ZMQShellDisplayHook(DisplayHook):
 
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
-    parent_header = Dict({})
+    _parent_header: ContextVar[dict[str, Any]]
     msg: dict[str, t.Any] | None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._parent_header = ContextVar("parent_header")
+        self._parent_header.set({})
+
+    @property
+    def parent_header(self):
+        return self._parent_header.get()
 
     def set_parent(self, parent):
         """Set the parent for outbound messages."""
-        self.parent_header = extract_header(parent)
+        self._parent_header.set(extract_header(parent))
 
     def start_displayhook(self):
         """Start the display hook."""

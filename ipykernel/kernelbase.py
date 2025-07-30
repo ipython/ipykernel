@@ -16,6 +16,7 @@ import time
 import typing as t
 import uuid
 import warnings
+from contextvars import ContextVar
 from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
@@ -194,8 +195,10 @@ class Kernel(SingletonConfigurable):
 
     # track associations with current request
     _allow_stdin = Bool(False)
-    _parents: Dict[str, t.Any] = Dict({"shell": {}, "control": {}})
-    _parent_ident = Dict({"shell": b"", "control": b""})
+    _control_parent: Dict[str, t.Any] = Dict({})
+    _control_parent_ident: bytes = b""
+    _shell_parent: ContextVar[dict[str, Any]]
+    _shell_parent_ident: ContextVar[bytes]
 
     @property
     def _parent_header(self):
@@ -298,6 +301,14 @@ class Kernel(SingletonConfigurable):
         self._do_exec_accepted_params = _accepts_parameters(
             self.do_execute, ["cell_meta", "cell_id"]
         )
+
+        self._control_parent = {}
+        self._control_parent_ident = b""
+
+        self._shell_parent = ContextVar("shell_parent")
+        self._shell_parent.set({})
+        self._shell_parent_ident = ContextVar("shell_parent_ident")
+        self._shell_parent_ident.set(b"")
 
     async def dispatch_control(self, msg):
         """Dispatch a control request, ensuring only one message is processed at a time."""
@@ -721,8 +732,12 @@ class Kernel(SingletonConfigurable):
         The parent identity is used to route input_request messages
         on the stdin channel.
         """
-        self._parent_ident[channel] = ident
-        self._parents[channel] = parent
+        if channel == "control":
+            self._control_parent_ident = ident
+            self._control_parent = parent
+        else:
+            self._shell_parent_ident.set(ident)
+            self._shell_parent.set(parent)
 
     def get_parent(self, channel=None):
         """Get the parent request associated with a channel.
@@ -747,7 +762,9 @@ class Kernel(SingletonConfigurable):
             else:
                 channel = "shell"
 
-        return self._parents.get(channel, {})
+        if channel == "control":
+            return self._control_parent
+        return self._shell_parent.get()
 
     def send_response(
         self,
@@ -1408,7 +1425,7 @@ class Kernel(SingletonConfigurable):
             )
         return self._input_request(
             prompt,
-            self._parent_ident["shell"],
+            self._shell_parent_ident.get(),
             self.get_parent("shell"),
             password=True,
         )
@@ -1425,7 +1442,7 @@ class Kernel(SingletonConfigurable):
             raise StdinNotImplementedError(msg)
         return self._input_request(
             str(prompt),
-            self._parent_ident["shell"],
+            self._shell_parent_ident.get(),
             self.get_parent("shell"),
             password=False,
         )

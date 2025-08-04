@@ -247,7 +247,7 @@ class Kernel(SingletonConfigurable):
     execution_count = 0
 
     # Asyncio lock to ensure only one control queue message is processed at a time.
-    _control_lock = asyncio.Lock
+    _control_lock = Instance(asyncio.Lock)
 
     msg_types = [
         "execute_request",

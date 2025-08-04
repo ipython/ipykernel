@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from .utils import TIMEOUT, get_reply, new_kernel
+from .utils import TIMEOUT, get_replies, get_reply, new_kernel
 
 seq = 0
 
@@ -15,11 +15,8 @@ except ImportError:
     debugpy = None
 
 
-def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
-    """Carry out a debug request and return the reply content.
-
-    It does not check if the request was successful.
-    """
+def prepare_debug_request(kernel, command, arguments=None):
+    """Prepare a debug request but do not send it."""
     global seq
     seq += 1
 
@@ -32,6 +29,15 @@ def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
             "arguments": arguments or {},
         },
     )
+    return msg
+
+
+def wait_for_debug_request(kernel, command, arguments=None, full_reply=False):
+    """Carry out a debug request and return the reply content.
+
+    It does not check if the request was successful.
+    """
+    msg = prepare_debug_request(kernel, command, arguments)
     kernel.control_channel.send(msg)
     reply = get_reply(kernel, msg["header"]["msg_id"], channel="control")
     return reply if full_reply else reply["content"]
@@ -448,3 +454,96 @@ my_test()"""
 
     # Compare local and global variable
     assert global_var["value"] == local_var["value"] and global_var["type"] == local_var["type"]  # noqa: PT018
+
+
+def test_debug_requests_sequential(kernel_with_debug):
+    # Issue https://github.com/ipython/ipykernel/issues/1412
+    # Control channel requests should be executed sequentially not concurrently.
+    code = """def f(a, b):
+    c = a + b
+    return c
+
+f(2, 3)"""
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "some path"
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 2}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
+    kernel_with_debug.execute(code)
+
+    if not debugpy:
+        # Cannot stop on breakpoint if debugpy not installed
+        return
+
+    # Wait for stop on breakpoint
+    msg: dict = {"msg_type": "", "content": {}}
+    while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+
+    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})["body"][
+        "stackFrames"
+    ]
+
+    scopes = wait_for_debug_request(kernel_with_debug, "scopes", {"frameId": stacks[0]["id"]})[
+        "body"
+    ]["scopes"]
+
+    # Get variablesReference for both Locals and Globals.
+    locals_ref = next(filter(lambda s: s["name"] == "Locals", scopes))["variablesReference"]
+    globals_ref = next(filter(lambda s: s["name"] == "Globals", scopes))["variablesReference"]
+
+    msgs = []
+    for ref in [locals_ref, globals_ref]:
+        msgs.append(
+            prepare_debug_request(kernel_with_debug, "variables", {"variablesReference": ref})
+        )
+
+    # Send messages in quick succession.
+    for msg in msgs:
+        kernel_with_debug.control_channel.send(msg)
+
+    replies = get_replies(kernel_with_debug, [msg["msg_id"] for msg in msgs], channel="control")
+
+    # Check debug variable returns are correct.
+    locals = replies[0]["content"]
+    assert locals["success"]
+    variables = locals["body"]["variables"]
+    var = next(filter(lambda v: v["name"] == "a", variables))
+    assert var["type"] == "int"
+    assert var["value"] == "2"
+    var = next(filter(lambda v: v["name"] == "b", variables))
+    assert var["type"] == "int"
+    assert var["value"] == "3"
+
+    globals = replies[1]["content"]
+    assert globals["success"]
+    variables = globals["body"]["variables"]
+
+    names = [v["name"] for v in variables]
+    assert "function variables" in names
+    assert "special variables" in names
+
+    # Check status iopub messages alternate between busy and idle.
+    execution_states = []
+    while len(execution_states) < 8:
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+        if msg["msg_type"] == "status":
+            execution_states.append(msg["content"]["execution_state"])
+    assert execution_states.count("busy") == 4
+    assert execution_states.count("idle") == 4
+    assert execution_states == ["busy", "idle"] * 4

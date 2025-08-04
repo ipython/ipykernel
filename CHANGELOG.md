@@ -2,6 +2,28 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.30.1
+
+This is a bugfix release to fix a significant bug introduced in 6.30.0 that allowed control messages to be handled concurrently rather than sequentially which broke debugging in JupyterLab and VSCode.
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.30.0...357c908eab4ae97bb17c5dcabc7ee981df8ecb29))
+
+### Bugs fixed
+
+- Correct use of asyncio.Lock to process a single control message at a time [#1416](https://github.com/ipython/ipykernel/pull/1416) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Backport: Remove links in changelog to github milestones that no longer exist [#1417](https://github.com/ipython/ipykernel/pull/1417) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-07-21&to=2025-08-04&type=c))
+
+[@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-07-21..2025-08-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.30.0
 
 This release fixes three bugs but is primarily a maintenance release bringing support for Python 3.13 and updating dependencies. It does not include subshells which will be in the upcoming 7.0.0 release. Users and downstream libraries that wish to avoid subshells should pin to `ipykernel < 7`.
@@ -49,8 +71,6 @@ This release fixes three bugs but is primarily a maintenance release bringing su
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-07-01&to=2025-07-21&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2024-07-01..2025-07-21&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-07-01..2025-07-21&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-07-01..2025-07-21&type=Issues) | [@dby-tmwctw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adby-tmwctw+updated%3A2024-07-01..2025-07-21&type=Issues) | [@gregory-shklover](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Agregory-shklover+updated%3A2024-07-01..2025-07-21&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-07-01..2025-07-21&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2024-07-01..2025-07-21&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2024-07-01..2025-07-21&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-07-01..2025-07-21&type=Issues) | [@meeseeksmachine](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ameeseeksmachine+updated%3A2024-07-01..2025-07-21&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-07-01..2025-07-21&type=Issues) | [@nathanmcavoy](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anathanmcavoy+updated%3A2024-07-01..2025-07-21&type=Issues) | [@s-t-e-v-e-n-k](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3As-t-e-v-e-n-k+updated%3A2024-07-01..2025-07-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.5
 

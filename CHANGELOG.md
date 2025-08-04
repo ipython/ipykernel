@@ -27,7 +27,7 @@ This release fixes three bugs but is primarily a maintenance release bringing su
 - Remove nose import. [#1368](https://github.com/ipython/ipykernel/pull/1368) ([@Carreau](https://github.com/Carreau))
 - Test more python versions [#1358](https://github.com/ipython/ipykernel/pull/1358) ([@davidbrochart](https://github.com/davidbrochart))
 - Fix expected text depending on IPython version. [#1354](https://github.com/ipython/ipykernel/pull/1354) ([@Carreau](https://github.com/Carreau))
-- Licence :: * trove classifers are deprecated [#1348](https://github.com/ipython/ipykernel/pull/1348) ([@Carreau](https://github.com/Carreau))
+- Licence :: * trove classifiers are deprecated [#1348](https://github.com/ipython/ipykernel/pull/1348) ([@Carreau](https://github.com/Carreau))
 - Try to fix spyder kernel install [#1337](https://github.com/ipython/ipykernel/pull/1337) ([@Carreau](https://github.com/Carreau))
 - Remove test_check job [#1335](https://github.com/ipython/ipykernel/pull/1335) ([@Carreau](https://github.com/Carreau))
 - Don't rerun test with --lf it hides failures. [#1324](https://github.com/ipython/ipykernel/pull/1324) ([@Carreau](https://github.com/Carreau))

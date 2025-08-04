@@ -62,6 +62,24 @@ def get_reply(kc, msg_id, timeout=TIMEOUT, channel="shell"):
     return reply
 
 
+def get_replies(kc, msg_ids: list[str], timeout=TIMEOUT, channel="shell"):
+    # Get replies which may arrive in any order as they may be running on different subshells.
+    # Replies are returned in the same order as the msg_ids, not in the order of arrival.
+    count = 0
+    replies = [None] * len(msg_ids)
+    while count < len(msg_ids):
+        get_msg = getattr(kc, f"get_{channel}_msg")
+        reply = get_msg(timeout=timeout)
+        try:
+            msg_id = reply["parent_header"]["msg_id"]
+            replies[msg_ids.index(msg_id)] = reply
+            count += 1
+        except ValueError:
+            # Allow debugging ignored replies
+            print(f"Ignoring reply not to any of {msg_ids}: {reply}")
+    return replies
+
+
 def execute(code="", kc=None, **kwargs):
     """wrapper for doing common steps for validating an execution request"""
     from .test_message_spec import validate_message

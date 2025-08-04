@@ -246,6 +246,9 @@ class Kernel(SingletonConfigurable):
     # execution count we store in the shell.
     execution_count = 0
 
+    # Asyncio lock to ensure only one control queue message is processed at a time.
+    _control_lock = asyncio.Lock()
+
     msg_types = [
         "execute_request",
         "complete_request",
@@ -295,7 +298,7 @@ class Kernel(SingletonConfigurable):
 
     async def dispatch_control(self, msg):
         # Ensure only one control message is processed at a time
-        async with asyncio.Lock():
+        async with self._control_lock:
             await self.process_control(msg)
 
     async def process_control(self, msg):

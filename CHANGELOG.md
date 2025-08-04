@@ -1692,8 +1692,6 @@ failures in nbconvert.
 
 5.1.0 fixes some important regressions in 5.0, especially on Windows.
 
-[5.1.0 on GitHub](https://github.com/ipython/ipykernel/milestones/5.1)
-
 - Fix message-ordering bug that could result in out-of-order
   executions, especially on Windows [#356](https://github.com/ipython/ipykernel/pull/356)
 - Fix classifiers to indicate dropped Python 2 support
@@ -1706,16 +1704,12 @@ failures in nbconvert.
 
 ### 5.0.0
 
-[5.0.0 on GitHub](https://github.com/ipython/ipykernel/milestones/5.0)
-
 - Drop support for Python 2. `ipykernel` 5.0 requires Python >= 3.4
 - Add support for IPython's asynchronous code execution
   [#323](https://github.com/ipython/ipykernel/pull/323)
 - Update release process in `CONTRIBUTING.md` [#339](https://github.com/ipython/ipykernel/pull/339)
 
 ## 4.10
-
-[4.10 on GitHub](https://github.com/ipython/ipykernel/milestones/4.10)
 
 - Fix compatibility with IPython 7.0 [#348](https://github.com/ipython/ipykernel/pull/348)
 - Fix compatibility in cases where sys.stdout can be None
@@ -1724,8 +1718,6 @@ failures in nbconvert.
 ## 4.9
 
 ### 4.9.0
-
-[4.9.0 on GitHub](https://github.com/ipython/ipykernel/milestones/4.9)
 
 - Python 3.3 is no longer supported [#336](https://github.com/ipython/ipykernel/pull/336)
 - Flush stdout/stderr in KernelApp before replacing
@@ -1740,14 +1732,10 @@ failures in nbconvert.
 
 ### 4.8.2
 
-[4.8.2 on GitHub](https://github.com/ipython/ipykernel/milestones/4.8.2)
-
 - Fix compatibility issue with qt eventloop and pyzmq 17
   [#307](https://github.com/ipython/ipykernel/pull/307).
 
 ### 4.8.1
-
-[4.8.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.8.1)
 
 - set zmq.ROUTER_HANDOVER socket option when available to workaround
   libzmq reconnect bug [#300](https://github.com/ipython/ipykernel/pull/300).
@@ -1756,8 +1744,6 @@ failures in nbconvert.
   [#306](https://github.com/ipython/ipykernel/pull/306).
 
 ### 4.8.0
-
-[4.8.0 on GitHub](https://github.com/ipython/ipykernel/milestones/4.8)
 
 - Cleanly shutdown integrated event loops when shutting down the
   kernel. [#290](https://github.com/ipython/ipykernel/pull/290)
@@ -1769,8 +1755,6 @@ failures in nbconvert.
 ## 4.7
 
 ### 4.7.0
-
-[4.7.0 on GitHub](https://github.com/ipython/ipykernel/milestones/4.7)
 
 - Add event loop integration for `asyncio`.
 - Use the new IPython completer API.
@@ -1785,16 +1769,12 @@ failures in nbconvert.
 
 ### 4.6.1
 
-[4.6.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.6.1)
-
 - Fix eventloop-integration bug preventing Qt windows/widgets from
   displaying with ipykernel 4.6.0 and IPython ≥ 5.2.
 - Avoid deprecation warnings about naive datetimes when working with
   jupyter_client ≥ 5.0.
 
 ### 4.6.0
-
-[4.6.0 on GitHub](https://github.com/ipython/ipykernel/milestones/4.6)
 
 - Add to API `DisplayPublisher.publish` two new fully
   backward-compatible keyword-args:
@@ -1838,14 +1818,10 @@ failures in nbconvert.
 
 ### 4.5.2
 
-[4.5.2 on GitHub](https://github.com/ipython/ipykernel/milestones/4.5.2)
-
 - Fix bug when instantiating Comms outside of the IPython kernel
   (introduced in 4.5.1).
 
 ### 4.5.1
-
-[4.5.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.5.1)
 
 - Add missing `stream` parameter to overridden
   `getpass`
@@ -1856,8 +1832,6 @@ failures in nbconvert.
 - Allow instantiating Comms outside of the IPython kernel
 
 ### 4.5.0
-
-[4.5 on GitHub](https://github.com/ipython/ipykernel/milestones/4.5)
 
 - Use figure.dpi instead of savefig.dpi to set DPI for inline figures
 - Support ipympl matplotlib backend (requires IPython update as well
@@ -1870,14 +1844,10 @@ failures in nbconvert.
 
 ### 4.4.1
 
-[4.4.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.4.1)
-
 - Fix circular import of matplotlib on Python 2 caused by the inline
   backend changes in 4.4.0.
 
 ### 4.4.0
-
-[4.4.0 on GitHub](https://github.com/ipython/ipykernel/milestones/4.4)
 
 - Use
   [MPLBACKEND](http://matplotlib.org/devel/coding_guide.html?highlight=mplbackend#developing-a-new-backend)
@@ -1912,8 +1882,6 @@ failures in nbconvert.
 
 ### 4.3.0
 
-[4.3.0 on GitHub](https://github.com/ipython/ipykernel/milestones/4.3)
-
 - Publish all IO in a thread, via `IOPubThread`. This solves the problem of requiring
   `sys.stdout.flush` to be called in
   the notebook to produce output promptly during long-running cells.
@@ -1936,21 +1904,15 @@ failures in nbconvert.
 
 ### 4.2.2
 
-[4.2.2 on GitHub](https://github.com/ipython/ipykernel/milestones/4.2.2)
-
 - Don't show interactive debugging info when kernel crashes
 - Fix handling of numerical types in json_clean
 - Testing fixes for output capturing
 
 ### 4.2.1
 
-[4.2.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.2.1)
-
 - Fix default display name back to "Python X" instead of "pythonX"
 
 ### 4.2.0
-
-[4.2 on GitHub](https://github.com/ipython/ipykernel/milestones/4.2)
 
 - Support sending a full message in initial opening of comms
   (metadata, buffers were not previously allowed)
@@ -1961,14 +1923,10 @@ failures in nbconvert.
 
 ### 4.1.1
 
-[4.1.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.1.1)
-
 - Fix missing `ipykernel.__version__` on Python 2.
 - Fix missing `target_name` when opening comms from the frontend.
 
 ### 4.1.0
-
-[4.1 on GitHub](https://github.com/ipython/ipykernel/milestones/4.1)
 
 - add `ipython kernel install` entrypoint for installing the IPython
   kernelspec
@@ -1976,7 +1934,5 @@ failures in nbconvert.
   v5.1
 
 ## 4.0
-
-[4.0 on GitHub](https://github.com/ipython/ipykernel/milestones/4.0)
 
 4.0 is the first release of ipykernel as a standalone package.

@@ -11,7 +11,7 @@ from collections import Counter
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, assemble_output, get_replies, get_reply, new_kernel
+from .utils import TIMEOUT, assemble_output, get_replies, get_reply, new_kernel, wait_for_idle
 
 # Helpers
 
@@ -272,6 +272,10 @@ def test_idle_message_parent_headers(are_subshells):
             create_subshell_helper(kc)["subshell_id"] if is_subshell else None
             for is_subshell in are_subshells
         ]
+
+        # Wait for all idle status messages to be received.
+        for _ in range(1 + sum(are_subshells)):
+            wait_for_idle(kc)
 
         msg_ids = []
         for subshell_id in subshell_ids:

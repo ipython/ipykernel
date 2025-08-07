@@ -2,7 +2,6 @@ import os
 from textwrap import dedent
 
 import pytest
-from flaky import flaky
 
 from .test_embed_kernel import setup_kernel
 
@@ -12,7 +11,7 @@ if os.name == "nt":
     pytest.skip("skipping tests on windows", allow_module_level=True)
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 def test_ipython_start_kernel_userns():
     import IPython
 
@@ -51,7 +50,7 @@ def test_ipython_start_kernel_userns():
         assert EXPECTED in text
 
 
-@flaky(max_runs=3)
+@pytest.mark.flaky(max_runs=3)
 def test_ipython_start_kernel_no_userns():
     # Issue #4188 - user_ns should be passed to shell as None, not {}
     cmd = dedent(

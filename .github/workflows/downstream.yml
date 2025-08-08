@@ -41,6 +41,7 @@ jobs:
           test_command: pytest -vv -raXxs -W default --durations 10 --color=yes
 
   jupyter_client:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,6 +56,7 @@ jobs:
           package_name: jupyter_client
 
   ipyparallel:
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

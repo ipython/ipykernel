@@ -4,7 +4,7 @@ import os
 from typing import no_type_check
 from unittest.mock import MagicMock
 
-import pytest
+import pytest_asyncio
 import zmq
 from jupyter_client.session import Session
 from tornado.ioloop import IOLoop
@@ -143,7 +143,7 @@ class MockIPyKernel(KernelMixin, IPythonKernel):  # type:ignore
         super().__init__(*args, **kwargs)
 
 
-@pytest.fixture()
+@pytest_asyncio.fixture()
 def kernel():
     kernel = MockKernel()
     kernel.io_loop = IOLoop.current()
@@ -151,7 +151,7 @@ def kernel():
     kernel.destroy()
 
 
-@pytest.fixture()
+@pytest_asyncio.fixture()
 def ipkernel():
     kernel = MockIPyKernel()
     kernel.io_loop = IOLoop.current()

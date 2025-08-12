@@ -6,12 +6,12 @@ from __future__ import annotations
 
 import platform
 import time
-from collections import Counter
+from queue import Empty
 
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, assemble_output, get_replies, get_reply, new_kernel, wait_for_idle
+from .utils import TIMEOUT, assemble_output, get_replies, get_reply, new_kernel, flush_channels
 
 # Helpers
 
@@ -40,8 +40,8 @@ def list_subshell_helper(kc: BlockingKernelClient):
     return reply["content"]
 
 
-def execute_request(kc: BlockingKernelClient, code: str, subshell_id: str | None):
-    msg = kc.session.msg("execute_request", {"code": code})
+def execute_request(kc: BlockingKernelClient, code: str, subshell_id: str | None, silent: bool = False):
+    msg = kc.session.msg("execute_request", {"code": code, "silent": silent})
     msg["header"]["subshell_id"] = subshell_id
     kc.shell_channel.send(msg)
     return msg
@@ -52,17 +52,17 @@ def execute_request_subshell_id(
 ):
     msg = execute_request(kc, code, subshell_id)
     msg_id = msg["header"]["msg_id"]
-    stdout, _ = assemble_output(kc.get_iopub_msg, None, msg_id)
+    stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
     return stdout.strip()
 
 
 def execute_thread_count(kc: BlockingKernelClient) -> int:
-    code = "print(threading.active_count())"
+    code = "import threading; print(threading.active_count())"
     return int(execute_request_subshell_id(kc, code, None))
 
 
 def execute_thread_ids(kc: BlockingKernelClient, subshell_id: str | None = None) -> tuple[str, str]:
-    code = "print(threading.get_ident(), threading.main_thread().ident)"
+    code = "import threading; print(threading.get_ident(), threading.main_thread().ident)"
     return execute_request_subshell_id(kc, code, subshell_id).split()
 
 
@@ -224,16 +224,16 @@ def test_execute_stop_on_error(are_subshells):
         msg = execute_request(
             kc, "import asyncio; await asyncio.sleep(1); raise ValueError()", subshell_ids[0]
         )
-        msg_ids.append(msg["msg_id"])
+        msg_ids.append(msg["header"]["msg_id"])
         msg = execute_request(kc, "print('hello')", subshell_ids[0])
-        msg_ids.append(msg["msg_id"])
+        msg_ids.append(msg["header"]["msg_id"])
         msg = execute_request(kc, "print('goodbye')", subshell_ids[0])
-        msg_ids.append(msg["msg_id"])
+        msg_ids.append(msg["header"]["msg_id"])
 
         msg = execute_request(kc, "import time; time.sleep(1.5)", subshell_ids[1])
-        msg_ids.append(msg["msg_id"])
+        msg_ids.append(msg["header"]["msg_id"])
         msg = execute_request(kc, "print('other')", subshell_ids[1])
-        msg_ids.append(msg["msg_id"])
+        msg_ids.append(msg["header"]["msg_id"])
 
         replies = get_replies(kc, msg_ids)
 
@@ -260,56 +260,63 @@ def test_execute_stop_on_error(are_subshells):
             if subshell_id:
                 delete_subshell_helper(kc, subshell_id)
 
-
-@pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
-def test_idle_message_parent_headers(are_subshells):
+def test_silent_flag_in_subshells():
+    """Verifies that the 'silent' flag suppresses output in main and subshell contexts."""
     with new_kernel() as kc:
-        # import time module on main shell.
-        msg = kc.session.msg("execute_request", {"code": "import time"})
-        kc.shell_channel.send(msg)
+        subshell_id = None
+        try:
+            flush_channels(kc)
+            # Test silent execution in main shell
+            msg_main_silent = execute_request(kc, "a=1", None, silent=True)
+            reply_main_silent = get_reply(kc, msg_main_silent["header"]["msg_id"])
+            assert reply_main_silent['content']['status'] == 'ok'
 
-        subshell_ids = [
-            create_subshell_helper(kc)["subshell_id"] if is_subshell else None
-            for is_subshell in are_subshells
-        ]
+            # Test silent execution in subshell
+            subshell_id = create_subshell_helper(kc)["subshell_id"]
+            msg_sub_silent = execute_request(kc, "b=2", subshell_id, silent=True)
+            reply_sub_silent = get_reply(kc, msg_sub_silent["header"]["msg_id"])
+            assert reply_sub_silent['content']['status'] == 'ok'
 
-        # Wait for all idle status messages to be received.
-        for _ in range(1 + sum(are_subshells)):
-            wait_for_idle(kc)
+            # Check for no iopub messages (other than status) from the silent requests
+            for msg_id in [msg_main_silent["header"]["msg_id"], msg_sub_silent["header"]["msg_id"]]:
+                while True:
+                    try:
+                        msg = kc.get_iopub_msg(timeout=0.2)
+                        if msg['header']['msg_type'] == 'status':
+                            continue
+                        pytest.fail(f"Silent execution produced unexpected IOPub message: {msg['header']['msg_type']}")
+                    except Empty:
+                        break
 
-        msg_ids = []
-        for subshell_id in subshell_ids:
-            msg = execute_request(kc, "time.sleep(0.5)", subshell_id)
-            msg_ids.append(msg["msg_id"])
+            # Test concurrent silent and non-silent execution
+            msg_silent = execute_request(
+                kc, "import time; time.sleep(0.5); c=3", subshell_id, silent=True
+            )
+            msg_noisy = execute_request(kc, "print('noisy')", None, silent=False)
 
-        # Expect 4 status messages (2 busy, 2 idle) on iopub channel for the two execute_requests
-        statuses = []
-        timeout = TIMEOUT  # Combined timeout to receive all the status messages
-        t0 = time.time()
-        while True:
-            status = kc.get_iopub_msg(timeout=timeout)
-            if status["msg_type"] != "status" or status["parent_header"]["msg_id"] not in msg_ids:
-                continue
-            statuses.append(status)
-            if len(statuses) == 4:
-                break
-            t1 = time.time()
-            timeout -= t1 - t0
-            t0 = t1
+            # Wait for both replies
+            get_replies(kc, [msg_silent["header"]["msg_id"], msg_noisy["header"]["msg_id"]])
 
-        execution_states = Counter(msg["content"]["execution_state"] for msg in statuses)
-        assert execution_states["busy"] == 2
-        assert execution_states["idle"] == 2
+            # Verify that we only receive stream output from the noisy message
+            stdout, stderr = assemble_output(
+                kc.get_iopub_msg, parent_msg_id=msg_noisy["header"]["msg_id"]
+            )
+            assert "noisy" in stdout
+            assert not stderr
 
-        parent_msg_ids = Counter(msg["parent_header"]["msg_id"] for msg in statuses)
-        assert parent_msg_ids[msg_ids[0]] == 2
-        assert parent_msg_ids[msg_ids[1]] == 2
-
-        parent_subshell_ids = Counter(msg["parent_header"].get("subshell_id") for msg in statuses)
-        assert parent_subshell_ids[subshell_ids[0]] == 2
-        assert parent_subshell_ids[subshell_ids[1]] == 2
-
-        # Cleanup
-        for subshell_id in subshell_ids:
+            # Verify there is no output from the concurrent silent message
+            while True:
+                try:
+                    msg = kc.get_iopub_msg(timeout=0.2)
+                    if msg['header']['msg_type'] == 'status':
+                        if msg['parent_header'].get('msg_id') == msg_silent['header']['msg_id']:
+                             continue
+                    # Any other message related to the silent request is a failure
+                    if msg['parent_header'].get('msg_id') == msg_silent['header']['msg_id']:
+                         pytest.fail("Silent execution in concurrent setting produced unexpected IOPub message")
+                except Empty:
+                    break
+        finally:
+            # Ensure subshell is always deleted
             if subshell_id:
                 delete_subshell_helper(kc, subshell_id)

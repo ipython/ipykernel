@@ -11,7 +11,7 @@ from queue import Empty
 import pytest
 from jupyter_client.blocking.client import BlockingKernelClient
 
-from .utils import TIMEOUT, assemble_output, get_replies, get_reply, new_kernel, flush_channels
+from .utils import TIMEOUT, assemble_output, flush_channels, get_replies, get_reply, new_kernel
 
 # Helpers
 
@@ -40,7 +40,9 @@ def list_subshell_helper(kc: BlockingKernelClient):
     return reply["content"]
 
 
-def execute_request(kc: BlockingKernelClient, code: str, subshell_id: str | None, silent: bool = False):
+def execute_request(
+    kc: BlockingKernelClient, code: str, subshell_id: str | None, silent: bool = False
+):
     msg = kc.session.msg("execute_request", {"code": code, "silent": silent})
     msg["header"]["subshell_id"] = subshell_id
     kc.shell_channel.send(msg)
@@ -260,6 +262,7 @@ def test_execute_stop_on_error(are_subshells):
             if subshell_id:
                 delete_subshell_helper(kc, subshell_id)
 
+
 def test_silent_flag_in_subshells():
     """Verifies that the 'silent' flag suppresses output in main and subshell contexts."""
     with new_kernel() as kc:
@@ -269,22 +272,24 @@ def test_silent_flag_in_subshells():
             # Test silent execution in main shell
             msg_main_silent = execute_request(kc, "a=1", None, silent=True)
             reply_main_silent = get_reply(kc, msg_main_silent["header"]["msg_id"])
-            assert reply_main_silent['content']['status'] == 'ok'
+            assert reply_main_silent["content"]["status"] == "ok"
 
             # Test silent execution in subshell
             subshell_id = create_subshell_helper(kc)["subshell_id"]
             msg_sub_silent = execute_request(kc, "b=2", subshell_id, silent=True)
             reply_sub_silent = get_reply(kc, msg_sub_silent["header"]["msg_id"])
-            assert reply_sub_silent['content']['status'] == 'ok'
+            assert reply_sub_silent["content"]["status"] == "ok"
 
             # Check for no iopub messages (other than status) from the silent requests
             for msg_id in [msg_main_silent["header"]["msg_id"], msg_sub_silent["header"]["msg_id"]]:
                 while True:
                     try:
                         msg = kc.get_iopub_msg(timeout=0.2)
-                        if msg['header']['msg_type'] == 'status':
+                        if msg["header"]["msg_type"] == "status":
                             continue
-                        pytest.fail(f"Silent execution produced unexpected IOPub message: {msg['header']['msg_type']}")
+                        pytest.fail(
+                            f"Silent execution produced unexpected IOPub message: {msg['header']['msg_type']}"
+                        )
                     except Empty:
                         break
 
@@ -308,12 +313,14 @@ def test_silent_flag_in_subshells():
             while True:
                 try:
                     msg = kc.get_iopub_msg(timeout=0.2)
-                    if msg['header']['msg_type'] == 'status':
-                        if msg['parent_header'].get('msg_id') == msg_silent['header']['msg_id']:
-                             continue
+                    if msg["header"]["msg_type"] == "status":
+                        if msg["parent_header"].get("msg_id") == msg_silent["header"]["msg_id"]:
+                            continue
                     # Any other message related to the silent request is a failure
-                    if msg['parent_header'].get('msg_id') == msg_silent['header']['msg_id']:
-                         pytest.fail("Silent execution in concurrent setting produced unexpected IOPub message")
+                    if msg["parent_header"].get("msg_id") == msg_silent["header"]["msg_id"]:
+                        pytest.fail(
+                            "Silent execution in concurrent setting produced unexpected IOPub message"
+                        )
                 except Empty:
                     break
         finally:

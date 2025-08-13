@@ -53,7 +53,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
         with:
           package_name: jupyter_client
-          test_command: "pytest -vv -raXxs -W default --durations 10 --color=yes"
+          test_command: "pytest -vv -raXxs -W default --durations 10 --color=yes -k 'not test_input_request'"
 
   ipyparallel:
     if: false

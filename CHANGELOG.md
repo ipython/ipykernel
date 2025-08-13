@@ -2,6 +2,132 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.0a2
+
+Pre-release of `ipykernel` with experimental subshell support on top of `tornado`/`asyncio`. The previous version 7 pre-releases used `anyio` but that will no longer be in `ipykernel` 7.
+
+Note the changelog here is not correct, presumably due to the recent branch renaming. For the full release this will have to be manually curated so that it is accurate. The "Full Changelog" link below is accurate.
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.29.5...e34aedbed0a84ae9ab728634766a8120ea631647))
+
+### Enhancements made
+
+- Replace BaseThread's add_task with start_soon [#1300](https://github.com/ipython/ipykernel/pull/1300) ([@davidbrochart](https://github.com/davidbrochart))
+- Use supported_features=['debugger'] in kernel info reply [#1296](https://github.com/ipython/ipykernel/pull/1296) ([@ianthomas23](https://github.com/ianthomas23))
+- Use zmq-anyio [#1291](https://github.com/ipython/ipykernel/pull/1291) ([@davidbrochart](https://github.com/davidbrochart))
+- Detect parent change in more cases on unix [#1271](https://github.com/ipython/ipykernel/pull/1271) ([@bluss](https://github.com/bluss))
+- Kernel subshells (JEP91) implementation [#1249](https://github.com/ipython/ipykernel/pull/1249) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Forward port from 6.x: Correct use of asyncio.Lock to process a single control message at a time [#1418](https://github.com/ipython/ipykernel/pull/1418) ([@ianthomas23](https://github.com/ianthomas23))
+- Cache separate headers on subshell threads [#1414](https://github.com/ipython/ipykernel/pull/1414) ([@ianthomas23](https://github.com/ianthomas23))
+- Fix OutStream using \_fid before being defined [#1373](https://github.com/ipython/ipykernel/pull/1373) ([@davidbrochart](https://github.com/davidbrochart))
+- Make kernelbase.\_eventloop_set event thread-safe [#1366](https://github.com/ipython/ipykernel/pull/1366) ([@davidbrochart](https://github.com/davidbrochart))
+- Remove implicit bind_kernel in `%qtconsole` [#1315](https://github.com/ipython/ipykernel/pull/1315) ([@minrk](https://github.com/minrk))
+- Fix ipykernel install [#1310](https://github.com/ipython/ipykernel/pull/1310) ([@davidbrochart](https://github.com/davidbrochart))
+- socket must be None, not shell_socket for default shell [#1281](https://github.com/ipython/ipykernel/pull/1281) ([@minrk](https://github.com/minrk))
+- restore zero-copy recv on shell messages [#1280](https://github.com/ipython/ipykernel/pull/1280) ([@minrk](https://github.com/minrk))
+- Fix eventloop integration with anyio [#1265](https://github.com/ipython/ipykernel/pull/1265) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Reinstate jupyter_client downstream tests with exclusions [#1425](https://github.com/ipython/ipykernel/pull/1425) ([@ianthomas23](https://github.com/ianthomas23))
+- Use correct `__version__` on `main` branch after branch manipulations [#1419](https://github.com/ipython/ipykernel/pull/1419) ([@ianthomas23](https://github.com/ianthomas23))
+- Remove links in changelog to github milestones that no longer exist [#1415](https://github.com/ipython/ipykernel/pull/1415) ([@ianthomas23](https://github.com/ianthomas23))
+- Replace `@flaky.flaky` decorate with pytest fixture [#1411](https://github.com/ipython/ipykernel/pull/1411) ([@mgorny](https://github.com/mgorny))
+- chore: update pre-commit hooks [#1409](https://github.com/ipython/ipykernel/pull/1409) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Bump scientific-python/upload-nightly-action from 0.6.1 to 0.6.2 in the actions group [#1404](https://github.com/ipython/ipykernel/pull/1404) ([@dependabot](https://github.com/dependabot))
+- Backports from `anyio` (old `main`) branch to `main` branch [#1402](https://github.com/ipython/ipykernel/pull/1402) ([@ianthomas23](https://github.com/ianthomas23))
+- Update pre-commit and github actions [#1401](https://github.com/ipython/ipykernel/pull/1401) ([@ianthomas23](https://github.com/ianthomas23))
+- Add security.md [#1394](https://github.com/ipython/ipykernel/pull/1394) ([@Carreau](https://github.com/Carreau))
+- chore: update pre-commit hooks [#1388](https://github.com/ipython/ipykernel/pull/1388) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- chore: update pre-commit hooks [#1385](https://github.com/ipython/ipykernel/pull/1385) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- chore: update pre-commit hooks [#1383](https://github.com/ipython/ipykernel/pull/1383) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- chore: update pre-commit hooks [#1378](https://github.com/ipython/ipykernel/pull/1378) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- chore: update pre-commit hooks [#1375](https://github.com/ipython/ipykernel/pull/1375) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- chore: update pre-commit hooks [#1372](https://github.com/ipython/ipykernel/pull/1372) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Remove nose import. [#1368](https://github.com/ipython/ipykernel/pull/1368) ([@Carreau](https://github.com/Carreau))
+- TQDM workaround due to unresponsive maintainer [#1363](https://github.com/ipython/ipykernel/pull/1363) ([@Carreau](https://github.com/Carreau))
+- chore: update pre-commit hooks [#1355](https://github.com/ipython/ipykernel/pull/1355) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- Fix expected text depending on IPython version. [#1354](https://github.com/ipython/ipykernel/pull/1354) ([@Carreau](https://github.com/Carreau))
+- Another try at tracking down ResourceWarning with tracemalloc. [#1353](https://github.com/ipython/ipykernel/pull/1353) ([@Carreau](https://github.com/Carreau))
+- Remove deprecated modules since 4.3 (2016). [#1352](https://github.com/ipython/ipykernel/pull/1352) ([@Carreau](https://github.com/Carreau))
+- Try to reenable tests from downstream ipywidgets [#1350](https://github.com/ipython/ipykernel/pull/1350) ([@Carreau](https://github.com/Carreau))
+- Disable 3 failing downstream tests, but keep testing the rest. [#1349](https://github.com/ipython/ipykernel/pull/1349) ([@Carreau](https://github.com/Carreau))
+- Licence :: * trove classifers are deprecated [#1348](https://github.com/ipython/ipykernel/pull/1348) ([@Carreau](https://github.com/Carreau))
+- Pin sphinx to resolve docs build failures [#1347](https://github.com/ipython/ipykernel/pull/1347) ([@krassowski](https://github.com/krassowski))
+- Make our own mock kernel methods async [#1346](https://github.com/ipython/ipykernel/pull/1346) ([@Carreau](https://github.com/Carreau))
+- Try to debug non-closed iopub socket [#1345](https://github.com/ipython/ipykernel/pull/1345) ([@Carreau](https://github.com/Carreau))
+- Email is @python.org since 2018 [#1343](https://github.com/ipython/ipykernel/pull/1343) ([@Carreau](https://github.com/Carreau))
+- Remove unused ignores lints. [#1342](https://github.com/ipython/ipykernel/pull/1342) ([@Carreau](https://github.com/Carreau))
+- Enable ruff G002 and fix 6 occurences [#1341](https://github.com/ipython/ipykernel/pull/1341) ([@Carreau](https://github.com/Carreau))
+- Check ignores warnings are still relevant. [#1340](https://github.com/ipython/ipykernel/pull/1340) ([@Carreau](https://github.com/Carreau))
+- Move mypy disablinging error codes on a per-file basis [#1338](https://github.com/ipython/ipykernel/pull/1338) ([@Carreau](https://github.com/Carreau))
+- try to fix spyder kernel install [#1337](https://github.com/ipython/ipykernel/pull/1337) ([@Carreau](https://github.com/Carreau))
+- Remove test_check job [#1335](https://github.com/ipython/ipykernel/pull/1335) ([@Carreau](https://github.com/Carreau))
+- Refine deprecation error messages. [#1334](https://github.com/ipython/ipykernel/pull/1334) ([@Carreau](https://github.com/Carreau))
+- Bump mypy [#1333](https://github.com/ipython/ipykernel/pull/1333) ([@Carreau](https://github.com/Carreau))
+- Remove dead code. [#1332](https://github.com/ipython/ipykernel/pull/1332) ([@Carreau](https://github.com/Carreau))
+- Ignore or fix most of the remaining ruff 0.9.6 errors [#1331](https://github.com/ipython/ipykernel/pull/1331) ([@Carreau](https://github.com/Carreau))
+- minor code reformating valid ruff 0.9.6 [#1330](https://github.com/ipython/ipykernel/pull/1330) ([@Carreau](https://github.com/Carreau))
+- Some formatting changes to prepare bumping ruff pre-commit. [#1329](https://github.com/ipython/ipykernel/pull/1329) ([@Carreau](https://github.com/Carreau))
+- Manually update Codespell and fix new errors. [#1328](https://github.com/ipython/ipykernel/pull/1328) ([@Carreau](https://github.com/Carreau))
+- Manually update mdformat pre-commit and run it. [#1327](https://github.com/ipython/ipykernel/pull/1327) ([@Carreau](https://github.com/Carreau))
+- Manually update pre-commit hooks that do not trigger new errors/fixes. [#1326](https://github.com/ipython/ipykernel/pull/1326) ([@Carreau](https://github.com/Carreau))
+- Try to force precommit-ci to send autoupdate PRs. [#1325](https://github.com/ipython/ipykernel/pull/1325) ([@Carreau](https://github.com/Carreau))
+- Don't rerun test with --lf it hides failures. [#1324](https://github.com/ipython/ipykernel/pull/1324) ([@Carreau](https://github.com/Carreau))
+- Delete always skipped test, fix trio test, fix framelocal has not .clear() [#1322](https://github.com/ipython/ipykernel/pull/1322) ([@Carreau](https://github.com/Carreau))
+- Fix types lints [#1321](https://github.com/ipython/ipykernel/pull/1321) ([@Carreau](https://github.com/Carreau))
+- Remove link to numfocus for funding. [#1320](https://github.com/ipython/ipykernel/pull/1320) ([@Carreau](https://github.com/Carreau))
+- Remove downstream_check [#1318](https://github.com/ipython/ipykernel/pull/1318) ([@Carreau](https://github.com/Carreau))
+- Copy payloadpage.page from IPython [#1317](https://github.com/ipython/ipykernel/pull/1317) ([@Carreau](https://github.com/Carreau))
+- More Informative assert [#1314](https://github.com/ipython/ipykernel/pull/1314) ([@Carreau](https://github.com/Carreau))
+- Fix test_print_to_correct_cell_from_child_thread [#1312](https://github.com/ipython/ipykernel/pull/1312) ([@davidbrochart](https://github.com/davidbrochart))
+- make debugger class configurable [#1307](https://github.com/ipython/ipykernel/pull/1307) ([@smacke](https://github.com/smacke))
+- properly close OutStream and various fixes [#1305](https://github.com/ipython/ipykernel/pull/1305) ([@limwz01](https://github.com/limwz01))
+- Remove base setup [#1299](https://github.com/ipython/ipykernel/pull/1299) ([@davidbrochart](https://github.com/davidbrochart))
+- Suggest to make implementations of some function always return awaitable [#1295](https://github.com/ipython/ipykernel/pull/1295) ([@Carreau](https://github.com/Carreau))
+- Misc type annotations [#1294](https://github.com/ipython/ipykernel/pull/1294) ([@Carreau](https://github.com/Carreau))
+- Rely on intrsphinx_registry to keep intersphinx up to date. [#1290](https://github.com/ipython/ipykernel/pull/1290) ([@Carreau](https://github.com/Carreau))
+- Improve robustness of subshell concurrency tests using Barrier [#1288](https://github.com/ipython/ipykernel/pull/1288) ([@ianthomas23](https://github.com/ianthomas23))
+- Add 20 min timeout dowstream ipyparallel [#1287](https://github.com/ipython/ipykernel/pull/1287) ([@Carreau](https://github.com/Carreau))
+- Improve robustness of subshell concurrency tests [#1285](https://github.com/ipython/ipykernel/pull/1285) ([@ianthomas23](https://github.com/ianthomas23))
+- Drop support for Python 3.8 [#1284](https://github.com/ipython/ipykernel/pull/1284) ([@ianthomas23](https://github.com/ianthomas23))
+- remove deprecated ipyparallel methods now that they are broken anyway [#1282](https://github.com/ipython/ipykernel/pull/1282) ([@minrk](https://github.com/minrk))
+- start testing on 3.13 [#1277](https://github.com/ipython/ipykernel/pull/1277) ([@Carreau](https://github.com/Carreau))
+- Try to add workflow to publish nightlies [#1276](https://github.com/ipython/ipykernel/pull/1276) ([@Carreau](https://github.com/Carreau))
+- fix mixture of sync/async sockets in IOPubThread [#1275](https://github.com/ipython/ipykernel/pull/1275) ([@minrk](https://github.com/minrk))
+- Remove some potential dead-code. [#1273](https://github.com/ipython/ipykernel/pull/1273) ([@Carreau](https://github.com/Carreau))
+- Remove direct use of asyncio [#1266](https://github.com/ipython/ipykernel/pull/1266) ([@davidbrochart](https://github.com/davidbrochart))
+- Specify argtypes when using macos msg [#1264](https://github.com/ipython/ipykernel/pull/1264) ([@ianthomas23](https://github.com/ianthomas23))
+- Forward port changelog for 6.29.4 and 5 to main branch [#1263](https://github.com/ipython/ipykernel/pull/1263) ([@ianthomas23](https://github.com/ianthomas23))
+- Ignore warning from trio [#1262](https://github.com/ipython/ipykernel/pull/1262) ([@ianthomas23](https://github.com/ianthomas23))
+- Build docs on ubuntu [#1257](https://github.com/ipython/ipykernel/pull/1257) ([@blink1073](https://github.com/blink1073))
+
+### Documentation improvements
+
+- Add subshell docstrings [#1405](https://github.com/ipython/ipykernel/pull/1405) ([@ianthomas23](https://github.com/ianthomas23))
+- Forward port changelog for 6.29.4 and 5 to main branch [#1263](https://github.com/ipython/ipykernel/pull/1263) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Deprecated features
+
+- Remove deprecated modules since 4.3 (2016). [#1352](https://github.com/ipython/ipykernel/pull/1352) ([@Carreau](https://github.com/Carreau))
+- Suggest to make implementations of some function always return awaitable [#1295](https://github.com/ipython/ipykernel/pull/1295) ([@Carreau](https://github.com/Carreau))
+
+### Other merged PRs
+
+- Ensure test_start_app takes 1s to stop kernel [#1364](https://github.com/ipython/ipykernel/pull/1364) ([@davidbrochart](https://github.com/davidbrochart))
+- Test more python versions [#1358](https://github.com/ipython/ipykernel/pull/1358) ([@davidbrochart](https://github.com/davidbrochart))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-07-01&to=2025-08-13&type=c))
+
+[@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-07-01..2025-08-13&type=Issues) | [@bluss](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abluss+updated%3A2024-07-01..2025-08-13&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2024-07-01..2025-08-13&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-07-01..2025-08-13&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-07-01..2025-08-13&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2024-07-01..2025-08-13&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-07-01..2025-08-13&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2024-07-01..2025-08-13&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2024-07-01..2025-08-13&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-07-01..2025-08-13&type=Issues) | [@limwz01](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Alimwz01+updated%3A2024-07-01..2025-08-13&type=Issues) | [@mgorny](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amgorny+updated%3A2024-07-01..2025-08-13&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-07-01..2025-08-13&type=Issues) | [@nathanmcavoy](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anathanmcavoy+updated%3A2024-07-01..2025-08-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2024-07-01..2025-08-13&type=Issues) | [@smacke](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Asmacke+updated%3A2024-07-01..2025-08-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.30.0a0
 
 Pre-release to allow further testing of subshell implementation.
@@ -26,8 +152,6 @@ Pre-release to allow further testing of subshell implementation.
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-07-01&to=2025-06-05&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2024-07-01..2025-06-05&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-07-01..2025-06-05&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-07-01..2025-06-05&type=Issues) | [@dby-tmwctw](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adby-tmwctw+updated%3A2024-07-01..2025-06-05&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-07-01..2025-06-05&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2024-07-01..2025-06-05&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2024-07-01..2025-06-05&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-07-01..2025-06-05&type=Issues) | [@meeseeksmachine](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ameeseeksmachine+updated%3A2024-07-01..2025-06-05&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-07-01..2025-06-05&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.29.5
 

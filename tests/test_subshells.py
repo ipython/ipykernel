@@ -313,14 +313,13 @@ def test_silent_flag_in_subshells():
             while True:
                 try:
                     msg = kc.get_iopub_msg(timeout=0.2)
-                    if msg["header"]["msg_type"] == "status":
-                        if msg["parent_header"].get("msg_id") == msg_silent["header"]["msg_id"]:
-                            continue
-                    # Any other message related to the silent request is a failure
-                    if msg["parent_header"].get("msg_id") == msg_silent["header"]["msg_id"]:
-                        pytest.fail(
-                            "Silent execution in concurrent setting produced unexpected IOPub message"
-                        )
+                    if (
+                        msg["header"]["msg_type"] == "status"
+                        and msg["parent_header"].get("msg_id") == msg_silent["header"]["msg_id"]
+                    ):
+                        continue
+                    if msg['parent_header'].get('msg_id') == msg_silent['header']['msg_id']:
+                         pytest.fail("Silent execution in concurrent setting produced unexpected IOPub message")
                 except Empty:
                     break
         finally:

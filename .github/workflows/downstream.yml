@@ -56,7 +56,6 @@ jobs:
           test_command: "pytest -vv -raXxs -W default --durations 10 --color=yes -k 'not (test_input_request or signal_kernel_subprocess)'"
 
   ipyparallel:
-    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

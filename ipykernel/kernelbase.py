@@ -16,6 +16,7 @@ import time
 import typing as t
 import uuid
 import warnings
+from collections.abc import Mapping
 from contextvars import ContextVar
 from datetime import datetime
 from functools import partial
@@ -61,6 +62,7 @@ from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
 from .iostream import OutStream
+from .utils import LazyDict
 
 _AWAITABLE_MESSAGE: str = (
     "For consistency across implementations, it is recommended that `{func_name}`"
@@ -199,6 +201,9 @@ class Kernel(SingletonConfigurable):
     _control_parent_ident: bytes = b""
     _shell_parent: ContextVar[dict[str, Any]]
     _shell_parent_ident: ContextVar[bytes]
+    # Kept for backward-compatibility, accesses _control_parent_ident and _shell_parent_ident,
+    # see https://github.com/jupyterlab/jupyterlab/issues/17785
+    _parent_ident: Mapping[str, bytes]
 
     @property
     def _parent_header(self):
@@ -312,6 +317,15 @@ class Kernel(SingletonConfigurable):
         self._shell_parent.set({})
         self._shell_parent_ident = ContextVar("shell_parent_ident")
         self._shell_parent_ident.set(b"")
+
+        # For backward compatibility so that _parent_ident["shell"] and _parent_ident["control"]
+        # work as they used to for ipykernel >= 7
+        self._parent_ident = LazyDict(
+            {
+                "control": lambda: self._control_parent_ident,
+                "shell": lambda: self._shell_parent_ident.get(),
+            }
+        )
 
     async def dispatch_control(self, msg):
         """Dispatch a control request, ensuring only one message is processed at a time."""

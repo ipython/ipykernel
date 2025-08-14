@@ -146,6 +146,12 @@ Submodules
    :show-inheritance:
 
 
+.. automodule:: ipykernel.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 .. automodule:: ipykernel.zmqshell
    :members:
    :undoc-members:

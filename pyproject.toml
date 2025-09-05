@@ -88,7 +88,7 @@ path = "ipykernel/_version.py"
 features = ["docs"]
 [tool.hatch.envs.docs.scripts]
 build = "make -C docs html SPHINXOPTS='-W'"
-api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab"
+api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab ipykernel/utils.py"
 
 [tool.hatch.envs.test]
 features = ["test"]

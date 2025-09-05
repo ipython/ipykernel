@@ -717,3 +717,44 @@ def test_shutdown_subprocesses():
             child_newpg.terminate()
         except psutil.NoSuchProcess:
             pass
+
+
+def test_parent_header_and_ident():
+    # Kernel._parent_ident is private but kept for backward compatibility,
+    # see https://github.com/jupyterlab/jupyterlab/issues/17785
+    with kernel() as kc:
+        # get_parent('shell')
+        msg_id, _ = execute(
+            kc=kc,
+            code="k=get_ipython().kernel; p=k.get_parent('shell'); print(p['header']['msg_id'], p['header']['session'])",
+        )
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+        check_msg_id, session = stdout.split()
+        assert check_msg_id == msg_id
+        assert check_msg_id.startswith(msg_id)
+
+        # _parent_ident['shell']
+        msg_id, _ = execute(kc=kc, code="print(k._parent_ident['shell'])")
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+        assert stdout == f"[b'{session}']\n"
+
+        # Send a control message
+        msg = kc.session.msg("kernel_info_request")
+        kc.control_channel.send(msg)
+        control_msg_id = msg["header"]["msg_id"]
+        assemble_output(kc.get_iopub_msg, parent_msg_id=control_msg_id)
+
+        # get_parent('control')
+        msg_id, _ = execute(
+            kc=kc,
+            code="p=k.get_parent('control'); print(p['header']['msg_id'], p['header']['session'])",
+        )
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+        check_msg_id, session = stdout.split()
+        assert check_msg_id == control_msg_id
+        assert check_msg_id.startswith(control_msg_id)
+
+        # _parent_ident['control']
+        msg_id, _ = execute(kc=kc, code="print(k._parent_ident['control'])")
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+        assert stdout == f"[b'{session}']\n"

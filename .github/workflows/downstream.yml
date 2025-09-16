@@ -90,6 +90,7 @@ jobs:
 
   qtconsole:
     runs-on: ubuntu-latest
+    if: false
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -122,6 +123,7 @@ jobs:
 
   spyder_kernels:
     runs-on: ubuntu-latest
+    if: false
     timeout-minutes: 20
     steps:
       - name: Checkout

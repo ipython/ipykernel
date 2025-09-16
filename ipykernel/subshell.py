@@ -1,5 +1,6 @@
 """A thread for a subshell."""
 
+import asyncio
 from typing import Any
 
 import zmq
@@ -28,6 +29,8 @@ class SubshellThread(BaseThread):
 
         # When aborting flag is set, execute_request messages to this subshell will be aborted.
         self.aborting = False
+
+        self.asyncio_lock = asyncio.Lock()
 
     def run(self) -> None:
         """Run the thread."""

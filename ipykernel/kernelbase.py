@@ -205,6 +205,9 @@ class Kernel(SingletonConfigurable):
     # see https://github.com/jupyterlab/jupyterlab/issues/17785
     _parent_ident: Mapping[str, bytes]
 
+    # Asyncio lock for main shell thread.
+    _main_asyncio_lock: asyncio.Lock
+
     @property
     def _parent_header(self):
         warnings.warn(
@@ -326,6 +329,8 @@ class Kernel(SingletonConfigurable):
                 "shell": lambda: self._shell_parent_ident.get(),
             }
         )
+
+        self._main_asyncio_lock = asyncio.Lock()
 
     async def dispatch_control(self, msg):
         """Dispatch a control request, ensuring only one message is processed at a time."""
@@ -649,56 +654,53 @@ class Kernel(SingletonConfigurable):
         """Handler for shell messages received on shell_channel_thread"""
         assert threading.current_thread() == self.shell_channel_thread
 
-        if self.session is None:
-            return
+        async with self.shell_channel_thread.asyncio_lock:
+            if self.session is None:
+                return
 
-        # deserialize only the header to get subshell_id
-        # Keep original message to send to subshell_id unmodified.
-        _, msg2 = self.session.feed_identities(msg, copy=False)
-        try:
-            msg3 = self.session.deserialize(msg2, content=False, copy=False)
-            subshell_id = msg3["header"].get("subshell_id")
+            # deserialize only the header to get subshell_id
+            # Keep original message to send to subshell_id unmodified.
+            _, msg2 = self.session.feed_identities(msg, copy=False)
+            try:
+                msg3 = self.session.deserialize(msg2, content=False, copy=False)
+                subshell_id = msg3["header"].get("subshell_id")
 
-            # Find inproc pair socket to use to send message to correct subshell.
-            subshell_manager = self.shell_channel_thread.manager
-            socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
-            assert socket is not None
-            socket.send_multipart(msg, copy=False)
-        except Exception:
-            self.log.error("Invalid message", exc_info=True)  # noqa: G201
+                # Find inproc pair socket to use to send message to correct subshell.
+                subshell_manager = self.shell_channel_thread.manager
+                socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
+                assert socket is not None
+                socket.send_multipart(msg, copy=False)
+            except Exception:
+                self.log.error("Invalid message", exc_info=True)  # noqa: G201
 
-        if self.shell_stream:
-            self.shell_stream.flush()
+            if self.shell_stream:
+                self.shell_stream.flush()
 
     async def shell_main(self, subshell_id: str | None, msg):
         """Handler of shell messages for a single subshell"""
         if self._supports_kernel_subshells:
             if subshell_id is None:
                 assert threading.current_thread() == threading.main_thread()
+                asyncio_lock = self._main_asyncio_lock
             else:
                 assert threading.current_thread() not in (
                     self.shell_channel_thread,
                     threading.main_thread(),
                 )
-            socket_pair = self.shell_channel_thread.manager.get_shell_channel_to_subshell_pair(
-                subshell_id
-            )
+                asyncio_lock = self.shell_channel_thread.manager.get_subshell_asyncio_lock(
+                    subshell_id
+                )
         else:
             assert subshell_id is None
             assert threading.current_thread() == threading.main_thread()
-            socket_pair = None
+            asyncio_lock = self._main_asyncio_lock
 
-        try:
-            # Whilst executing a shell message, do not accept any other shell messages on the
-            # same subshell, so that cells are run sequentially. Without this we can run multiple
-            # async cells at the same time which would be a nice feature to have but is an API
-            # change.
-            if socket_pair:
-                socket_pair.pause_on_recv()
+        # Whilst executing a shell message, do not accept any other shell messages on the
+        # same subshell, so that cells are run sequentially. Without this we can run multiple
+        # async cells at the same time which would be a nice feature to have but is an API
+        # change.
+        async with asyncio_lock:
             await self.dispatch_shell(msg, subshell_id=subshell_id)
-        finally:
-            if socket_pair:
-                socket_pair.resume_on_recv()
 
     def record_ports(self, ports):
         """Record the ports that this kernel is using.

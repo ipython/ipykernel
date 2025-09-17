@@ -14,9 +14,10 @@ import traceback
 import warnings
 from binascii import b2a_hex
 from collections import defaultdict, deque
+from collections.abc import Callable
 from io import StringIO, TextIOBase
 from threading import local
-from typing import Any, Callable, Optional
+from typing import Any
 
 import zmq
 from jupyter_client.session import extract_header
@@ -70,7 +71,7 @@ class IOPubThread:
         self._event_pipes: dict[threading.Thread, Any] = {}
         self._event_pipe_gc_lock: threading.Lock = threading.Lock()
         self._event_pipe_gc_seconds: float = 10
-        self._event_pipe_gc_task: Optional[asyncio.Task[Any]] = None
+        self._event_pipe_gc_task: asyncio.Task[Any] | None = None
         self._setup_event_pipe()
         self.thread = threading.Thread(target=self._thread_main, name="IOPub")
         self.thread.daemon = True
@@ -359,7 +360,7 @@ class OutStream(TextIOBase):
     flush_interval = 0.2
     topic = None
     encoding = "UTF-8"
-    _exc: Optional[Any] = None
+    _exc: Any | None = None
 
     def fileno(self):
         """
@@ -658,7 +659,7 @@ class OutStream(TextIOBase):
                     ident=self.topic,
                 )
 
-    def write(self, string: str) -> Optional[int]:  # type:ignore[override]
+    def write(self, string: str) -> int | None:  # type:ignore[override]
         """Write to current stream after encoding if necessary
 
         Returns

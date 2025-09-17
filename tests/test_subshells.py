@@ -164,7 +164,7 @@ def test_run_concurrently_sequence(are_subshells, overlap, request):
             ]
 
         msgs = []
-        for subshell_id, code in zip(subshell_ids, codes):
+        for subshell_id, code in zip(subshell_ids, codes, strict=False):
             msg = kc.session.msg("execute_request", {"code": code})
             msg["header"]["subshell_id"] = subshell_id
             kc.shell_channel.send(msg)

@@ -418,7 +418,7 @@ class Kernel(SingletonConfigurable):
         assert msg["header"].get("subshell_id") == subshell_id
 
         if self._supports_kernel_subshells:
-            stream = self.shell_channel_thread.manager.get_subshell_to_shell_channel_socket(
+            stream = self.shell_channel_thread.manager.get_subshell_to_shell_channel_stream(
                 subshell_id
             )
         else:

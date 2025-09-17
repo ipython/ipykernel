@@ -19,12 +19,13 @@ class SocketPair:
     """
 
     from_socket: zmq.Socket[Any]
+    from_stream: ZMQStream | None = None
     to_socket: zmq.Socket[Any]
     to_stream: ZMQStream | None = None
     on_recv_callback: Any
     on_recv_copy: bool
 
-    def __init__(self, context: zmq.Context[Any], name: str):
+    def __init__(self, context: zmq.Context[Any], name: str, from_io_loop: IOLoop | None = None):
         """Initialize the inproc socker pair."""
         self.from_socket = context.socket(zmq.PAIR)
         self.to_socket = context.socket(zmq.PAIR)
@@ -32,8 +33,14 @@ class SocketPair:
         self.from_socket.bind(address)
         self.to_socket.connect(address)  # Or do I need to do this in another thread?
 
+        # Optional from_stream, only created if from_io_loop is specified.
+        if from_io_loop is not None:
+            self.from_stream = ZMQStream(self.from_socket, from_io_loop)
+
     def close(self):
         """Close the inproc socker pair."""
+        if self.from_stream is not None:
+            self.from_stream.close()
         self.from_socket.close()
 
         if self.to_stream is not None:

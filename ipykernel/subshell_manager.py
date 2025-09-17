@@ -10,6 +10,7 @@ from threading import Lock, current_thread, main_thread
 
 import zmq
 from tornado.ioloop import IOLoop
+from zmq.eventloop.zmqstream import ZMQStream
 
 from .socket_pair import SocketPair
 from .subshell import SubshellThread
@@ -62,7 +63,8 @@ class SubshellManager:
 
         # Inproc socket pair for communication from main thread to shell channel thread.
         # such as for execute_reply messages.
-        self._main_to_shell_channel = SocketPair(self._context, "main-reverse")
+        main_io_loop = IOLoop.current()
+        self._main_to_shell_channel = SocketPair(self._context, "main-reverse", main_io_loop)
         self._main_to_shell_channel.on_recv(
             self._shell_channel_io_loop, self._send_on_shell_channel
         )
@@ -90,14 +92,17 @@ class SubshellManager:
         with self._lock_cache:
             return self._cache[subshell_id].shell_channel_to_subshell
 
-    def get_subshell_to_shell_channel_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
-        """Return the socket used by a particular subshell or main shell to send
+    def get_subshell_to_shell_channel_stream(self, subshell_id: str | None) -> ZMQStream:
+        """Return the stream used by a particular subshell or main shell to send
         messages to the shell channel.
         """
         if subshell_id is None:
-            return self._main_to_shell_channel.from_socket
-        with self._lock_cache:
-            return self._cache[subshell_id].subshell_to_shell_channel.from_socket
+            from_stream = self._main_to_shell_channel.from_stream
+        else:
+            with self._lock_cache:
+                from_stream = self._cache[subshell_id].subshell_to_shell_channel.from_stream
+        assert from_stream is not None
+        return from_stream
 
     def get_shell_channel_to_subshell_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
         """Return the socket used by the shell channel to send messages to a particular

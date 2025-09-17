@@ -24,7 +24,7 @@ class SubshellThread(BaseThread):
         super().__init__(name=f"subshell-{subshell_id}", **kwargs)
 
         self.shell_channel_to_subshell = SocketPair(context, subshell_id)
-        self.subshell_to_shell_channel = SocketPair(context, subshell_id + "-reverse")
+        self.subshell_to_shell_channel = SocketPair(context, subshell_id + "-reverse", self.io_loop)
 
         # When aborting flag is set, execute_request messages to this subshell will be aborted.
         self.aborting = False

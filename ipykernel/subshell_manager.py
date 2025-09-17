@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import typing as t
 import uuid
@@ -46,8 +47,8 @@ class SubshellManager:
         self._shell_channel_io_loop = shell_channel_io_loop
         self._shell_socket = shell_socket
         self._cache: dict[str, SubshellThread] = {}
-        self._lock_cache = Lock()
-        self._lock_shell_socket = Lock()
+        self._lock_cache = Lock()  # Sync lock across threads when accessing cache.
+        self._lock_shell_socket = asyncio.Lock()  # Async lock within shell manager thread.
 
         # Inproc socket pair for communication from control thread to shell channel thread,
         # such as for create_subshell_request messages. Reply messages are returned straight away.
@@ -107,7 +108,13 @@ class SubshellManager:
 
     def get_subshell_aborting(self, subshell_id: str) -> bool:
         """Get the boolean aborting flag of the specified subshell."""
-        return self._cache[subshell_id].aborting
+        with self._lock_cache:
+            return self._cache[subshell_id].aborting
+
+    def get_subshell_asyncio_lock(self, subshell_id: str) -> asyncio.Lock:
+        """Return the asyncio lock belonging to the specified subshell."""
+        with self._lock_cache:
+            return self._cache[subshell_id].asyncio_lock
 
     def list_subshell(self) -> list[str]:
         """Return list of current subshell ids.
@@ -214,9 +221,9 @@ class SubshellManager:
         # Return the reply to the control thread.
         self.control_to_shell_channel.to_socket.send_json(reply)
 
-    def _send_on_shell_channel(self, msg) -> None:
+    async def _send_on_shell_channel(self, msg) -> None:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
-        with self._lock_shell_socket:
+        async with self._lock_shell_socket:
             self._shell_socket.send_multipart(msg)
 
     def _stop_subshell(self, subshell_thread: SubshellThread) -> None:

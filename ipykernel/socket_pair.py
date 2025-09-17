@@ -21,8 +21,6 @@ class SocketPair:
     from_socket: zmq.Socket[Any]
     to_socket: zmq.Socket[Any]
     to_stream: ZMQStream | None = None
-    on_recv_callback: Any
-    on_recv_copy: bool
 
     def __init__(self, context: zmq.Context[Any], name: str):
         """Initialize the inproc socker pair."""
@@ -43,21 +41,9 @@ class SocketPair:
     def on_recv(self, io_loop: IOLoop, on_recv_callback, copy: bool = False):
         """Set the callback used when a message is received on the to stream."""
         # io_loop is that of the 'to' thread.
-        self.on_recv_callback = on_recv_callback
-        self.on_recv_copy = copy
         if self.to_stream is None:
             self.to_stream = ZMQStream(self.to_socket, io_loop)
-        self.resume_on_recv()
-
-    def pause_on_recv(self):
-        """Pause receiving on the to stream."""
-        if self.to_stream is not None:
-            self.to_stream.stop_on_recv()
-
-    def resume_on_recv(self):
-        """Resume receiving on the to stream."""
-        if self.to_stream is not None and not self.to_stream.closed():
-            self.to_stream.on_recv(self.on_recv_callback, copy=self.on_recv_copy)
+        self.to_stream.on_recv(on_recv_callback, copy=copy)
 
     def _address(self, name) -> str:
         """Return the address used for this inproc socket pair."""

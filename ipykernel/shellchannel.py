@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import zmq
@@ -27,6 +28,8 @@ class ShellChannelThread(BaseThread):
         self._manager: SubshellManager | None = None
         self._context = context
         self._shell_socket = shell_socket
+
+        self.asyncio_lock = asyncio.Lock()
 
     @property
     def manager(self) -> SubshellManager:

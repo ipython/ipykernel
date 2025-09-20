@@ -121,6 +121,7 @@ class ParentPollerWindows(Thread):
 
             if WAIT_OBJECT_0 <= result < len(handles):
                 handle = handles[result - WAIT_OBJECT_0]
+                ctypes.windll.kernel32.ResetEvent(handle)  # type:ignore[attr-defined]
 
                 if handle == self.interrupt_handle:
                     # check if signal handler is callable

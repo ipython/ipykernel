@@ -221,7 +221,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
 
         self.disp_pub.shell = mock_shell
 
-        data = {'text/plain': 'test output'}
+        data = {"text/plain": "test output"}
         self.disp_pub.publish(data)
 
         # Check that output was stored in history
@@ -229,6 +229,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         assert len(stored_outputs) == 1
         assert stored_outputs[0].output_type == "display_data"
         assert stored_outputs[0].bundle == data
+
 
 def test_magics(tmp_path):
     context = zmq.Context()

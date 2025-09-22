@@ -209,6 +209,26 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         second = self.disp_pub.unregister_hook(hook)
         assert not bool(second)
 
+    def test_display_stored_in_history(self):
+        """
+        Test that published display data gets stored in shell history
+        for %notebook magic support.
+        """
+        # Mock shell with history manager
+        mock_shell = MagicMock()
+        mock_shell.execution_count = 1
+        mock_shell.history_manager.outputs = {1: []}
+
+        self.disp_pub.shell = mock_shell
+
+        data = {'text/plain': 'test output'}
+        self.disp_pub.publish(data)
+
+        # Check that output was stored in history
+        stored_outputs = mock_shell.history_manager.outputs[1]
+        assert len(stored_outputs) == 1
+        assert stored_outputs[0].output_type == "display_data"
+        assert stored_outputs[0].bundle == data
 
 def test_magics(tmp_path):
     context = zmq.Context()

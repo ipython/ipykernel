@@ -30,6 +30,7 @@ from IPython.core.interactiveshell import InteractiveShell, InteractiveShellABC
 from IPython.core.magic import Magics, line_magic, magics_class
 from IPython.core.magics import CodeMagics, MacroToEdit  # type:ignore[attr-defined]
 from IPython.core.usage import default_banner
+from IPython.core.history import HistoryOutput
 from IPython.display import Javascript, display
 from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
@@ -115,6 +116,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
         update : bool, optional, keyword-only
             If True, send an update_display_data message instead of display_data.
         """
+        if self.shell is not None and hasattr(self.shell, 'history_manager'):
+            outputs = self.shell.history_manager.outputs
+            outputs[self.shell.execution_count].append(
+                HistoryOutput(output_type="display_data", bundle=data)
+            )
         self._flush_streams()
         if metadata is None:
             metadata = {}

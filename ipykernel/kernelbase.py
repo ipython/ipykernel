@@ -544,7 +544,7 @@ class Kernel(SingletonConfigurable):
             This is now a coroutine
         """
         # flush messages off of shell stream into the message queue
-        if self.shell_stream:
+        if self.shell_stream and not self._supports_kernel_subshells:
             self.shell_stream.flush()
         # process at most one shell message per iteration
         await self.process_one(wait=False)
@@ -673,9 +673,6 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.error("Invalid message", exc_info=True)  # noqa: G201
 
-            if self.shell_stream:
-                self.shell_stream.flush()
-
     async def shell_main(self, subshell_id: str | None, msg):
         """Handler of shell messages for a single subshell"""
         if self._supports_kernel_subshells:
@@ -741,7 +738,7 @@ class Kernel(SingletonConfigurable):
     def _publish_status_and_flush(self, status, channel, stream, parent=None):
         """send status on IOPub and flush specified stream to ensure reply is sent before handling the next reply"""
         self._publish_status(status, channel, parent)
-        if stream and hasattr(stream, "flush"):
+        if stream and hasattr(stream, "flush") and not self._supports_kernel_subshells:
             stream.flush(zmq.POLLOUT)
 
     def _publish_debug_event(self, event):
@@ -1384,7 +1381,7 @@ class Kernel(SingletonConfigurable):
 
         # flush streams, so all currently waiting messages
         # are added to the queue
-        if self.shell_stream:
+        if self.shell_stream and not self._supports_kernel_subshells:
             self.shell_stream.flush()
 
         # Callback to signal that we are done aborting

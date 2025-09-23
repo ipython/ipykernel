@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.4", "jupyter_client>=6"]
+requires = ["hatchling>=1.4", "jupyter_client>=6", "click<8.3.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -19,6 +19,7 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
+    "click<8.3.0",
     "debugpy>=1.6.5",
     "ipython>=7.23.1",
     "comm>=0.1.1",

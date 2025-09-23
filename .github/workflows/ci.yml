@@ -40,6 +40,7 @@ jobs:
         run: |
           python --version
           python -m pip install hatch
+          python -m pip install "click<8.3.0"
 
       - name: Run the tests
         timeout-minutes: 15
@@ -85,6 +86,7 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run Linters
         run: |
+          python -m pip install "click<8.3.0"
           hatch run typing:test
           hatch run lint:build
           pipx run interrogate -vv .
@@ -106,6 +108,7 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Build API docs
         run: |
+          python -m pip install "click<8.3.0"
           hatch run docs:api
           # If this fails run `hatch run docs:api` locally
           # and commit.
@@ -131,6 +134,7 @@ jobs:
 
       - name: Install the Python dependencies without debugpy
         run: |
+          python -m pip install "click<8.3.0"
           pip install .[test]
           pip uninstall --yes debugpy
 
@@ -156,6 +160,7 @@ jobs:
 
       - name: List installed packages
         run: |
+          python -m pip install "click<8.3.0"
           hatch -v run test:list
 
       - name: Run the unit tests

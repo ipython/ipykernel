@@ -48,7 +48,6 @@ class SubshellManager:
         self._shell_socket = shell_socket
         self._cache: dict[str, SubshellThread] = {}
         self._lock_cache = Lock()  # Sync lock across threads when accessing cache.
-        self._lock_shell_socket = asyncio.Lock()  # Async lock within shell manager thread.
 
         # Inproc socket pair for communication from control thread to shell channel thread,
         # such as for create_subshell_request messages. Reply messages are returned straight away.
@@ -221,10 +220,9 @@ class SubshellManager:
         # Return the reply to the control thread.
         self.control_to_shell_channel.to_socket.send_json(reply)
 
-    async def _send_on_shell_channel(self, msg) -> None:
+    def _send_on_shell_channel(self, msg) -> None:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
-        async with self._lock_shell_socket:
-            self._shell_socket.send_multipart(msg)
+        self._shell_socket.send_multipart(msg)
 
     def _stop_subshell(self, subshell_thread: SubshellThread) -> None:
         """Stop a subshell thread and close all of its resources."""

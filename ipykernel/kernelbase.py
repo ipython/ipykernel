@@ -696,6 +696,7 @@ class Kernel(SingletonConfigurable):
         # same subshell, so that cells are run sequentially. Without this we can run multiple
         # async cells at the same time which would be a nice feature to have but is an API
         # change.
+        assert asyncio_lock is not None
         async with asyncio_lock:
             await self.dispatch_shell(msg, subshell_id=subshell_id)
 

@@ -22,7 +22,7 @@ import typing
 import warnings
 from pathlib import Path
 
-from IPython.core import page, version_info
+from IPython.core import page
 from IPython.core.autocall import ZMQExitAutocall
 from IPython.core.displaypub import DisplayPublisher
 from IPython.core.error import UsageError
@@ -41,9 +41,9 @@ from ipykernel import connect_qtconsole, get_connection_file, get_connection_inf
 from ipykernel.displayhook import ZMQShellDisplayHook
 from ipykernel.jsonutil import encode_images, json_clean
 
-if version_info >= (9, 1, 0):
+try:
     from IPython.core.history import HistoryOutput
-else:
+except ImportError:
     HistoryOutput = None
 
 # -----------------------------------------------------------------------------

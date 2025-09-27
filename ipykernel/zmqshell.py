@@ -22,11 +22,10 @@ import typing
 import warnings
 from pathlib import Path
 
-from IPython.core import page
+from IPython.core import page, version_info
 from IPython.core.autocall import ZMQExitAutocall
 from IPython.core.displaypub import DisplayPublisher
 from IPython.core.error import UsageError
-from IPython.core.history import HistoryOutput
 from IPython.core.interactiveshell import InteractiveShell, InteractiveShellABC
 from IPython.core.magic import Magics, line_magic, magics_class
 from IPython.core.magics import CodeMagics, MacroToEdit  # type:ignore[attr-defined]
@@ -41,6 +40,11 @@ from traitlets import Any, CBool, CBytes, Instance, Type, default, observe
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
 from ipykernel.jsonutil import encode_images, json_clean
+
+if version_info >= (9, 1, 0):
+    from IPython.core.history import HistoryOutput
+else:
+    HistoryOutput = None
 
 # -----------------------------------------------------------------------------
 # Functions and classes
@@ -116,7 +120,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
         update : bool, optional, keyword-only
             If True, send an update_display_data message instead of display_data.
         """
-        if self.shell is not None and hasattr(self.shell, "history_manager"):
+        if (
+            self.shell is not None
+            and hasattr(self.shell, "history_manager")
+            and HistoryOutput is not None
+        ):
             outputs = self.shell.history_manager.outputs
             outputs[self.shell.execution_count].append(
                 HistoryOutput(output_type="display_data", bundle=data)

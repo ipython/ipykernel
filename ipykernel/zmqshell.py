@@ -125,10 +125,13 @@ class ZMQDisplayPublisher(DisplayPublisher):
             and hasattr(self.shell, "history_manager")
             and HistoryOutput is not None
         ):
-            outputs = self.shell.history_manager.outputs
-            outputs[self.shell.execution_count].append(
-                HistoryOutput(output_type="display_data", bundle=data)
-            )
+            # Reference: github.com/ipython/ipython/pull/14998
+            exec_count = self.shell.execution_count
+            if getattr(self.shell.display_pub, "_in_post_execute", False):
+                exec_count -= 1
+            outputs = getattr(self.shell.history_manager, "outputs", None)
+            if outputs is not None:
+                outputs.append(HistoryOutput(output_type="display_data", bundle=data))
         self._flush_streams()
         if metadata is None:
             metadata = {}

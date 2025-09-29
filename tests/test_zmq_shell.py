@@ -217,7 +217,8 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         # Mock shell with history manager
         mock_shell = MagicMock()
         mock_shell.execution_count = 1
-        mock_shell.history_manager.outputs = {1: []}
+        mock_shell.history_manager.outputs = dict()
+        mock_shell.display_pub._in_post_execute = False
 
         self.disp_pub.shell = mock_shell
 

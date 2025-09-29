@@ -131,7 +131,9 @@ class ZMQDisplayPublisher(DisplayPublisher):
                 exec_count -= 1
             outputs = getattr(self.shell.history_manager, "outputs", None)
             if outputs is not None:
-                outputs.append(HistoryOutput(output_type="display_data", bundle=data))
+                outputs.setdefault(exec_count, []).append(
+                    HistoryOutput(output_type="display_data", bundle=data)
+                )
         self._flush_streams()
         if metadata is None:
             metadata = {}

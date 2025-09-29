@@ -35,7 +35,7 @@ from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
-from traitlets import Any, CBool, CBytes, Instance, default, observe
+from traitlets import Any, CBool, CBytes, Instance, Type, default, observe
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
@@ -517,8 +517,8 @@ class ZMQInteractiveShell(InteractiveShell):
         self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
 
-    displayhook_class = type(ZMQShellDisplayHook)
-    display_pub_class = type(ZMQDisplayPublisher)
+    displayhook_class = Type(ZMQShellDisplayHook)
+    display_pub_class = Type(ZMQDisplayPublisher)
     data_pub_class = Any()
     kernel = Any()
     _parent_header: contextvars.ContextVar[dict[str, Any]]

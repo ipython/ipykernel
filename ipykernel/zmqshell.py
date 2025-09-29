@@ -35,7 +35,7 @@ from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
-from traitlets import Any, CBool, CBytes, Instance, Type, default, observe
+from traitlets import Any, CBool, CBytes, Instance, default, observe
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
@@ -44,7 +44,7 @@ from ipykernel.jsonutil import encode_images, json_clean
 try:
     from IPython.core.history import HistoryOutput
 except ImportError:
-    HistoryOutput = None  # type: ignore[assignment]
+    HistoryOutput: type | None = None
 
 # -----------------------------------------------------------------------------
 # Functions and classes
@@ -517,8 +517,8 @@ class ZMQInteractiveShell(InteractiveShell):
         self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
 
-    displayhook_class = Type(ZMQShellDisplayHook)
-    display_pub_class = Type(ZMQDisplayPublisher)
+    displayhook_class = type(ZMQShellDisplayHook)
+    display_pub_class = type(ZMQDisplayPublisher)
     data_pub_class = Any()
     kernel = Any()
     _parent_header: contextvars.ContextVar[dict[str, Any]]

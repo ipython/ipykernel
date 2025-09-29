@@ -22,6 +22,11 @@ from ipykernel.zmqshell import (  # type:ignore
     ZMQInteractiveShell,
 )
 
+try:
+    from IPython.core.history import HistoryOutput
+except ImportError:
+    HistoryOutput = None  # type: ignore[assignment,misc]
+
 
 class NoReturnDisplayHook:
     """
@@ -209,6 +214,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         second = self.disp_pub.unregister_hook(hook)
         assert not bool(second)
 
+    @unittest.skipIf(HistoryOutput is None, "HistoryOutput not available")
     def test_display_stored_in_history(self):
         """
         Test that published display data gets stored in shell history

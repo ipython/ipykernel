@@ -44,7 +44,7 @@ from ipykernel.jsonutil import encode_images, json_clean
 try:
     from IPython.core.history import HistoryOutput
 except ImportError:
-    HistoryOutput: type | None = None
+    HistoryOutput = None  # type: ignore[assignment,misc]
 
 # -----------------------------------------------------------------------------
 # Functions and classes

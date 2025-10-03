@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.0a3
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.0.0a2...7b41bc6bfca1e00b903f386e76dce1eda97b0907))
+
+### Enhancements made
+
+- Use asyncio.Lock around subshell message handling [#1430](https://github.com/ipython/ipykernel/pull/1430) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Drop support for Python 3.9 [#1431](https://github.com/ipython/ipykernel/pull/1431) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump the actions group across 1 directory with 2 updates [#1428](https://github.com/ipython/ipykernel/pull/1428) ([@dependabot](https://github.com/dependabot))
+- Continue to support `Kernel._parent_ident` for backward compatibility [#1427](https://github.com/ipython/ipykernel/pull/1427) ([@ianthomas23](https://github.com/ianthomas23))
+- Tests: Add robust tests for silent flag in subshells [#1424](https://github.com/ipython/ipykernel/pull/1424) ([@pankaj-bind](https://github.com/pankaj-bind))
+
+### Documentation improvements
+
+- Forward port of 6.x changelog to main branch [#1429](https://github.com/ipython/ipykernel/pull/1429) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-08-13&to=2025-10-03&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-08-13..2025-10-03&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2025-08-13..2025-10-03&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2025-08-13..2025-10-03&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2025-08-13..2025-10-03&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-08-13..2025-10-03&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2025-08-13..2025-10-03&type=Issues) | [@pankaj-bind](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apankaj-bind+updated%3A2025-08-13..2025-10-03&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.0a2
 
 Pre-release of `ipykernel` with experimental subshell support on top of `tornado`/`asyncio`. The previous version 7 pre-releases used `anyio` but that will no longer be in `ipykernel` 7.
@@ -125,8 +152,6 @@ Note the changelog here is not correct, presumably due to the recent branch rena
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2024-07-01&to=2025-08-13&type=c))
 
 [@blink1073](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ablink1073+updated%3A2024-07-01..2025-08-13&type=Issues) | [@bluss](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abluss+updated%3A2024-07-01..2025-08-13&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2024-07-01..2025-08-13&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2024-07-01..2025-08-13&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2024-07-01..2025-08-13&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2024-07-01..2025-08-13&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2024-07-01..2025-08-13&type=Issues) | [@ivanov](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aivanov+updated%3A2024-07-01..2025-08-13&type=Issues) | [@jasongrout](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2024-07-01..2025-08-13&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2024-07-01..2025-08-13&type=Issues) | [@limwz01](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Alimwz01+updated%3A2024-07-01..2025-08-13&type=Issues) | [@mgorny](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amgorny+updated%3A2024-07-01..2025-08-13&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2024-07-01..2025-08-13&type=Issues) | [@nathanmcavoy](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anathanmcavoy+updated%3A2024-07-01..2025-08-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2024-07-01..2025-08-13&type=Issues) | [@smacke](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Asmacke+updated%3A2024-07-01..2025-08-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.30.1
 

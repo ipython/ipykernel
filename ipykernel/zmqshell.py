@@ -63,14 +63,20 @@ class ZMQDisplayPublisher(DisplayPublisher):
         super().__init__(*args, **kwargs)
         self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
+        self._parent_header_global = {}
 
     @property
     def parent_header(self):
-        return self._parent_header.get()
+        try:
+            return self._parent_header.get()
+        except LookupError:
+            return self._parent_header_global
 
     def set_parent(self, parent):
         """Set the parent for outbound messages."""
-        self._parent_header.set(extract_header(parent))
+        parent_header = extract_header(parent)
+        self._parent_header.set(parent_header)
+        self._parent_header_global = parent_header
 
     def _flush_streams(self):
         """flush IO Streams prior to display"""
@@ -673,11 +679,23 @@ class ZMQInteractiveShell(InteractiveShell):
 
     @property
     def parent_header(self):
-        return self._parent_header.get()
+        try:
+            return self._parent_header.get()
+        except LookupError:
+            return self._parent_header_global
+
+    @parent_header.setter
+    def parent_header(self, value):
+        self._parent_header_global = value
+        self._parent_header.set(value)
 
     def set_parent(self, parent):
-        """Set the parent header for associating output with its triggering input"""
-        self._parent_header.set(parent)
+        """Set the parent header for associating output with its triggering input
+
+        When called from a thread, sets the thread-local value, which persists
+        until the next call from this thread.
+        """
+        self.parent_header = parent
         self.displayhook.set_parent(parent)  # type:ignore[attr-defined]
         self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
         if hasattr(self, "_data_pub"):
@@ -688,7 +706,12 @@ class ZMQInteractiveShell(InteractiveShell):
             sys.stderr.set_parent(parent)
 
     def get_parent(self):
-        """Get the parent header."""
+        """Get the parent header.
+
+        If set_parent has never been called from the current thread,
+        the value from the last call to set_parent from _any_ thread will be used
+        (typically the currently running cell).
+        """
         return self.parent_header
 
     def init_magics(self):

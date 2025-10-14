@@ -17,7 +17,7 @@ import typing as t
 import uuid
 import warnings
 from collections.abc import Mapping
-from contextvars import ContextVar
+from contextvars import Context, ContextVar, copy_context
 from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
@@ -201,6 +201,7 @@ class Kernel(SingletonConfigurable):
     _control_parent_ident: bytes = b""
     _shell_parent: ContextVar[dict[str, Any]]
     _shell_parent_ident: ContextVar[bytes]
+    _shell_context: Context
     # Kept for backward-compatibility, accesses _control_parent_ident and _shell_parent_ident,
     # see https://github.com/jupyterlab/jupyterlab/issues/17785
     _parent_ident: Mapping[str, bytes]
@@ -320,13 +321,14 @@ class Kernel(SingletonConfigurable):
         self._shell_parent.set({})
         self._shell_parent_ident = ContextVar("shell_parent_ident")
         self._shell_parent_ident.set(b"")
+        self._shell_context = copy_context()
 
         # For backward compatibility so that _parent_ident["shell"] and _parent_ident["control"]
         # work as they used to for ipykernel >= 7
         self._parent_ident = LazyDict(
             {
                 "control": lambda: self._control_parent_ident,
-                "shell": lambda: self._shell_parent_ident.get(),
+                "shell": lambda: self._get_shell_context_var(self._shell_parent_ident),
             }
         )
 
@@ -768,6 +770,8 @@ class Kernel(SingletonConfigurable):
         else:
             self._shell_parent_ident.set(ident)
             self._shell_parent.set(parent)
+            # preserve the last call to set_parent
+            self._shell_context = copy_context()
 
     def get_parent(self, channel=None):
         """Get the parent request associated with a channel.
@@ -794,7 +798,20 @@ class Kernel(SingletonConfigurable):
 
         if channel == "control":
             return self._control_parent
-        return self._shell_parent.get()
+
+        return self._get_shell_context_var(self._shell_parent)
+
+    def _get_shell_context_var(self, var: ContextVar):
+        """Lookup a ContextVar, falling back on the shell context
+
+        Allows for user-launched Threads to still resolve to the shell's mai context
+
+        necessary for e.g. display from threads.
+        """
+        try:
+            return var.get()
+        except LookupError:
+            return self._shell_context[var]
 
     def send_response(
         self,
@@ -1455,7 +1472,7 @@ class Kernel(SingletonConfigurable):
             )
         return self._input_request(
             prompt,
-            self._shell_parent_ident.get(),
+            self._get_shell_context_var(self._shell_parent_ident),
             self.get_parent("shell"),
             password=True,
         )
@@ -1472,7 +1489,7 @@ class Kernel(SingletonConfigurable):
             raise StdinNotImplementedError(msg)
         return self._input_request(
             str(prompt),
-            self._shell_parent_ident.get(),
+            self._get_shell_context_var(self._shell_parent_ident),
             self.get_parent("shell"),
             password=False,
         )

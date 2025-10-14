@@ -456,8 +456,6 @@ class OutStream(TextIOBase):
             "parent_header"
         )
         self._parent_header.set({})
-        self._thread_to_parent = {}
-        self._thread_to_parent_header = {}
         self._parent_header_global = {}
         self._master_pid = os.getpid()
         self._flush_pending = False
@@ -512,21 +510,11 @@ class OutStream(TextIOBase):
     @property
     def parent_header(self):
         try:
-            # asyncio-specific
+            # asyncio or thread-specific
             return self._parent_header.get()
         except LookupError:
-            try:
-                # thread-specific
-                identity = threading.current_thread().ident
-                # retrieve the outermost (oldest ancestor,
-                # discounting the kernel thread) thread identity
-                while identity in self._thread_to_parent:
-                    identity = self._thread_to_parent[identity]
-                # use the header of the oldest ancestor
-                return self._thread_to_parent_header[identity]
-            except KeyError:
-                # global (fallback)
-                return self._parent_header_global
+            # global (fallback)
+            return self._parent_header_global
 
     @parent_header.setter
     def parent_header(self, value):

@@ -227,6 +227,7 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         mock_shell.display_pub._in_post_execute = False
 
         self.disp_pub.shell = mock_shell
+        self.disp_pub.store_display_history = True
 
         data = {"text/plain": "test output"}
         self.disp_pub.publish(data)

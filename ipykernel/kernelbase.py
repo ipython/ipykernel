@@ -72,6 +72,8 @@ _AWAITABLE_MESSAGE: str = (
     " ipykernel 6.0 (2021). {target} does not seem to return an awaitable"
 )
 
+T = t.TypeVar("T")
+
 
 def _accepts_parameters(meth, param_names):
     parameters = inspect.signature(meth).parameters
@@ -801,7 +803,7 @@ class Kernel(SingletonConfigurable):
 
         return self._get_shell_context_var(self._shell_parent)
 
-    def _get_shell_context_var(self, var: ContextVar):
+    def _get_shell_context_var(self, var: ContextVar[T]) -> T:
         """Lookup a ContextVar, falling back on the shell context
 
         Allows for user-launched Threads to still resolve to the shell's mai context

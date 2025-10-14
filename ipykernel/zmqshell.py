@@ -35,7 +35,7 @@ from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
-from traitlets import Any, CBool, CBytes, Instance, Type, default, observe
+from traitlets import Any, Bool, CBool, CBytes, Instance, Type, default, observe
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
@@ -58,6 +58,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
     pub_socket = Any(allow_none=True)
     _parent_header: contextvars.ContextVar[dict[str, Any]]
     topic = CBytes(b"display_data")
+
+    store_display_history = Bool(
+        False,
+        help="If set to True, store display outputs in the history manager. Default is False.",
+    ).tag(config=True)
 
     # thread_local:
     # An attribute used to ensure the correct output message
@@ -121,7 +126,8 @@ class ZMQDisplayPublisher(DisplayPublisher):
             If True, send an update_display_data message instead of display_data.
         """
         if (
-            self.shell is not None
+            self.store_display_history
+            and self.shell is not None
             and hasattr(self.shell, "history_manager")
             and HistoryOutput is not None
         ):

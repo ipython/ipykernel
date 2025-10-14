@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.5", "jupyter_client>=6"]
+requires = ["hatchling>=1.22", "jupyter_client>=6"]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,7 +7,6 @@ name = "ipykernel"
 dynamic = ["version"]
 authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
 license = "BSD-3-Clause"
-license-files = ["LICENSE"]
 readme = "README.md"
 description = "IPython Kernel for Jupyter"
 keywords = ["Interactive", "Interpreter", "Shell", "Web"]

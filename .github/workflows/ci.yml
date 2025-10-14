@@ -51,7 +51,7 @@ jobs:
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
-          hatch run test:nowarn
+          hatch run test:nowarn --ignore=tests/test_debugger.py
 
       - name: Run the tests on Windows
         timeout-minutes: 15

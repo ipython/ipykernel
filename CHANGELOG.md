@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.0.1
+
+IPykernel 7.0.1 is a bug fix release to support CPython 3.14.
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.0.0...6d9a14a21a8e328e384ebac48e4ccbaad85b1d45))
+
+### Bugs fixed
+
+- Avoid overriding Thread.\_context in Python 3.14 [#1447](https://github.com/ipython/ipykernel/pull/1447) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Fix 7.x license warnings [#1448](https://github.com/ipython/ipykernel/pull/1448) ([@bollwyvl](https://github.com/bollwyvl))
+- ci: Test on PyPy 3.11 instead of 3.10 [#1444](https://github.com/ipython/ipykernel/pull/1444) ([@cclauss](https://github.com/cclauss))
+
+### Documentation improvements
+
+- Clean up changelog following 7.0.0 release [#1439](https://github.com/ipython/ipykernel/pull/1439) ([@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-10-13&to=2025-10-14&type=c))
+
+[@bollwyvl](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abollwyvl+updated%3A2025-10-13..2025-10-14&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-10-13..2025-10-14&type=Issues) | [@cclauss](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Acclauss+updated%3A2025-10-13..2025-10-14&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-10-13..2025-10-14&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.0
 
 IPykernel 7.0.0 is a major release containing experimental support for [kernel subshells](https://github.com/jupyter/enhancement-proposals/pull/91).
@@ -49,8 +76,6 @@ For further information and to report problems please see [ipykernel 7.0.0 relea
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-05-16&to=2025-10-13&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-05-16..2025-10-13&type=Issues) | [@ccordoba12](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2025-05-16..2025-10-13&type=Issues) | [@davidbrochart](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2025-05-16..2025-10-13&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adependabot+updated%3A2025-05-16..2025-10-13&type=Issues) | [@fleming79](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Afleming79+updated%3A2025-05-16..2025-10-13&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-05-16..2025-10-13&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2025-05-16..2025-10-13&type=Issues) | [@mgorny](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amgorny+updated%3A2025-05-16..2025-10-13&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2025-05-16..2025-10-13&type=Issues) | [@pankaj-bind](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apankaj-bind+updated%3A2025-05-16..2025-10-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apre-commit-ci+updated%3A2025-05-16..2025-10-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.30.1
 

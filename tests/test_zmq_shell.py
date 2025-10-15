@@ -218,25 +218,30 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
     def test_display_stored_in_history(self):
         """
         Test that published display data gets stored in shell history
-        for %notebook magic support.
+        for %notebook magic support, and not stored when disabled.
         """
-        # Mock shell with history manager
-        mock_shell = MagicMock()
-        mock_shell.execution_count = 1
-        mock_shell.history_manager.outputs = dict()
-        mock_shell.display_pub._in_post_execute = False
+        for enable in [False, True]:
+            # Mock shell with history manager
+            mock_shell = MagicMock()
+            mock_shell.execution_count = 1
+            mock_shell.history_manager.outputs = dict()
+            mock_shell.display_pub._in_post_execute = False
 
-        self.disp_pub.shell = mock_shell
-        self.disp_pub.store_display_history = True
+            self.disp_pub.shell = mock_shell
+            self.disp_pub.store_display_history = enable
 
-        data = {"text/plain": "test output"}
-        self.disp_pub.publish(data)
+            data = {"text/plain": "test output"}
+            self.disp_pub.publish(data)
 
-        # Check that output was stored in history
-        stored_outputs = mock_shell.history_manager.outputs[1]
-        assert len(stored_outputs) == 1
-        assert stored_outputs[0].output_type == "display_data"
-        assert stored_outputs[0].bundle == data
+            if enable:
+                # Check that output was stored in history
+                stored_outputs = mock_shell.history_manager.outputs[1]
+                assert len(stored_outputs) == 1
+                assert stored_outputs[0].output_type == "display_data"
+                assert stored_outputs[0].bundle == data
+            else:
+                # Should not store anything in history
+                assert mock_shell.history_manager.outputs == {}
 
 
 def test_magics(tmp_path):

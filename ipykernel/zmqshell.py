@@ -33,11 +33,16 @@ from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
-from traitlets import Any, CBool, CBytes, Dict, Instance, Type, default, observe
+from traitlets import Any, Bool, CBool, CBytes, Dict, Instance, Type, default, observe
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
 from ipykernel.jsonutil import encode_images, json_clean
+
+try:
+    from IPython.core.history import HistoryOutput
+except ImportError:
+    HistoryOutput = None  # type: ignore[assignment,misc]
 
 # -----------------------------------------------------------------------------
 # Functions and classes
@@ -51,6 +56,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
     pub_socket = Any(allow_none=True)
     parent_header = Dict({})
     topic = CBytes(b"display_data")
+
+    store_display_history = Bool(
+        False,
+        help="If set to True, store display outputs in the history manager. Default is False.",
+    ).tag(config=True)
 
     # thread_local:
     # An attribute used to ensure the correct output message
@@ -100,6 +110,21 @@ class ZMQDisplayPublisher(DisplayPublisher):
         update : bool, optional, keyword-only
             If True, send an update_display_data message instead of display_data.
         """
+        if (
+            self.store_display_history
+            and self.shell is not None
+            and hasattr(self.shell, "history_manager")
+            and HistoryOutput is not None
+        ):
+            # Reference: github.com/ipython/ipython/pull/14998
+            exec_count = self.shell.execution_count
+            if getattr(self.shell.display_pub, "_in_post_execute", False):
+                exec_count -= 1
+            outputs = getattr(self.shell.history_manager, "outputs", None)
+            if outputs is not None:
+                outputs.setdefault(exec_count, []).append(
+                    HistoryOutput(output_type="display_data", bundle=data)
+                )
         self._flush_streams()
         if metadata is None:
             metadata = {}

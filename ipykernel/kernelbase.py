@@ -806,7 +806,7 @@ class Kernel(SingletonConfigurable):
     def _get_shell_context_var(self, var: ContextVar[T]) -> T:
         """Lookup a ContextVar, falling back on the shell context
 
-        Allows for user-launched Threads to still resolve to the shell's mai context
+        Allows for user-launched Threads to still resolve to the shell's main context
 
         necessary for e.g. display from threads.
         """

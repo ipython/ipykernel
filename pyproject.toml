@@ -103,13 +103,10 @@ features = ["test", "cov"]
 test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
 
-[[tool.hatch.envs.cov.matrix]]
-qt = ["qt5", "qt6"]
-
 [tool.hatch.envs.cov.overrides]
-matrix.qt.features = [
-  { value = "pyqt5", if = ["qt5"] },
-  { value = "pyside6", if = ["qt6"] },
+env.QT.features = [
+    { value = "pyqt5", if = ["qt5"] },
+    { value = "pyside6", if = ["qt6"] },
 ]
 
 [tool.hatch.envs.typing]

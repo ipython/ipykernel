@@ -58,7 +58,7 @@ def test_start_kernel_background_thread():
         from ipykernel.kernelapp import launch_new_instance
 
         def launch():
-            # Threads don't always have a default event loop so we need to 
+            # Threads don't always have a default event loop so we need to
             # create and set a default
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

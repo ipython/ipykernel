@@ -677,19 +677,19 @@ class Kernel(SingletonConfigurable):
         """Handler of shell messages for a single subshell"""
         if self._supports_kernel_subshells:
             if subshell_id is None:
-                assert threading.current_thread() == threading.main_thread()
+                assert threading.current_thread() == self.shell_channel_thread.parent_thread
                 asyncio_lock = self._main_asyncio_lock
             else:
                 assert threading.current_thread() not in (
                     self.shell_channel_thread,
-                    threading.main_thread(),
+                    self.shell_channel_thread.parent_thread,
                 )
                 asyncio_lock = self.shell_channel_thread.manager.get_subshell_asyncio_lock(
                     subshell_id
                 )
         else:
             assert subshell_id is None
-            assert threading.current_thread() == threading.main_thread()
+            assert threading.current_thread() == self.shell_channel_thread.parent_thread
             asyncio_lock = self._main_asyncio_lock
 
         # Whilst executing a shell message, do not accept any other shell messages on the

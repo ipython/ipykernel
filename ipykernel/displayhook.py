@@ -29,6 +29,7 @@ class ZMQDisplayHook:
 
         self._parent_header: ContextVar[dict[str, Any]] = ContextVar("parent_header")
         self._parent_header.set({})
+        self._parent_header_global = {}
 
     def get_execution_count(self):
         """This method is replaced in kernelapp"""
@@ -57,11 +58,16 @@ class ZMQDisplayHook:
 
     @property
     def parent_header(self):
-        return self._parent_header.get()
+        try:
+            return self._parent_header.get()
+        except LookupError:
+            return self._parent_header_global
 
     def set_parent(self, parent):
         """Set the parent header."""
-        self._parent_header.set(extract_header(parent))
+        parent_header = extract_header(parent)
+        self._parent_header.set(parent_header)
+        self._parent_header_global = parent_header
 
 
 class ZMQShellDisplayHook(DisplayHook):
@@ -83,11 +89,16 @@ class ZMQShellDisplayHook(DisplayHook):
 
     @property
     def parent_header(self):
-        return self._parent_header.get()
+        try:
+            return self._parent_header.get()
+        except LookupError:
+            return self._parent_header_global
 
     def set_parent(self, parent):
-        """Set the parent for outbound messages."""
-        self._parent_header.set(extract_header(parent))
+        """Set the parent header."""
+        parent_header = extract_header(parent)
+        self._parent_header.set(parent_header)
+        self._parent_header_global = parent_header
 
     def start_displayhook(self):
         """Start the display hook."""

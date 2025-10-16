@@ -50,14 +50,18 @@ def test_ipython_start_kernel_userns():
         assert EXPECTED in text
 
 
-@pytest.mark.flaky(max_runs=3)
 def test_start_kernel_background_thread():
     cmd = dedent(
         """
         import threading
+        import asyncio
         from ipykernel.kernelapp import launch_new_instance
 
         def launch():
+            # Threads don't always have a default event loop so we need to 
+            # create and set a default
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             launch_new_instance()
 
         thread = threading.Thread(target=launch)

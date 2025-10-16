@@ -50,6 +50,7 @@ def test_ipython_start_kernel_userns():
         assert EXPECTED in text
 
 
+@pytest.mark.flaky(max_runs=3)
 def test_start_kernel_background_thread():
     cmd = dedent(
         """

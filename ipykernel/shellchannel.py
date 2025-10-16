@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 from threading import current_thread
+from typing import Any
 
 import zmq
 

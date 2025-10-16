@@ -51,7 +51,6 @@ def test_ipython_start_kernel_userns():
 
 
 def test_start_kernel_background_thread():
-
     cmd = dedent(
         """
         import threading
@@ -59,7 +58,7 @@ def test_start_kernel_background_thread():
 
         def launch():
             launch_new_instance()
-        
+
         thread = threading.Thread(target=launch)
         thread.start()
         thread.join()
@@ -71,14 +70,14 @@ def test_start_kernel_background_thread():
         msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg["content"]
         assert content["status"] == "ok"
-        
+
         client.inspect("a")
         msg = client.get_shell_msg(timeout=TIMEOUT)
         content = msg["content"]
         assert content["found"]
         text = content["data"]["text/plain"]
         assert "1" in text
-    
+
 
 @pytest.mark.flaky(max_runs=3)
 def test_ipython_start_kernel_no_userns():

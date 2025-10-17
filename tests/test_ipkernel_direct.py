@@ -169,7 +169,7 @@ async def test_start(ipkernel: IPythonKernel) -> None:
         if status == "starting" and channel == "shell":
             shell_future.set_result(None)
 
-    ipkernel._publish_status = fake_publish_status # type:ignore
+    ipkernel._publish_status = fake_publish_status  # type:ignore
     ipkernel.start()
 
     await shell_future
@@ -186,7 +186,7 @@ async def test_start_no_debugpy(ipkernel: IPythonKernel) -> None:
         if status == "starting" and channel == "shell":
             shell_future.set_result(None)
 
-    ipkernel._publish_status = fake_publish_status # type:ignore
+    ipkernel._publish_status = fake_publish_status  # type:ignore
     ipkernel.debugpy_stream = None
     ipkernel.start()
 

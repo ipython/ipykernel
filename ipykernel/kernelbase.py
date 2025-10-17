@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import itertools
 import logging
 import os
 import socket
@@ -42,7 +41,6 @@ import zmq
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
 from tornado import ioloop
-from tornado.queues import Queue, QueueEmpty
 from traitlets.config.configurable import SingletonConfigurable
 from traitlets.traitlets import (
     Any,
@@ -511,11 +509,6 @@ class Kernel(SingletonConfigurable):
             if self.eventloop is not eventloop:
                 self.log.info("exiting eventloop %s", eventloop)
                 return
-            if self.msg_queue.qsize():
-                self.log.debug("Delaying eventloop due to waiting messages")
-                # still messages to process, make the eventloop wait
-                schedule_next()
-                return
             self.log.debug("Advancing eventloop %s", eventloop)
             try:
                 eventloop(self)
@@ -534,87 +527,10 @@ class Kernel(SingletonConfigurable):
             # already consumed from the queue by process_one and the queue is
             # technically empty.
             self.log.debug("Scheduling eventloop advance")
-            self.io_loop.call_later(0.001, partial(self.schedule_dispatch, advance_eventloop))
+            self.io_loop.call_later(0.001, advance_eventloop)
 
         # begin polling the eventloop
         schedule_next()
-
-    async def do_one_iteration(self):
-        """Process a single shell message
-
-        Any pending control messages will be flushed as well
-
-        .. versionchanged:: 5
-            This is now a coroutine
-        """
-        # flush messages off of shell stream into the message queue
-        if self.shell_stream and not self._supports_kernel_subshells:
-            self.shell_stream.flush()
-        # process at most one shell message per iteration
-        await self.process_one(wait=False)
-
-    async def process_one(self, wait=True):
-        """Process one request
-
-        Returns None if no message was handled.
-        """
-        if wait:
-            t, dispatch, args = await self.msg_queue.get()
-        else:
-            try:
-                t, dispatch, args = self.msg_queue.get_nowait()
-            except (asyncio.QueueEmpty, QueueEmpty):
-                return
-
-        if self.control_thread is None and self.control_stream is not None:
-            # If there isn't a separate control thread then this main thread handles both shell
-            # and control messages. Before processing a shell message we need to flush all control
-            # messages and allow them all to be processed.
-            await asyncio.sleep(0)
-            self.control_stream.flush()
-
-            socket = self.control_stream.socket
-            while socket.poll(1):
-                await asyncio.sleep(0)
-                self.control_stream.flush()
-
-        await dispatch(*args)
-
-    async def dispatch_queue(self):
-        """Coroutine to preserve order of message handling
-
-        Ensures that only one message is processing at a time,
-        even when the handler is async
-        """
-
-        while True:
-            try:
-                await self.process_one()
-            except Exception:
-                self.log.exception("Error in message handler")
-
-    _message_counter = Any(
-        help="""Monotonic counter of messages
-        """,
-    )
-
-    @default("_message_counter")
-    def _message_counter_default(self):
-        return itertools.count()
-
-    def schedule_dispatch(self, dispatch, *args):
-        """schedule a message for dispatch"""
-        idx = next(self._message_counter)
-
-        self.msg_queue.put_nowait(
-            (
-                idx,
-                dispatch,
-                args,
-            )
-        )
-        # ensure the eventloop wakes up
-        self.io_loop.add_callback(lambda: None)
 
     async def _create_control_lock(self):
         # This can be removed when minimum python increases to 3.10
@@ -623,9 +539,6 @@ class Kernel(SingletonConfigurable):
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
-        self.msg_queue: Queue[t.Any] = Queue()
-        if not self.shell_channel_thread:
-            self.io_loop.add_callback(self.dispatch_queue)
 
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
@@ -644,10 +557,7 @@ class Kernel(SingletonConfigurable):
                 self.shell_stream.on_recv(self.shell_channel_thread_main, copy=False)
             else:
                 self.shell_stream.on_recv(
-                    partial(
-                        self.schedule_dispatch,
-                        self.dispatch_shell,
-                    ),
+                    partial(self.shell_main, None),
                     copy=False,
                 )
 
@@ -693,7 +603,6 @@ class Kernel(SingletonConfigurable):
                 )
         else:
             assert subshell_id is None
-            assert threading.current_thread() == self.shell_channel_thread.parent_thread
             asyncio_lock = self._main_asyncio_lock
 
         # Whilst executing a shell message, do not accept any other shell messages on the
@@ -1410,15 +1319,10 @@ class Kernel(SingletonConfigurable):
             self.log.info("Finishing abort")
             self._aborting = False
 
-        # put the stop-aborting event on the message queue
-        # so that all messages already waiting in the queue are aborted
-        # before we reset the flag
-        schedule_stop_aborting = partial(self.schedule_dispatch, stop_aborting)
-
         if self.stop_on_error_timeout:
             # if we have a delay, give messages this long to arrive on the queue
             # before we stop aborting requests
-            self.io_loop.call_later(self.stop_on_error_timeout, schedule_stop_aborting)
+            self.io_loop.call_later(self.stop_on_error_timeout, stop_aborting)
             # If we have an eventloop, it may interfere with the call_later above.
             # If the loop has a _schedule_exit method, we call that so the loop exits
             # after stop_on_error_timeout, returning to the main io_loop and letting
@@ -1426,7 +1330,7 @@ class Kernel(SingletonConfigurable):
             if self.eventloop is not None and hasattr(self.eventloop, "_schedule_exit"):
                 self.eventloop._schedule_exit(self.stop_on_error_timeout + 0.01)
         else:
-            schedule_stop_aborting()
+            self.io_loop.add_callback(stop_aborting)
 
     def _send_abort_reply(self, stream, msg, idents):
         """Send a reply to an aborted request"""

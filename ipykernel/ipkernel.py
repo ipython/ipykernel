@@ -439,7 +439,7 @@ class IPythonKernel(KernelBase):
 
                 cm = (
                     self._cancel_on_sigint
-                    if threading.current_thread() == threading.main_thread()
+                    if threading.current_thread() == self.shell_channel_thread.parent_thread
                     else self._dummy_context_manager
                 )
                 with cm(coro_future):

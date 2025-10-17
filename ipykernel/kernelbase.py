@@ -603,7 +603,6 @@ class Kernel(SingletonConfigurable):
                 )
         else:
             assert subshell_id is None
-            assert threading.current_thread() == self.shell_channel_thread.parent_thread
             asyncio_lock = self._main_asyncio_lock
 
         # Whilst executing a shell message, do not accept any other shell messages on the

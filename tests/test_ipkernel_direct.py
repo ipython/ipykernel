@@ -165,28 +165,36 @@ def test_dispatch_debugpy(ipkernel: IPythonKernel) -> None:
 async def test_start(ipkernel: IPythonKernel) -> None:
     shell_future: asyncio.Future = asyncio.Future()
 
-    async def fake_dispatch_queue():
-        shell_future.set_result(None)
+    def fake_publish_status(status, channel):
+        if status == "starting" and channel == "shell":
+            shell_future.set_result(None)
 
-    ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
+    ipkernel._publish_status = fake_publish_status # type:ignore
     ipkernel.start()
-    ipkernel.debugpy_stream = None
-    ipkernel.start()
-    await ipkernel.process_one(False)
+
     await shell_future
+
+    shell_stream = ipkernel.shell_stream
+    assert shell_stream is not None
+    assert not shell_stream.closed()
 
 
 async def test_start_no_debugpy(ipkernel: IPythonKernel) -> None:
     shell_future: asyncio.Future = asyncio.Future()
 
-    async def fake_dispatch_queue():
-        shell_future.set_result(None)
+    def fake_publish_status(status, channel):
+        if status == "starting" and channel == "shell":
+            shell_future.set_result(None)
 
-    ipkernel.dispatch_queue = fake_dispatch_queue  # type:ignore
+    ipkernel._publish_status = fake_publish_status # type:ignore
     ipkernel.debugpy_stream = None
     ipkernel.start()
 
     await shell_future
+
+    shell_stream = ipkernel.shell_stream
+    assert shell_stream is not None
+    assert not shell_stream.closed()
 
 
 def test_create_comm():

@@ -145,11 +145,6 @@ async def test_dispatch_shell(kernel):
     await kernel.dispatch_shell(msg)
 
 
-async def test_do_one_iteration(kernel):
-    kernel.msg_queue = asyncio.Queue()
-    await kernel.do_one_iteration()
-
-
 async def test_publish_debug_event(kernel):
     kernel._publish_debug_event({})
 

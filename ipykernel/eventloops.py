@@ -40,8 +40,9 @@ def register_integration(*toolkitnames):
     You can provide alternative names for the same toolkit.
 
     The decorated function should take a single argument, the IPython kernel
-    instance, arrange for the event loop to call ``kernel.do_one_iteration()``
-    at least every ``kernel._poll_interval`` seconds, and start the event loop.
+    instance, arrange for the event loop to yield the asyncio loop when a
+    message is received by the main shell zmq stream or at least every
+    ``kernel._poll_interval`` seconds, and start the event loop.
 
     :mod:`ipykernel.eventloops` provides and registers such functions
     for a few common event loops.
@@ -68,6 +69,15 @@ def register_integration(*toolkitnames):
     return decorator
 
 
+def get_shell_stream(kernel):
+    # Return the zmq stream that receives messages for the main shell.
+    if kernel._supports_kernel_subshells:
+        manager = kernel.shell_channel_thread.manager
+        socket_pair = manager.get_shell_channel_to_subshell_pair(None)
+        return socket_pair.to_stream
+    return kernel.shell_stream
+
+
 def _notify_stream_qt(kernel):
     import operator
     from functools import lru_cache
@@ -87,17 +97,20 @@ def _notify_stream_qt(kernel):
         kernel._qt_notifier.setEnabled(False)
         kernel.app.qt_event_loop.quit()
 
-    def process_stream_events():
+    def process_stream_events_wrap(shell_stream):
         """fall back to main loop when there's a socket event"""
         # call flush to ensure that the stream doesn't lose events
         # due to our consuming of the edge-triggered FD
         # flush returns the number of events consumed.
         # if there were any, wake it up
-        if kernel.shell_stream.flush(limit=1):
+        if shell_stream.flush(limit=1):
             exit_loop()
 
+    shell_stream = get_shell_stream(kernel)
+    process_stream_events = partial(process_stream_events_wrap, shell_stream)
+
     if not hasattr(kernel, "_qt_notifier"):
-        fd = kernel.shell_stream.getsockopt(zmq.FD)
+        fd = shell_stream.getsockopt(zmq.FD)
         kernel._qt_notifier = QtCore.QSocketNotifier(
             fd, enum_helper("QtCore.QSocketNotifier.Type").Read, kernel.app.qt_event_loop
         )
@@ -177,9 +190,11 @@ def loop_wx(kernel):
     # Wx uses milliseconds
     poll_interval = int(1000 * kernel._poll_interval)
 
-    def wake():
+    shell_stream = get_shell_stream(kernel)
+
+    def wake(shell_stream):
         """wake from wx"""
-        if kernel.shell_stream.flush(limit=1):
+        if shell_stream.flush(limit=1):
             kernel.app.ExitMainLoop()
             return
 
@@ -201,7 +216,7 @@ def loop_wx(kernel):
     # wx.Timer to defer back to the tornado event loop.
     class IPWxApp(wx.App):  # type:ignore[misc]
         def OnInit(self):
-            self.frame = TimerFrame(wake)
+            self.frame = TimerFrame(partial(wake, shell_stream))
             self.frame.Show(False)
             return True
 
@@ -248,14 +263,14 @@ def loop_tk(kernel):
 
         def exit_loop():
             """fall back to main loop"""
-            app.tk.deletefilehandler(kernel.shell_stream.getsockopt(zmq.FD))
+            app.tk.deletefilehandler(shell_stream.getsockopt(zmq.FD))
             app.quit()
             app.destroy()
             del kernel.app_wrapper
 
-        def process_stream_events(*a, **kw):
+        def process_stream_events_wrap(shell_stream, *a, **kw):
             """fall back to main loop when there's a socket event"""
-            if kernel.shell_stream.flush(limit=1):
+            if shell_stream.flush(limit=1):
                 exit_loop()
 
         # allow for scheduling exits from the loop in case a timeout needs to
@@ -268,9 +283,10 @@ def loop_tk(kernel):
 
         # For Tkinter, we create a Tk object and call its withdraw method.
         kernel.app_wrapper = BasicAppWrapper(app)
-        app.tk.createfilehandler(
-            kernel.shell_stream.getsockopt(zmq.FD), READABLE, process_stream_events
-        )
+        shell_stream = get_shell_stream(kernel)
+        process_stream_events = partial(process_stream_events_wrap, shell_stream)
+
+        app.tk.createfilehandler(shell_stream.getsockopt(zmq.FD), READABLE, process_stream_events)
         # schedule initial call after start
         app.after(0, process_stream_events)
 
@@ -283,15 +299,19 @@ def loop_tk(kernel):
 
         nest_asyncio.apply()
 
-        doi = kernel.do_one_iteration
         # Tk uses milliseconds
         poll_interval = int(1000 * kernel._poll_interval)
 
+        shell_stream = get_shell_stream(kernel)
+
         class TimedAppWrapper:
-            def __init__(self, app, func):
+            def __init__(self, app, shell_stream):
                 self.app = app
+                self.shell_stream = shell_stream
                 self.app.withdraw()
-                self.func = func
+
+            async def func(self):
+                self.shell_stream.flush(limit=1)
 
             def on_timer(self):
                 loop = asyncio.get_event_loop()
@@ -305,7 +325,7 @@ def loop_tk(kernel):
                 self.on_timer()  # Call it once to get things going.
                 self.app.mainloop()
 
-        kernel.app_wrapper = TimedAppWrapper(app, doi)
+        kernel.app_wrapper = TimedAppWrapper(app, shell_stream)
         kernel.app_wrapper.start()
 
 
@@ -313,8 +333,10 @@ def loop_tk(kernel):
 def loop_tk_exit(kernel):
     """Exit the tk loop."""
     try:
+        kernel.app_wrapper.app.quit()
         kernel.app_wrapper.app.destroy()
         del kernel.app_wrapper
+        kernel.eventloop = None
     except (RuntimeError, AttributeError):
         pass
 
@@ -359,6 +381,7 @@ def loop_cocoa(kernel):
     from ._eventloop_macos import mainloop, stop
 
     real_excepthook = sys.excepthook
+    shell_stream = get_shell_stream(kernel)
 
     def handle_int(etype, value, tb):
         """don't let KeyboardInterrupts look like crashes"""
@@ -377,7 +400,7 @@ def loop_cocoa(kernel):
                 # don't let interrupts during mainloop invoke crash_handler:
                 sys.excepthook = handle_int
                 mainloop(kernel._poll_interval)
-                if kernel.shell_stream.flush(limit=1):
+                if shell_stream.flush(limit=1):
                     # events to process, return control to kernel
                     return
             except BaseException:
@@ -415,13 +438,14 @@ def loop_asyncio(kernel):
     loop._should_close = False  # type:ignore[attr-defined]
 
     # pause eventloop when there's an event on a zmq socket
-    def process_stream_events(stream):
+    def process_stream_events(shell_stream):
         """fall back to main loop when there's a socket event"""
-        if stream.flush(limit=1):
+        if shell_stream.flush(limit=1):
             loop.stop()
 
-    notifier = partial(process_stream_events, kernel.shell_stream)
-    loop.add_reader(kernel.shell_stream.getsockopt(zmq.FD), notifier)
+    shell_stream = get_shell_stream(kernel)
+    notifier = partial(process_stream_events, shell_stream)
+    loop.add_reader(shell_stream.getsockopt(zmq.FD), notifier)
     loop.call_soon(notifier)
 
     while True:

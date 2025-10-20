@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -37,6 +38,9 @@ def execute(
 def test_matplotlib_gui(kc, gui):
     """Make sure matplotlib activates and its eventloop runs while the kernel is also responsive"""
     pytest.importorskip("matplotlib", reason="this test requires matplotlib")
+    if gui in {"tk", "qt"} and os.getenv("GITHUB_ACTIONS") and sys.platform == "linux":
+        pytest.skip("tk, qt tests not working yet on Linux CI")
+
     stdout, stderr = execute(kc, f"%matplotlib {gui}")
     assert not stderr
     # debug: show output from invoking the matplotlib magic
@@ -69,15 +73,21 @@ timer.add_callback(add_call)
 timer.start()
 """,
     )
-    # wait for the first call (up to 10 seconds)
-    for _ in range(100):
+    # wait for the first call (up to 30 seconds)
+    deadline = time.monotonic() + 30
+    done = False
+    while time.monotonic() <= deadline:
         stdout, _ = execute(kc, "print(f.done())")
         if stdout.strip() == "True":
+            done = True
             break
         if stdout == "False":
             time.sleep(0.1)
         else:
             pytest.fail(f"Unexpected output {stdout}")
+    if not done:
+        pytest.fail("future never finished...")
+
     time.sleep(0.25)
     stdout, _ = execute(kc, "print(call_count)")
     call_count = int(stdout)

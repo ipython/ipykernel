@@ -39,6 +39,8 @@ def test_matplotlib_gui(kc, gui):
     pytest.importorskip("matplotlib", reason="this test requires matplotlib")
     stdout, stderr = execute(kc, f"%matplotlib {gui}")
     assert not stderr
+    # debug: show output from invoking the matplotlib magic
+    print(stdout)
     execute(
         kc,
         """

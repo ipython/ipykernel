@@ -97,7 +97,7 @@ def _notify_stream_qt(kernel):
         kernel._qt_notifier.setEnabled(False)
         kernel.app.qt_event_loop.quit()
 
-    def process_stream_events_wrap(shell_stream):
+    def process_stream_events_wrap(shell_stream, *args, **kwargs):
         """fall back to main loop when there's a socket event"""
         # call flush to ensure that the stream doesn't lose events
         # due to our consuming of the edge-triggered FD

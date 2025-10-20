@@ -53,6 +53,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: setup xvfb
+        if: ${{ startsWith(matrix.runs-on, 'ubuntu) }}
+        run: |
+          echo "PRE_TEST=xvfb-run --auto-servernum" >> "$GITHUB_ENV"
+
       - name: set qt env
         run: |
           echo "QT=${{ matrix.qt }}" >> $GITHUB_ENV
@@ -67,19 +72,19 @@ jobs:
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:test --cov-fail-under 50
+          ${PRE_TEST-} hatch run cov:test --cov-fail-under 50
 
       - name: Run the tests on pypy
         timeout-minutes: 15
         if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
         run: |
-          hatch run test:nowarn --ignore=tests/test_debugger.py
+          ${PRE_TEST-} hatch run test:nowarn --ignore=tests/test_debugger.py
 
       - name: Run the tests on Windows
         timeout-minutes: 15
         if: ${{ !startsWith( matrix.python-version, 'pypy' ) && startsWith(matrix.os, 'windows') }}
         run: |
-          hatch run cov:nowarn
+          ${PRE_TEST-} hatch run cov:nowarn
 
       - name: Check Launcher
         run: |

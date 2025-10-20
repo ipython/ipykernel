@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 
@@ -38,9 +37,6 @@ def execute(
 def test_matplotlib_gui(kc, gui):
     """Make sure matplotlib activates and its eventloop runs while the kernel is also responsive"""
     pytest.importorskip("matplotlib", reason="this test requires matplotlib")
-    if gui in {"tk", "qt"} and os.getenv("GITHUB_ACTIONS") and sys.platform == "linux":
-        pytest.skip("tk, qt tests not working yet on Linux CI")
-
     stdout, stderr = execute(kc, f"%matplotlib {gui}")
     assert not stderr
     # debug: show output from invoking the matplotlib magic

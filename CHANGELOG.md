@@ -2,6 +2,31 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 6.31.0
+
+IPykernel 6.31.0 fixes an issue where display outputs such as Matplotlib plots were not included when using `%notebook` magic to save sessions as `.ipynb` files. This is enabled using the traitlet `ZMQDisplayPublisher.store_display_history` which defaults to the previous behaviour of `False`. This is a minor release rather than a patch release due to the addition of the new traitlet.
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v6.30.1...01c1e8fe43047050f29d8728eabf4e4de14b624b))
+
+### Enhancements made
+
+- Backport PR #1435: Store display outputs in history for `%notebook` magic [#1461](https://github.com/ipython/ipykernel/pull/1461) ([@Darshan808](https://github.com/Darshan808))
+
+### Maintenance and upkeep improvements
+
+- Backport PR #1453: update tests for 3.14 [#1460](https://github.com/ipython/ipykernel/pull/1460) ([@minrk](https://github.com/minrk))
+- Backport PR #1444: Test on PyPy 3.11 instead of 3.10 [#1459](https://github.com/ipython/ipykernel/pull/1459) ([@cclauss](https://github.com/cclauss))
+- 6.x: Update PEP-639 license values in pyproject.toml [#1446](https://github.com/ipython/ipykernel/pull/1446) ([@bollwyvl](https://github.com/bollwyvl))
+- Backport PR #1411: Replace `@flaky.flaky` decorate with pytest fixture [#1421](https://github.com/ipython/ipykernel/pull/1421) ([@mgorny](https://github.com/mgorny))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-08-04&to=2025-10-20&type=c))
+
+[@bollwyvl](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abollwyvl+updated%3A2025-08-04..2025-10-20&type=Issues) | [@cclauss](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Acclauss+updated%3A2025-08-04..2025-10-20&type=Issues) | [@Darshan808](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ADarshan808+updated%3A2025-08-04..2025-10-20&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-08-04..2025-10-20&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2025-08-04..2025-10-20&type=Issues) | [@lumberbot-app](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Alumberbot-app+updated%3A2025-08-04..2025-10-20&type=Issues) | [@meeseeksmachine](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ameeseeksmachine+updated%3A2025-08-04..2025-10-20&type=Issues) | [@mgorny](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Amgorny+updated%3A2025-08-04..2025-10-20&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2025-08-04..2025-10-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 6.30.1
 
 This is a bugfix release to fix a significant bug introduced in 6.30.0 that allowed control messages to be handled concurrently rather than sequentially which broke debugging in JupyterLab and VSCode.
@@ -21,8 +46,6 @@ This is a bugfix release to fix a significant bug introduced in 6.30.0 that allo
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-07-21&to=2025-08-04&type=c))
 
 [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-07-21..2025-08-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 6.30.0
 

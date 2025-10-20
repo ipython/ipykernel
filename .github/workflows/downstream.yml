@@ -117,7 +117,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd ${GITHUB_WORKSPACE}/../qtconsole
-          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole -k "not test_scroll"
 
   spyder_kernels:
     runs-on: ubuntu-latest

@@ -36,7 +36,14 @@ class LazyDict(Mapping[str, t.Any]):
         return iter(self._dict)
 
 
-def _async_in_context(f: Callable, context: Context | None = None) -> Callable:
+T = t.TypeVar("T")
+U = t.TypeVar("U")
+V = t.TypeVar("V")
+
+
+def _async_in_context(
+    f: Callable[..., t.Coroutine[T, U, V]], context: Context | None = None
+) -> Callable[..., t.Coroutine[T, U, V]]:
     """
     Wrapper to run a coroutine in a persistent ContextVar Context.
 
@@ -56,7 +63,7 @@ def _async_in_context(f: Callable, context: Context | None = None) -> Callable:
 
     # don't need this backport when we require 3.11
     # context_holder so we have a modifiable container for later calls
-    context_holder = [context]
+    context_holder = [context]  # type: ignore[unreachable]
 
     async def preserve_context(f, *args, **kwargs):
         """call a coroutine, preserving the context after it is called"""
@@ -67,8 +74,8 @@ def _async_in_context(f: Callable, context: Context | None = None) -> Callable:
             context_holder[0] = copy_context()
 
     @wraps(f)
-    async def run_in_context(*args, **kwargs):
+    async def run_in_context_pre311(*args, **kwargs):
         ctx = context_holder[0]
         return await ctx.run(partial(asyncio.create_task, preserve_context(f, *args, **kwargs)))
 
-    return run_in_context
+    return run_in_context_pre311

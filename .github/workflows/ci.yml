@@ -54,7 +54,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: setup xvfb
-        if: ${{ startsWith(matrix.runs-on, 'ubuntu) }}
+        if: ${{ startsWith(matrix.runs-on, 'ubuntu') }}
         run: |
           echo "PRE_TEST=xvfb-run --auto-servernum" >> "$GITHUB_ENV"
 

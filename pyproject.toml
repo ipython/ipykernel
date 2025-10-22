@@ -57,6 +57,7 @@ docs = [
 test = [
     "pytest>=7.0,<9",
     "pytest-cov",
+    'pytest-xvfb; platform_system == "Linux"',
     "flaky",
     "ipyparallel",
     "pre-commit",

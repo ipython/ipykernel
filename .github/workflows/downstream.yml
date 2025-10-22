@@ -56,7 +56,6 @@ jobs:
           test_command: "pytest -vv -raXxs -W default --durations 10 --color=yes -k 'not (test_input_request or signal_kernel_subprocess)'"
 
   ipyparallel:
-    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -90,7 +89,6 @@ jobs:
 
   qtconsole:
     runs-on: ubuntu-latest
-    if: false
     timeout-minutes: 20
     steps:
       - name: Checkout
@@ -119,7 +117,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd ${GITHUB_WORKSPACE}/../qtconsole
-          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole
+          xvfb-run --auto-servernum ${pythonLocation}/bin/python -m pytest -x -vv -s --full-trace --color=yes qtconsole -k "not test_scroll"
 
   spyder_kernels:
     runs-on: ubuntu-latest

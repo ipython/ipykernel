@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from threading import current_thread
 from typing import Any
 
 import zmq
@@ -25,15 +27,20 @@ class ShellChannelThread(BaseThread):
         """Initialize the thread."""
         super().__init__(name=SHELL_CHANNEL_THREAD_NAME, **kwargs)
         self._manager: SubshellManager | None = None
-        self._context = context
+        self._zmq_context = context  # Avoid use of self._context
         self._shell_socket = shell_socket
+        # Record the parent thread - the thread that started the app (usually the main thread)
+        self.parent_thread = current_thread()
+
+        self.asyncio_lock = asyncio.Lock()
 
     @property
     def manager(self) -> SubshellManager:
         # Lazy initialisation.
         if self._manager is None:
+            assert current_thread() == self.parent_thread
             self._manager = SubshellManager(
-                self._context,
+                self._zmq_context,
                 self.io_loop,
                 self._shell_socket,
             )

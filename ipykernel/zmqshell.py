@@ -35,11 +35,16 @@ from IPython.utils import openpy
 from IPython.utils.process import arg_split, system  # type:ignore[attr-defined]
 from jupyter_client.session import Session, extract_header
 from jupyter_core.paths import jupyter_runtime_dir
-from traitlets import Any, CBool, CBytes, Instance, Type, default, observe
+from traitlets import Any, Bool, CBool, CBytes, Instance, Type, default, observe
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
 from ipykernel.jsonutil import encode_images, json_clean
+
+try:
+    from IPython.core.history import HistoryOutput
+except ImportError:
+    HistoryOutput = None  # type: ignore[assignment,misc]
 
 # -----------------------------------------------------------------------------
 # Functions and classes
@@ -54,6 +59,11 @@ class ZMQDisplayPublisher(DisplayPublisher):
     _parent_header: contextvars.ContextVar[dict[str, Any]]
     topic = CBytes(b"display_data")
 
+    store_display_history = Bool(
+        False,
+        help="If set to True, store display outputs in the history manager. Default is False.",
+    ).tag(config=True)
+
     # thread_local:
     # An attribute used to ensure the correct output message
     # is processed. See ipykernel Issue 113 for a discussion.
@@ -63,14 +73,20 @@ class ZMQDisplayPublisher(DisplayPublisher):
         super().__init__(*args, **kwargs)
         self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
+        self._parent_header_global = {}
 
     @property
     def parent_header(self):
-        return self._parent_header.get()
+        try:
+            return self._parent_header.get()
+        except LookupError:
+            return self._parent_header_global
 
     def set_parent(self, parent):
         """Set the parent for outbound messages."""
-        self._parent_header.set(extract_header(parent))
+        parent_header = extract_header(parent)
+        self._parent_header.set(parent_header)
+        self._parent_header_global = parent_header
 
     def _flush_streams(self):
         """flush IO Streams prior to display"""
@@ -115,6 +131,21 @@ class ZMQDisplayPublisher(DisplayPublisher):
         update : bool, optional, keyword-only
             If True, send an update_display_data message instead of display_data.
         """
+        if (
+            self.store_display_history
+            and self.shell is not None
+            and hasattr(self.shell, "history_manager")
+            and HistoryOutput is not None
+        ):
+            # Reference: github.com/ipython/ipython/pull/14998
+            exec_count = self.shell.execution_count
+            if getattr(self.shell.display_pub, "_in_post_execute", False):
+                exec_count -= 1
+            outputs = getattr(self.shell.history_manager, "outputs", None)
+            if outputs is not None:
+                outputs.setdefault(exec_count, []).append(
+                    HistoryOutput(output_type="display_data", bundle=data)
+                )
         self._flush_streams()
         if metadata is None:
             metadata = {}
@@ -673,11 +704,23 @@ class ZMQInteractiveShell(InteractiveShell):
 
     @property
     def parent_header(self):
-        return self._parent_header.get()
+        try:
+            return self._parent_header.get()
+        except LookupError:
+            return self._parent_header_global
+
+    @parent_header.setter
+    def parent_header(self, value):
+        self._parent_header_global = value
+        self._parent_header.set(value)
 
     def set_parent(self, parent):
-        """Set the parent header for associating output with its triggering input"""
-        self._parent_header.set(parent)
+        """Set the parent header for associating output with its triggering input
+
+        When called from a thread, sets the thread-local value, which persists
+        until the next call from this thread.
+        """
+        self.parent_header = parent
         self.displayhook.set_parent(parent)  # type:ignore[attr-defined]
         self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
         if hasattr(self, "_data_pub"):
@@ -688,7 +731,12 @@ class ZMQInteractiveShell(InteractiveShell):
             sys.stderr.set_parent(parent)
 
     def get_parent(self):
-        """Get the parent header."""
+        """Get the parent header.
+
+        If set_parent has never been called from the current thread,
+        the value from the last call to set_parent from _any_ thread will be used
+        (typically the currently running cell).
+        """
         return self.parent_header
 
     def init_magics(self):

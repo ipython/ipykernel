@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import typing as t
 import uuid
 from functools import partial
-from threading import Lock, current_thread, main_thread
+from threading import Lock, current_thread
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -40,14 +41,13 @@ class SubshellManager:
         shell_socket: zmq.Socket[t.Any],
     ):
         """Initialize the subshell manager."""
-        assert current_thread() == main_thread()
+        self._parent_thread = current_thread()
 
         self._context: zmq.Context[t.Any] = context
         self._shell_channel_io_loop = shell_channel_io_loop
         self._shell_socket = shell_socket
         self._cache: dict[str, SubshellThread] = {}
-        self._lock_cache = Lock()
-        self._lock_shell_socket = Lock()
+        self._lock_cache = Lock()  # Sync lock across threads when accessing cache.
 
         # Inproc socket pair for communication from control thread to shell channel thread,
         # such as for create_subshell_request messages. Reply messages are returned straight away.
@@ -107,7 +107,13 @@ class SubshellManager:
 
     def get_subshell_aborting(self, subshell_id: str) -> bool:
         """Get the boolean aborting flag of the specified subshell."""
-        return self._cache[subshell_id].aborting
+        with self._lock_cache:
+            return self._cache[subshell_id].aborting
+
+    def get_subshell_asyncio_lock(self, subshell_id: str) -> asyncio.Lock:
+        """Return the asyncio lock belonging to the specified subshell."""
+        with self._lock_cache:
+            return self._cache[subshell_id].asyncio_lock
 
     def list_subshell(self) -> list[str]:
         """Return list of current subshell ids.
@@ -121,7 +127,7 @@ class SubshellManager:
         """Set the callback used by the main shell and all subshells to receive
         messages sent from the shell channel thread.
         """
-        assert current_thread() == main_thread()
+        assert current_thread() == self._parent_thread
         self._on_recv_callback = on_recv_callback
         self._shell_channel_to_main.on_recv(IOLoop.current(), partial(self._on_recv_callback, None))
 
@@ -138,7 +144,7 @@ class SubshellManager:
         Only used by %subshell magic so does not have to be fast/cached.
         """
         with self._lock_cache:
-            if thread_id == main_thread().ident:
+            if thread_id == self._parent_thread.ident:
                 return None
             for id, subshell in self._cache.items():
                 if subshell.ident == thread_id:
@@ -216,8 +222,7 @@ class SubshellManager:
 
     def _send_on_shell_channel(self, msg) -> None:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
-        with self._lock_shell_socket:
-            self._shell_socket.send_multipart(msg)
+        self._shell_socket.send_multipart(msg)
 
     def _stop_subshell(self, subshell_thread: SubshellThread) -> None:
         """Stop a subshell thread and close all of its resources."""

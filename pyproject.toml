@@ -1,12 +1,12 @@
 [build-system]
-requires = ["hatchling>=1.4", "jupyter_client>=6"]
+requires = ["hatchling>=1.22", "jupyter_client>=6"]
 build-backend = "hatchling.build"
 
 [project]
 name = "ipykernel"
 dynamic = ["version"]
 authors = [{name = "IPython Development Team", email = "ipython-dev@scipy.org"}]
-license = {file = "LICENSE"}
+license = "BSD-3-Clause"
 readme = "README.md"
 description = "IPython Kernel for Jupyter"
 keywords = ["Interactive", "Interpreter", "Shell", "Web"]
@@ -103,13 +103,10 @@ features = ["test", "cov"]
 test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
 
-[[tool.hatch.envs.cov.matrix]]
-qt = ["qt5", "qt6"]
-
 [tool.hatch.envs.cov.overrides]
-matrix.qt.features = [
-  { value = "pyqt5", if = ["qt5"] },
-  { value = "pyside6", if = ["qt6"] },
+env.QT.features = [
+    { value = "pyqt5", if = ["qt5"] },
+    { value = "pyside6", if = ["qt6"] },
 ]
 
 [tool.hatch.envs.typing]

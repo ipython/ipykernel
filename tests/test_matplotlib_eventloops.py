@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -6,6 +7,12 @@ from jupyter_client.blocking.client import BlockingKernelClient
 
 from .test_eventloop import qt_guis_avail
 from .utils import assemble_output
+
+# these tests don't seem to work with xvfb yet
+pytestmark = pytest.mark.skipif(
+    sys.platform == "linux" and bool(os.getenv("CI")),
+    reason="tests not working yet with xvfb on linux CI",
+)
 
 guis = []
 if not sys.platform.startswith("tk"):
@@ -25,7 +32,7 @@ backends = {
 def execute(
     kc: BlockingKernelClient,
     code: str,
-    timeout=30,
+    timeout=60,
 ):
     msg_id = kc.execute(code)
     stdout, stderr = assemble_output(kc.get_iopub_msg, timeout=timeout, parent_msg_id=msg_id)

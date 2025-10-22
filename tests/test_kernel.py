@@ -848,3 +848,33 @@ def test_parent_header_and_ident():
         msg_id, _ = execute(kc=kc, code="print(k._parent_ident['control'])")
         stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
         assert stdout == f"[b'{session}']\n"
+
+
+def test_context_vars():
+    with new_kernel() as kc:
+        msg_id, _ = execute(
+            kc=kc,
+            code="from contextvars import ContextVar, copy_context\nctxvar = ContextVar('var', default='default')",
+        )
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+
+        msg_id, _ = execute(
+            kc=kc,
+            code="print(ctxvar.get())",
+        )
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+        assert stdout.strip() == "default"
+
+        msg_id, _ = execute(
+            kc=kc,
+            code="ctxvar.set('set'); print(ctxvar.get())",
+        )
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+        assert stdout.strip() == "set"
+
+        msg_id, _ = execute(
+            kc=kc,
+            code="print(ctxvar.get())",
+        )
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+        assert stdout.strip() == "set"

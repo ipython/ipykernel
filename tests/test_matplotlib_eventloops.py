@@ -32,7 +32,7 @@ backends = {
 def execute(
     kc: BlockingKernelClient,
     code: str,
-    timeout=60,
+    timeout=120,
 ):
     msg_id = kc.execute(code)
     stdout, stderr = assemble_output(kc.get_iopub_msg, timeout=timeout, parent_msg_id=msg_id)

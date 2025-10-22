@@ -34,6 +34,7 @@ def execute(
 
 
 @pytest.mark.parametrize("gui", guis)
+@pytest.mark.timeout(300)
 def test_matplotlib_gui(kc, gui):
     """Make sure matplotlib activates and its eventloop runs while the kernel is also responsive"""
     pytest.importorskip("matplotlib", reason="this test requires matplotlib")

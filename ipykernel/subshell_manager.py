@@ -15,6 +15,7 @@ from tornado.ioloop import IOLoop
 from .socket_pair import SocketPair
 from .subshell import SubshellThread
 from .thread import SHELL_CHANNEL_THREAD_NAME
+from .utils import _async_in_context
 
 
 class SubshellManager:
@@ -129,7 +130,9 @@ class SubshellManager:
         """
         assert current_thread() == self._parent_thread
         self._on_recv_callback = on_recv_callback
-        self._shell_channel_to_main.on_recv(IOLoop.current(), partial(self._on_recv_callback, None))
+        self._shell_channel_to_main.on_recv(
+            IOLoop.current(), _async_in_context(partial(on_recv_callback, None))
+        )
 
     def set_subshell_aborting(self, subshell_id: str, aborting: bool) -> None:
         """Set the aborting flag of the specified subshell."""
@@ -165,7 +168,7 @@ class SubshellManager:
 
         subshell_thread.shell_channel_to_subshell.on_recv(
             subshell_thread.io_loop,
-            partial(self._on_recv_callback, subshell_id),
+            _async_in_context(partial(self._on_recv_callback, subshell_id)),
         )
 
         subshell_thread.subshell_to_shell_channel.on_recv(

@@ -60,7 +60,7 @@ from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
 from .iostream import OutStream
-from .utils import LazyDict
+from .utils import LazyDict, _async_in_context
 
 _AWAITABLE_MESSAGE: str = (
     "For consistency across implementations, it is recommended that `{func_name}`"
@@ -557,7 +557,7 @@ class Kernel(SingletonConfigurable):
                 self.shell_stream.on_recv(self.shell_channel_thread_main, copy=False)
             else:
                 self.shell_stream.on_recv(
-                    partial(self.shell_main, None),
+                    _async_in_context(partial(self.shell_main, None)),
                     copy=False,
                 )
 

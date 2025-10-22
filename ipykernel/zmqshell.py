@@ -570,7 +570,7 @@ class ZMQInteractiveShell(InteractiveShell):
     # Over ZeroMQ, GUI control isn't done with PyOS_InputHook as there is no
     # interactive input being read; we provide event loop support in ipkernel
     def enable_gui(self, gui: typing.Any = None) -> None:
-        """Enable a given guil."""
+        """Enable a given gui."""
         from .eventloops import enable_gui as real_enable_gui
 
         try:

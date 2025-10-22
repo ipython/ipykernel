@@ -100,6 +100,14 @@ def test_cocoa_loop(kernel):
 
 @pytest.mark.parametrize("gui", qt_guis_avail)
 def test_qt_enable_gui(gui, kernel, capsys):
+    if os.getenv("GITHUB_ACTIONS", None) == "true" and gui == "qt5":
+        pytest.skip("Qt5 and GitHub action crash CPython")
+    if gui == "qt6" and sys.version_info < (3, 10):
+        pytest.skip(
+            "qt6 fails on 3.9 with AttributeError: module 'PySide6.QtPrintSupport' has no attribute 'QApplication'"
+        )
+    if sys.platform == "linux" and gui == "qt6" and os.getenv("GITHUB_ACTIONS", None) == "true":
+        pytest.skip("qt6 fails on github CI with missing libEGL.so.1")
     enable_gui(gui, kernel)
 
     # We store the `QApplication` instance in the kernel.

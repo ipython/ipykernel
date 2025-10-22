@@ -58,7 +58,7 @@ windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on w
 
 # some part of this module seems to hang when run with xvfb
 pytestmark = pytest.mark.skipif(
-    sys.platform == "linux" and os.getenv("CI"), reason="hangs on linux CI"
+    sys.platform == "linux" and bool(os.getenv("CI")), reason="hangs on linux CI"
 )
 
 

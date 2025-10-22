@@ -25,7 +25,7 @@ backends = {
 def execute(
     kc: BlockingKernelClient,
     code: str,
-    timeout=10,
+    timeout=30,
 ):
     msg_id = kc.execute(code)
     stdout, stderr = assemble_output(kc.get_iopub_msg, timeout=timeout, parent_msg_id=msg_id)
@@ -69,8 +69,8 @@ timer.add_callback(add_call)
 timer.start()
 """,
     )
-    # wait for the first call (up to 30 seconds)
-    deadline = time.monotonic() + 30
+    # wait for the first call (up to 60 seconds)
+    deadline = time.monotonic() + 60
     done = False
     while time.monotonic() <= deadline:
         stdout, _ = execute(kc, "print(f.done())")

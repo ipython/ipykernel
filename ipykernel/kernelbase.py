@@ -862,7 +862,7 @@ class Kernel(SingletonConfigurable):
             subshell_id = parent["header"].get("subshell_id")
             self._abort_queues(subshell_id)
 
-    def do_execute(
+    async def do_execute(
         self,
         code,
         silent,
@@ -897,7 +897,7 @@ class Kernel(SingletonConfigurable):
         matches = json_clean(matches)
         self.session.send(stream, "complete_reply", matches, parent, ident)
 
-    def do_complete(self, code, cursor_pos):
+    async def do_complete(self, code, cursor_pos):
         """Override in subclasses to find completions."""
         return {
             "matches": [],
@@ -933,7 +933,7 @@ class Kernel(SingletonConfigurable):
         msg = self.session.send(stream, "inspect_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
+    async def do_inspect(self, code, cursor_pos, detail_level=0, omit_sections=()):
         """Override in subclasses to allow introspection."""
         return {"status": "ok", "data": {}, "metadata": {}, "found": False}
 
@@ -957,7 +957,7 @@ class Kernel(SingletonConfigurable):
         msg = self.session.send(stream, "history_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
-    def do_history(
+    async def do_history(
         self,
         hist_access_type,
         output,
@@ -1097,7 +1097,7 @@ class Kernel(SingletonConfigurable):
             shell_io_loop = self.shell_stream.io_loop
             shell_io_loop.add_callback(shell_io_loop.stop)
 
-    def do_shutdown(self, restart):
+    async def do_shutdown(self, restart):
         """Override in subclasses to do things when the frontend shuts down the
         kernel.
         """
@@ -1123,7 +1123,7 @@ class Kernel(SingletonConfigurable):
         reply_msg = self.session.send(stream, "is_complete_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
-    def do_is_complete(self, code):
+    async def do_is_complete(self, code):
         """Override in subclasses to find completions."""
         return {"status": "unknown"}
 

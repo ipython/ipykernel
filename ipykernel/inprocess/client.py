@@ -206,7 +206,7 @@ class InProcessKernelClient(KernelClient):
         else:
             loop = asyncio.get_event_loop()  # type:ignore[unreachable]
             loop.run_until_complete(kernel.dispatch_shell(msg_parts))
-        idents, reply_msg = self.session.recv(stream, copy=False)
+        _idents, reply_msg = self.session.recv(stream, copy=False)
         self.shell_channel.call_handlers_later(reply_msg)
 
     def get_shell_msg(self, block=True, timeout=None):

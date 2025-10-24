@@ -222,7 +222,7 @@ def test_echo_watch(ctx):
         print(f"{p.stderr}=", file=sys.stderr)
         assert p.returncode == 0
         while s.poll(timeout=100):
-            ident, msg = session.recv(s)
+            _ident, msg = session.recv(s)
             assert msg is not None  # for type narrowing
             if msg["header"]["msg_type"] == "stream" and msg["content"]["name"] == "stdout":
                 stdout_chunks.append(msg["content"]["text"])

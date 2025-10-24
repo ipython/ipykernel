@@ -34,8 +34,8 @@ from .utils import (
 def _check_master(kc, expected=True, stream="stdout"):
     execute(kc=kc, code="import sys")
     flush_channels(kc)
-    msg_id, content = execute(kc=kc, code="print(sys.%s._is_master_process())" % stream)
-    stdout, stderr = assemble_output(kc.get_iopub_msg)
+    _msg_id, _content = execute(kc=kc, code="print(sys.%s._is_master_process())" % stream)
+    stdout, _stderr = assemble_output(kc.get_iopub_msg)
     assert stdout.strip() == repr(expected)
 
 
@@ -51,7 +51,7 @@ def _check_status(content):
 def test_simple_print():
     """simple print statement in kernel"""
     with kernel() as kc:
-        msg_id, content = execute(kc=kc, code="print('hi')")
+        _msg_id, _content = execute(kc=kc, code="print('hi')")
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == "hi\n"
         assert stderr == ""
@@ -251,7 +251,7 @@ def test_capture_fd():
     """simple print statement in kernel"""
     with kernel() as kc:
         iopub = kc.iopub_channel
-        msg_id, content = execute(kc=kc, code="import os; os.system('echo capsys')")
+        _msg_id, _content = execute(kc=kc, code="import os; os.system('echo capsys')")
         stdout, stderr = assemble_output(iopub)
         assert stdout == "capsys\n"
         assert stderr == ""
@@ -262,7 +262,7 @@ def test_capture_fd():
 def test_subprocess_peek_at_stream_fileno():
     with kernel() as kc:
         iopub = kc.iopub_channel
-        msg_id, content = execute(
+        _msg_id, _content = execute(
             kc=kc,
             code="import subprocess, sys; subprocess.run(['python', '-c', 'import os; os.system(\"echo CAP1\"); print(\"CAP2\")'], stderr=sys.stderr)",
         )
@@ -275,7 +275,7 @@ def test_subprocess_peek_at_stream_fileno():
 def test_sys_path():
     """test that sys.path doesn't get messed up by default"""
     with kernel() as kc:
-        msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
+        _msg_id, _content = execute(kc=kc, code="import sys; print(repr(sys.path))")
         stdout, stderr = assemble_output(kc.get_iopub_msg)
     # for error-output on failure
     sys.stderr.write(stderr)
@@ -288,7 +288,7 @@ def test_sys_path_profile_dir():
     """test that sys.path doesn't get messed up when `--profile-dir` is specified"""
 
     with new_kernel(["--profile-dir", locate_profile("default")]) as kc:
-        msg_id, content = execute(kc=kc, code="import sys; print(repr(sys.path))")
+        _msg_id, _content = execute(kc=kc, code="import sys; print(repr(sys.path))")
         stdout, stderr = assemble_output(kc.get_iopub_msg)
     # for error-output on failure
     sys.stderr.write(stderr)
@@ -323,7 +323,7 @@ def test_subprocess_print():
             ]
         )
 
-        msg_id, content = execute(kc=kc, code=code)
+        _msg_id, _content = execute(kc=kc, code=code)
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout.count("hello") == np, stdout
         for n in range(np):
@@ -347,7 +347,7 @@ def test_subprocess_noprint():
             ]
         )
 
-        msg_id, content = execute(kc=kc, code=code)
+        _msg_id, _content = execute(kc=kc, code=code)
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == ""
         assert stderr == ""
@@ -373,7 +373,7 @@ def test_subprocess_error():
             ]
         )
 
-        msg_id, content = execute(kc=kc, code=code)
+        _msg_id, _content = execute(kc=kc, code=code)
         stdout, stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == ""
         assert "ValueError" in stderr
@@ -400,7 +400,7 @@ def test_raw_input():
         kc.input(text)
         reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply["content"]["status"] == "ok"
-        stdout, stderr = assemble_output(kc.get_iopub_msg)
+        stdout, _stderr = assemble_output(kc.get_iopub_msg)
         assert stdout == text + "\n"
 
 
@@ -555,7 +555,7 @@ def test_unc_paths():
         kc.execute(code="ls")
         reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply["content"]["status"] == "ok"
-        out, err = assemble_output(kc.get_iopub_msg)
+        out, _err = assemble_output(kc.get_iopub_msg)
         assert "unc.txt" in out
 
         kc.execute(code="cd")
@@ -774,7 +774,7 @@ def test_shutdown_subprocesses():
     """Kernel exits after polite shutdown_request"""
     with new_kernel() as kc:
         km = kc.parent
-        msg_id, reply = execute(
+        _msg_id, reply = execute(
             f"from {__name__} import _start_children\n_start_children()",
             kc=kc,
             user_expressions={

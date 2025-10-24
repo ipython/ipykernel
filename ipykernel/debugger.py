@@ -429,7 +429,7 @@ class Debugger:
                 (self.shell_socket.getsockopt(ROUTING_ID)),
             )
 
-            ident, msg = self.session.recv(self.shell_socket, mode=0)
+            _ident, msg = self.session.recv(self.shell_socket, mode=0)
             self.debugpy_initialized = msg["content"]["status"] == "ok"
 
         # Don't remove leading empty lines when debugging so the breakpoints are correctly positioned

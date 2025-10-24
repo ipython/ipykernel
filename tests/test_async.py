@@ -23,7 +23,7 @@ def _setup_env():
 
 def test_async_await():
     flush_channels(KC)
-    msg_id, content = execute("import asyncio; await asyncio.sleep(0.1)", KC)
+    _msg_id, content = execute("import asyncio; await asyncio.sleep(0.1)", KC)
     assert content["status"] == "ok", content
 
 

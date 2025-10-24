@@ -64,7 +64,7 @@ def setup_kernel(cmd):
         time.sleep(0.1)
 
         if kernel.poll() is not None:
-            o, e = kernel.communicate()
+            _o, e = kernel.communicate()
             raise OSError("Kernel failed to start:\n%s" % e)
 
         if not os.path.exists(connection_file):

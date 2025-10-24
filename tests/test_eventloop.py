@@ -56,6 +56,11 @@ def _setup_env():
 
 windows_skip = pytest.mark.skipif(os.name == "nt", reason="causing failures on windows")
 
+# some part of this module seems to hang when run with xvfb
+pytestmark = pytest.mark.skipif(
+    sys.platform == "linux" and bool(os.getenv("CI")), reason="hangs on linux CI"
+)
+
 
 @windows_skip
 @pytest.mark.skipif(sys.platform == "darwin", reason="hangs on macos")

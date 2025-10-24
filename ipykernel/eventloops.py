@@ -373,7 +373,7 @@ def loop_gtk3_exit(kernel):
     kernel._gtk.stop()
 
 
-@register_integration("osx")
+@register_integration("osx", "macosx")
 def loop_cocoa(kernel):
     """Start the kernel, coordinating with the Cocoa CFRunLoop event loop
     via the matplotlib MacOSX backend.

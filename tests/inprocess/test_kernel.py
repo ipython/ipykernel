@@ -57,7 +57,7 @@ def test_pylab(kc):
     """Does %pylab work in the in-process kernel?"""
     _ = pytest.importorskip("matplotlib", reason="This test requires matplotlib")
     kc.execute("%pylab")
-    out, err = assemble_output(kc.get_iopub_msg)
+    out, _err = assemble_output(kc.get_iopub_msg)
     assert "matplotlib" in out
 
 
@@ -85,7 +85,7 @@ def test_stdout(kc):
     kc = BlockingInProcessKernelClient(kernel=kernel, session=kernel.session)
     kernel.frontends.append(kc)
     kc.execute('print("bar")')
-    out, err = assemble_output(kc.get_iopub_msg)
+    out, _err = assemble_output(kc.get_iopub_msg)
     assert out == "bar\n"
 
 
@@ -102,7 +102,7 @@ def test_capfd(kc):
     kernel.frontends.append(kc)
     kc.execute("import os")
     kc.execute('os.system("echo capfd")')
-    out, err = assemble_output(kc.iopub_channel)
+    out, _err = assemble_output(kc.iopub_channel)
     assert out == "capfd\n"
 
 

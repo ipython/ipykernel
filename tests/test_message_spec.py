@@ -426,7 +426,7 @@ def test_non_execute_stop_on_error():
 def test_user_expressions():
     flush_channels()
 
-    msg_id, reply = execute(code="x=1", user_expressions=dict(foo="x+1"))
+    _msg_id, reply = execute(code="x=1", user_expressions=dict(foo="x+1"))
     user_expressions = reply["user_expressions"]
     assert user_expressions == {
         "foo": {
@@ -440,7 +440,7 @@ def test_user_expressions():
 def test_user_expressions_fail():
     flush_channels()
 
-    msg_id, reply = execute(code="x=0", user_expressions=dict(foo="nosuchname"))
+    _msg_id, reply = execute(code="x=0", user_expressions=dict(foo="nosuchname"))
     user_expressions = reply["user_expressions"]
     foo = user_expressions["foo"]
     assert foo["status"] == "error"
@@ -572,7 +572,7 @@ def test_single_payload():
     transform) should avoid setting multiple set_next_input).
     """
     flush_channels()
-    msg_id, reply = execute(
+    _msg_id, reply = execute(
         code="ip = get_ipython()\nfor i in range(3):\n   ip.set_next_input('Hello There')\n"
     )
     payload = reply["payload"]
@@ -635,7 +635,7 @@ def test_history_search():
 def test_stream():
     flush_channels()
 
-    msg_id, reply = execute("print('hi')")
+    msg_id, _reply = execute("print('hi')")
 
     stdout = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(stdout, "stream", msg_id)
@@ -646,7 +646,7 @@ def test_stream():
 def test_display_data():
     flush_channels()
 
-    msg_id, reply = execute("from IPython.display import display; display(1)")
+    msg_id, _reply = execute("from IPython.display import display; display(1)")
 
     display = KC.get_iopub_msg(timeout=TIMEOUT)
     validate_message(display, "display_data", parent=msg_id)

@@ -548,7 +548,7 @@ def test_unc_paths():
         kc.execute(f"cd {unc_file_path:s}")
         reply = kc.get_shell_msg(timeout=TIMEOUT)
         assert reply["content"]["status"] == "ok"
-        out, err = assemble_output(kc.get_iopub_msg)
+        out, _err = assemble_output(kc.get_iopub_msg)
         assert unc_file_path in out
 
         flush_channels(kc)

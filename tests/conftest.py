@@ -4,6 +4,7 @@ import os
 from typing import no_type_check
 from unittest.mock import MagicMock
 
+import pytest
 import pytest_asyncio
 import zmq
 from jupyter_client.session import Session
@@ -20,6 +21,7 @@ except ImportError:
     # Windows
     resource = None  # type:ignore
 
+from .utils import new_kernel
 
 # Handle resource limit
 # Ensure a minimal soft limit of DEFAULT_SOFT if the current hard limit is at least that much.
@@ -158,3 +160,9 @@ def ipkernel():
     yield kernel
     kernel.destroy()
     ZMQInteractiveShell.clear_instance()
+
+
+@pytest.fixture
+def kc():
+    with new_kernel() as kc:
+        yield kc

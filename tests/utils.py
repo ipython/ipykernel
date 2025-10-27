@@ -168,7 +168,7 @@ def new_kernel(argv=None):
     return manager.run_kernel(**kwargs)
 
 
-def assemble_output(get_msg, timeout=1, parent_msg_id: str | None = None):
+def assemble_output(get_msg, timeout=1, parent_msg_id: str | None = None, raise_error=True):
     """assemble stdout/err from an execution"""
     stdout = ""
     stderr = ""
@@ -191,6 +191,12 @@ def assemble_output(get_msg, timeout=1, parent_msg_id: str | None = None):
                 stderr += content["text"]
             else:
                 raise KeyError("bad stream: %r" % content["name"])
+        elif raise_error and msg["msg_type"] == "error":
+            tb = "\n".join(msg["content"]["traceback"])
+            msg = f"Execution failed with:\n{tb}"
+            if stderr:
+                msg = f"{msg}\nstderr:\n{stderr}"
+            raise RuntimeError(msg)
         else:
             # other output, ignored
             pass

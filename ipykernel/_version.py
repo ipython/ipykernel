@@ -5,7 +5,7 @@ store the current version info of the server.
 import re
 
 # Version string must appear intact for hatch versioning
-__version__ = "7.0.1"
+__version__ = "7.1.0"
 
 # Build up version_info tuple for backwards compatibility
 pattern = r"(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)(?P<rest>.*)"

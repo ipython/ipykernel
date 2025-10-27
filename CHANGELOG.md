@@ -2,6 +2,42 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.1.0
+
+IPykernel 7.1.0 fixes an issue where display outputs such as Matplotlib plots were not included when using `%notebook` magic to save sessions as `.ipynb` files (#1435). This is enabled using the traitlet `ZMQDisplayPublisher.store_display_history` which defaults to the previous behaviour of False. This is a minor release rather than a patch release due to the addition of the new traitlet.
+
+Output from threads is restored to the pre-6.29 behavior by default (route to latest cell, unless `get_ipython().set_parent()` is called explicitly from the thread. If it is called, output from that thread will continue to be routed to the same cell). This behavior is now opt-in, instead of unconditional (#1451).
+
+This release also fixes bugs that were introduced into the 7.x branch relating to Matplotlib plots in separate windows not being displayed correctly (#1458), kernels launched in new threads failing asserts (#1455), and `ContextVar`s persisting between cells (#1462). There is also a fix for keyboard interrupts on Windows (#1434).
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.0.1...6f61a6835c217e42c406ee01b359e2fa235baf43))
+
+### Enhancements made
+
+- Store display outputs in history for `%notebook` magic [#1435](https://github.com/ipython/ipykernel/pull/1435) ([@Darshan808](https://github.com/Darshan808))
+
+### Bugs fixed
+
+- fix ContextVar persistence across cells [#1462](https://github.com/ipython/ipykernel/pull/1462) ([@minrk](https://github.com/minrk))
+- Fix matplotlib eventloops [#1458](https://github.com/ipython/ipykernel/pull/1458) ([@ianthomas23](https://github.com/ianthomas23))
+- Refer to kernel launching thread instead of assuming the main thread [#1455](https://github.com/ipython/ipykernel/pull/1455) ([@dfalbel](https://github.com/dfalbel))
+- Fix routing of background thread output when no parent is set explicitly [#1451](https://github.com/ipython/ipykernel/pull/1451) ([@minrk](https://github.com/minrk))
+- Fix KeyboardInterrupt on Windows by manually resetting interrupt event [#1434](https://github.com/ipython/ipykernel/pull/1434) ([@ptosco](https://github.com/ptosco))
+
+### Maintenance and upkeep improvements
+
+- update pre-commit and related [#1465](https://github.com/ipython/ipykernel/pull/1465) ([@Carreau](https://github.com/Carreau))
+- test that matplotlib event loop integration is responsive [#1463](https://github.com/ipython/ipykernel/pull/1463) ([@minrk](https://github.com/minrk))
+- update tests for 3.14 [#1453](https://github.com/ipython/ipykernel/pull/1453) ([@minrk](https://github.com/minrk))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-10-14&to=2025-10-27&type=c))
+
+[@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-10-14..2025-10-27&type=Issues) | [@Darshan808](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ADarshan808+updated%3A2025-10-14..2025-10-27&type=Issues) | [@dfalbel](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adfalbel+updated%3A2025-10-14..2025-10-27&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-10-14..2025-10-27&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2025-10-14..2025-10-27&type=Issues) | [@lumberbot-app](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Alumberbot-app+updated%3A2025-10-14..2025-10-27&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2025-10-14..2025-10-27&type=Issues) | [@ptosco](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aptosco+updated%3A2025-10-14..2025-10-27&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.0.1
 
 IPykernel 7.0.1 is a bug fix release to support CPython 3.14.
@@ -26,8 +62,6 @@ IPykernel 7.0.1 is a bug fix release to support CPython 3.14.
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-10-13&to=2025-10-14&type=c))
 
 [@bollwyvl](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Abollwyvl+updated%3A2025-10-13..2025-10-14&type=Issues) | [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-10-13..2025-10-14&type=Issues) | [@cclauss](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Acclauss+updated%3A2025-10-13..2025-10-14&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-10-13..2025-10-14&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.0.0
 

@@ -45,6 +45,13 @@ def execute(
 def test_matplotlib_gui(kc, gui):
     """Make sure matplotlib activates and its eventloop runs while the kernel is also responsive"""
     pytest.importorskip("matplotlib", reason="this test requires matplotlib")
+    if (
+        gui == "qt"
+        and os.getenv("QT") == "qt5"
+        and os.getenv("CI")
+        and sys.platform.startswith("win")
+    ):
+        pytest.skip("flaky on Windows CI")
     stdout, stderr = execute(kc, f"%matplotlib {gui}")
     assert not stderr
     # debug: show output from invoking the matplotlib magic

@@ -35,7 +35,7 @@ def test_async_interrupt(asynclib, request):
         __import__(asynclib)
     except ImportError:
         pytest.skip("Requires %s" % asynclib)
-    request.addfinalizer(lambda: execute("%autoawait asyncio", KC))
+    request.addfinalizer(lambda: execute("%autoawait " + asynclib, KC))
 
     flush_channels(KC)
     msg_id, content = execute("%autoawait " + asynclib, KC)

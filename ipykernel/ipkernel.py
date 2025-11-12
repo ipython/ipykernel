@@ -460,7 +460,9 @@ class IPythonKernel(KernelBase):
                 # runner isn't already running,
                 # make synchronous call,
                 # letting shell dispatch to loop runners
-                res = shell.run_cell(code, store_history=store_history, silent=silent, **do_execute_args)
+                res = shell.run_cell(
+                    code, store_history=store_history, silent=silent, **do_execute_args
+                )
         finally:
             self._restore_input()
 

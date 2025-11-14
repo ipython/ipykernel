@@ -17,6 +17,7 @@ machinery.  This should thus be thought of as scaffolding.
 import contextvars
 import os
 import sys
+from subprocess import CalledProcessError
 import threading
 import typing
 import warnings
@@ -783,9 +784,15 @@ class ZMQInteractiveShell(InteractiveShell):
             with AvoidUNCPath() as path:
                 if path is not None:
                     cmd = f"pushd {path} &&{cmd}"
-                self.user_ns["_exit_code"] = system(cmd)
+                exit_code = system(cmd)
+                self.user_ns["_exit_code"] = exit_code
         else:
-            self.user_ns["_exit_code"] = system(self.var_expand(cmd, depth=1))
+            exit_code = system(self.var_expand(cmd, depth=1))
+            self.user_ns["_exit_code"] = exit_code
+
+        # Raise an exception if the command failed and system_raise_on_error is True
+        if self.system_raise_on_error and exit_code != 0:
+            raise CalledProcessError(exit_code, cmd)
 
     # Ensure new system_piped implementation is used
     system = system_piped

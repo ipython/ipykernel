@@ -694,7 +694,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # Only available in newer IPython releases:
             debugger.Pdb = debugger.InterruptiblePdb  # type:ignore[misc]
             pdb.Pdb = debugger.Pdb  # type:ignore[assignment,misc]
-            pdb.set_trace = debugger.set_trace
+            pdb.set_trace = debugger.set_trace  # type:ignore[assignment]
 
     @catch_config_error
     def initialize(self, argv=None):

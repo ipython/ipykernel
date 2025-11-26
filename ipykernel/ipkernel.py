@@ -292,7 +292,7 @@ class IPythonKernel(KernelBase):
         builtins.input = self.raw_input
 
         self._save_getpass = getpass.getpass
-        getpass.getpass = self.getpass
+        getpass.getpass = self.getpass  # type:ignore[assignment]
 
     def _restore_input(self):
         """Restore raw_input, getpass"""

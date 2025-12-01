@@ -326,7 +326,7 @@ class Debugger:
     ]
 
     def __init__(
-        self, log, debugpy_stream, event_callback, shell_socket, session, just_my_code=True
+        self, log, debugpy_stream, event_callback, shell_socket, session, kernel_modules, just_my_code=True
     ):
         """Initialize the debugger."""
         self.log = log
@@ -335,6 +335,7 @@ class Debugger:
         self.session = session
         self.is_started = False
         self.event_callback = event_callback
+        self.kernel_modules = kernel_modules
         self.just_my_code = just_my_code
         self.stopped_queue: Queue[t.Any] = Queue()
 
@@ -574,6 +575,11 @@ class Debugger:
         # Set debugOptions for breakpoints in python standard library source.
         if not self.just_my_code:
             message["arguments"]["debugOptions"] = ["DebugStdLib"]
+
+        # Dynamic skip rules (computed at kernel startup)
+        rules = [{"path": path, "include": False} for path in self.kernel_modules]
+        message["arguments"]["rules"] = rules
+
         return await self._forward_message(message)
 
     async def configurationDone(self, message):

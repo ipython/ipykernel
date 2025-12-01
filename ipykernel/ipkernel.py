@@ -135,6 +135,7 @@ class IPythonKernel(KernelBase):
                 self.session,
                 self._kernel_modules,
                 self.debug_just_my_code,
+                self.filter_internal_frames,
             )
 
         # Initialize the InteractiveShell subclass

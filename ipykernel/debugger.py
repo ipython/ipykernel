@@ -326,7 +326,7 @@ class Debugger:
     ]
 
     def __init__(
-        self, log, debugpy_stream, event_callback, shell_socket, session, kernel_modules, just_my_code=True
+        self, log, debugpy_stream, event_callback, shell_socket, session, kernel_modules, just_my_code=False, filter_internal_frames=True
     ):
         """Initialize the debugger."""
         self.log = log
@@ -337,6 +337,7 @@ class Debugger:
         self.event_callback = event_callback
         self.kernel_modules = kernel_modules
         self.just_my_code = just_my_code
+        self.filter_internal_frames = filter_internal_frames
         self.stopped_queue: Queue[t.Any] = Queue()
 
         self.started_debug_handlers = {}
@@ -577,8 +578,9 @@ class Debugger:
             message["arguments"]["debugOptions"] = ["DebugStdLib"]
 
         # Dynamic skip rules (computed at kernel startup)
-        rules = [{"path": path, "include": False} for path in self.kernel_modules]
-        message["arguments"]["rules"] = rules
+        if self.filter_internal_frames:
+            rules = [{"path": path, "include": False} for path in self.kernel_modules]
+            message["arguments"]["rules"] = rules
 
         return await self._forward_message(message)
 

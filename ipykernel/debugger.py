@@ -509,23 +509,6 @@ class Debugger:
     async def stackTrace(self, message):
         """Handle a stack trace message."""
         reply = await self._forward_message(message)
-        # The stackFrames array can have the following content:
-        # { frames from the notebook}
-        # ...
-        # { 'id': xxx, 'name': '<module>', ... } <= this is the first frame of the code from the notebook
-        # { frames from ipykernel }
-        # ...
-        # {'id': yyy, 'name': '<module>', ... } <= this is the first frame of ipykernel code
-        # or only the frames from the notebook.
-        # We want to remove all the frames from ipykernel when they are present.
-        try:
-            sf_list = reply["body"]["stackFrames"]
-            module_idx = len(sf_list) - next(
-                i for i, v in enumerate(reversed(sf_list), 1) if v["name"] == "<module>" and i != 1
-            )
-            reply["body"]["stackFrames"] = reply["body"]["stackFrames"][: module_idx + 1]
-        except StopIteration:
-            pass
         return reply
 
     def accept_variable(self, variable_name):

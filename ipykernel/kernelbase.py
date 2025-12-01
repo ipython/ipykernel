@@ -179,8 +179,15 @@ class Kernel(SingletonConfigurable):
     # The ipykernel source is in the call stack, so the user
     # has to manipulate the step-over and step-into in a wize way.
     debug_just_my_code = Bool(
-        True,
+        False,
         help="""Set to False if you want to debug python standard and dependent libraries.
+        """,
+    ).tag(config=True)
+
+    # Experimental option to filter internal frames from the stack trace and stepping.
+    filter_internal_frames = Bool(
+        True,
+        help="""Set to False if you want to debug kernel modules.
         """,
     ).tag(config=True)
 

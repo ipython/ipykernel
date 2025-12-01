@@ -326,7 +326,15 @@ class Debugger:
     ]
 
     def __init__(
-        self, log, debugpy_stream, event_callback, shell_socket, session, kernel_modules, just_my_code=False, filter_internal_frames=True
+        self,
+        log,
+        debugpy_stream,
+        event_callback,
+        shell_socket,
+        session,
+        kernel_modules,
+        just_my_code=False,
+        filter_internal_frames=True,
     ):
         """Initialize the debugger."""
         self.log = log

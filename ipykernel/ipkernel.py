@@ -120,9 +120,7 @@ class IPythonKernel(KernelBase):
         from .debugger import _is_debugpy_available
 
         self._kernel_modules = [
-            m.__file__
-            for m in sys.modules.values()
-            if hasattr(m, "__file__") and m.__file__
+            m.__file__ for m in sys.modules.values() if hasattr(m, "__file__") and m.__file__
         ]
 
         # Initialize the Debugger

@@ -508,8 +508,7 @@ class Debugger:
 
     async def stackTrace(self, message):
         """Handle a stack trace message."""
-        reply = await self._forward_message(message)
-        return reply
+        return await self._forward_message(message)
 
     def accept_variable(self, variable_name):
         """Accept a variable by name."""

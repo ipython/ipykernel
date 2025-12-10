@@ -406,10 +406,11 @@ class IPythonKernel(KernelBase):
             except Exception:
                 transformed_cell = code
                 preprocessing_exc_tuple = sys.exc_info()
+
             do_execute_args = {}
             if accepts_params["cell_meta"]:
                 do_execute_args["cell_meta"] = cell_meta
-            if self._do_exec_accepted_params["cell_id"]:
+            if accepts_params["cell_id"]:
                 do_execute_args["cell_id"] = cell_id
 
             if (
@@ -422,24 +423,14 @@ class IPythonKernel(KernelBase):
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
             ):
-                if accepts_params["cell_id"]:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                        **do_execute_args,
-                    )
-                else:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                        **do_execute_args,
-                    )
+                coro = run_cell(
+                    code,
+                    store_history=store_history,
+                    silent=silent,
+                    transformed_cell=transformed_cell,
+                    preprocessing_exc_tuple=preprocessing_exc_tuple,
+                    **do_execute_args,
+                )
 
                 coro_future = asyncio.ensure_future(coro)
 

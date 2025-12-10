@@ -787,7 +787,7 @@ class Kernel(SingletonConfigurable):
             store_history = content.get("store_history", not silent)
             user_expressions = content.get("user_expressions", {})
             allow_stdin = content.get("allow_stdin", False)
-            cell_meta = parent.get("metadata", {})
+            cell_meta = parent.get("metadata", None)
             cell_id = cell_meta.get("cellId")
         except Exception:
             self.log.error("Got bad msg: ")

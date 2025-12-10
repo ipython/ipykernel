@@ -184,39 +184,45 @@ def _loop_wx(app):
 @register_integration("wx")
 def loop_wx(kernel):
     """Start a kernel with wx event loop support."""
-
     import wx
-
-    # Wx uses milliseconds
-    poll_interval = int(1000 * kernel._poll_interval)
-
-    shell_stream = get_shell_stream(kernel)
-
-    def wake(shell_stream):
-        """wake from wx"""
-        if shell_stream.flush(limit=1):
-            kernel.app.ExitMainLoop()
-            return
 
     # We have to put the wx.Timer in a wx.Frame for it to fire properly.
     # We make the Frame hidden when we create it in the main app below.
     class TimerFrame(wx.Frame):  # type:ignore[misc]
-        def __init__(self, func):
+        def __init__(self, kernel):
+            self.kernel = kernel
+            self.shell_stream = get_shell_stream(kernel)
+
             wx.Frame.__init__(self, None, -1)
             self.timer = wx.Timer(self)
-            # Units for the timer are in milliseconds
-            self.timer.Start(poll_interval)
+
+            self.Bind(wx.EVT_CLOSE, self.on_exit)
             self.Bind(wx.EVT_TIMER, self.on_timer)
-            self.func = func
+
+            # Units for the timer are in milliseconds
+            self.timer.Start(int(1000 * self.kernel._poll_interval))
+
+        def wake(self):
+            """wake from wx"""
+            try:
+                if self.shell_stream.flush(limit=1):
+                    self.kernel.app.ExitMainLoop()
+            except Exception:
+                pass
 
         def on_timer(self, event):
-            self.func()
+            self.wake()
+
+        def on_exit(self, event):
+            self.timer.Stop()
+            self.wake()
+            self.Destroy()
 
     # We need a custom wx.App to create our Frame subclass that has the
     # wx.Timer to defer back to the tornado event loop.
     class IPWxApp(wx.App):  # type:ignore[misc]
         def OnInit(self):
-            self.frame = TimerFrame(partial(wake, shell_stream))
+            self.frame = TimerFrame(kernel)
             self.frame.Show(False)
             return True
 

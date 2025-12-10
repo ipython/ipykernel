@@ -352,7 +352,7 @@ class KernelMagics(Magics):
 
         payload = {"source": "edit_magic", "filename": filename, "line_number": lineno}
         assert self.shell is not None
-        self.shell.payload_manager.write_payload(payload)  # type: ignore[unreachable]
+        self.shell.payload_manager.write_payload(payload)  # type: ignore[union-attr]
 
     # A few magics that are adapted to the specifics of using pexpect and a
     # remote terminal
@@ -361,7 +361,7 @@ class KernelMagics(Magics):
     def clear(self, arg_s):
         """Clear the terminal."""
         assert self.shell is not None
-        if os.name == "posix":  # type: ignore[unreachable]
+        if os.name == "posix":
             self.shell.system("clear")
         else:
             self.shell.system("cls")
@@ -383,7 +383,7 @@ class KernelMagics(Magics):
 
         if arg_s.endswith(".py"):
             assert self.shell is not None
-            cont = self.shell.pycolorize(openpy.read_py_file(arg_s, skip_encoding_cookie=False))  # type: ignore[unreachable]
+            cont = self.shell.pycolorize(openpy.read_py_file(arg_s, skip_encoding_cookie=False))
         else:
             with open(arg_s) as fid:
                 cont = fid.read()
@@ -398,7 +398,7 @@ class KernelMagics(Magics):
         def man(self, arg_s):
             """Find the man page for the given command and display in pager."""
             assert self.shell is not None
-            page.page(self.shell.getoutput("man %s | col -b" % arg_s, split=False))  # type: ignore[unreachable]
+            page.page(self.shell.getoutput("man %s | col -b" % arg_s, split=False))
 
     @line_magic
     def connect_info(self, arg_s):

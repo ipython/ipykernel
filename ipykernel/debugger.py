@@ -326,7 +326,15 @@ class Debugger:
     ]
 
     def __init__(
-        self, log, debugpy_stream, event_callback, shell_socket, session, just_my_code=True
+        self,
+        log,
+        debugpy_stream,
+        event_callback,
+        shell_socket,
+        session,
+        kernel_modules,
+        just_my_code=False,
+        filter_internal_frames=True,
     ):
         """Initialize the debugger."""
         self.log = log
@@ -335,7 +343,9 @@ class Debugger:
         self.session = session
         self.is_started = False
         self.event_callback = event_callback
+        self.kernel_modules = kernel_modules
         self.just_my_code = just_my_code
+        self.filter_internal_frames = filter_internal_frames
         self.stopped_queue: Queue[t.Any] = Queue()
 
         self.started_debug_handlers = {}
@@ -498,25 +508,7 @@ class Debugger:
 
     async def stackTrace(self, message):
         """Handle a stack trace message."""
-        reply = await self._forward_message(message)
-        # The stackFrames array can have the following content:
-        # { frames from the notebook}
-        # ...
-        # { 'id': xxx, 'name': '<module>', ... } <= this is the first frame of the code from the notebook
-        # { frames from ipykernel }
-        # ...
-        # {'id': yyy, 'name': '<module>', ... } <= this is the first frame of ipykernel code
-        # or only the frames from the notebook.
-        # We want to remove all the frames from ipykernel when they are present.
-        try:
-            sf_list = reply["body"]["stackFrames"]
-            module_idx = len(sf_list) - next(
-                i for i, v in enumerate(reversed(sf_list), 1) if v["name"] == "<module>" and i != 1
-            )
-            reply["body"]["stackFrames"] = reply["body"]["stackFrames"][: module_idx + 1]
-        except StopIteration:
-            pass
-        return reply
+        return await self._forward_message(message)
 
     def accept_variable(self, variable_name):
         """Accept a variable by name."""
@@ -574,6 +566,12 @@ class Debugger:
         # Set debugOptions for breakpoints in python standard library source.
         if not self.just_my_code:
             message["arguments"]["debugOptions"] = ["DebugStdLib"]
+
+        # Dynamic skip rules (computed at kernel startup)
+        if self.filter_internal_frames:
+            rules = [{"path": path, "include": False} for path in self.kernel_modules]
+            message["arguments"]["rules"] = rules
+
         return await self._forward_message(message)
 
     async def configurationDone(self, message):

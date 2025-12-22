@@ -47,7 +47,7 @@ class IOPubThread:
     whose IO is always run in a thread.
     """
 
-    def __init__(self, socket, session, pipe=False):
+    def __init__(self, socket, session=None, pipe=False):
         """Create IOPub thread
 
         Parameters
@@ -119,6 +119,15 @@ class IOPubThread:
         subscription : str
             The subscription topic (UTF-8 decoded)
         """
+
+        # TODO: This early return is for backward-compatibility with ipyparallel.
+        # This should be removed when ipykernel has been released with support of
+        # xpub and ipyparallel has been updated to pass the session parameter
+        # to IOPubThread upon construction.
+        # (NB: the call to fix is here:
+        # https://github.com/ipython/ipyparallel/blob/main/ipyparallel/engine/app.py#L679
+        if self.session is None:
+            return
 
         content = {"subscription": subscription}
 

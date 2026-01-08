@@ -45,7 +45,7 @@ Tracker = "https://github.com/ipython/ipykernel/issues"
 docs = [
   # Sphinx pinned until `sphinx-autodoc-typehints` issue is resolved:
   # https://github.com/tox-dev/sphinx-autodoc-typehints/issues/523
-  "sphinx<8.2.0",
+  "sphinx<9.2.0",
   "myst_parser",
   "pydata_sphinx_theme",
   "sphinxcontrib_github_alt",
@@ -55,7 +55,7 @@ docs = [
   "trio"
 ]
 test = [
-    "pytest>=7.0,<9",
+    "pytest>=7.0,<10",
     "pytest-cov",
     # 'pytest-xvfb; platform_system == "Linux"',
     "flaky",

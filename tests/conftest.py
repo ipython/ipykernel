@@ -48,7 +48,7 @@ class KernelMixin:
 
     def _initialize(self):
         self.context = context = zmq.Context()
-        self.iopub_socket = context.socket(zmq.PUB)
+        self.iopub_socket = context.socket(zmq.XPUB)
         self.stdin_socket = context.socket(zmq.ROUTER)
         self.session = Session()
         self.test_sockets = [self.iopub_socket]

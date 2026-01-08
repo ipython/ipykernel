@@ -2,6 +2,42 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.2.0a0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.1.0...6786ddd040c1f0e8aaeae7e261eec511e2a37fd9))
+
+### New features added
+
+- Replaced PUB socket with XPUB socket [#1482](https://github.com/ipython/ipykernel/pull/1482) ([@JohanMabille](https://github.com/JohanMabille), [@SylvainCorlay](https://github.com/SylvainCorlay))
+
+### Enhancements made
+
+- Implement kernel-side callstack filtering for internal frames [#1481](https://github.com/ipython/ipykernel/pull/1481) ([@arjxn-py](https://github.com/arjxn-py), [@JohanMabille](https://github.com/JohanMabille))
+
+### Bugs fixed
+
+- add close event for wx timer app in loop_wx [#1478](https://github.com/ipython/ipykernel/pull/1478) ([@newville](https://github.com/newville), [@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Removed spyder downstream tests [#1486](https://github.com/ipython/ipykernel/pull/1486) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+- Bump scientific-python/upload-nightly-action from 0.6.2 to 0.6.3 in the actions group [#1484](https://github.com/ipython/ipykernel/pull/1484) ([@JohanMabille](https://github.com/JohanMabille))
+- Fix linting errors [#1480](https://github.com/ipython/ipykernel/pull/1480) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump actions/checkout from 5 to 6 in the actions group [#1479](https://github.com/ipython/ipykernel/pull/1479) ([@ianthomas23](https://github.com/ianthomas23))
+- chore: update pre-commit hooks [#1467](https://github.com/ipython/ipykernel/pull/1467) ([@JohanMabille](https://github.com/JohanMabille))
+- Test changing base method to async after #1295 [#1464](https://github.com/ipython/ipykernel/pull/1464) ([@Carreau](https://github.com/Carreau), [@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-10-27&to=2026-01-08&type=c))
+
+@arjxn-py ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aarjxn-py+updated%3A2025-10-27..2026-01-08&type=Issues)) | @Carreau ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-10-27..2026-01-08&type=Issues)) | @ianthomas23 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-10-27..2026-01-08&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2025-10-27..2026-01-08&type=Issues)) | @newville ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anewville+updated%3A2025-10-27..2026-01-08&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2025-10-27..2026-01-08&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.1.0
 
 IPykernel 7.1.0 fixes an issue where display outputs such as Matplotlib plots were not included when using `%notebook` magic to save sessions as `.ipynb` files (#1435). This is enabled using the traitlet `ZMQDisplayPublisher.store_display_history` which defaults to the previous behaviour of False. This is a minor release rather than a patch release due to the addition of the new traitlet.
@@ -35,8 +71,6 @@ This release also fixes bugs that were introduced into the 7.x branch relating t
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-10-14&to=2025-10-27&type=c))
 
 [@Carreau](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-10-14..2025-10-27&type=Issues) | [@Darshan808](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ADarshan808+updated%3A2025-10-14..2025-10-27&type=Issues) | [@dfalbel](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adfalbel+updated%3A2025-10-14..2025-10-27&type=Issues) | [@ianthomas23](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-10-14..2025-10-27&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2025-10-14..2025-10-27&type=Issues) | [@lumberbot-app](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Alumberbot-app+updated%3A2025-10-14..2025-10-27&type=Issues) | [@minrk](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2025-10-14..2025-10-27&type=Issues) | [@ptosco](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aptosco+updated%3A2025-10-14..2025-10-27&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.0.1
 

@@ -22,7 +22,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.34.1
+    rev: 0.36.1
     hooks:
       - id: check-github-workflows
 
@@ -39,7 +39,7 @@ repos:
         types_or: [yaml, html, json]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.18.2"
+    rev: "v1.19.1"
     hooks:
       - id: mypy
         files: ipykernel
@@ -73,7 +73,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.3
+    rev: v0.14.14
     hooks:
       - id: ruff-check
         types_or: [python, jupyter]
@@ -82,7 +82,7 @@ repos:
         types_or: [python, jupyter]
 
   - repo: https://github.com/scientific-python/cookie
-    rev: "2025.10.20"
+    rev: "2025.11.21"
     hooks:
       - id: sp-repo-review
         additional_dependencies: ["repo-review[cli]"]

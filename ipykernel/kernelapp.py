@@ -382,7 +382,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
         self.log.debug("iopub PUB Channel on port: %i", self.iopub_port)
         self.configure_tornado_logger()
-        self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True, session = self.session)
+        self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True, session=self.session)
         self.iopub_thread.start()
         # backward-compat: wrap iopub socket API in background thread
         self.iopub_socket = self.iopub_thread.background_socket

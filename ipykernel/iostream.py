@@ -518,7 +518,7 @@ class OutStream(TextIOBase):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            pub_thread = IOPubThread(pub_thread, session = self.session)
+            pub_thread = IOPubThread(pub_thread, session=self.session)
             pub_thread.start()
         self.pub_thread = pub_thread
         self.name = name

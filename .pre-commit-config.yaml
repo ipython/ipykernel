@@ -82,7 +82,7 @@ repos:
         types_or: [python, jupyter]
 
   - repo: https://github.com/scientific-python/cookie
-    rev: "2025.11.21"
+    rev: "2025.10.20"
     hooks:
       - id: sp-repo-review
         additional_dependencies: ["repo-review[cli]"]

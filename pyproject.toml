@@ -55,7 +55,7 @@ docs = [
   "trio"
 ]
 test = [
-    "pytest>=7.0,<9",
+    "pytest>=7.0,<10",
     "pytest-cov",
     # 'pytest-xvfb; platform_system == "Linux"',
     "flaky",

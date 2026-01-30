@@ -47,7 +47,7 @@ class IOPubThread:
     whose IO is always run in a thread.
     """
 
-    def __init__(self, socket, session=None, pipe=False):
+    def __init__(self, socket, pipe=False, session=False):
         """Create IOPub thread
 
         Parameters
@@ -518,7 +518,7 @@ class OutStream(TextIOBase):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            pub_thread = IOPubThread(pub_thread, self.session)
+            pub_thread = IOPubThread(pub_thread, session=self.session)
             pub_thread.start()
         self.pub_thread = pub_thread
         self.name = name

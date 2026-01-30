@@ -28,7 +28,7 @@ def ctx():
 def iopub_thread(ctx):
     session = Session()
     with ctx.socket(zmq.PUB) as pub:
-        thread = IOPubThread(pub, session)
+        thread = IOPubThread(pub, session=session)
         thread.start()
 
         yield thread
@@ -156,7 +156,7 @@ def subprocess_test_echo_watch():
     # use PUSH socket to avoid subscription issues
     with zmq.Context() as ctx, ctx.socket(zmq.PUSH) as pub:
         pub.connect(os.environ["IOPUB_URL"])
-        iopub_thread = IOPubThread(pub, session)
+        iopub_thread = IOPubThread(pub, session=session)
         iopub_thread.start()
         stdout_fd = sys.stdout.fileno()
         sys.stdout.flush()

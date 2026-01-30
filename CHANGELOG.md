@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.2.0a1
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.2.0a0...220a3c6e8b24ffb3f8678925712ff3644aafb41e))
+
+### New features added
+
+- Added kernel_protocol_version to kernelspec [#1483](https://github.com/ipython/ipykernel/pull/1483) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+
+### Enhancements made
+
+- Made IOPubThread constructor backward compatible [#1492](https://github.com/ipython/ipykernel/pull/1492) ([@JohanMabille](https://github.com/JohanMabille), [@SylvainCorlay](https://github.com/SylvainCorlay), [@ianthomas23](https://github.com/ianthomas23))
+- Advertizes kernel protocol 5.5 [#1488](https://github.com/ipython/ipykernel/pull/1488) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+- Upgrade to jupyter_client 8.8.0 [#1487](https://github.com/ipython/ipykernel/pull/1487) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Update pytest requirement from \<9,>=7.0 to >=7.0,\<10 in the actions group across 1 directory [#1489](https://github.com/ipython/ipykernel/pull/1489) ([@JohanMabille](https://github.com/JohanMabille))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2026-01-08&to=2026-01-30&type=c))
+
+@ianthomas23 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2026-01-08..2026-01-30&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2026-01-08..2026-01-30&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2026-01-08..2026-01-30&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.2.0a0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.1.0...6786ddd040c1f0e8aaeae7e261eec511e2a37fd9))
@@ -35,8 +64,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-10-27&to=2026-01-08&type=c))
 
 @arjxn-py ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aarjxn-py+updated%3A2025-10-27..2026-01-08&type=Issues)) | @Carreau ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-10-27..2026-01-08&type=Issues)) | @ianthomas23 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-10-27..2026-01-08&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2025-10-27..2026-01-08&type=Issues)) | @newville ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anewville+updated%3A2025-10-27..2026-01-08&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2025-10-27..2026-01-08&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.1.0
 

@@ -2,6 +2,49 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.2.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/39eaf96a...1630c4f7d5365918c4f06cf3caee3c278b52afc2))
+
+### New features added
+
+- Added kernel_protocol_version to kernelspec [#1483](https://github.com/ipython/ipykernel/pull/1483) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+- Replaced PUB socket with XPUB socket [#1482](https://github.com/ipython/ipykernel/pull/1482) ([@JohanMabille](https://github.com/JohanMabille), [@SylvainCorlay](https://github.com/SylvainCorlay), [@ccordoba12](https://github.com/ccordoba12), [@ianthomas23](https://github.com/ianthomas23), [@minrk](https://github.com/minrk))
+
+### Enhancements made
+
+- Made IOPubThread constructor backward compatible [#1492](https://github.com/ipython/ipykernel/pull/1492) ([@JohanMabille](https://github.com/JohanMabille), [@SylvainCorlay](https://github.com/SylvainCorlay), [@ianthomas23](https://github.com/ianthomas23), [@minrk](https://github.com/minrk))
+- Advertizes kernel protocol 5.5 [#1488](https://github.com/ipython/ipykernel/pull/1488) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+- Upgrade to jupyter_client 8.8.0 [#1487](https://github.com/ipython/ipykernel/pull/1487) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+- Implement kernel-side callstack filtering for internal frames [#1481](https://github.com/ipython/ipykernel/pull/1481) ([@arjxn-py](https://github.com/arjxn-py), [@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- add close event for wx timer app in loop_wx [#1478](https://github.com/ipython/ipykernel/pull/1478) ([@newville](https://github.com/newville), [@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- Temporarily revert "Test changing base method to async after (#1464)" [#1493](https://github.com/ipython/ipykernel/pull/1493) ([@ianthomas23](https://github.com/ianthomas23), [@JohanMabille](https://github.com/JohanMabille))
+- Update pytest requirement from \<9,>=7.0 to >=7.0,\<10 in the actions group across 1 directory [#1489](https://github.com/ipython/ipykernel/pull/1489) ([@JohanMabille](https://github.com/JohanMabille))
+- Removed spyder downstream tests [#1486](https://github.com/ipython/ipykernel/pull/1486) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+- Bump scientific-python/upload-nightly-action from 0.6.2 to 0.6.3 in the actions group [#1484](https://github.com/ipython/ipykernel/pull/1484) ([@JohanMabille](https://github.com/JohanMabille))
+- Fix linting errors [#1480](https://github.com/ipython/ipykernel/pull/1480) ([@ianthomas23](https://github.com/ianthomas23))
+- Bump actions/checkout from 5 to 6 in the actions group [#1479](https://github.com/ipython/ipykernel/pull/1479) ([@ianthomas23](https://github.com/ianthomas23))
+- chore: update pre-commit hooks [#1472](https://github.com/ipython/ipykernel/pull/1472) ([@ianthomas23](https://github.com/ianthomas23))
+- chore: update pre-commit hooks [#1467](https://github.com/ipython/ipykernel/pull/1467) ([@JohanMabille](https://github.com/JohanMabille))
+- Test changing base method to async after #1295 [#1464](https://github.com/ipython/ipykernel/pull/1464) ([@Carreau](https://github.com/Carreau), [@ianthomas23](https://github.com/ianthomas23))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2025-10-27&to=2026-02-06&type=c))
+
+@arjxn-py ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aarjxn-py+updated%3A2025-10-27..2026-02-06&type=Issues)) | @Carreau ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2025-10-27..2026-02-06&type=Issues)) | @ccordoba12 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Accordoba12+updated%3A2025-10-27..2026-02-06&type=Issues)) | @ianthomas23 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2025-10-27..2026-02-06&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2025-10-27..2026-02-06&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2025-10-27..2026-02-06&type=Issues)) | @newville ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Anewville+updated%3A2025-10-27..2026-02-06&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2025-10-27..2026-02-06&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.2.0a1
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.2.0a0...220a3c6e8b24ffb3f8678925712ff3644aafb41e))
@@ -28,8 +71,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2026-01-08&to=2026-01-30&type=c))
 
 @ianthomas23 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2026-01-08..2026-01-30&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2026-01-08..2026-01-30&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ASylvainCorlay+updated%3A2026-01-08..2026-01-30&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.2.0a0
 

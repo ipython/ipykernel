@@ -17,11 +17,11 @@ machinery.  This should thus be thought of as scaffolding.
 import contextvars
 import os
 import sys
-from subprocess import CalledProcessError
 import threading
 import typing
 import warnings
 from pathlib import Path
+from subprocess import CalledProcessError
 
 from IPython.core import page
 from IPython.core.autocall import ZMQExitAutocall
@@ -790,7 +790,7 @@ class ZMQInteractiveShell(InteractiveShell):
             exit_code = system(self.var_expand(cmd, depth=1))
             self.user_ns["_exit_code"] = exit_code
 
-        if getattr(self, 'system_raise_on_error', False) and exit_code != 0:
+        if getattr(self, "system_raise_on_error", False) and exit_code != 0:
             raise CalledProcessError(exit_code, cmd)
 
     # Ensure new system_piped implementation is used

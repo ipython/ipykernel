@@ -790,8 +790,7 @@ class ZMQInteractiveShell(InteractiveShell):
             exit_code = system(self.var_expand(cmd, depth=1))
             self.user_ns["_exit_code"] = exit_code
 
-        # Raise an exception if the command failed and system_raise_on_error is True
-        if self.system_raise_on_error and exit_code != 0:
+        if getattr(self, 'system_raise_on_error', False) and exit_code != 0:
             raise CalledProcessError(exit_code, cmd)
 
     # Ensure new system_piped implementation is used

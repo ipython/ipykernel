@@ -452,16 +452,18 @@ def loop_asyncio(kernel):
     shell_stream = get_shell_stream(kernel)
     notifier = partial(process_stream_events, shell_stream)
 
-    if os.name=='nt':
-        stop_event=asyncio.Event()
+    if os.name == "nt":
+        stop_event = asyncio.Event()
+
         def blocking_poll():
-            poller=zmq.Poller()
+            poller = zmq.Poller()
             poller.register(shell_stream.socket, zmq.POLLIN)
 
             while stop_event.is_set():
-                events=poller.poll(None)
+                events = poller.poll(None)
                 if events:
                     loop.calls_soon_threadsafe(notifier)
+
         t = threading.Thread(target=blocking_poll, daemon=True).start()
     else:
         loop.add_reader(shell_stream.getsockopt(zmq.FD), notifier)
@@ -476,7 +478,7 @@ def loop_asyncio(kernel):
         except Exception as e:
             error = e
         if loop._should_close:  # type:ignore[attr-defined]
-            if os.name=='nt':
+            if os.name == "nt":
                 stop_event.set()
                 t.join()
             loop.close()

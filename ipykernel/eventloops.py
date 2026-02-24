@@ -453,7 +453,7 @@ def loop_asyncio(kernel):
     shell_stream = get_shell_stream(kernel)
     notifier = partial(process_stream_events, shell_stream)
 
-    if os.name=='nt':
+    if os.name == "nt":
         stop_event = asyncio.Event()
         t = None
 
@@ -465,7 +465,7 @@ def loop_asyncio(kernel):
                 events = poller.poll(None)
                 if events:
                     loop.call_soon_threadsafe(notifier)
-        
+
         t = threading.Thread(target=blocking_poll, daemon=True)
         t.start()
     else:
@@ -481,7 +481,7 @@ def loop_asyncio(kernel):
         except Exception as e:
             error = e
         if loop._should_close:  # type:ignore[attr-defined]
-            if os.name=='nt':
+            if os.name == "nt":
                 stop_event.set()
                 if t is not None:
                     t.join()

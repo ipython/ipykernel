@@ -517,6 +517,14 @@ class ZMQInteractiveShell(InteractiveShell):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Suppress Trio's signal handling warning on Windows with ProactorEventLoop
+        # This occurs when Trio is imported and finds signal handling already taken by Proactor
+        warnings.filterwarnings(
+            "ignore",
+            message=".*Trio's signal handling code might have collided.*",
+            category=RuntimeWarning,
+        )
+
         # tqdm has an incorrect detection of ZMQInteractiveShell when launch via
         # a scheduler that bypass IPKernelApp Think of JupyterHub cluster
         # spawners and co. as of end of Feb 2025, the maintainer has been

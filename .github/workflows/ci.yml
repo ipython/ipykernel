@@ -61,7 +61,7 @@ jobs:
       - name: Install hatch
         run: |
           python --version
-          python -m pip install hatch
+          python -m pip install hatch "virtualenv<21"
 
       - name: Run the tests
         timeout-minutes: 15
@@ -104,6 +104,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Preinstall hatch and virtualenv
+        run: |
+          python --version
+          python -m pip install hatch "virtualenv<21"
+
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
       - name: Run Linters
         run: |
@@ -116,7 +122,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Preinstall hatch and virtualenv
+        run: |
+          python --version
+          python -m pip install hatch "virtualenv<21"
+
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
       - uses: jupyter-server/jupyter_releaser/.github/actions/check-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -125,7 +138,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - name: Preinstall hatch and virtualenv
+        run: |
+          python --version
+          python -m pip install hatch "virtualenv<21"
+
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
       - name: Build API docs
         run: |
           hatch run docs:api
@@ -147,6 +167,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Preinstall hatch and virtualenv
+        run: |
+          python --version
+          python -m pip install hatch "virtualenv<21"
 
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
@@ -170,11 +195,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
+      - name: Preinstall hatch and virtualenv
+        run: |
+          python --version
+          python -m pip install hatch "virtualenv<21"
+
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: minimum
-          python_version: "3.10"
+          python_version: ${{ matrix.python-version }}
 
       - name: List installed packages
         run: |
@@ -191,10 +226,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Preinstall hatch and virtualenv
+        run: |
+          python --version
+          python -m pip install hatch "virtualenv<21"
+
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: pre
+
       - name: Run the tests
         run: |
           hatch run test:nowarn

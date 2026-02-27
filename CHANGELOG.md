@@ -14,7 +14,7 @@
 ### Enhancements made
 
 - Made IOPubThread constructor backward compatible [#1492](https://github.com/ipython/ipykernel/pull/1492) ([@JohanMabille](https://github.com/JohanMabille), [@SylvainCorlay](https://github.com/SylvainCorlay), [@ianthomas23](https://github.com/ianthomas23), [@minrk](https://github.com/minrk))
-- Advertizes kernel protocol 5.5 [#1488](https://github.com/ipython/ipykernel/pull/1488) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
+- Advertises kernel protocol 5.5 [#1488](https://github.com/ipython/ipykernel/pull/1488) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
 - Upgrade to jupyter_client 8.8.0 [#1487](https://github.com/ipython/ipykernel/pull/1487) ([@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
 - Implement kernel-side callstack filtering for internal frames [#1481](https://github.com/ipython/ipykernel/pull/1481) ([@arjxn-py](https://github.com/arjxn-py), [@JohanMabille](https://github.com/JohanMabille), [@ianthomas23](https://github.com/ianthomas23))
 

@@ -289,4 +289,4 @@ toplevel = ["ipykernel/", "ipykernel_launcher.py"]
 ignore = ["W002"]
 
 [tool.repo-review]
-ignore = ["PY007", "PP308", "GH102", "MY101"]
+ignore = ["PC902", "PP006", "PP304"]

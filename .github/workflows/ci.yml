@@ -61,7 +61,7 @@ jobs:
       - name: Install hatch
         run: |
           python --version
-          python -m pip install hatch
+          python -m pip install hatch "virtualenv<21"
 
       - name: Run the tests
         timeout-minutes: 15

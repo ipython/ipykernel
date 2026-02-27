@@ -301,9 +301,9 @@ def loop_tk(kernel):
     else:
         import asyncio
 
-        import nest_asyncio
+        import nest_asyncio2
 
-        nest_asyncio.apply()
+        nest_asyncio2.apply()
 
         # Tk uses milliseconds
         poll_interval = int(1000 * kernel._poll_interval)

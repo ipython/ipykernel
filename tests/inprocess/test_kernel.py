@@ -119,3 +119,9 @@ async def test_do_execute(kc):
     kernel = InProcessKernel()
     await kernel.do_execute("a=1", True)
     assert kernel.shell.user_ns["a"] == 1
+
+
+async def test_cell_meta_do_execute():
+    kernel: InProcessKernel = InProcessKernel()
+    await kernel.do_execute("a=1", True, cell_meta={"testkey": "testvalue"})
+    assert kernel.shell.user_ns["a"] == 1

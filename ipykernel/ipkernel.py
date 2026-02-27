@@ -392,7 +392,7 @@ class IPythonKernel(KernelBase):
         if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
             run_cell = shell.run_cell_async
             should_run_async = shell.should_run_async
-            accepts_params = _accepts_parameters(run_cell, ["cell_id"])
+            accepts_params = _accepts_parameters(run_cell, ["cell_id", "cell_meta"])
         else:
             should_run_async = lambda cell: False  # noqa: ARG005, E731
             # older IPython,
@@ -401,7 +401,7 @@ class IPythonKernel(KernelBase):
             async def run_cell(*args, **kwargs):
                 return shell.run_cell(*args, **kwargs)
 
-            accepts_params = _accepts_parameters(shell.run_cell, ["cell_id"])
+            accepts_params = _accepts_parameters(shell.run_cell, ["cell_id", "cell_meta"])
         try:
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
@@ -413,6 +413,12 @@ class IPythonKernel(KernelBase):
                 transformed_cell = code
                 preprocessing_exc_tuple = sys.exc_info()
 
+            do_execute_args = {}
+            if accepts_params["cell_meta"]:
+                do_execute_args["cell_meta"] = cell_meta
+            if accepts_params["cell_id"]:
+                do_execute_args["cell_id"] = cell_id
+
             if (
                 _asyncio_runner  # type:ignore[truthy-bool]
                 and shell.loop_runner is _asyncio_runner
@@ -423,23 +429,14 @@ class IPythonKernel(KernelBase):
                     preprocessing_exc_tuple=preprocessing_exc_tuple,
                 )
             ):
-                if accepts_params["cell_id"]:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                        cell_id=cell_id,
-                    )
-                else:
-                    coro = run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        transformed_cell=transformed_cell,
-                        preprocessing_exc_tuple=preprocessing_exc_tuple,
-                    )
+                coro = run_cell(
+                    code,
+                    store_history=store_history,
+                    silent=silent,
+                    transformed_cell=transformed_cell,
+                    preprocessing_exc_tuple=preprocessing_exc_tuple,
+                    **do_execute_args,
+                )
 
                 coro_future = asyncio.ensure_future(coro)
 
@@ -460,15 +457,9 @@ class IPythonKernel(KernelBase):
                 # runner isn't already running,
                 # make synchronous call,
                 # letting shell dispatch to loop runners
-                if accepts_params["cell_id"]:
-                    res = shell.run_cell(
-                        code,
-                        store_history=store_history,
-                        silent=silent,
-                        cell_id=cell_id,
-                    )
-                else:
-                    res = shell.run_cell(code, store_history=store_history, silent=silent)
+                res = shell.run_cell(
+                    code, store_history=store_history, silent=silent, **do_execute_args
+                )
         finally:
             self._restore_input()
 

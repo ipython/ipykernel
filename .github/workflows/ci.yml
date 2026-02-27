@@ -196,6 +196,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.10"
+
       - name: Preinstall hatch and virtualenv
         run: |
           python --version
@@ -205,7 +209,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
         with:
           dependency_type: minimum
-          python_version: "3.10"
+          python_version: ${{ matrix.python-version }}
 
       - name: List installed packages
         run: |

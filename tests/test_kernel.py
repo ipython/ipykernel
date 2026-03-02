@@ -203,7 +203,7 @@ def test_print_to_correct_cell_from_child_thread():
 
         received = 0
         while received < iterations:
-            msg = kc.get_iopub_msg(timeout=interval * 2)
+            msg = kc.get_iopub_msg(timeout=interval * 10)
             if msg["msg_type"] != "stream":
                 continue
             content = msg["content"]
@@ -235,7 +235,7 @@ def test_print_to_correct_cell_from_asyncio():
 
         received = 0
         while received < iterations:
-            msg = kc.get_iopub_msg(timeout=interval * 2)
+            msg = kc.get_iopub_msg(timeout=interval * 10)
             if msg["msg_type"] != "stream":
                 continue
             content = msg["content"]

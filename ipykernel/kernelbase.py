@@ -543,6 +543,16 @@ class Kernel(SingletonConfigurable):
         # This can be removed when minimum python increases to 3.10
         self._control_lock = asyncio.Lock()
 
+    async def _await_result(self, result, func_name):
+        """Await result if awaitable, otherwise warn about non-async do_* method."""
+        if inspect.isawaitable(result):
+            return await result
+        warnings.warn(
+            _AWAITABLE_MESSAGE.format(func_name=func_name, target=getattr(self, func_name)),
+            PendingDeprecationWarning, stacklevel=2,
+        )
+        return result
+
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
@@ -830,14 +840,7 @@ class Kernel(SingletonConfigurable):
         # Call do_execute with the appropriate arguments
         reply_content = self.do_execute(**do_execute_args)
 
-        if inspect.isawaitable(reply_content):
-            reply_content = await reply_content
-        else:
-            warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_execute", target=self.do_execute),
-                PendingDeprecationWarning,
-                stacklevel=1,
-            )
+        reply_content = await self._await_result(reply_content, "do_execute")
 
         # Flush output before sending the reply.
         if sys.stdout is not None:
@@ -892,14 +895,7 @@ class Kernel(SingletonConfigurable):
         cursor_pos = content["cursor_pos"]
 
         matches = self.do_complete(code, cursor_pos)
-        if inspect.isawaitable(matches):
-            matches = await matches
-        else:
-            warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_complete", target=self.do_complete),
-                PendingDeprecationWarning,
-                stacklevel=1,
-            )
+        matches = await self._await_result(matches, "do_complete")
 
         matches = json_clean(matches)
         self.session.send(stream, "complete_reply", matches, parent, ident)
@@ -926,14 +922,7 @@ class Kernel(SingletonConfigurable):
             content.get("detail_level", 0),
             set(content.get("omit_sections", [])),
         )
-        if inspect.isawaitable(reply_content):
-            reply_content = await reply_content
-        else:
-            warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_inspect", target=self.do_inspect),
-                PendingDeprecationWarning,
-                stacklevel=1,
-            )
+        reply_content = await self._await_result(reply_content, "do_inspect")
 
         # Before we send this object over, we scrub it for JSON usage
         reply_content = json_clean(reply_content)
@@ -951,14 +940,7 @@ class Kernel(SingletonConfigurable):
         content = parent["content"]
 
         reply_content = self.do_history(**content)
-        if inspect.isawaitable(reply_content):
-            reply_content = await reply_content
-        else:
-            warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_history", target=self.do_history),
-                PendingDeprecationWarning,
-                stacklevel=1,
-            )
+        reply_content = await self._await_result(reply_content, "do_history")
 
         reply_content = json_clean(reply_content)
         msg = self.session.send(stream, "history_reply", reply_content, parent, ident)
@@ -1079,14 +1061,7 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         content = self.do_shutdown(parent["content"]["restart"])
-        if inspect.isawaitable(content):
-            content = await content
-        else:
-            warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_shutdown", target=self.do_shutdown),
-                PendingDeprecationWarning,
-                stacklevel=1,
-            )
+        content = await self._await_result(content, "do_shutdown")
         self.session.send(stream, "shutdown_reply", content, parent, ident=ident)
         # same content, but different msg_id for broadcasting on IOPub
         self._shutdown_message = self.session.msg("shutdown_reply", content, parent)
@@ -1118,14 +1093,7 @@ class Kernel(SingletonConfigurable):
         code = content["code"]
 
         reply_content = self.do_is_complete(code)
-        if inspect.isawaitable(reply_content):
-            reply_content = await reply_content
-        else:
-            warnings.warn(
-                _AWAITABLE_MESSAGE.format(func_name="do_is_complete", target=self.do_is_complete),
-                PendingDeprecationWarning,
-                stacklevel=1,
-            )
+        reply_content = await self._await_result(reply_content, "do_is_complete")
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, "is_complete_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
@@ -1140,16 +1108,7 @@ class Kernel(SingletonConfigurable):
             return
         content = parent["content"]
         reply_content = self.do_debug_request(content)
-        if inspect.isawaitable(reply_content):
-            reply_content = await reply_content
-        else:
-            warnings.warn(
-                _AWAITABLE_MESSAGE.format(
-                    func_name="do_debug_request", target=self.do_debug_request
-                ),
-                PendingDeprecationWarning,
-                stacklevel=1,
-            )
+        reply_content = await self._await_result(reply_content, "do_debug_request")
         reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)

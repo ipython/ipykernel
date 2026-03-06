@@ -11,7 +11,6 @@ import comm.base_comm
 import traitlets.config
 from traitlets import Bool, Bytes, Instance, Unicode, default
 
-from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
 
 
@@ -28,7 +27,7 @@ class BaseComm(comm.base_comm.BaseComm):  # type:ignore[misc]
 
         data = {} if data is None else data
         metadata = {} if metadata is None else metadata
-        content = json_clean(dict(data=data, comm_id=self.comm_id, **keys))
+        content = dict(data=data, comm_id=self.comm_id, **keys)
 
         if self.kernel is None:
             self.kernel = Kernel.instance()
@@ -38,7 +37,7 @@ class BaseComm(comm.base_comm.BaseComm):  # type:ignore[misc]
             self.kernel.iopub_socket,
             msg_type,
             content,
-            metadata=json_clean(metadata),
+            metadata=metadata,
             parent=self.kernel.get_parent(),
             ident=self.topic,
             buffers=buffers,

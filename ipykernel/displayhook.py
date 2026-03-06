@@ -13,7 +13,7 @@ from IPython.core.displayhook import DisplayHook
 from jupyter_client.session import Session, extract_header
 from traitlets import Any, Instance
 
-from ipykernel.jsonutil import encode_images, json_clean
+from ipykernel.jsonutil import encode_images
 
 
 class ZMQDisplayHook:
@@ -120,7 +120,7 @@ class ZMQShellDisplayHook(DisplayHook):
     def write_format_data(self, format_dict, md_dict=None):
         """Write format data to the message."""
         if self.msg:
-            self.msg["content"]["data"] = json_clean(encode_images(format_dict))
+            self.msg["content"]["data"] = encode_images(format_dict)
             self.msg["content"]["metadata"] = md_dict
 
     def finish_displayhook(self):

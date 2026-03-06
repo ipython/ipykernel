@@ -15,7 +15,7 @@ from ipykernel.ipkernel import IPythonKernel
 from ipykernel.jsonutil import json_clean
 from ipykernel.zmqshell import ZMQInteractiveShell
 
-from ..iostream import BackgroundSocket, IOPubThread, OutStream
+from ..iostream import IOPubThread, OutStream
 from .constants import INPROCESS_KEY
 from .socket import DummySocket
 
@@ -60,11 +60,11 @@ class InProcessKernel(IPythonKernel):
         thread.start()
         return thread
 
-    iopub_socket: BackgroundSocket = Instance(BackgroundSocket)  # type:ignore[assignment]
+    iopub_socket: IOPubThread = Instance(IOPubThread)  # type:ignore[assignment]
 
     @default("iopub_socket")
     def _default_iopub_socket(self):
-        return self.iopub_thread.background_socket
+        return self.iopub_thread
 
     stdin_socket = Instance(DummySocket, ())
 

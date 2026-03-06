@@ -17,6 +17,9 @@ from typing import Any
 
 from intersphinx_registry import get_intersphinx_mapping
 
+import warnings
+warnings.filterwarnings("ignore", message="Cannot resolve forward reference.*InteractiveShell")
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -290,8 +293,6 @@ texinfo_documents = [
         "Miscellaneous",
     ),
 ]
-
-suppress_warnings = ["autodoc.resolve_forward_ref"]
 
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []

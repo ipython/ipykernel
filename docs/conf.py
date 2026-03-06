@@ -291,9 +291,7 @@ texinfo_documents = [
     ),
 ]
 
-nitpick_ignore = [
-    ("py:class", "InteractiveShell"),
-]
+suppress_warnings = ["autodoc.resolve_forward_ref"]
 
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []

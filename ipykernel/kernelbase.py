@@ -549,7 +549,8 @@ class Kernel(SingletonConfigurable):
             return await result
         warnings.warn(
             _AWAITABLE_MESSAGE.format(func_name=func_name, target=getattr(self, func_name)),
-            PendingDeprecationWarning, stacklevel=2,
+            PendingDeprecationWarning,
+            stacklevel=2,
         )
         return result
 

@@ -133,9 +133,9 @@ class InProcessKernel(IPythonKernel):
 
     def _io_dispatch(self, change):
         """Called when a message is sent to the IO socket."""
-        assert self.iopub_socket.io_thread is not None
+        assert self.iopub_socket is not None
         assert self.session is not None
-        _ident, msg = self.session.recv(self.iopub_socket.io_thread.socket, copy=False)
+        _ident, msg = self.session.recv(self.iopub_socket.socket, copy=False)
         for frontend in self.frontends:
             assert frontend is not None
             frontend.iopub_channel.call_handlers(msg)

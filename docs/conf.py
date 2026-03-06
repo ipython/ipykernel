@@ -18,6 +18,7 @@ from typing import Any
 
 from intersphinx_registry import get_intersphinx_mapping
 
+set_type_checking_flag = True
 warnings.filterwarnings("ignore", message="Cannot resolve forward reference.*InteractiveShell")
 
 # If extensions (or modules to document with autodoc) are in another directory,

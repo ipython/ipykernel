@@ -252,8 +252,6 @@ class ZMQDisplayPublisher(DisplayPublisher):
 class KernelMagics(Magics):
     """Kernel magics."""
 
-    shell: InteractiveShell | None  # already imported in zmqshell.py
-
     # ------------------------------------------------------------------------
     # Magic overrides
     # ------------------------------------------------------------------------

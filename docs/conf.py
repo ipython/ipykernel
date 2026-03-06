@@ -291,6 +291,10 @@ texinfo_documents = [
     ),
 ]
 
+nitpick_ignore = [
+    ("py:class", "InteractiveShell"),
+]
+
 # Documents to append as an appendix to all manuals.
 # texinfo_appendices = []
 

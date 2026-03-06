@@ -12,12 +12,12 @@
 
 import os
 import shutil
+import warnings
 from pathlib import Path
 from typing import Any
 
 from intersphinx_registry import get_intersphinx_mapping
 
-import warnings
 warnings.filterwarnings("ignore", message="Cannot resolve forward reference.*InteractiveShell")
 
 # If extensions (or modules to document with autodoc) are in another directory,

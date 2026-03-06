@@ -181,15 +181,6 @@ class Kernel(SingletonConfigurable):
     # Asyncio lock for main shell thread.
     _main_asyncio_lock: asyncio.Lock
 
-    @property
-    def _parent_header(self):
-        warnings.warn(
-            "Kernel._parent_header is deprecated in ipykernel 6. Use .get_parent()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_parent()
-
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the
     # execute cycle, it helps prevent output synchronization problems for

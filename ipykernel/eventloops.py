@@ -431,6 +431,7 @@ def loop_cocoa_exit(kernel):
 def loop_asyncio(kernel):
     """Start a kernel with asyncio event loop support."""
     import asyncio
+    import threading
 
     loop = asyncio.get_event_loop()
     # loop is already running (e.g. tornado 5), nothing left to do
@@ -451,8 +452,25 @@ def loop_asyncio(kernel):
 
     shell_stream = get_shell_stream(kernel)
     notifier = partial(process_stream_events, shell_stream)
-    loop.add_reader(shell_stream.getsockopt(zmq.FD), notifier)
-    loop.call_soon(notifier)
+
+    if os.name == "nt":
+        stop_event = asyncio.Event()
+        t = None
+
+        def blocking_poll():
+            poller = zmq.Poller()
+            poller.register(shell_stream.socket, zmq.POLLIN)
+
+            while not stop_event.is_set():
+                events = poller.poll(None)
+                if events:
+                    loop.call_soon_threadsafe(notifier)
+
+        t = threading.Thread(target=blocking_poll, daemon=True)
+        t.start()
+    else:
+        loop.add_reader(shell_stream.getsockopt(zmq.FD), notifier)
+        loop.call_soon(notifier)
 
     while True:
         error = None
@@ -463,6 +481,10 @@ def loop_asyncio(kernel):
         except Exception as e:
             error = e
         if loop._should_close:  # type:ignore[attr-defined]
+            if os.name == "nt":
+                stop_event.set()
+                if t is not None:
+                    t.join()
             loop.close()
         if error is not None:
             raise error

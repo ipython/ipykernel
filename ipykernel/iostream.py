@@ -47,7 +47,7 @@ class IOPubThread:
     whose IO is always run in a thread.
     """
 
-    def __init__(self, socket, pipe=False):
+    def __init__(self, socket, pipe=False, session=False):
         """Create IOPub thread
 
         Parameters
@@ -59,6 +59,7 @@ class IOPubThread:
             piped from subprocesses.
         """
         self.socket = socket
+        self.session = session
         self._stopped = False
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
@@ -73,11 +74,81 @@ class IOPubThread:
         self._event_pipe_gc_seconds: float = 10
         self._event_pipe_gc_task: asyncio.Task[Any] | None = None
         self._setup_event_pipe()
+        self._setup_xpub_listener()
         self.thread = threading.Thread(target=self._thread_main, name="IOPub")
         self.thread.daemon = True
         self.thread.pydev_do_not_trace = True  # type:ignore[attr-defined]
         self.thread.is_pydev_daemon_thread = True  # type:ignore[attr-defined]
         self.thread.name = "IOPub"
+
+    def _setup_xpub_listener(self):
+        """Setup listener for XPUB subscription events"""
+
+        # Checks the socket is not a DummySocket
+        if not hasattr(self.socket, "getsockopt"):
+            return
+
+        socket_type = self.socket.getsockopt(zmq.TYPE)
+        if socket_type == zmq.XPUB:
+            self._xpub_stream = ZMQStream(self.socket, self.io_loop)
+            self._xpub_stream.on_recv(self._handle_subscription)
+
+    def _handle_subscription(self, frames):
+        """Handle subscription/unsubscription events from XPUB socket
+
+        XPUB sockets receive:
+        - subscribe:  single frame with b'\\x01' + topic
+        - unsubscribe: single frame with b'\\x00' + topic
+        """
+
+        for frame in frames:
+            event_type = frame[0]
+            if event_type == 1:
+                subscription = frame[1:] if len(frame) > 1 else b""
+                try:
+                    subscription_str = subscription.decode("utf-8")
+                except UnicodeDecodeError:
+                    continue
+                self._send_welcome_message(subscription_str)
+
+    def _send_welcome_message(self, subscription):
+        """Send iopub_welcome message for new subscription
+
+        Parameters
+        ----------
+        subscription : str
+            The subscription topic (UTF-8 decoded)
+        """
+
+        # TODO: This early return is for backward-compatibility with ipyparallel.
+        # This should be removed when ipykernel has been released with support of
+        # xpub and ipyparallel has been updated to pass the session parameter
+        # to IOPubThread upon construction.
+        # (NB: the call to fix is here:
+        # https://github.com/ipython/ipyparallel/blob/main/ipyparallel/engine/app.py#L679
+        if self.session is None:
+            return
+
+        content = {"subscription": subscription}
+
+        header = self.session.msg_header("iopub_welcome")
+        msg = {
+            "header": header,
+            "parent_header": {},
+            "metadata": {},
+            "content": content,
+            "buffers": [],
+        }
+
+        msg_list = self.session.serialize(msg)
+
+        if subscription:
+            identity = subscription.encode("utf-8")
+            full_msg = [identity, *msg_list]
+        else:
+            full_msg = msg_list
+        # Send directly on socket (we're already in IO thread context)
+        self.socket.send_multipart(full_msg)
 
     def _thread_main(self):
         """The inner loop that's actually run in a thread"""
@@ -447,7 +518,7 @@ class OutStream(TextIOBase):
                 DeprecationWarning,
                 stacklevel=2,
             )
-            pub_thread = IOPubThread(pub_thread)
+            pub_thread = IOPubThread(pub_thread, session=self.session)
             pub_thread.start()
         self.pub_thread = pub_thread
         self.name = name

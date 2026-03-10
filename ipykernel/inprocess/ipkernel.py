@@ -56,7 +56,7 @@ class InProcessKernel(IPythonKernel):
 
     @default("iopub_thread")
     def _default_iopub_thread(self):
-        thread = IOPubThread(self._underlying_iopub_socket)
+        thread = IOPubThread(self._underlying_iopub_socket, session=self.session)
         thread.start()
         return thread
 

@@ -384,8 +384,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.configure_tornado_logger()
         self.iopub_thread = IOPubThread(self.iopub_socket, pipe=True, session=self.session)
         self.iopub_thread.start()
-        # backward-compat: wrap iopub socket API in background thread
-        self.iopub_socket = self.iopub_thread.background_socket
+        self.iopub_socket = self.iopub_thread
 
     def init_heartbeat(self):
         """start the heart beating"""

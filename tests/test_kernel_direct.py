@@ -4,7 +4,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
-import warnings
 
 import pytest
 
@@ -101,18 +100,6 @@ async def test_is_complete_request(kernel):
 async def test_direct_debug_request(kernel):
     reply = await kernel.test_control_message("debug_request", {})
     assert reply["header"]["msg_type"] == "debug_reply"
-
-
-async def test_deprecated_features(kernel):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        header = kernel._parent_header
-        assert isinstance(header, dict)
-        shell_streams = kernel.shell_streams
-        assert len(shell_streams) == 1
-        assert shell_streams[0] == kernel.shell_stream
-        warnings.simplefilter("ignore", RuntimeWarning)
-        kernel.shell_streams = [kernel.shell_stream, kernel.shell_stream]
 
 
 async def test_process_control(kernel):

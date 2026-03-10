@@ -110,44 +110,9 @@ class Kernel(SingletonConfigurable):
     profile_dir = Instance("IPython.core.profiledir.ProfileDir", allow_none=True)
     shell_stream = Instance(ZMQStream, allow_none=True)
 
-    shell_streams: List[t.Any] = List(
-        help="""Deprecated shell_streams alias. Use shell_stream
-
-        .. versionchanged:: 6.0
-            shell_streams is deprecated. Use shell_stream.
-        """
-    )
-
     implementation: str
     implementation_version: str
     banner: str
-
-    @default("shell_streams")
-    def _shell_streams_default(self):  # pragma: no cover
-        warnings.warn(
-            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if self.shell_stream is not None:
-            return [self.shell_stream]
-        return []
-
-    @observe("shell_streams")
-    def _shell_streams_changed(self, change):  # pragma: no cover
-        warnings.warn(
-            "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if len(change.new) > 1:
-            warnings.warn(
-                "Kernel only supports one shell stream. Additional streams will be ignored.",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-        if change.new:
-            self.shell_stream = change.new[0]
 
     control_stream = Instance(ZMQStream, allow_none=True)
 
@@ -215,15 +180,6 @@ class Kernel(SingletonConfigurable):
 
     # Asyncio lock for main shell thread.
     _main_asyncio_lock: asyncio.Lock
-
-    @property
-    def _parent_header(self):
-        warnings.warn(
-            "Kernel._parent_header is deprecated in ipykernel 6. Use .get_parent()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_parent()
 
     # Time to sleep after flushing the stdout/err buffers in each execute
     # cycle.  While this introduces a hard limit on the minimal latency of the

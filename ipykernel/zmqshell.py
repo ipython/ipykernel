@@ -369,7 +369,7 @@ class KernelMagics(Magics):
 
     if os.name == "nt":
         # This is the usual name in windows
-        cls = line_magic("cls")(clear)
+        cls = line_magic("cls")(clear)  # type: ignore[arg-type,var-annotated]
 
     # Terminal pagers won't work over pexpect, but we do have our own pager
 
@@ -390,7 +390,7 @@ class KernelMagics(Magics):
                 cont = fid.read()
         page.page(cont)
 
-    more = line_magic("more")(less)
+    more = line_magic("more")(less)  # type: ignore[arg-type,var-annotated]
 
     # Man calls a pager, so we also need to redefine it
     if os.name == "posix":

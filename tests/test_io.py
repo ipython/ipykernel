@@ -14,7 +14,7 @@ import pytest
 import zmq
 from jupyter_client.session import Session
 
-from ipykernel.iostream import MASTER, BackgroundSocket, IOPubThread, OutStream
+from ipykernel.iostream import MASTER, IOPubThread, OutStream
 
 
 @pytest.fixture()
@@ -81,15 +81,8 @@ def test_io_thread(iopub_thread):
     thread._really_send(None)
 
 
-def test_background_socket(iopub_thread):
-    sock = BackgroundSocket(iopub_thread)
-    assert sock.__class__ == BackgroundSocket
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", DeprecationWarning)
-        sock.linger = 101
-        assert iopub_thread.socket.linger == 101
-    assert sock.io_thread == iopub_thread
-    sock.send(b"hi")
+def test_iopub_thread_send(iopub_thread):
+    iopub_thread.send(b"hi")
 
 
 def test_outstream(iopub_thread):

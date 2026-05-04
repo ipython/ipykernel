@@ -693,7 +693,7 @@ class Debugger:
 
     async def modules(self, message):
         """Handle a modules message."""
-        modules = list(sys.modules.values())
+        modules = list(sys.modules.copy().values())
         startModule = message.get("startModule", 0)
         moduleCount = message.get("moduleCount", len(modules))
         mods = []

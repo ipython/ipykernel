@@ -127,8 +127,7 @@ def test_curve_unauthenticated_socket_messages_dropped(curve_enabled_kernel_app)
         poller.register(app.shell_socket, zmq.POLLIN)
         events = dict(poller.poll(timeout=300))
         assert app.shell_socket not in events, (
-            "Unauthenticated message reached the kernel socket - "
-            "CurveZMQ should have dropped it"
+            "Unauthenticated message reached the kernel socket - CurveZMQ should have dropped it"
         )
     finally:
         unauth.close(linger=0)

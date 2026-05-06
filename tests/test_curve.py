@@ -72,7 +72,7 @@ def test_curve_connection_file_has_keys(curve_enabled_kernel_app):
 
 def test_curve_keys_are_stable_per_startup(curve_enabled_kernel_app):
     """Keys generated at startup stay the same throughout the process lifetime."""
-    app, connection_file_path = curve_enabled_kernel_app
+    app, _connection_file_path = curve_enabled_kernel_app
     app.init_sockets()
     pub1 = app._curve_publickey
     # Writing the file twice should not regenerate keys.
@@ -83,7 +83,7 @@ def test_curve_keys_are_stable_per_startup(curve_enabled_kernel_app):
 
 def test_curve_socket_server_options(curve_enabled_kernel_app):
     """Bound sockets must have CURVE_SERVER=True when Curve is enabled."""
-    app, connection_file_path = curve_enabled_kernel_app
+    app, _connection_file_path = curve_enabled_kernel_app
     app.init_sockets()
     # shell and stdin are ROUTER sockets configured directly.
     assert app.shell_socket.curve_server, "shell_socket missing curve_server"
@@ -95,7 +95,7 @@ def test_curve_socket_server_options(curve_enabled_kernel_app):
 
 def test_no_curve_socket_options_when_disabled(curve_disabled_kernel_app):
     """No CURVE options are set when Curve is disabled (default)."""
-    app, connection_file_path = curve_disabled_kernel_app
+    app, _connection_file_path = curve_disabled_kernel_app
     app.init_sockets()
     # curve_server defaults to 0/False; key options are write-only.
     assert not app.shell_socket.curve_server
@@ -109,7 +109,7 @@ def test_curve_unauthenticated_socket_messages_dropped(curve_enabled_kernel_app)
     with test_transport_security.py in jupyter-client which shows the *absence*
     of this property today.
     """
-    app, connection_file_path = curve_enabled_kernel_app
+    app, _connection_file_path = curve_enabled_kernel_app
     app.init_sockets()
 
     # Build the endpoint URL from the bound port.
@@ -136,7 +136,7 @@ def test_curve_unauthenticated_socket_messages_dropped(curve_enabled_kernel_app)
 
 def test_curve_authenticated_socket_can_communicate(curve_enabled_kernel_app):
     """With CurveZMQ, a correctly-keyed client socket can reach the kernel."""
-    app, connection_file_path = curve_enabled_kernel_app
+    app, _connection_file_path = curve_enabled_kernel_app
     app.init_sockets()
 
     endpoint = f"tcp://{app.ip}:{app.shell_port}"

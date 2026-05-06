@@ -299,11 +299,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             control_port=self.control_port,
         )
         if self.enable_curve and self._curve_publickey is not None:
-            # Store Z85-encoded keys as ASCII strings alongside the HMAC key.
-            # Clients that understand CurveZMQ will use these to configure
-            # their sockets; legacy clients ignore the unknown fields.
-            connection_info["curve_publickey"] = self._curve_publickey.decode("ascii")
-            connection_info["curve_secretkey"] = self._curve_secretkey.decode("ascii")  # type: ignore[union-attr]
+            # write_connection_file() in jupyter-client handles JSON-safe key serialization
+            connection_info["curve_publickey"] = self._curve_publickey
+            connection_info["curve_secretkey"] = self._curve_secretkey
         if Path(cf).exists():
             # If the file exists, merge our info into it. For example, if the
             # original file had port number 0, we update with the actual port

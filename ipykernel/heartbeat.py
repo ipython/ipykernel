@@ -36,11 +36,11 @@ class Heartbeat(Thread):
         addr : tuple, optional
             (transport, ip, port)
         curve_publickey : bytes, optional
-            Z85-encoded CurveZMQ public key.  When provided together with
+            CurveZMQ public key (Z85). When provided together with
             *curve_secretkey*, the heartbeat socket will operate as a
             CurveZMQ server so that only authenticated clients can connect.
         curve_secretkey : bytes, optional
-            Z85-encoded CurveZMQ secret key (paired with *curve_publickey*).
+            CurveZMQ secret key (Z85, paired with *curve_publickey*).
         """
         if addr is None:
             addr = ("tcp", localhost(), 0)

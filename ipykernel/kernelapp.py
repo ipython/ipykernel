@@ -359,6 +359,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.enable_curve:
             self._curve_publickey, self._curve_secretkey = zmq.curve_keypair()
             self.log.debug("CurveZMQ enabled; generated server keypair")
+        elif self.transport == "tcp":
+            self.log.warning(
+                "Kernel is running over TCP without encryption."
+                " All communication (including code and outputs) is sent in plain text"
+                " and is susceptible to eavesdropping."
+                " Use IPC transport or set IPKernelApp.enable_curve=True to enable"
+                " CurveZMQ encryption."
+            )
 
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000

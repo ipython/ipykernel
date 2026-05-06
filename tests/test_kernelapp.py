@@ -129,3 +129,27 @@ def test_trio_loop():
     app.io_loop.add_callback(app.io_loop.stop)
     app.kernel.destroy()
     app.close()
+
+
+def test_init_sockets_curve_enabled_logs_debug():
+    app = IPKernelApp(enable_curve=True)
+    with patch.object(app.log, "debug") as mock_debug:
+        app.init_sockets()
+    app.cleanup_connection_file()
+    app.close()
+    messages = [str(call) for call in mock_debug.call_args_list]
+    assert any("CurveZMQ enabled" in m for m in messages), (
+        "Expected a debug log mentioning CurveZMQ when enable_curve=True"
+    )
+
+
+def test_init_sockets_tcp_without_curve_logs_warning():
+    app = IPKernelApp(transport="tcp", enable_curve=False)
+    with patch.object(app.log, "warning") as mock_warning:
+        app.init_sockets()
+    app.cleanup_connection_file()
+    app.close()
+    messages = [str(call) for call in mock_warning.call_args_list]
+    assert any("Kernel is running over TCP without encryption" in m for m in messages), (
+        "Expected a warning about missing encryption when transport=tcp and enable_curve=False"
+    )

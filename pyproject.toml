@@ -73,6 +73,9 @@ cov = [
 pyqt5 = ["pyqt5"]
 pyside6 = ["pyside6"]
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.version]
 path = "ipykernel/_version.py"
 

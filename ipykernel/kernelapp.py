@@ -224,7 +224,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         # write uncaught traceback to 'real' stderr, not zmq-forwarder
         traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
 
-    def _apply_curve_server_options(self, socket: zmq.sugar.socket.Socket) -> None:
+    def _apply_curve_server_options(self, socket: zmq.Socket[t.Any]) -> None:
         """Set CurveZMQ server-side options on *socket* before it is bound.
 
         This is a no-op when enable_curve is False or keys have not been

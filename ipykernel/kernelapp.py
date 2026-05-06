@@ -188,6 +188,19 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     """,
     ).tag(config=True)
 
+    enable_curve = Bool(
+        bool(int(os.environ.get("JUPYTER_ENABLE_CURVE", "0"))),
+        help="Enable CurveZMQ transport encryption and authentication. "
+        "When True, a keypair is generated at startup and stored in the "
+        "connection file so that clients can authenticate and encrypt "
+        "all ZMQ channels.",
+    ).tag(config=True)
+
+    # Internal CurveZMQ keypair (Z85-encoded bytes); populated in init_sockets
+    # when enable_curve is True.
+    _curve_publickey: bytes | None = None
+    _curve_secretkey: bytes | None = None
+
     # polling
     parent_handle = Integer(
         int(os.environ.get("JPY_PARENT_PID") or 0),
@@ -210,6 +223,17 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Handle an exception."""
         # write uncaught traceback to 'real' stderr, not zmq-forwarder
         traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
+
+    def _apply_curve_server_options(self, socket: zmq.sugar.socket.Socket) -> None:
+        """Set CurveZMQ server-side options on *socket* before it is bound.
+
+        This is a no-op when enable_curve is False or keys have not been
+        generated yet, so it is safe to call unconditionally.
+        """
+        if self.enable_curve and self._curve_secretkey is not None:
+            socket.curve_secretkey = self._curve_secretkey
+            socket.curve_publickey = self._curve_publickey
+            socket.curve_server = True
 
     def init_poller(self):
         """Initialize the poller."""
@@ -274,6 +298,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             iopub_port=self.iopub_port,
             control_port=self.control_port,
         )
+        if self.enable_curve and self._curve_publickey is not None:
+            # Store Z85-encoded keys as ASCII strings alongside the HMAC key.
+            # Clients that understand CurveZMQ will use these to configure
+            # their sockets; legacy clients ignore the unknown fields.
+            connection_info["curve_publickey"] = self._curve_publickey.decode("ascii")
+            connection_info["curve_secretkey"] = self._curve_secretkey.decode("ascii")  # type: ignore[union-attr]
         if Path(cf).exists():
             # If the file exists, merge our info into it. For example, if the
             # original file had port number 0, we update with the actual port
@@ -328,13 +358,19 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.context = context = zmq.Context()
         atexit.register(self.close)
 
+        if self.enable_curve:
+            self._curve_publickey, self._curve_secretkey = zmq.curve_keypair()
+            self.log.debug("CurveZMQ enabled; generated server keypair")
+
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
+        self._apply_curve_server_options(self.shell_socket)
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
         self.log.debug("shell ROUTER Channel on port: %i", self.shell_port)
 
         self.stdin_socket = context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
+        self._apply_curve_server_options(self.stdin_socket)
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
         self.log.debug("stdin ROUTER Channel on port: %i", self.stdin_port)
 
@@ -351,6 +387,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Initialize the control channel."""
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
+        self._apply_curve_server_options(self.control_socket)
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
         self.log.debug("control ROUTER Channel on port: %i", self.control_port)
 
@@ -379,6 +416,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Initialize the iopub channel."""
         self.iopub_socket = context.socket(zmq.XPUB)
         self.iopub_socket.linger = 1000
+        self._apply_curve_server_options(self.iopub_socket)
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
         self.log.debug("iopub PUB Channel on port: %i", self.iopub_port)
         self.configure_tornado_logger()
@@ -392,7 +430,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         # heartbeat doesn't share context, because it mustn't be blocked
         # by the GIL, which is accessed by libzmq when freeing zero-copy messages
         hb_ctx = zmq.Context()
-        self.heartbeat = Heartbeat(hb_ctx, (self.transport, self.ip, self.hb_port))
+        self.heartbeat = Heartbeat(
+            hb_ctx,
+            (self.transport, self.ip, self.hb_port),
+            curve_publickey=self._curve_publickey if self.enable_curve else None,
+            curve_secretkey=self._curve_secretkey if self.enable_curve else None,
+        )
         self.hb_port = self.heartbeat.port
         self.log.debug("Heartbeat REP Channel on port: %i", self.hb_port)
         self.heartbeat.start()

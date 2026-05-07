@@ -38,9 +38,12 @@ def test_start_app():
         app.stop()
 
     thread = threading.Thread(target=trigger_stop)
+    t0 = time.time()
     thread.start()
     app.init_sockets()
     app.start()
+    t1 = time.time()
+    assert t1 - t0 >= 1
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()
@@ -127,7 +130,7 @@ async def test_trio_loop(anyio_backend):
     app.kernel = MockKernel()
     app.init_sockets()
     async with trio.open_nursery() as nursery:
-        nursery.start_soon(app._start)
+        nursery.start_soon(lambda: app._start("trio"))
         nursery.start_soon(trigger_stop)
     app.cleanup_connection_file()
     app.kernel.destroy()

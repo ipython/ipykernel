@@ -54,7 +54,7 @@ class InProcessKernel(IPythonKernel):
     _underlying_iopub_socket = Instance(DummySocket, (False,))
     iopub_thread: IOPubThread = Instance(IOPubThread)  # type:ignore[assignment]
 
-    shell_socket = Instance(DummySocket, (True,))  # type:ignore[arg-type]
+    shell_socket = Instance(DummySocket, (True,))
 
     @default("iopub_thread")
     def _default_iopub_thread(self):
@@ -207,7 +207,7 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
         """Activate pylab support at runtime."""
         if not gui:
             gui = self.kernel.gui
-        return super().enable_pylab(gui, import_all, welcome_message)
+        return super().enable_pylab(gui, import_all, welcome_message)  # type: ignore[call-arg]
 
 
 InteractiveShellABC.register(InProcessInteractiveShell)

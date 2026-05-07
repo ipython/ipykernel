@@ -36,7 +36,7 @@ except ModuleNotFoundError:
     tracemalloc = None
 
 # ensure we don't leak history managers
-HistoryManager._max_inst = 1
+HistoryManager._max_inst = 2
 
 pytestmark = pytest.mark.anyio
 

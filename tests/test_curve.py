@@ -2,7 +2,6 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
-import os
 import time
 
 import pytest
@@ -12,13 +11,8 @@ from ipykernel.kernelapp import IPKernelApp
 
 
 @pytest.fixture
-def temp_folder_path(tmp_path):
-    return str(tmp_path)
-
-
-@pytest.fixture
-def curve_disabled_kernel_app(temp_folder_path):
-    app, connection_file_path = _make_app(temp_folder_path, enable_curve=False)
+def curve_disabled_kernel_app(tmp_path):
+    app, connection_file_path = _make_app(tmp_path, enable_curve=False)
     try:
         yield app, connection_file_path
     finally:
@@ -26,8 +20,8 @@ def curve_disabled_kernel_app(temp_folder_path):
 
 
 @pytest.fixture
-def curve_enabled_kernel_app(temp_folder_path):
-    app, connection_file_path = _make_app(temp_folder_path, enable_curve=True)
+def curve_enabled_kernel_app(tmp_path):
+    app, connection_file_path = _make_app(tmp_path, enable_curve=True)
     try:
         yield app, connection_file_path
     finally:
@@ -167,9 +161,9 @@ def test_curve_authenticated_socket_can_communicate(curve_enabled_kernel_app):
         ctx.term()
 
 
-def _make_app(temp_folder_path, **kwargs):
-    """Return a minimal IPKernelApp rooted in temporary directory *temp_folder_path*."""
-    connection_file_path = os.path.join(temp_folder_path, "kernel.json")
+def _make_app(tmp_path, **kwargs):
+    """Return a minimal IPKernelApp rooted in temporary directory *tmp_path*."""
+    connection_file_path = str(tmp_path / "kernel.json")
     app = IPKernelApp(connection_file=connection_file_path, **kwargs)
     # Replicate the subset of initialize() that sets up connection info
     # without importing IPython shell machinery.

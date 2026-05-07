@@ -27,7 +27,7 @@ from jupyter_client.localinterfaces import localhost
 class Heartbeat(Thread):
     """A simple ping-pong style heartbeat that runs in a thread."""
 
-    def __init__(self, context, addr=None, curve_publickey=None, curve_secretkey=None):
+    def __init__(self, context, addr=None, *, curve_publickey=None, curve_secretkey=None):
         """Initialize the heartbeat thread.
 
         Parameters

@@ -7,19 +7,19 @@ Submodules
 
 .. automodule:: ipykernel.comm.comm
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 
 .. automodule:: ipykernel.comm.manager
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: ipykernel.comm
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

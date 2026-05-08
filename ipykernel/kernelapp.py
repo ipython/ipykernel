@@ -33,6 +33,7 @@ from tornado import ioloop
 from traitlets.traitlets import (
     Any,
     Bool,
+    Bytes,
     Dict,
     DottedObjectName,
     Instance,
@@ -157,6 +158,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     # connection info:
     connection_dir = Unicode()
+
+    # Optional CurveZMQ keys loaded from the connection file (Z85-encoded bytes).
+    # None when the kernel was not started with CurveZMQ enabled.
+    curve_publickey: Bytes | None = Bytes(allow_none=True, default_value=None)
+    curve_secretkey: Bytes | None = Bytes(allow_none=True, default_value=None)
 
     @default("connection_dir")
     def _default_connection_dir(self):

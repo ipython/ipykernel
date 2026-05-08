@@ -6,6 +6,7 @@ import time
 
 import pytest
 import zmq
+from jupyter_client import KernelManager
 
 from ipykernel.kernelapp import IPKernelApp
 
@@ -26,12 +27,6 @@ def curve_enabled_kernel_app(tmp_path):
         yield app, connection_file_path
     finally:
         app.close()
-
-
-def test_curve_disabled_by_default():
-    """CurveZMQ must be off by default so existing kernels are unaffected."""
-    app = IPKernelApp()
-    assert app.enable_curve is False
 
 
 def test_connection_file_no_curve_keys_by_default(curve_disabled_kernel_app):
@@ -65,14 +60,14 @@ def test_curve_connection_file_has_keys(curve_enabled_kernel_app):
 
 
 def test_curve_keys_are_stable_per_startup(curve_enabled_kernel_app):
-    """Keys generated at startup stay the same throughout the process lifetime."""
+    """Provisioned keys stay unchanged throughout the kernel process lifetime."""
     app, _connection_file_path = curve_enabled_kernel_app
     app.init_sockets()
-    pub1 = app._curve_publickey
+    pub1 = app.curve_publickey
     # Writing the file twice should not regenerate keys.
     app.init_heartbeat()
     app.write_connection_file()
-    assert app._curve_publickey == pub1
+    assert app.curve_publickey == pub1
 
 
 def test_curve_socket_server_options(curve_enabled_kernel_app):
@@ -134,7 +129,7 @@ def test_curve_authenticated_socket_can_communicate(curve_enabled_kernel_app):
     app.init_sockets()
 
     endpoint = f"tcp://{app.ip}:{app.shell_port}"
-    server_public = app._curve_publickey
+    server_public = app.curve_publickey
 
     ctx = zmq.Context()
     auth_client = ctx.socket(zmq.DEALER)
@@ -161,9 +156,33 @@ def test_curve_authenticated_socket_can_communicate(curve_enabled_kernel_app):
         ctx.term()
 
 
-def _make_app(tmp_path, **kwargs):
+def test_manager_provisioned_curve_keys_are_used(curve_enabled_kernel_app):
+    """Kernel uses manager-provisioned Curve keys exactly as provided."""
+    app, _connection_file_path = curve_enabled_kernel_app
+    try:
+        with open(_connection_file_path) as f:
+            info = json.load(f)
+
+        app.init_sockets()
+
+        assert app.curve_publickey == info["curve_publickey"].encode()
+        assert app.curve_secretkey == info["curve_secretkey"].encode()
+        assert app.shell_socket.curve_server
+        assert app.stdin_socket.curve_server
+        assert app.control_socket.curve_server
+    finally:
+        app.close()
+
+
+def _make_app(tmp_path, *, enable_curve=False, **kwargs):
     """Return a minimal IPKernelApp rooted in temporary directory *tmp_path*."""
     connection_file_path = str(tmp_path / "kernel.json")
+    if enable_curve:
+        # Populate the Curve keys into the connection file
+        km = KernelManager(connection_file=connection_file_path)
+        km.transport_encryption = True
+        km.pre_start_kernel()
+
     app = IPKernelApp(connection_file=connection_file_path, **kwargs)
     # Replicate the subset of initialize() that sets up connection info
     # without importing IPython shell machinery.

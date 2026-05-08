@@ -188,19 +188,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     """,
     ).tag(config=True)
 
-    enable_curve = Bool(
-        bool(int(os.environ.get("JUPYTER_ENABLE_CURVE", "0"))),
-        help="Enable CurveZMQ transport encryption and authentication. "
-        "When True, a keypair is generated at startup and stored in the "
-        "connection file so that clients can authenticate and encrypt "
-        "all ZMQ channels.",
-    ).tag(config=True)
-
-    # Internal CurveZMQ keypair (Z85-encoded bytes); populated in init_sockets
-    # when enable_curve is True.
-    _curve_publickey: bytes | None = None
-    _curve_secretkey: bytes | None = None
-
     # polling
     parent_handle = Integer(
         int(os.environ.get("JPY_PARENT_PID") or 0),
@@ -227,12 +214,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     def _apply_curve_server_options(self, socket: zmq.Socket[t.Any]) -> None:
         """Set CurveZMQ server-side options on *socket* before it is bound.
 
-        This is a no-op when enable_curve is False or keys have not been
-        generated yet, so it is safe to call unconditionally.
+        This is a no-op when Curve keys are not available yet, so it is safe
+        to call unconditionally.
         """
-        if self.enable_curve and self._curve_secretkey is not None:
-            socket.curve_secretkey = self._curve_secretkey
-            socket.curve_publickey = self._curve_publickey
+        if self.curve_secretkey is not None:
+            socket.curve_secretkey = self.curve_secretkey
+            socket.curve_publickey = self.curve_publickey
             socket.curve_server = True
 
     def init_poller(self):
@@ -298,10 +285,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             iopub_port=self.iopub_port,
             control_port=self.control_port,
         )
-        if self.enable_curve and self._curve_publickey is not None:
-            # write_connection_file() in jupyter-client handles JSON-safe key serialization
-            connection_info["curve_publickey"] = self._curve_publickey
-            connection_info["curve_secretkey"] = self._curve_secretkey
+        if self.curve_publickey is not None:
+            connection_info["curve_publickey"] = self.curve_publickey
+            connection_info["curve_secretkey"] = self.curve_secretkey
         if Path(cf).exists():
             # If the file exists, merge our info into it. For example, if the
             # original file had port number 0, we update with the actual port
@@ -356,16 +342,15 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.context = context = zmq.Context()
         atexit.register(self.close)
 
-        if self.enable_curve:
-            self._curve_publickey, self._curve_secretkey = zmq.curve_keypair()
-            self.log.debug("CurveZMQ enabled; generated server keypair")
+        if self.curve_secretkey is not None:
+            self.log.debug("Detected CurveZMQ secret key; using transport encryption")
         elif self.transport == "tcp":
             self.log.warning(
                 "Kernel is running over TCP without encryption."
                 " All communication (including code and outputs) is sent in plain text"
                 " and is susceptible to eavesdropping."
-                " Use IPC transport or set IPKernelApp.enable_curve=True to enable"
-                " CurveZMQ encryption."
+                " Use IPC transport or launch with kernel manager-provisioned"
+                " CurveZMQ keys to enable transport encryption."
             )
 
         self.shell_socket = context.socket(zmq.ROUTER)
@@ -439,8 +424,8 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.heartbeat = Heartbeat(
             hb_ctx,
             (self.transport, self.ip, self.hb_port),
-            curve_publickey=self._curve_publickey if self.enable_curve else None,
-            curve_secretkey=self._curve_secretkey if self.enable_curve else None,
+            curve_publickey=self.curve_publickey,
+            curve_secretkey=self.curve_secretkey,
         )
         self.hb_port = self.heartbeat.port
         self.log.debug("Heartbeat REP Channel on port: %i", self.hb_port)

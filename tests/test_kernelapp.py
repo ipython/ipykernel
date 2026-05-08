@@ -5,6 +5,7 @@ import time
 from unittest.mock import patch
 
 import pytest
+from jupyter_client import KernelManager
 from jupyter_core.paths import secure_write
 from traitlets.config.loader import Config
 
@@ -131,25 +132,32 @@ def test_trio_loop():
     app.close()
 
 
-def test_init_sockets_curve_enabled_logs_debug():
-    app = IPKernelApp(enable_curve=True)
+def test_init_sockets_curve_enabled_logs_debug(tmp_path):
+    connection_file = str(tmp_path / "kernel.json")
+    km = KernelManager(connection_file=connection_file)
+    km.transport_encryption = True
+    km.pre_start_kernel()
+
+    app = IPKernelApp(connection_file=connection_file)
+    super(IPKernelApp, app).initialize(argv=[""])
+    app.init_connection_file()
     with patch.object(app.log, "debug") as mock_debug:
         app.init_sockets()
     app.cleanup_connection_file()
     app.close()
     messages = [str(call) for call in mock_debug.call_args_list]
-    assert any("CurveZMQ enabled" in m for m in messages), (
-        "Expected a debug log mentioning CurveZMQ when enable_curve=True"
+    assert any("Detected CurveZMQ secret key; using transport encryption" in m for m in messages), (
+        "Expected a debug log mentioning CurveZMQ when keys are provided"
     )
 
 
 def test_init_sockets_tcp_without_curve_logs_warning():
-    app = IPKernelApp(transport="tcp", enable_curve=False)
+    app = IPKernelApp(transport="tcp")
     with patch.object(app.log, "warning") as mock_warning:
         app.init_sockets()
     app.cleanup_connection_file()
     app.close()
     messages = [str(call) for call in mock_warning.call_args_list]
     assert any("Kernel is running over TCP without encryption" in m for m in messages), (
-        "Expected a warning about missing encryption when transport=tcp and enable_curve=False"
+        "Expected a warning about missing encryption when transport=tcp without curve keys"
     )

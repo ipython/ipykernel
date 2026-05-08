@@ -465,7 +465,9 @@ class IPythonKernel(KernelBase):
 
         err = res.error_before_exec if res.error_before_exec is not None else res.error_in_exec
 
-        if res.success:
+        displayhook_error = getattr(shell, "_last_traceback_during_displayhook", False)
+
+        if res.success and not displayhook_error:
             reply_content["status"] = "ok"
         else:
             reply_content["status"] = "error"

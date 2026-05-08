@@ -661,6 +661,7 @@ class ZMQInteractiveShell(InteractiveShell):
     def run_cell(self, *args, **kwargs):
         """Run a cell."""
         self._last_traceback = None
+        self._last_traceback_during_displayhook = False
         return super().run_cell(*args, **kwargs)
 
     def _showtraceback(self, etype, evalue, stb):
@@ -675,6 +676,10 @@ class ZMQInteractiveShell(InteractiveShell):
         }
 
         dh = self.displayhook
+        if getattr(dh, "msg", None) is not None:
+            # Errors raised while formatting display output should mark the
+            # current execute_request as failed.
+            self._last_traceback_during_displayhook = True
         # Send exception info over pub socket for other clients than the caller
         # to pick up
         topic = None

@@ -6,12 +6,13 @@ from __future__ import annotations
 
 import builtins
 import sys
+import threading
 import typing as t
 from contextvars import ContextVar
 
 from IPython.core.displayhook import DisplayHook
 from jupyter_client.session import Session, extract_header
-from traitlets import Any, Instance
+from traitlets import Any, Instance, default
 
 from ipykernel.jsonutil import encode_images, json_clean
 
@@ -80,12 +81,40 @@ class ZMQShellDisplayHook(DisplayHook):
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
     _parent_header: ContextVar[dict[str, Any]]
+    _thread_local = Any()
     msg: dict[str, t.Any] | None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._parent_header = ContextVar("parent_header")
         self._parent_header.set({})
+
+    @default("_thread_local")
+    def _default_thread_local(self):
+        return threading.local()
+
+    @property
+    def _hooks(self):
+        if not hasattr(self._thread_local, "hooks"):
+            self._thread_local.hooks = []
+        return self._thread_local.hooks
+
+    def register_hook(self, hook):
+        """Register a transform hook on the execute_result message.
+
+        Mirrors ``ZMQDisplayPublisher.register_hook``. Each hook receives the
+        outbound message dict and must return either a (possibly mutated)
+        message dict to continue the chain, or ``None`` to suppress the send.
+        """
+        self._hooks.append(hook)
+
+    def unregister_hook(self, hook):
+        """Remove a previously registered hook. Returns True on success."""
+        try:
+            self._hooks.remove(hook)
+            return True
+        except ValueError:
+            return False
 
     @property
     def parent_header(self):
@@ -124,9 +153,22 @@ class ZMQShellDisplayHook(DisplayHook):
             self.msg["content"]["metadata"] = md_dict
 
     def finish_displayhook(self):
-        """Finish up all displayhook activities."""
+        """Finish up all displayhook activities.
+
+        Runs the registered hook chain before ``session.send``. Each hook
+        either returns a message (to continue) or ``None`` (to suppress the
+        send). This mirrors the transform pipeline on
+        ``ZMQDisplayPublisher.publish`` so a single hook implementation can
+        attach to both the ``display_data`` and ``execute_result`` paths.
+        """
         sys.stdout.flush()
         sys.stderr.flush()
         if self.msg and self.msg["content"]["data"] and self.session:
-            self.session.send(self.pub_socket, self.msg, ident=self.topic)
+            msg = self.msg
+            for hook in self._hooks:
+                msg = hook(msg)
+                if msg is None:
+                    self.msg = None
+                    return
+            self.session.send(self.pub_socket, msg, ident=self.topic)
         self.msg = None

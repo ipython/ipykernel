@@ -349,7 +349,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         atexit.register(self.close)
 
         if self.curve_secretkey is not None:
-            self.log.debug("Detected CurveZMQ secret key; using transport encryption")
+            self.log.info("Detected CurveZMQ secret key; using transport encryption")
         elif self.transport == "tcp":
             self.log.warning(
                 "Kernel is running over TCP without encryption."

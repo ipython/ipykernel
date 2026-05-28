@@ -180,7 +180,7 @@ def _make_app(tmp_path, *, enable_curve=False, **kwargs):
     if enable_curve:
         # Populate the Curve keys into the connection file
         km = KernelManager(connection_file=connection_file_path)
-        km.transport_encryption = True
+        km.transport_encryption = "enabled"
         km.pre_start_kernel()
 
     app = IPKernelApp(connection_file=connection_file_path, **kwargs)

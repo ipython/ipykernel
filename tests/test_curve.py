@@ -3,6 +3,7 @@
 
 import json
 import time
+from pathlib import Path
 
 import pytest
 import zmq
@@ -199,6 +200,10 @@ def _make_app(tmp_path, *, enable_curve=False, **kwargs):
         km = KernelManager(connection_file=connection_file_path)
         km.transport_encryption = "enabled"
         km.pre_start_kernel()
+        for _ in range(100):
+            if Path(connection_file_path).exists():
+                break
+            time.sleep(0.01)
 
     app = IPKernelApp(connection_file=connection_file_path, **kwargs)
     # Replicate the subset of initialize() that sets up connection info

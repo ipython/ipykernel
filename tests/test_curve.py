@@ -3,11 +3,11 @@
 
 import json
 import time
-from pathlib import Path
 
 import pytest
 import zmq
 from jupyter_client import KernelManager
+from jupyter_client.kernelspec import KernelSpecManager
 
 from ipykernel.kernelapp import IPKernelApp
 
@@ -28,6 +28,8 @@ def curve_enabled_kernel_app(tmp_path):
         yield app, connection_file_path
     finally:
         app.close()
+        if hasattr(app, "_curve_seed_manager"):
+            app._curve_seed_manager.cleanup_connection_file()
 
 
 def test_connection_file_no_curve_keys_by_default(curve_disabled_kernel_app):
@@ -195,17 +197,38 @@ def test_curve_debug_shell_socket_can_communicate(curve_enabled_kernel_app):
 def _make_app(tmp_path, *, enable_curve=False, **kwargs):
     """Return a minimal IPKernelApp rooted in temporary directory *tmp_path*."""
     connection_file_path = str(tmp_path / "kernel.json")
+    km = None
     if enable_curve:
+        kernel_name = "curve-test"
+        kernels_dir = tmp_path / "kernels"
+        kernel_dir = kernels_dir / kernel_name
+        kernel_dir.mkdir(parents=True)
+        with (kernel_dir / "kernel.json").open("w") as f:
+            json.dump(
+                {
+                    "argv": ["python", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
+                    "display_name": "curve-test",
+                    "language": "python",
+                    "metadata": {"supported_encryption": "curve"},
+                },
+                f,
+            )
+
         # Populate the Curve keys into the connection file
-        km = KernelManager(connection_file=connection_file_path)
+        km = KernelManager(
+            connection_file=connection_file_path,
+            kernel_name=kernel_name,
+            kernel_spec_manager=KernelSpecManager(kernel_dirs=[str(kernels_dir)]),
+        )
         km.transport_encryption = "enabled"
         km.pre_start_kernel()
-        for _ in range(100):
-            if Path(connection_file_path).exists():
-                break
-            time.sleep(0.01)
 
     app = IPKernelApp(connection_file=connection_file_path, **kwargs)
+    if km is not None:
+        # Keep the seeding manager alive for the test lifetime.
+        # Its destructor cleans up the connection file, which is otherwise
+        # timing-dependent across Python versions.
+        app._curve_seed_manager = km
     # Replicate the subset of initialize() that sets up connection info
     # without importing IPython shell machinery.
     super(IPKernelApp, app).initialize(argv=[""])

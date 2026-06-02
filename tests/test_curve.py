@@ -174,6 +174,23 @@ def test_manager_provisioned_curve_keys_are_used(curve_enabled_kernel_app):
         app.close()
 
 
+def test_curve_debug_shell_socket_can_communicate(curve_enabled_kernel_app):
+    """Debugger shell socket can talk to the shell ROUTER when Curve is enabled."""
+    app, _connection_file_path = curve_enabled_kernel_app
+    app.init_sockets()
+
+    # Allow the Curve handshake to complete before sending a probe.
+    time.sleep(0.05)
+    app.debug_shell_socket.send(b"debug-probe", flags=zmq.NOBLOCK)
+
+    poller = zmq.Poller()
+    poller.register(app.shell_socket, zmq.POLLIN)
+    events = dict(poller.poll(timeout=1000))
+    assert app.shell_socket in events, (
+        "debug_shell_socket could not reach shell_socket with Curve enabled"
+    )
+
+
 def _make_app(tmp_path, *, enable_curve=False, **kwargs):
     """Return a minimal IPKernelApp rooted in temporary directory *tmp_path*."""
     connection_file_path = str(tmp_path / "kernel.json")

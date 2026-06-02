@@ -228,6 +228,14 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             socket.curve_publickey = self.curve_publickey
             socket.curve_server = True
 
+    def _apply_curve_client_options(self, socket: zmq.Socket[t.Any]) -> None:
+        """Set CurveZMQ client-side options on *socket* before it connects."""
+        if self.curve_secretkey is not None:
+            socket.curve_serverkey = self.curve_publickey
+            # Reuse manager-provisioned keypair for the in-kernel client socket.
+            socket.curve_secretkey = self.curve_secretkey
+            socket.curve_publickey = self.curve_publickey
+
     def init_poller(self):
         """Initialize the poller."""
         if sys.platform == "win32":
@@ -393,6 +401,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         self.debug_shell_socket = context.socket(zmq.DEALER)
         self.debug_shell_socket.linger = 1000
+        self._apply_curve_client_options(self.debug_shell_socket)
         if self.shell_socket.getsockopt(zmq.LAST_ENDPOINT):
             self.debug_shell_socket.connect(self.shell_socket.getsockopt(zmq.LAST_ENDPOINT))
 

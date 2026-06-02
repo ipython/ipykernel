@@ -1,6 +1,7 @@
 import sys
 
 import pytest
+from packaging.version import Version
 
 from .utils import TIMEOUT, get_replies, get_reply, new_kernel
 
@@ -119,7 +120,12 @@ def test_attach_debug(kernel_with_debug):
     )
     if debugpy:
         assert reply["success"]
-        assert reply["body"]["result"] == ""
+        # A "repl" evaluate with no frameId hits debugpy's exec path. debugpy < 1.8.21
+        # reported an empty result there; debugpy >= 1.8.21 reports the actual value.
+        if Version(debugpy.__version__) >= Version("1.8.21"):
+            assert reply["body"]["result"] == "ab"
+        else:
+            assert reply["body"]["result"] == ""
     else:
         assert reply == {}
 

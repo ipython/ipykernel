@@ -220,7 +220,7 @@ def _make_app(tmp_path, *, enable_curve=False, **kwargs):
             kernel_name=kernel_name,
             kernel_spec_manager=KernelSpecManager(kernel_dirs=[str(kernels_dir)]),
         )
-        km.transport_encryption = "enabled"
+        km.transport_encryption = "auto"
         km.pre_start_kernel()
 
     app = IPKernelApp(connection_file=connection_file_path, **kwargs)

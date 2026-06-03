@@ -155,7 +155,7 @@ def test_init_sockets_curve_enabled_logs_debug(tmp_path):
         kernel_name=kernel_name,
         kernel_spec_manager=KernelSpecManager(kernel_dirs=[str(kernels_dir)]),
     )
-    km.transport_encryption = "enabled"
+    km.transport_encryption = "auto"
     km.pre_start_kernel()
 
     app = IPKernelApp(connection_file=connection_file)

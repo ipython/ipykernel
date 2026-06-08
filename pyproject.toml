@@ -113,6 +113,7 @@ dependencies = ["pre-commit"]
 detached = true
 [tool.hatch.envs.typing.scripts]
 test = "pre-commit run --all-files --hook-stage manual mypy"
+check = "pre-commit run --all-files check-mypy-deps"
 
 [tool.hatch.envs.lint]
 dependencies = ["pre-commit"]
@@ -120,7 +121,8 @@ detached = true
 [tool.hatch.envs.lint.scripts]
 build = [
   "pre-commit run --all-files ruff-check",
-  "pre-commit run --all-files ruff-format"
+  "pre-commit run --all-files ruff-format",
+  "pre-commit run --all-files check-mypy-deps",
 ]
 
 [tool.mypy]

@@ -47,11 +47,33 @@ repos:
         args: ["--install-types", "--non-interactive"]
         additional_dependencies:
           [
-            "traitlets>=5.13",
-            "ipython>=8.16.1",
-            "jupyter_client>=8.5",
-            "appnope",
+            "appnope>=0.1.2",
+            "comm>=0.1.1",
+            "debugpy>=1.6.5",
+            "ipython>=7.23.1",
+            "jupyter_client>=8.9.0",
+            "jupyter_core>=5.1",
+            "matplotlib-inline>=0.1",
+            "nest_asyncio2>=1.7.0",
+            "packaging>=22",
+            "psutil>=5.7",
+            "pyzmq>=25",
+            "tornado>=6.4.1",
+            "traitlets>=5.4.0",
           ]
+
+  - repo: local
+    hooks:
+      - id: check-mypy-deps
+        name: mypy deps in sync with project deps
+        entry: python scripts/check_mypy_deps.py
+        language: python
+        pass_filenames: false
+        always_run: true
+        additional_dependencies:
+          - "pyyaml"
+          - "packaging"
+          - "tomli; python_version < '3.11'"
 
   - repo: https://github.com/adamchainz/blacken-docs
     rev: "1.20.0"

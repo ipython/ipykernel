@@ -441,7 +441,7 @@ class Kernel(SingletonConfigurable):
         # Only abort execute requests
         if msg_type == "execute_request":
             if subshell_id is None:
-                aborting = self._aborting  # type:ignore[unreachable]
+                aborting = self._aborting
             else:
                 aborting = self.shell_channel_thread.manager.get_subshell_aborting(subshell_id)
             if aborting:

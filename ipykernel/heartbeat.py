@@ -27,14 +27,29 @@ from jupyter_client.localinterfaces import localhost
 class Heartbeat(Thread):
     """A simple ping-pong style heartbeat that runs in a thread."""
 
-    def __init__(self, context, addr=None):
-        """Initialize the heartbeat thread."""
+    def __init__(self, context, addr=None, *, curve_publickey=None, curve_secretkey=None):
+        """Initialize the heartbeat thread.
+
+        Parameters
+        ----------
+        context : zmq.Context
+        addr : tuple, optional
+            (transport, ip, port)
+        curve_publickey : bytes, optional
+            CurveZMQ public key (Z85). When provided together with
+            *curve_secretkey*, the heartbeat socket will operate as a
+            CurveZMQ server so that only authenticated clients can connect.
+        curve_secretkey : bytes, optional
+            CurveZMQ secret key (Z85, paired with *curve_publickey*).
+        """
         if addr is None:
             addr = ("tcp", localhost(), 0)
         Thread.__init__(self, name="Heartbeat")
         self.context = context
         self.transport, self.ip, self.port = addr
         self.original_port = self.port
+        self._curve_publickey = curve_publickey
+        self._curve_secretkey = curve_secretkey
         if self.original_port == 0:
             self.pick_port()
         self.addr = (self.ip, self.port)
@@ -94,6 +109,10 @@ class Heartbeat(Thread):
         self.name = "Heartbeat"
         self.socket = self.context.socket(zmq.ROUTER)
         self.socket.linger = 1000
+        if self._curve_secretkey is not None:
+            self.socket.curve_secretkey = self._curve_secretkey
+            self.socket.curve_publickey = self._curve_publickey
+            self.socket.curve_server = True
         try:
             self._bind_socket()
         except Exception:
@@ -122,3 +141,6 @@ class Heartbeat(Thread):
                 raise
             else:
                 break
+
+    _curve_publickey: bytes | None
+    _curve_secretkey: bytes | None

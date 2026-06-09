@@ -20,7 +20,10 @@ class CustomHook(BuildHookInterface):
 
         # When building a standard wheel, the executable specified in the kernelspec is simply 'python'.
         if version == "standard":
-            overrides["metadata"] = dict(debugger=True)
+            overrides["metadata"] = {
+                "debugger": True,
+                "supported_encryption": "curve",
+            }
             argv = make_ipkernel_cmd(executable="python")
 
         # When installing an editable wheel, the full `sys.executable` can be used.

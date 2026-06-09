@@ -66,7 +66,7 @@ def get_kernel_dict(
         ),
         "display_name": "Python %i (ipykernel)" % sys.version_info[0],
         "language": "python",
-        "metadata": {"debugger": True},
+        "metadata": {"debugger": True, "supported_encryption": "curve"},
         "kernel_protocol_version": "5.5",
     }
 

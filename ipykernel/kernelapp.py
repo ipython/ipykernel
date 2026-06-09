@@ -33,6 +33,7 @@ from tornado import ioloop
 from traitlets.traitlets import (
     Any,
     Bool,
+    Bytes,
     Dict,
     DottedObjectName,
     Instance,
@@ -158,6 +159,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     # connection info:
     connection_dir = Unicode()
 
+    # Optional CurveZMQ keys loaded from the connection file (Z85-encoded bytes).
+    # None when the kernel was not started with CurveZMQ enabled.
+    curve_publickey: Bytes | None = Bytes(allow_none=True, default_value=None)
+    curve_secretkey: Bytes | None = Bytes(allow_none=True, default_value=None)
+
     @default("connection_dir")
     def _default_connection_dir(self):
         return jupyter_runtime_dir()
@@ -210,6 +216,25 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Handle an exception."""
         # write uncaught traceback to 'real' stderr, not zmq-forwarder
         traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
+
+    def _apply_curve_server_options(self, socket: zmq.Socket[t.Any]) -> None:
+        """Set CurveZMQ server-side options on *socket* before it is bound.
+
+        This is a no-op when Curve keys are not available yet, so it is safe
+        to call unconditionally.
+        """
+        if self.curve_secretkey is not None:
+            socket.curve_secretkey = self.curve_secretkey
+            socket.curve_publickey = self.curve_publickey
+            socket.curve_server = True
+
+    def _apply_curve_client_options(self, socket: zmq.Socket[t.Any]) -> None:
+        """Set CurveZMQ client-side options on *socket* before it connects."""
+        if self.curve_secretkey is not None:
+            socket.curve_serverkey = self.curve_publickey
+            # Reuse manager-provisioned keypair for the in-kernel client socket.
+            socket.curve_secretkey = self.curve_secretkey
+            socket.curve_publickey = self.curve_publickey
 
     def init_poller(self):
         """Initialize the poller."""
@@ -274,6 +299,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             iopub_port=self.iopub_port,
             control_port=self.control_port,
         )
+        if self.curve_publickey is not None:
+            connection_info["curve_publickey"] = self.curve_publickey
+            connection_info["curve_secretkey"] = self.curve_secretkey
         if Path(cf).exists():
             # If the file exists, merge our info into it. For example, if the
             # original file had port number 0, we update with the actual port
@@ -328,13 +356,26 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.context = context = zmq.Context()
         atexit.register(self.close)
 
+        if self.curve_secretkey is not None:
+            self.log.info("Detected CurveZMQ secret key; using transport encryption")
+        elif self.transport == "tcp":
+            self.log.warning(
+                "Kernel is running over TCP without encryption."
+                " All communication (including code and outputs) is sent in plain text"
+                " and is susceptible to eavesdropping."
+                " Use IPC transport or launch with kernel manager-provisioned"
+                " CurveZMQ keys to enable transport encryption."
+            )
+
         self.shell_socket = context.socket(zmq.ROUTER)
         self.shell_socket.linger = 1000
+        self._apply_curve_server_options(self.shell_socket)
         self.shell_port = self._bind_socket(self.shell_socket, self.shell_port)
         self.log.debug("shell ROUTER Channel on port: %i", self.shell_port)
 
         self.stdin_socket = context.socket(zmq.ROUTER)
         self.stdin_socket.linger = 1000
+        self._apply_curve_server_options(self.stdin_socket)
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
         self.log.debug("stdin ROUTER Channel on port: %i", self.stdin_port)
 
@@ -351,6 +392,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Initialize the control channel."""
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
+        self._apply_curve_server_options(self.control_socket)
         self.control_port = self._bind_socket(self.control_socket, self.control_port)
         self.log.debug("control ROUTER Channel on port: %i", self.control_port)
 
@@ -359,6 +401,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         self.debug_shell_socket = context.socket(zmq.DEALER)
         self.debug_shell_socket.linger = 1000
+        self._apply_curve_client_options(self.debug_shell_socket)
         if self.shell_socket.getsockopt(zmq.LAST_ENDPOINT):
             self.debug_shell_socket.connect(self.shell_socket.getsockopt(zmq.LAST_ENDPOINT))
 
@@ -379,6 +422,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Initialize the iopub channel."""
         self.iopub_socket = context.socket(zmq.XPUB)
         self.iopub_socket.linger = 1000
+        self._apply_curve_server_options(self.iopub_socket)
         self.iopub_port = self._bind_socket(self.iopub_socket, self.iopub_port)
         self.log.debug("iopub PUB Channel on port: %i", self.iopub_port)
         self.configure_tornado_logger()
@@ -392,7 +436,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         # heartbeat doesn't share context, because it mustn't be blocked
         # by the GIL, which is accessed by libzmq when freeing zero-copy messages
         hb_ctx = zmq.Context()
-        self.heartbeat = Heartbeat(hb_ctx, (self.transport, self.ip, self.hb_port))
+        self.heartbeat = Heartbeat(
+            hb_ctx,
+            (self.transport, self.ip, self.hb_port),
+            curve_publickey=self.curve_publickey,
+            curve_secretkey=self.curve_secretkey,
+        )
         self.hb_port = self.heartbeat.port
         self.log.debug("Heartbeat REP Channel on port: %i", self.hb_port)
         self.heartbeat.start()

@@ -5,6 +5,8 @@ import time
 from unittest.mock import patch
 
 import pytest
+from jupyter_client import KernelManager
+from jupyter_client.kernelspec import KernelSpecManager
 from jupyter_core.paths import secure_write
 from traitlets.config.loader import Config
 
@@ -129,3 +131,53 @@ def test_trio_loop():
     app.io_loop.add_callback(app.io_loop.stop)
     app.kernel.destroy()
     app.close()
+
+
+def test_init_sockets_curve_enabled_logs_debug(tmp_path):
+    kernel_name = "curve-test"
+    kernels_dir = tmp_path / "kernels"
+    kernel_dir = kernels_dir / kernel_name
+    kernel_dir.mkdir(parents=True)
+    with (kernel_dir / "kernel.json").open("w") as f:
+        json.dump(
+            {
+                "argv": ["python", "-m", "ipykernel_launcher", "-f", "{connection_file}"],
+                "display_name": "curve-test",
+                "language": "python",
+                "metadata": {"supported_encryption": "curve"},
+            },
+            f,
+        )
+
+    connection_file = str(tmp_path / "kernel.json")
+    km = KernelManager(
+        connection_file=connection_file,
+        kernel_name=kernel_name,
+        kernel_spec_manager=KernelSpecManager(kernel_dirs=[str(kernels_dir)]),
+    )
+    km.transport_encryption = "auto"
+    km.pre_start_kernel()
+
+    app = IPKernelApp(connection_file=connection_file)
+    super(IPKernelApp, app).initialize(argv=[""])
+    app.init_connection_file()
+    with patch.object(app.log, "info") as mock_info:
+        app.init_sockets()
+    app.cleanup_connection_file()
+    app.close()
+    messages = [str(call) for call in mock_info.call_args_list]
+    assert any("Detected CurveZMQ secret key; using transport encryption" in m for m in messages), (
+        "Expected a debug log mentioning CurveZMQ when keys are provided"
+    )
+
+
+def test_init_sockets_tcp_without_curve_logs_warning():
+    app = IPKernelApp(transport="tcp")
+    with patch.object(app.log, "warning") as mock_warning:
+        app.init_sockets()
+    app.cleanup_connection_file()
+    app.close()
+    messages = [str(call) for call in mock_warning.call_args_list]
+    assert any("Kernel is running over TCP without encryption" in m for m in messages), (
+        "Expected a warning about missing encryption when transport=tcp without curve keys"
+    )

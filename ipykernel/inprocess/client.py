@@ -17,6 +17,7 @@ from typing import Any
 
 from jupyter_client.client import KernelClient
 from jupyter_client.clientabc import KernelClientABC
+from jupyter_client.connect import KernelConnectionInfo
 from jupyter_core.utils import run_sync
 
 # IPython imports
@@ -59,10 +60,10 @@ class InProcessKernelClient(KernelClient):
 
         return BlockingInProcessKernelClient
 
-    def get_connection_info(self, session: bool = False) -> dict[str, int | str | bytes]:
+    def get_connection_info(self, session: bool = False) -> KernelConnectionInfo:
         """Get the connection info for the client."""
         d = super().get_connection_info(session=session)
-        d["kernel"] = self.kernel  # type:ignore[assignment]
+        d["kernel"] = self.kernel  # type: ignore[typeddict-unknown-key]
         return d
 
     def start_channels(self, *args, **kwargs):

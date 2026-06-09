@@ -178,7 +178,7 @@ class IPythonKernel(KernelBase):
             },
             {
                 "text": "IPython Reference",
-                "url": "https://ipython.org/documentation.html",
+                "url": "https://ipython.readthedocs.io/en/stable/",
             },
             {
                 "text": "NumPy Reference",

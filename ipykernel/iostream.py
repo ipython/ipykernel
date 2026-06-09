@@ -7,6 +7,7 @@ import asyncio
 import atexit
 import contextvars
 import io
+import logging
 import os
 import sys
 import threading
@@ -32,6 +33,8 @@ MASTER = 0
 CHILD = 1
 
 PIPE_BUFFER_SIZE = 1000
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
 # IO classes
@@ -355,8 +358,20 @@ class IOPubThread:
         mp_mode = self._check_mp_mode()
 
         if mp_mode != CHILD:
-            # we are master, do a regular send
-            self.socket.send_multipart(msg, *args, **kwargs)
+            # we are master, do a regular send.
+            # The closed check above is racy: once the IO thread has been
+            # joined, _really_send runs on the caller's thread while close()
+            # may run concurrently on another, so the socket can be closed
+            # (or become None) between the check and the send. Swallow that
+            # specific case rather than logging a noisy traceback during
+            # shutdown.
+            try:
+                self.socket.send_multipart(msg, *args, **kwargs)
+            except (AttributeError, zmq.error.ZMQError) as e:
+                if isinstance(e, AttributeError) or e.errno == zmq.ENOTSOCK:
+                    logger.debug("IOPub socket closed during send (likely shutdown): %s", e)
+                    return
+                raise
         else:
             # we are a child, pipe to master
             # new context/socket for every pipe-out

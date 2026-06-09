@@ -130,6 +130,8 @@ jobs:
       - uses: actions/checkout@v6
 
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        with:
+          python_version: "3.14"
 
       - name: Build API docs
         run: |

@@ -36,13 +36,6 @@ except ImportError:
     # jupyter_client < 5, use local now()
     now = datetime.now
 
-try:
-    import psutil
-except ImportError:
-    psutil = None
-
-_NO_SUCH_PROCESS = () if psutil is None else psutil.NoSuchProcess
-
 import zmq
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -67,6 +60,19 @@ from ipykernel.jsonutil import json_clean
 from ._version import kernel_protocol_version
 from .iostream import OutStream
 from .utils import LazyDict, _async_in_context
+
+psutil: t.Any | None
+try:
+    import psutil as _psutil
+except ImportError:
+    psutil = None
+else:
+    psutil = _psutil
+
+if psutil is None:
+    _NO_SUCH_PROCESS: tuple[type[BaseException], ...] = ()
+else:
+    _NO_SUCH_PROCESS = (psutil.NoSuchProcess,)
 
 _AWAITABLE_MESSAGE: str = (
     "For consistency across implementations, it is recommended that `{func_name}`"
@@ -1189,8 +1195,7 @@ class Kernel(SingletonConfigurable):
         # Ensure 1) self.processes is updated to only current subprocesses
         # and 2) we reuse processes when possible (needed for accurate CPU)
         self.processes = {
-            process.pid: self.processes.get(process.pid, process)  # type:ignore[misc,call-overload]
-            for process in all_processes
+            process.pid: self.processes.get(process.pid, process) for process in all_processes
         }
         reply_content["kernel_cpu"] = sum(
             [
@@ -1208,7 +1213,7 @@ class Kernel(SingletonConfigurable):
         cpu_percent = psutil.cpu_percent()
         # https://psutil.readthedocs.io/en/latest/index.html?highlight=cpu#psutil.cpu_percent
         # The first time cpu_percent is called it will return a meaningless 0.0 value which you are supposed to ignore.
-        if cpu_percent is not None and cpu_percent != 0.0:  # type:ignore[redundant-expr]
+        if cpu_percent is not None and cpu_percent != 0.0:
             reply_content["host_cpu_percent"] = cpu_percent
         reply_content["cpu_count"] = psutil.cpu_count(logical=True)
         reply_content["host_virtual_memory"] = dict(psutil.virtual_memory()._asdict())

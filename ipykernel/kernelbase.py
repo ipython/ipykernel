@@ -36,7 +36,13 @@ except ImportError:
     # jupyter_client < 5, use local now()
     now = datetime.now
 
-import psutil
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
+_NO_SUCH_PROCESS = () if psutil is None else psutil.NoSuchProcess
+
 import zmq
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
@@ -97,7 +103,7 @@ class Kernel(SingletonConfigurable):
     # attribute to override with a GUI
     eventloop = Any(None)
 
-    processes: dict[str, psutil.Process] = {}
+    processes: dict[int, t.Any] = {}
 
     @observe("eventloop")
     def _update_eventloop(self, change):
@@ -1172,6 +1178,12 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
+        if psutil is None:
+            reply_content["cpu_count"] = os.cpu_count()
+            reply_msg = self.session.send(stream, "usage_reply", reply_content, parent, ident)
+            self.log.debug("%s", reply_msg)
+            return
+
         current_process = psutil.Process()
         all_processes = [current_process, *current_process.children(recursive=True)]
         # Ensure 1) self.processes is updated to only current subprocesses
@@ -1476,7 +1488,7 @@ class Kernel(SingletonConfigurable):
                     p.kill()
                 else:
                     p.send_signal(signum)
-            except psutil.NoSuchProcess:
+            except _NO_SUCH_PROCESS:
                 pass
 
     def _process_children(self):
@@ -1486,6 +1498,9 @@ class Kernel(SingletonConfigurable):
         - including parents and self with killpg
         - including all children that may have forked-off a new group
         """
+        if psutil is None:
+            return []
+
         kernel_process = psutil.Process()
         all_children = kernel_process.children(recursive=True)
         if os.name == "nt":

@@ -22,7 +22,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.37.0
+    rev: 0.37.2
     hooks:
       - id: check-github-workflows
 
@@ -39,7 +39,7 @@ repos:
         types_or: [yaml, html, json]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.19.1"
+    rev: "v2.1.0"
     hooks:
       - id: mypy
         files: ipykernel
@@ -47,11 +47,33 @@ repos:
         args: ["--install-types", "--non-interactive"]
         additional_dependencies:
           [
-            "traitlets>=5.13",
-            "ipython>=8.16.1",
-            "jupyter_client>=8.5",
-            "appnope",
+            "appnope>=0.1.2",
+            "comm>=0.1.1",
+            "debugpy>=1.6.5",
+            "ipython>=7.23.1",
+            "jupyter_client>=8.9.0",
+            "jupyter_core>=5.1",
+            "matplotlib-inline>=0.1",
+            "nest_asyncio2>=1.7.0",
+            "packaging>=22",
+            "psutil>=5.7",
+            "pyzmq>=25",
+            "tornado>=6.4.1",
+            "traitlets>=5.4.0",
           ]
+
+  - repo: local
+    hooks:
+      - id: check-mypy-deps
+        name: mypy deps in sync with project deps
+        entry: python scripts/check_mypy_deps.py
+        language: python
+        pass_filenames: false
+        always_run: true
+        additional_dependencies:
+          - "pyyaml"
+          - "packaging"
+          - "tomli; python_version < '3.11'"
 
   - repo: https://github.com/adamchainz/blacken-docs
     rev: "1.20.0"
@@ -60,7 +82,7 @@ repos:
         additional_dependencies: [black==23.7.0]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.4.1"
+    rev: "v2.4.2"
     hooks:
       - id: codespell
         args: ["-L", "sur,nd"]
@@ -73,7 +95,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+    rev: v0.15.16
     hooks:
       - id: ruff-check
         types_or: [python, jupyter]
@@ -82,7 +104,7 @@ repos:
         types_or: [python, jupyter]
 
   - repo: https://github.com/scientific-python/cookie
-    rev: "2026.03.02"
+    rev: "2026.04.04"
     hooks:
       - id: sp-repo-review
         additional_dependencies: ["repo-review[cli]"]

@@ -36,7 +36,7 @@ def assert_kernel_dict(d):
     assert d["display_name"] == "Python %i (ipykernel)" % sys.version_info[0]
     assert d["language"] == "python"
     assert d["metadata"]["debugger"] is True
-    assert d["metadata"]["supported_encryption"] == "curve"
+    assert d["metadata"]["supported_encryption"] == ["curve"]
     assert d["kernel_protocol_version"] == "5.5"
 
 
@@ -50,7 +50,7 @@ def assert_kernel_dict_with_profile(d):
     assert d["display_name"] == "Python %i (ipykernel)" % sys.version_info[0]
     assert d["language"] == "python"
     assert d["metadata"]["debugger"] is True
-    assert d["metadata"]["supported_encryption"] == "curve"
+    assert d["metadata"]["supported_encryption"] == ["curve"]
     assert d["kernel_protocol_version"] == "5.5"
 
 

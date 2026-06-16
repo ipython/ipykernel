@@ -29,6 +29,10 @@ class ShellChannelThread(BaseThread):
         self._manager: SubshellManager | None = None
         self._zmq_context = context  # Avoid use of self._context
         self._shell_socket = shell_socket
+        # Set by kernelapp.init_kernel after it builds the shell ZMQStream (this thread
+        # is created before the stream). Threaded into SubshellManager so the out-of-band
+        # reply is sent through the stream rather than raw on the socket (the wedge fix).
+        self.shell_stream = None
         # Record the parent thread - the thread that started the app (usually the main thread)
         self.parent_thread = current_thread()
 
@@ -43,6 +47,7 @@ class ShellChannelThread(BaseThread):
                 self._zmq_context,
                 self.io_loop,
                 self._shell_socket,
+                self.shell_stream,
             )
         return self._manager
 

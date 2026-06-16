@@ -608,6 +608,9 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """Create the Kernel object itself"""
         if self.shell_channel_thread:
             shell_stream = ZMQStream(self.shell_socket, self.shell_channel_thread.io_loop)
+            # Hand the stream to the shell-channel thread so SubshellManager can send the
+            # out-of-band reply through the stream rather than raw on the socket (the wedge fix).
+            self.shell_channel_thread.shell_stream = shell_stream
         else:
             shell_stream = ZMQStream(self.shell_socket)
         control_stream = ZMQStream(self.control_socket, self.control_thread.io_loop)

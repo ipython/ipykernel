@@ -46,7 +46,7 @@ def _run_on_loop(loop, func):
     def runner():
         try:
             box["result"] = func()
-        except BaseException as exc:  # noqa: BLE001 - re-raised on the calling thread
+        except BaseException as exc:
             box["error"] = exc
         finally:
             done.set()
@@ -146,18 +146,19 @@ def test_concurrent_request_not_stranded_by_reply_send():
         )
         assert received and received[-1][-1] == b"req-1"
     finally:
+
         def teardown():
             if manager is not None:
                 try:
                     manager.close()
-                except Exception:  # noqa: BLE001 - best-effort teardown
+                except Exception:
                     pass
             if stream is not None:
                 stream.close()
 
         try:
             _run_on_loop(loop, teardown)
-        except Exception:  # noqa: BLE001 - best-effort teardown
+        except Exception:
             pass
         loop.add_callback(loop.stop)
         thread.join(timeout=TIMEOUT)

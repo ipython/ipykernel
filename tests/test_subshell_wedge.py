@@ -144,7 +144,8 @@ def test_concurrent_request_not_stranded_by_reply_send():
             "the concurrently-queued request was stranded by the out-of-band reply send "
             "and never delivered to on_recv -- the shell-channel wedge has regressed"
         )
-        assert received and received[-1][-1] == b"req-1"
+        assert received
+        assert received[-1][-1] == b"req-1"
     finally:
 
         def teardown():

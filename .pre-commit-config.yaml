@@ -95,7 +95,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.17
+    rev: v0.15.18
     hooks:
       - id: ruff-check
         types_or: [python, jupyter]
@@ -104,7 +104,7 @@ repos:
         types_or: [python, jupyter]
 
   - repo: https://github.com/scientific-python/cookie
-    rev: "2026.04.04"
+    rev: "2026.06.18"
     hooks:
       - id: sp-repo-review
         additional_dependencies: ["repo-review[cli]"]

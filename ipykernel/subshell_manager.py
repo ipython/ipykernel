@@ -40,6 +40,7 @@ class SubshellManager:
         context: zmq.Context[t.Any],
         shell_channel_io_loop: IOLoop,
         shell_socket: zmq.Socket[t.Any],
+        shell_stream=None,
     ):
         """Initialize the subshell manager."""
         self._parent_thread = current_thread()
@@ -47,6 +48,11 @@ class SubshellManager:
         self._context: zmq.Context[t.Any] = context
         self._shell_channel_io_loop = shell_channel_io_loop
         self._shell_socket = shell_socket
+        # ZMQStream that reads `shell_socket`. The out-of-band reply below is sent through
+        # this stream rather than raw on the socket: a raw send would drain the socket's
+        # edge-triggered ZMQ_FD read edge without the stream re-arming, stranding a
+        # concurrently-arrived request unread (the wedge).
+        self._shell_stream = shell_stream
         self._cache: dict[str, SubshellThread] = {}
         self._lock_cache = Lock()  # Sync lock across threads when accessing cache.
 
@@ -225,7 +231,19 @@ class SubshellManager:
 
     def _send_on_shell_channel(self, msg) -> None:
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
-        self._shell_socket.send_multipart(msg)
+        # Send the reply through the shell ZMQStream rather than raw on its socket. A raw
+        # send_multipart on the dual-use shell ROUTER drains its edge-triggered ZMQ_FD read
+        # edge; because the stream never sees that send, it is never re-armed, so a request
+        # that arrived concurrently can strand unread on a registered-but-non-readable fd
+        # (the wedge). Routing the send through the stream keeps the stream the sole user of
+        # the socket: the send is serviced by the stream's own _handle_events, which recvs
+        # any pending request first and then re-arms POLLIN via _rebuild_io_state, so the
+        # request cannot strand. Fall back to the raw socket if no stream was threaded in.
+        stream = self._shell_stream
+        if stream is not None and stream.socket is self._shell_socket:
+            stream.send_multipart(msg)
+        else:
+            self._shell_socket.send_multipart(msg)
 
     def _stop_subshell(self, subshell_thread: SubshellThread) -> None:
         """Stop a subshell thread and close all of its resources."""

@@ -676,6 +676,15 @@ class Debugger:
         src_var_name = message["arguments"]["srcVariableName"]
         src_frame_id = message["arguments"]["srcFrameId"]
 
+        if not str.isidentifier(dst_var_name) or not str.isidentifier(src_var_name):
+            return {
+                "type": "response",
+                "request_seq": message["seq"],
+                "success": False,
+                "command": message["command"],
+                "message": "dstVariableName and srcVariableName must be valid identifiers",
+            }
+
         expression = f"globals()['{dst_var_name}']"
         seq = message["seq"]
         return await self._forward_message(

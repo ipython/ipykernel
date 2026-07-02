@@ -473,6 +473,24 @@ my_test()"""
     assert global_var["value"] == local_var["value"] and global_var["type"] == local_var["type"]  # noqa: PT018
 
 
+def test_copy_to_globals_rejects_non_identifier(kernel_with_debug):
+    # A dstVariableName that is not a valid identifier would break out of the
+    # single-quoted globals()['...'] expression forwarded to setExpression.
+    reply = wait_for_debug_request(
+        kernel_with_debug,
+        "copyToGlobals",
+        {
+            "srcVariableName": "src",
+            "dstVariableName": "x'] or __import__('os').system('echo pwned') or globals()['y",
+            "srcFrameId": 0,
+        },
+    )
+    # The request is rejected locally instead of being forwarded to
+    # setExpression, so the response still carries the copyToGlobals command.
+    assert reply["success"] is False
+    assert reply["command"] == "copyToGlobals"
+
+
 def test_debug_requests_sequential(kernel_with_debug):
     # Issue https://github.com/ipython/ipykernel/issues/1412
     # Control channel requests should be executed sequentially not concurrently.

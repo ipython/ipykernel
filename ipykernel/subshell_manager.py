@@ -71,13 +71,14 @@ class SubshellManager:
     def close(self) -> None:
         """Stop all subshells and close all resources."""
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
+        # pop all subshells under the lock, but stop them after releasing it:
+        # subshell threads take the same lock (e.g. get_subshell_asyncio_lock
+        # in shell_main), so joining them while holding it can deadlock
         with self._lock_cache:
-            while True:
-                try:
-                    _, subshell_thread = self._cache.popitem()
-                except KeyError:
-                    break
-                self._stop_subshell(subshell_thread)
+            subshell_threads = list(self._cache.values())
+            self._cache.clear()
+        for subshell_thread in subshell_threads:
+            self._stop_subshell(subshell_thread)
 
         self.control_to_shell_channel.close()
         self._main_to_shell_channel.close()

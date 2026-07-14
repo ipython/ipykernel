@@ -513,17 +513,18 @@ class OutStream(TextIOBase):
                 "and is no longer supported." % (pub_thread,)
             )
             raise TypeError(msg)
-        self.pub_thread = pub_thread
+        # None after close()
+        self.pub_thread: IOPubThread | None = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()
         # the parent header is stored together with its frozenset form, which
         # keys the output buffers: computing it once per set_parent instead of
         # on every write() keeps the per-write cost down
-        self._parent_header: contextvars.ContextVar[tuple[dict[str, Any], frozenset]] = (
+        self._parent_header: contextvars.ContextVar[tuple[dict[str, Any], frozenset[Any]]] = (
             contextvars.ContextVar("parent_header")
         )
         self._parent_header.set(({}, frozenset()))
-        self._parent_header_global: tuple[dict[str, Any], frozenset] = ({}, frozenset())
+        self._parent_header_global: tuple[dict[str, Any], frozenset[Any]] = ({}, frozenset())
         self._master_pid = os.getpid()
         self._flush_pending = False
         self._subprocess_flush_pending = False
@@ -657,6 +658,7 @@ class OutStream(TextIOBase):
         def _schedule_in_thread():
             self._io_loop.call_later(self.flush_interval, self._flush)
 
+        assert self.pub_thread is not None
         self.pub_thread.schedule(_schedule_in_thread)
 
     def flush(self):
@@ -680,7 +682,6 @@ class OutStream(TextIOBase):
 
         if (
             self.pub_thread
-            and self.pub_thread.thread is not None
             and self.pub_thread.thread.is_alive()
             and self.pub_thread.thread.ident != threading.current_thread().ident
         ):

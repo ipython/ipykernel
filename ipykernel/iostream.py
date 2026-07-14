@@ -391,38 +391,6 @@ class BackgroundSocket:
         """Initialize the socket."""
         self.io_thread = io_thread
 
-    def __getattr__(self, attr):
-        """Wrap socket attr access for backward-compatibility"""
-        if attr.startswith("__") and attr.endswith("__"):
-            # don't wrap magic methods
-            super().__getattr__(attr)  # type:ignore[misc]
-        assert self.io_thread is not None
-        if hasattr(self.io_thread.socket, attr):
-            warnings.warn(
-                f"Accessing zmq Socket attribute {attr} on BackgroundSocket"
-                f" is deprecated since ipykernel 4.3.0"
-                f" use .io_thread.socket.{attr}",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            return getattr(self.io_thread.socket, attr)
-        return super().__getattr__(attr)  # type:ignore[misc]
-
-    def __setattr__(self, attr, value):
-        """Set an attribute on the socket."""
-        if attr == "io_thread" or (attr.startswith("__") and attr.endswith("__")):
-            super().__setattr__(attr, value)
-        else:
-            warnings.warn(
-                f"Setting zmq Socket attribute {attr} on BackgroundSocket"
-                f" is deprecated since ipykernel 4.3.0"
-                f" use .io_thread.socket.{attr}",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            assert self.io_thread is not None
-            setattr(self.io_thread.socket, attr, value)
-
     def send(self, msg, *args, **kwargs):
         """Send a message to the socket."""
         return self.send_multipart([msg], *args, **kwargs)
@@ -487,7 +455,6 @@ class OutStream(TextIOBase):
         session,
         pub_thread,
         name,
-        pipe=None,
         echo=None,
         *,
         watchfd=True,
@@ -498,12 +465,10 @@ class OutStream(TextIOBase):
         ----------
         session : object
             the session object
-        pub_thread : threading.Thread
+        pub_thread : IOPubThread
             the publication thread
         name : str {'stderr', 'stdout'}
             the name of the standard stream to replace
-        pipe : object
-            the pipe object
         echo : bool
             whether to echo output
         watchfd : bool (default, True)
@@ -516,25 +481,16 @@ class OutStream(TextIOBase):
             Indication of whether this stream has terminal capabilities (e.g. can handle colors)
 
         """
-        if pipe is not None:
-            warnings.warn(
-                "pipe argument to OutStream is deprecated and ignored since ipykernel 4.2.3.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
         # This is necessary for compatibility with Python built-in streams
         self.session = session
         self._fid = None
         if not isinstance(pub_thread, IOPubThread):
-            # Backward-compat: given socket, not thread. Wrap in a thread.
-            warnings.warn(
-                "Since IPykernel 4.3, OutStream should be created with "
-                "IOPubThread, not %r" % pub_thread,
-                DeprecationWarning,
-                stacklevel=2,
+            msg = (
+                "OutStream must be created with an IOPubThread, got %r. "
+                "Wrapping a raw socket has been deprecated since ipykernel 4.3 "
+                "and is no longer supported." % (pub_thread,)
             )
-            pub_thread = IOPubThread(pub_thread, session=self.session)
-            pub_thread.start()
+            raise TypeError(msg)
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()

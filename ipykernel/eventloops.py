@@ -157,11 +157,6 @@ def loop_qt(kernel):
     kernel.app._in_event_loop = False
 
 
-# NOTE: To be removed in version 7
-loop_qt5 = loop_qt
-
-
-# exit and watch are the same for qt 4 and 5
 @loop_qt.exit
 def loop_qt_exit(kernel):
     kernel.app.exit()
@@ -343,22 +338,6 @@ def loop_tk_exit(kernel):
         kernel.eventloop = None
     except (RuntimeError, AttributeError):
         pass
-
-
-@register_integration("gtk")
-def loop_gtk(kernel):
-    """Start the kernel, coordinating with the GTK event loop"""
-    from .gui.gtkembed import GTKEmbed
-
-    gtk_kernel = GTKEmbed(kernel)
-    gtk_kernel.start()
-    kernel._gtk = gtk_kernel
-
-
-@loop_gtk.exit
-def loop_gtk_exit(kernel):
-    """Exit the gtk loop."""
-    kernel._gtk.stop()
 
 
 @register_integration("gtk3")

@@ -1026,8 +1026,10 @@ class Kernel(SingletonConfigurable):
                 try:
                     os.killpg(pgid, SIGINT)
                 except OSError:
+                    # killpg failed (e.g. EPERM in a restricted environment):
+                    # fall back to interrupting just the kernel process. Only
+                    # report failure if the fallback fails as well.
                     os.kill(pid, SIGINT)
-                    raise
             else:
                 os.kill(pid, SIGINT)
 
@@ -1043,7 +1045,7 @@ class Kernel(SingletonConfigurable):
 
             content = {
                 "status": "error",
-                "traceback": traceback.format_stack(),
+                "traceback": traceback.format_exception(err),
                 "ename": str(type(err).__name__),
                 "evalue": str(err),
             }

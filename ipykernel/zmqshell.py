@@ -528,6 +528,7 @@ class ZMQInteractiveShell(InteractiveShell):
 
         self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
+        self._parent_header_global: dict[str, typing.Any] = {}
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
@@ -559,7 +560,9 @@ class ZMQInteractiveShell(InteractiveShell):
         if change["new"]:
             if hasattr(self.kernel, "io_loop"):
                 loop = self.kernel.io_loop
-                loop.call_later(0.1, loop.stop)
+                # this may fire from another thread (e.g. the control thread
+                # during shutdown); only add_callback is thread-safe
+                loop.add_callback(lambda: loop.call_later(0.1, loop.stop))
             if self.kernel.eventloop:
                 exit_hook = getattr(self.kernel.eventloop, "exit_hook", None)
                 if exit_hook:

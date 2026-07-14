@@ -651,8 +651,11 @@ class Debugger:
                     "arguments": {"expression": code, "frameId": frame_id, "context": "clipboard"},
                 }
             )
-            if reply["success"]:
-                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})
+            if not reply["success"]:
+                # propagate the failure (e.g. name not visible in the frame)
+                # instead of masking it as an empty successful response
+                return reply
+            repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})
 
         body = {
             "data": repr_data,
@@ -686,10 +689,12 @@ class Debugger:
     async def modules(self, message):
         """Handle a modules message."""
         modules = list(sys.modules.copy().values())
-        startModule = message.get("startModule", 0)
-        moduleCount = message.get("moduleCount", len(modules))
+        arguments = message.get("arguments", {})
+        startModule = arguments.get("startModule", 0)
+        # moduleCount == 0 means "all remaining modules" per the DAP spec
+        moduleCount = arguments.get("moduleCount", 0) or len(modules)
         mods = []
-        for i in range(startModule, moduleCount):
+        for i in range(startModule, min(startModule + moduleCount, len(modules))):
             module = modules[i]
             filename = getattr(getattr(module, "__spec__", None), "origin", None)
             if filename and filename.endswith(".py"):

@@ -279,11 +279,12 @@ class InstallIPythonKernelSpecApp(Application):
                 prefix=opts.prefix,
                 display_name=opts.display_name,
                 env=opts.env,
+                frozen_modules=opts.frozen_modules,
             )
         except OSError as e:
             if e.errno == errno.EACCES:
                 print(e, file=sys.stderr)
-                if opts.user:
+                if not opts.user:
                     print("Perhaps you want `sudo` or `--user`?", file=sys.stderr)
                 self.exit(1)
             raise

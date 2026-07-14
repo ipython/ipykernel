@@ -80,12 +80,12 @@ class ZMQShellDisplayHook(DisplayHook):
     pub_socket = Any(allow_none=True)
     _parent_header: ContextVar[dict[str, Any]]
     _thread_local = Any()
-    msg: dict[str, t.Any] | None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._parent_header = ContextVar("parent_header")
         self._parent_header.set({})
+        self._parent_header_global: dict[str, Any] = {}
 
     @default("_thread_local")
     def _default_thread_local(self):
@@ -96,6 +96,16 @@ class ZMQShellDisplayHook(DisplayHook):
         if not hasattr(self._thread_local, "hooks"):
             self._thread_local.hooks = []
         return self._thread_local.hooks
+
+    # the in-progress execute_result message is per-thread state, like _hooks:
+    # concurrent subshell executions must not clobber each other's message
+    @property
+    def msg(self) -> dict[str, t.Any] | None:
+        return getattr(self._thread_local, "msg", None)
+
+    @msg.setter
+    def msg(self, value: dict[str, t.Any] | None) -> None:
+        self._thread_local.msg = value
 
     def register_hook(self, hook):
         """Register a transform hook on the execute_result message.

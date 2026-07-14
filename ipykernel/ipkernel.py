@@ -418,9 +418,16 @@ class IPythonKernel(KernelBase):
 
                 coro_future = asyncio.ensure_future(coro)
 
+                # SIGINT is only delivered to the thread that started the
+                # kernel (the main thread when there is no shell channel
+                # thread, e.g. for embedded/in-process kernels)
+                if self.shell_channel_thread is not None:
+                    sigint_thread = self.shell_channel_thread.parent_thread
+                else:
+                    sigint_thread = threading.main_thread()
                 cm = (
                     self._cancel_on_sigint
-                    if threading.current_thread() == self.shell_channel_thread.parent_thread
+                    if threading.current_thread() == sigint_thread
                     else self._dummy_context_manager
                 )
                 with cm(coro_future):

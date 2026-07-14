@@ -314,11 +314,14 @@ class IOPubThread:
             # avoid infinite hang if stop fails
             msg = "IOPub thread did not terminate in 30 seconds"
             raise TimeoutError(msg)
-        # close *all* event pipes, created in any thread
-        # event pipes can only be used from other threads while self.thread.is_alive()
-        # so after thread.join, this should be safe
-        for _thread, event_pipe in self._event_pipes.items():
-            event_pipe.close()
+        # close *all* event pipes, created in any thread.
+        # hold the gc lock: a writer thread may have passed the is_alive()
+        # check in schedule() before join() returned and still be lazily
+        # creating its event pipe, mutating the dict under our feet
+        with self._event_pipe_gc_lock:
+            while self._event_pipes:
+                _thread, event_pipe = self._event_pipes.popitem()
+                event_pipe.close()
 
     def close(self):
         """Close the IOPub thread."""
@@ -442,11 +445,24 @@ class OutStream(TextIOBase):
             return
 
         try:
-            bts = os.read(self._fid, PIPE_BUFFER_SIZE)
-            while bts and self._should_watch:
+            while True:
+                bts = os.read(self._fid, PIPE_BUFFER_SIZE)
+                if not bts:
+                    break
+                if not self._should_watch:
+                    # close() flipped the flag and wrote a b"\0" wake byte.
+                    # Forward output that was still in the pipe, but not the
+                    # wake byte itself, and drain until we have seen it.
+                    stopping = b"\0" in bts
+                    bts = bts.replace(b"\0", b"")
+                    if bts:
+                        self.write(bts.decode(errors="replace"))
+                        os.write(self._original_stdstream_copy, bts)
+                    if stopping:
+                        break
+                    continue
                 self.write(bts.decode(errors="replace"))
                 os.write(self._original_stdstream_copy, bts)
-                bts = os.read(self._fid, PIPE_BUFFER_SIZE)
         except Exception:
             self._exc = sys.exc_info()
 
@@ -538,10 +554,12 @@ class OutStream(TextIOBase):
                     if echo_fd is not None and echo_fd == self._original_stdstream_fd:
                         # echo on the _copy_ we made during
                         # this is the actual terminal FD now
+                        # closefd=False: close() closes the copied fd itself
                         echo = io.TextIOWrapper(
                             io.FileIO(
                                 self._original_stdstream_copy,
                                 "w",
+                                closefd=False,
                             )
                         )
                 self.echo = echo
@@ -675,19 +693,21 @@ class OutStream(TextIOBase):
                 content = {"name": self.name, "text": data}
                 msg = self.session.msg("stream", content, parent=parent)
 
-                # Each transform either returns a new
-                # message or None. If None is returned,
-                # the message has been 'used' and we return.
+                # Each transform either returns a new message or None.
+                # If None is returned, the message has been 'used' and we
+                # move on to the buffers of the other parent headers --
+                # they have already been rotated out and would otherwise
+                # be silently dropped.
                 for hook in self._hooks:
                     msg = hook(msg)
                     if msg is None:
-                        return
-
-                self.session.send(
-                    self.pub_thread,
-                    msg,
-                    ident=self.topic,
-                )
+                        break
+                else:
+                    self.session.send(
+                        self.pub_thread,
+                        msg,
+                        ident=self.topic,
+                    )
 
     def write(self, string: str) -> int | None:  # type:ignore[override]
         """Write to current stream after encoding if necessary

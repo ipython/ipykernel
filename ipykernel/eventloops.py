@@ -404,17 +404,10 @@ def loop_cocoa_exit(kernel):
     stop()
 
 
-# loop created by loop_asyncio when no loop was running,
-# so that loop_asyncio_exit can find it again
-_asyncio_loop = None
-
-
 @register_integration("asyncio")
 def loop_asyncio(kernel):
     """Start a kernel with asyncio event loop support."""
     import asyncio
-
-    global _asyncio_loop  # noqa: PLW0603
 
     try:
         # loop is already running (tornado runs on asyncio), nothing left to do
@@ -423,12 +416,15 @@ def loop_asyncio(kernel):
     except RuntimeError:
         pass
 
-    loop = _asyncio_loop
+    try:
+        # use the loop already bound to this thread, if any
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # no current loop for this thread (Python >= 3.14)
+        loop = None
     if loop is None or loop.is_closed():
-        # no usable loop for this thread, create a new one
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        _asyncio_loop = loop
     loop._should_close = False  # type:ignore[attr-defined]
 
     # pause eventloop when there's an event on a zmq socket
@@ -465,10 +461,11 @@ def loop_asyncio_exit(kernel):
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
-        loop = _asyncio_loop
-
-    if loop is None:
-        return
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # no current loop for this thread (Python >= 3.14)
+            return
 
     async def close_loop():
         await loop.shutdown_asyncgens()
@@ -566,7 +563,7 @@ def set_qt_api_env_from_gui(gui):
 
     # Do the actual import now that the environment variable is set to make sure it works.
     try:
-        pass
+        from IPython.external.qt_for_kernel import QtCore  # noqa: F401
     except Exception as e:
         # Clear the environment variable for the next attempt.
         if "QT_API" in os.environ:

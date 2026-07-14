@@ -64,9 +64,12 @@ class TrioRunner:
         async def loc(coro):
             """A thread runner context."""
             self._cell_cancel_scope = trio.CancelScope()
-            with self._cell_cancel_scope:
-                return await coro
-            self._cell_cancel_scope = None  # type:ignore[unreachable]
-            return None
+            try:
+                with self._cell_cancel_scope:
+                    return await coro
+            finally:
+                # reset so an interrupt between cells is reported instead of
+                # cancelling the already-exited scope of the previous cell
+                self._cell_cancel_scope = None
 
         return trio.from_thread.run(loc, async_fn, trio_token=self._trio_token)

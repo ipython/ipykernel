@@ -12,7 +12,6 @@
 # -----------------------------------------------------------------------------
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from jupyter_client.client import KernelClient
@@ -201,12 +200,8 @@ class InProcessKernelClient(KernelClient):
         stream = kernel.shell_stream
         self.session.send(stream, msg)
         msg_parts = stream.recv_multipart()
-        if run_sync is not None:
-            dispatch_shell = run_sync(kernel.dispatch_shell)
-            dispatch_shell(msg_parts)
-        else:
-            loop = asyncio.get_event_loop()  # type:ignore[unreachable]
-            loop.run_until_complete(kernel.dispatch_shell(msg_parts))
+        dispatch_shell = run_sync(kernel.dispatch_shell)
+        dispatch_shell(msg_parts)
         _idents, reply_msg = self.session.recv(stream, copy=False)
         self.shell_channel.call_handlers_later(reply_msg)
 

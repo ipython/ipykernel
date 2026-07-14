@@ -4,21 +4,19 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
-import platform
 import sys
 from functools import partial
 
 import zmq
-from packaging.version import Version as V
 from traitlets.config.application import Application
 
 
 def _use_appnope():
     """Should we use appnope for dealing with OS X app nap?
 
-    Checks if we are on OS X 10.9 or greater.
+    CPython >= 3.10 requires OS X 10.9 or greater, where app nap exists.
     """
-    return sys.platform == "darwin" and V(platform.mac_ver()[0]) >= V("10.9")
+    return sys.platform == "darwin"
 
 
 # mapping of keys to loop functions
@@ -427,20 +425,31 @@ def loop_cocoa_exit(kernel):
     stop()
 
 
+# loop created by loop_asyncio when no loop was running,
+# so that loop_asyncio_exit can find it again
+_asyncio_loop = None
+
+
 @register_integration("asyncio")
 def loop_asyncio(kernel):
     """Start a kernel with asyncio event loop support."""
     import asyncio
 
-    loop = asyncio.get_event_loop()
-    # loop is already running (e.g. tornado 5), nothing left to do
-    if loop.is_running():
-        return
+    global _asyncio_loop  # noqa: PLW0603
 
-    if loop.is_closed():
-        # main loop is closed, create a new one
+    try:
+        # loop is already running (tornado runs on asyncio), nothing left to do
+        asyncio.get_running_loop()
+        return
+    except RuntimeError:
+        pass
+
+    loop = _asyncio_loop
+    if loop is None or loop.is_closed():
+        # no usable loop for this thread, create a new one
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        _asyncio_loop = loop
     loop._should_close = False  # type:ignore[attr-defined]
 
     # pause eventloop when there's an event on a zmq socket
@@ -474,19 +483,24 @@ def loop_asyncio_exit(kernel):
     """Exit hook for asyncio"""
     import asyncio
 
-    loop = asyncio.get_event_loop()
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = _asyncio_loop
+
+    if loop is None:
+        return
 
     async def close_loop():
-        if hasattr(loop, "shutdown_asyncgens"):
-            yield loop.shutdown_asyncgens()
+        await loop.shutdown_asyncgens()
         loop._should_close = True  # type:ignore[attr-defined]
         loop.stop()
 
     if loop.is_running():
-        close_loop()
+        asyncio.ensure_future(close_loop(), loop=loop)  # noqa: RUF006
 
     elif not loop.is_closed():
-        loop.run_until_complete(close_loop)  # type:ignore[arg-type]
+        loop.run_until_complete(close_loop())
         loop.close()
 
 

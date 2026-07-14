@@ -379,11 +379,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.stdin_port = self._bind_socket(self.stdin_socket, self.stdin_port)
         self.log.debug("stdin ROUTER Channel on port: %i", self.stdin_port)
 
-        if hasattr(zmq, "ROUTER_HANDOVER"):
-            # set router-handover to workaround zeromq reconnect problems
-            # in certain rare circumstances
-            # see ipython/ipykernel#270 and zeromq/libzmq#2892
-            self.shell_socket.router_handover = self.stdin_socket.router_handover = 1
+        # set router-handover to workaround zeromq reconnect problems
+        # in certain rare circumstances
+        # see ipython/ipykernel#270 and zeromq/libzmq#2892
+        self.shell_socket.router_handover = self.stdin_socket.router_handover = 1
 
         self.init_control(context)
         self.init_iopub(context)
@@ -405,11 +404,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         if self.shell_socket.getsockopt(zmq.LAST_ENDPOINT):
             self.debug_shell_socket.connect(self.shell_socket.getsockopt(zmq.LAST_ENDPOINT))
 
-        if hasattr(zmq, "ROUTER_HANDOVER"):
-            # set router-handover to workaround zeromq reconnect problems
-            # in certain rare circumstances
-            # see ipython/ipykernel#270 and zeromq/libzmq#2892
-            self.control_socket.router_handover = 1
+        # set router-handover to workaround zeromq reconnect problems
+        # in certain rare circumstances
+        # see ipython/ipykernel#270 and zeromq/libzmq#2892
+        self.control_socket.router_handover = 1
 
         self.control_thread = ControlThread(daemon=True)
         self.shell_channel_thread = ShellChannelThread(
@@ -573,32 +571,30 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
     def patch_io(self):
         """Patch important libraries that can't handle sys.stdout forwarding"""
-        try:
-            import faulthandler
-        except ImportError:
-            pass
-        else:
-            # Warning: this is a monkeypatch of `faulthandler.enable`, watch for possible
-            # updates to the upstream API and update accordingly (up-to-date as of Python 3.5):
-            # https://docs.python.org/3/library/faulthandler.html#faulthandler.enable
+        import faulthandler
 
-            # change default file to __stderr__ from forwarded stderr
-            faulthandler_enable = faulthandler.enable
+        # Warning: this is a monkeypatch of `faulthandler.enable`, watch for possible
+        # updates to the upstream API and update accordingly (up-to-date as of Python 3.5):
+        # https://docs.python.org/3/library/faulthandler.html#faulthandler.enable
 
-            def enable(file=sys.__stderr__, all_threads=True, **kwargs):
-                return faulthandler_enable(file=file, all_threads=all_threads, **kwargs)
+        # change default file to __stderr__ from forwarded stderr
+        faulthandler_enable = faulthandler.enable
 
-            faulthandler.enable = enable
+        def enable(file=sys.__stderr__, all_threads=True, **kwargs):
+            return faulthandler_enable(file=file, all_threads=all_threads, **kwargs)
 
-            if hasattr(faulthandler, "register"):
-                faulthandler_register = faulthandler.register
+        faulthandler.enable = enable
 
-                def register(signum, file=sys.__stderr__, all_threads=True, chain=False, **kwargs):
-                    return faulthandler_register(
-                        signum, file=file, all_threads=all_threads, chain=chain, **kwargs
-                    )
+        # `register` is not available on Windows
+        if hasattr(faulthandler, "register"):
+            faulthandler_register = faulthandler.register
 
-                faulthandler.register = register
+            def register(signum, file=sys.__stderr__, all_threads=True, chain=False, **kwargs):
+                return faulthandler_register(
+                    signum, file=file, all_threads=all_threads, chain=chain, **kwargs
+                )
+
+            faulthandler.register = register
 
     def init_signal(self):
         """Initialize the signal handler."""
@@ -692,43 +688,6 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    def _init_asyncio_patch(self):
-        """set default asyncio policy to be compatible with tornado
-
-        Tornado 6 (at least) is not compatible with the default
-        asyncio implementation on Windows
-
-        Pick the older SelectorEventLoopPolicy on Windows
-        if the known-incompatible default policy is in use.
-
-        Support for Proactor via a background thread is available in tornado 6.1,
-        but it is still preferable to run the Selector in the main thread
-        instead of the background.
-
-        do this as early as possible to make it a low priority and overridable
-
-        ref: https://github.com/tornadoweb/tornado/issues/2608
-
-        FIXME: if/when tornado supports the defaults in asyncio without threads,
-               remove and bump tornado requirement for py38.
-               Most likely, this will mean a new Python version
-               where asyncio.ProactorEventLoop supports add_reader and friends.
-
-        """
-        if sys.platform.startswith("win"):
-            import asyncio
-
-            try:
-                from asyncio import WindowsProactorEventLoopPolicy, WindowsSelectorEventLoopPolicy
-            except ImportError:
-                pass
-                # not affected
-            else:
-                if type(asyncio.get_event_loop_policy()) is WindowsProactorEventLoopPolicy:
-                    # WindowsProactorEventLoopPolicy is not compatible with tornado 6
-                    # fallback to the pre-3.8 default of Selector
-                    asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-
     def init_pdb(self):
         """Replace pdb with IPython's version that is interruptible.
 
@@ -739,16 +698,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         from IPython.core import debugger
 
-        if hasattr(debugger, "InterruptiblePdb"):
-            # Only available in newer IPython releases:
-            debugger.Pdb = debugger.InterruptiblePdb  # type:ignore[misc]
-            pdb.Pdb = debugger.Pdb  # type:ignore[assignment,misc]
-            pdb.set_trace = debugger.set_trace
+        debugger.Pdb = debugger.InterruptiblePdb  # type:ignore[misc]
+        pdb.Pdb = debugger.Pdb  # type:ignore[assignment,misc]
+        pdb.set_trace = debugger.set_trace
 
     @catch_config_error
     def initialize(self, argv=None):
         """Initialize the application."""
-        self._init_asyncio_patch()
         super().initialize(argv)
         if self.subapp is not None:
             return

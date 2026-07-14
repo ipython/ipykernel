@@ -15,6 +15,9 @@ from functools import partial
 
 import comm
 from IPython.core import release
+from IPython.core.completer import provisionalcompleter as _provisionalcompleter
+from IPython.core.completer import rectify_completions as _rectify_completions
+from IPython.core.interactiveshell import _asyncio_runner  # type:ignore[attr-defined]
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, default, observe, observe_compat
 from zmq.eventloop.zmqstream import ZMQStream
@@ -26,20 +29,6 @@ from .eventloops import _use_appnope
 from .kernelbase import Kernel as KernelBase
 from .kernelbase import _accepts_parameters
 from .zmqshell import ZMQInteractiveShell
-
-try:
-    from IPython.core.interactiveshell import _asyncio_runner  # type:ignore[attr-defined]
-except ImportError:
-    _asyncio_runner = None  # type:ignore[assignment]
-
-try:
-    from IPython.core.completer import provisionalcompleter as _provisionalcompleter
-    from IPython.core.completer import rectify_completions as _rectify_completions
-
-    _use_experimental_60_completion = True
-except ImportError:
-    _use_experimental_60_completion = False
-
 
 _EXPERIMENTAL_KEY_NAME = "_jupyter_types_experimental"
 
@@ -389,19 +378,9 @@ class IPythonKernel(KernelBase):
         self._forward_input(allow_stdin)
 
         reply_content: dict[str, t.Any] = {}
-        if hasattr(shell, "run_cell_async") and hasattr(shell, "should_run_async"):
-            run_cell = shell.run_cell_async
-            should_run_async = shell.should_run_async
-            accepts_params = _accepts_parameters(run_cell, ["cell_id", "cell_meta"])
-        else:
-            should_run_async = lambda cell: False  # noqa: ARG005, E731
-            # older IPython,
-            # use blocking run_cell and wrap it in coroutine
-
-            async def run_cell(*args, **kwargs):
-                return shell.run_cell(*args, **kwargs)
-
-            accepts_params = _accepts_parameters(shell.run_cell, ["cell_id", "cell_meta"])
+        run_cell = shell.run_cell_async
+        should_run_async = shell.should_run_async
+        accepts_params = _accepts_parameters(run_cell, ["cell_id", "cell_meta"])
         try:
             # default case: runner is asyncio and asyncio is already running
             # TODO: this should check every case for "are we inside the runner",
@@ -420,8 +399,7 @@ class IPythonKernel(KernelBase):
                 do_execute_args["cell_id"] = cell_id
 
             if (
-                _asyncio_runner  # type:ignore[truthy-bool]
-                and shell.loop_runner is _asyncio_runner
+                shell.loop_runner is _asyncio_runner
                 and asyncio.get_event_loop().is_running()
                 and should_run_async(
                     code,
@@ -513,7 +491,7 @@ class IPythonKernel(KernelBase):
 
     def do_complete(self, code, cursor_pos):
         """Handle code completion."""
-        if _use_experimental_60_completion and self.use_experimental_completions:
+        if self.use_experimental_completions:
             return self._experimental_do_complete(code, cursor_pos)
 
         # FIXME: IPython completers currently assume single line,

@@ -40,7 +40,6 @@ from traitlets import Any, Bool, CBool, CBytes, Instance, Type, default, observe
 
 from ipykernel import connect_qtconsole, get_connection_file, get_connection_info
 from ipykernel.displayhook import ZMQShellDisplayHook
-from ipykernel.jsonutil import encode_images, json_clean
 
 try:
     from IPython.core.history import HistoryOutput
@@ -154,7 +153,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
             transient = {}
         self._validate_data(data, metadata)
         content = {}
-        content["data"] = encode_images(data)
+        content["data"] = data
         content["metadata"] = metadata
         content["transient"] = transient
 
@@ -164,7 +163,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         # in order to put it through the transform
         # hooks before potentially sending.
         assert self.session is not None
-        msg = self.session.msg(msg_type, json_clean(content), parent=self.parent_header)
+        msg = self.session.msg(msg_type, content, parent=self.parent_header)
 
         # Each transform either returns a new
         # message or None. If None is returned,
@@ -194,7 +193,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         content = dict(wait=wait)
         self._flush_streams()
         assert self.session is not None
-        msg = self.session.msg("clear_output", json_clean(content), parent=self.parent_header)
+        msg = self.session.msg("clear_output", content, parent=self.parent_header)
 
         # see publish() for details on how this works
         for hook in self._hooks:
@@ -689,7 +688,7 @@ class ZMQInteractiveShell(InteractiveShell):
         dh.session.send(  # type:ignore[attr-defined]
             dh.pub_socket,  # type:ignore[attr-defined]
             "error",
-            json_clean(exc_content),
+            exc_content,
             dh.parent_header,  # type:ignore[attr-defined]
             ident=topic,
         )

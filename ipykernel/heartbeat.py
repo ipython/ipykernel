@@ -121,7 +121,7 @@ class Heartbeat(Thread):
 
         while True:
             try:
-                zmq.device(zmq.QUEUE, self.socket, self.socket)  # type:ignore[attr-defined]
+                zmq.proxy(self.socket, self.socket)
             except zmq.ZMQError as e:
                 if e.errno == errno.EINTR:
                     # signal interrupt, resume heartbeat

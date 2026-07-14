@@ -17,7 +17,6 @@ import uuid
 import warnings
 from collections.abc import Mapping
 from contextvars import Context, ContextVar, copy_context
-from datetime import datetime
 from functools import partial
 from signal import SIGINT, SIGTERM, Signals, default_int_handler, signal
 
@@ -29,17 +28,11 @@ else:
     SIGKILL = "windown-SIGKILL-sentinel"
 
 
-try:
-    # jupyter_client >= 5, use tz-aware now
-    from jupyter_client.session import utcnow as now
-except ImportError:
-    # jupyter_client < 5, use local now()
-    now = datetime.now
-
 import psutil
 import zmq
 from IPython.core.error import StdinNotImplementedError
 from jupyter_client.session import Session
+from jupyter_client.session import utcnow as now
 from tornado import ioloop
 from traitlets.config.configurable import SingletonConfigurable
 from traitlets.traitlets import (
@@ -55,8 +48,6 @@ from traitlets.traitlets import (
     observe,
 )
 from zmq.eventloop.zmqstream import ZMQStream
-
-from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
 from .iostream import OutStream
@@ -539,10 +530,6 @@ class Kernel(SingletonConfigurable):
         # begin polling the eventloop
         schedule_next()
 
-    async def _create_control_lock(self):
-        # This can be removed when minimum python increases to 3.10
-        self._control_lock = asyncio.Lock()
-
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
@@ -550,13 +537,7 @@ class Kernel(SingletonConfigurable):
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
 
-        if self.control_thread and sys.version_info < (3, 10):
-            # Before Python 3.10 we need to ensure the _control_lock is created in the
-            # thread that uses it. When our minimum python is 3.10 we can remove this
-            # and always use the else below, or just assign it where it is declared.
-            self.control_thread.io_loop.add_callback(self._create_control_lock)
-        else:
-            self._control_lock = asyncio.Lock()
+        self._control_lock = asyncio.Lock()
 
         if self.shell_stream:
             if self.shell_channel_thread:
@@ -851,7 +832,6 @@ class Kernel(SingletonConfigurable):
             time.sleep(self._execute_sleep)
 
         # Send the reply.
-        reply_content = json_clean(reply_content)
         metadata = self.finish_metadata(parent, metadata, reply_content)
 
         reply_msg: dict[str, t.Any] = self.session.send(  # type:ignore[assignment]
@@ -901,7 +881,6 @@ class Kernel(SingletonConfigurable):
                 stacklevel=1,
             )
 
-        matches = json_clean(matches)
         self.session.send(stream, "complete_reply", matches, parent, ident)
 
     async def do_complete(self, code, cursor_pos):
@@ -936,7 +915,6 @@ class Kernel(SingletonConfigurable):
             )
 
         # Before we send this object over, we scrub it for JSON usage
-        reply_content = json_clean(reply_content)
         msg = self.session.send(stream, "inspect_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
@@ -960,7 +938,6 @@ class Kernel(SingletonConfigurable):
                 stacklevel=1,
             )
 
-        reply_content = json_clean(reply_content)
         msg = self.session.send(stream, "history_reply", reply_content, parent, ident)
         self.log.debug("%s", msg)
 
@@ -1126,7 +1103,6 @@ class Kernel(SingletonConfigurable):
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
-        reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, "is_complete_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
@@ -1150,7 +1126,6 @@ class Kernel(SingletonConfigurable):
                 PendingDeprecationWarning,
                 stacklevel=1,
             )
-        reply_content = json_clean(reply_content)
         reply_msg = self.session.send(stream, "debug_reply", reply_content, parent, ident)
         self.log.debug("%s", reply_msg)
 
@@ -1425,7 +1400,7 @@ class Kernel(SingletonConfigurable):
 
         # Send the input request.
         assert self.session is not None
-        content = json_clean(dict(prompt=prompt, password=password))
+        content = dict(prompt=prompt, password=password)
         self.session.send(self.stdin_socket, "input_request", content, parent, ident=ident)
 
         # Await a response.

@@ -9,14 +9,10 @@ from pathlib import Path
 import zmq
 from IPython.core.getipython import get_ipython
 from IPython.core.inputtransformer2 import leading_empty_lines
+from jupyter_client.jsonutil import json_default
 from tornado.locks import Event
 from tornado.queues import Queue
 from zmq.utils import jsonapi
-
-try:
-    from jupyter_client.jsonutil import json_default
-except ImportError:
-    from jupyter_client.jsonutil import date_default as json_default
 
 from .compiler import get_file_name, get_tmp_directory, get_tmp_hash_seed
 
@@ -40,10 +36,6 @@ except Exception as e:
         _is_debugpy_available = False
     else:
         raise e
-
-
-# Required for backwards compatibility
-ROUTING_ID = getattr(zmq, "ROUTING_ID", None) or zmq.IDENTITY
 
 
 class _FakeCode:
@@ -219,7 +211,7 @@ class DebugpyClient:
 
     def _send_request(self, msg):
         if self.routing_id is None:
-            self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
+            self.routing_id = self.debugpy_stream.socket.getsockopt(zmq.ROUTING_ID)
         content = jsonapi.dumps(
             msg,
             default=json_default,
@@ -274,7 +266,7 @@ class DebugpyClient:
     def connect_tcp_socket(self):
         """Connect to the tcp socket."""
         self.debugpy_stream.socket.connect(self._get_endpoint())
-        self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
+        self.routing_id = self.debugpy_stream.socket.getsockopt(zmq.ROUTING_ID)
 
     def disconnect_tcp_socket(self):
         """Disconnect from the tcp socket."""
@@ -436,7 +428,7 @@ class Debugger:
                 "execute_request",
                 content,
                 None,
-                (self.shell_socket.getsockopt(ROUTING_ID)),
+                (self.shell_socket.getsockopt(zmq.ROUTING_ID)),
             )
 
             _ident, msg = self.session.recv(self.shell_socket, mode=0)

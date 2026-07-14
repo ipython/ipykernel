@@ -100,24 +100,17 @@ class VariableExplorer:
 class DebugpyMessageQueue:
     """A debugpy message queue."""
 
-    HEADER = "Content-Length: "
-    HEADER_LENGTH = 16
-    SEPARATOR = "\r\n\r\n"
-    SEPARATOR_LENGTH = 4
+    HEADER = b"Content-Length: "
+    SEPARATOR = b"\r\n\r\n"
 
     def __init__(self, event_callback, log):
         """Init the queue."""
-        self.tcp_buffer = ""
-        self._reset_tcp_pos()
+        # DAP Content-Length counts bytes, so the buffer must stay bytes:
+        # decoding first would desync the parser on non-ascii payloads
+        self.tcp_buffer = bytearray()
         self.event_callback = event_callback
         self.message_queue: Queue[t.Any] = Queue()
         self.log = log
-
-    def _reset_tcp_pos(self):
-        self.header_pos = -1
-        self.separator_pos = -1
-        self.message_size = 0
-        self.message_pos = -1
 
     def _put_message(self, raw_msg):
         self.log.debug("QUEUE - _put_message:")
@@ -133,50 +126,30 @@ class DebugpyMessageQueue:
 
     def put_tcp_frame(self, frame):
         """Put a tcp frame in the queue."""
-        self.tcp_buffer += frame
+        self.tcp_buffer.extend(frame)
 
         self.log.debug("QUEUE - received frame")
         while True:
-            # Finds header
-            if self.header_pos == -1:
-                self.header_pos = self.tcp_buffer.find(DebugpyMessageQueue.HEADER)
-            if self.header_pos == -1:
+            header_pos = self.tcp_buffer.find(DebugpyMessageQueue.HEADER)
+            if header_pos == -1:
                 return
 
-            self.log.debug("QUEUE - found header at pos %i", self.header_pos)
-
-            # Finds separator
-            if self.separator_pos == -1:
-                hint = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
-                self.separator_pos = self.tcp_buffer.find(DebugpyMessageQueue.SEPARATOR, hint)
-            if self.separator_pos == -1:
+            size_pos = header_pos + len(DebugpyMessageQueue.HEADER)
+            separator_pos = self.tcp_buffer.find(DebugpyMessageQueue.SEPARATOR, size_pos)
+            if separator_pos == -1:
                 return
 
-            self.log.debug("QUEUE - found separator at pos %i", self.separator_pos)
+            message_pos = separator_pos + len(DebugpyMessageQueue.SEPARATOR)
+            message_size = int(self.tcp_buffer[size_pos:separator_pos])
 
-            if self.message_pos == -1:
-                size_pos = self.header_pos + DebugpyMessageQueue.HEADER_LENGTH
-                self.message_pos = self.separator_pos + DebugpyMessageQueue.SEPARATOR_LENGTH
-                self.message_size = int(self.tcp_buffer[size_pos : self.separator_pos])
-
-            self.log.debug("QUEUE - found message at pos %i", self.message_pos)
-            self.log.debug("QUEUE - message size is %i", self.message_size)
-
-            if len(self.tcp_buffer) - self.message_pos < self.message_size:
+            if len(self.tcp_buffer) - message_pos < message_size:
+                # message not complete yet, wait for the next frame
                 return
 
-            self._put_message(
-                self.tcp_buffer[self.message_pos : self.message_pos + self.message_size]
-            )
-            if len(self.tcp_buffer) - self.message_pos == self.message_size:
-                self.log.debug("QUEUE - resetting tcp_buffer")
-                self.tcp_buffer = ""
-                self._reset_tcp_pos()
-                return
-
-            self.tcp_buffer = self.tcp_buffer[self.message_pos + self.message_size :]
-            self.log.debug("QUEUE - slicing tcp_buffer: %s", self.tcp_buffer)
-            self._reset_tcp_pos()
+            self.log.debug("QUEUE - found message of size %i", message_size)
+            self._put_message(bytes(self.tcp_buffer[message_pos : message_pos + message_size]))
+            # drop the consumed message and keep parsing the remainder
+            del self.tcp_buffer[: message_pos + message_size]
 
     async def get_message(self):
         """Get a message from the queue."""
@@ -218,11 +191,8 @@ class DebugpyClient:
             ensure_ascii=False,
             allow_nan=False,
         )
-        content_length = str(len(content))
-        buf = (DebugpyMessageQueue.HEADER + content_length + DebugpyMessageQueue.SEPARATOR).encode(
-            "ascii"
-        )
-        buf += content
+        content_length = str(len(content)).encode("ascii")
+        buf = DebugpyMessageQueue.HEADER + content_length + DebugpyMessageQueue.SEPARATOR + content
         self.log.debug("DEBUGPYCLIENT:")
         self.log.debug(self.routing_id)
         self.log.debug(buf)

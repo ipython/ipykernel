@@ -215,8 +215,10 @@ class IPythonKernel(KernelBase):
         from .debugger import _is_debugpy_available
 
         if _is_debugpy_available:
-            # The first frame is the socket id, we can drop it
-            frame = msg[1].bytes.decode("utf-8")
+            # The first frame is the socket id, we can drop it.
+            # Keep the frame as bytes: DAP Content-Length counts bytes and
+            # the message queue slices the stream accordingly.
+            frame = msg[1].bytes
             self.log.debug("Debugpy received: %s", frame)
             self.debugger.tcp_client.receive_dap_frame(frame)
 

@@ -1,3 +1,4 @@
+import json
 import sys
 
 import pytest
@@ -564,3 +565,36 @@ f(2, 3)"""
     assert execution_states.count("busy") == 4
     assert execution_states.count("idle") == 4
     assert execution_states == ["busy", "idle"] * 4
+
+
+def test_message_queue_non_ascii_split_frames():
+    """DAP Content-Length counts bytes: non-ascii payloads split across
+    frames must not desync the parser."""
+    import asyncio
+    import logging
+
+    from ipykernel.debugger import DebugpyMessageQueue
+
+    events = []
+    queue = DebugpyMessageQueue(events.append, logging.getLogger(__name__))
+
+    def dap_message(body):
+        content = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        return b"Content-Length: %d\r\n\r\n%s" % (len(content), content)
+
+    msg1 = {"type": "event", "event": "output", "body": {"output": "héllo 日本語"}}
+    msg2 = {"type": "response", "command": "evaluate", "body": {"result": "ünïcode"}}
+    stream = dap_message(msg1) + dap_message(msg2)
+
+    # feed the byte stream in pathological 3-byte frames, splitting
+    # multi-byte utf-8 sequences across frames
+    for i in range(0, len(stream), 3):
+        queue.put_tcp_frame(stream[i : i + 3])
+
+    assert events == [msg1]
+
+    async def get():
+        return await queue.get_message()
+
+    assert asyncio.run(get()) == msg2
+    assert not queue.tcp_buffer

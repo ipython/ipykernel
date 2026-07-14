@@ -32,7 +32,13 @@ from zmq.eventloop.zmqstream import ZMQStream
 MASTER = 0
 CHILD = 1
 
-PIPE_BUFFER_SIZE = 1000
+# size of reads from the pipe watching redirected file descriptors;
+# sized to the default Linux pipe capacity so bulk fd-level output
+# is forwarded in as few reads as possible
+PIPE_BUFFER_SIZE = 65536
+
+# sentinel for "parent header not set in this context"
+_PARENT_UNSET = object()
 
 logger = logging.getLogger(__name__)
 
@@ -510,11 +516,14 @@ class OutStream(TextIOBase):
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()
-        self._parent_header: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-            "parent_header"
+        # the parent header is stored together with its frozenset form, which
+        # keys the output buffers: computing it once per set_parent instead of
+        # on every write() keeps the per-write cost down
+        self._parent_header: contextvars.ContextVar[tuple[dict[str, Any], frozenset]] = (
+            contextvars.ContextVar("parent_header")
         )
-        self._parent_header.set({})
-        self._parent_header_global = {}
+        self._parent_header.set(({}, frozenset()))
+        self._parent_header_global: tuple[dict[str, Any], frozenset] = ({}, frozenset())
         self._master_pid = os.getpid()
         self._flush_pending = False
         self._subprocess_flush_pending = False
@@ -567,19 +576,25 @@ class OutStream(TextIOBase):
                 msg = "echo argument must be a file-like object"
                 raise ValueError(msg)
 
+    def _parent_pair(self):
+        """The (parent_header, frozenset) pair for the current context."""
+        # asyncio or thread-specific value, global fallback.
+        # the sentinel default avoids raising and catching a LookupError
+        # on every access from contexts that never called set_parent
+        pair = self._parent_header.get(_PARENT_UNSET)
+        if pair is _PARENT_UNSET:
+            return self._parent_header_global
+        return pair
+
     @property
     def parent_header(self):
-        try:
-            # asyncio or thread-specific
-            return self._parent_header.get()
-        except LookupError:
-            # global (fallback)
-            return self._parent_header_global
+        return self._parent_pair()[0]
 
     @parent_header.setter
     def parent_header(self, value):
-        self._parent_header_global = value
-        return self._parent_header.set(value)
+        pair = (value, frozenset(value.items()))
+        self._parent_header_global = pair
+        self._parent_header.set(pair)
 
     def isatty(self):
         """Return a bool indicating whether this is an 'interactive' stream.
@@ -649,6 +664,20 @@ class OutStream(TextIOBase):
 
         send will happen in the background thread
         """
+        with self._buffer_lock:
+            nothing_to_send = (
+                not self._buffers
+                and not self._flush_pending
+                and not self._subprocess_flush_pending
+                and self.echo is None
+            )
+        if nothing_to_send:
+            # nothing buffered and no flush in flight: skip the blocking
+            # cross-thread round-trip. This is the common case for the
+            # flushes after completion/inspection requests and executions
+            # that produce no output.
+            return
+
         if (
             self.pub_thread
             and self.pub_thread.thread is not None
@@ -718,7 +747,7 @@ class OutStream(TextIOBase):
             number of items from input parameter written to stream.
 
         """
-        parent = self.parent_header
+        _parent, frozen_parent = self._parent_pair()
 
         if not isinstance(string, str):
             msg = f"write() argument must be str, not {type(string)}"  # type:ignore[unreachable]
@@ -738,7 +767,7 @@ class OutStream(TextIOBase):
         is_child = not self._is_master_process()
         # only touch the buffer in the IO thread to avoid races
         with self._buffer_lock:
-            self._buffers[frozenset(parent.items())].write(string)
+            self._buffers[frozen_parent].write(string)
         if is_child:
             # mp.Pool cannot be trusted to flush promptly (or ever),
             # and this helps.

@@ -1,6 +1,7 @@
 """Compiler helpers for the debugger."""
 
 import os
+import struct
 import sys
 import tempfile
 
@@ -10,18 +11,12 @@ from IPython.core.compilerop import CachingCompiler
 def murmur2_x86(data, seed):
     """Get the murmur2 hash."""
     m = 0x5BD1E995
-    data = [chr(d) for d in str.encode(data, "utf8")]
-    length = len(data)
+    buf = data.encode("utf8")
+    length = len(buf)
     h = seed ^ length
     rounded_end = length & 0xFFFFFFFC
-    for i in range(0, rounded_end, 4):
-        k = (
-            (ord(data[i]) & 0xFF)
-            | ((ord(data[i + 1]) & 0xFF) << 8)
-            | ((ord(data[i + 2]) & 0xFF) << 16)
-            | (ord(data[i + 3]) << 24)
-        )
-        k = (k * m) & 0xFFFFFFFF
+    for (word,) in struct.iter_unpack("<I", buf[:rounded_end]):
+        k = (word * m) & 0xFFFFFFFF
         k ^= k >> 24
         k = (k * m) & 0xFFFFFFFF
 
@@ -31,11 +26,11 @@ def murmur2_x86(data, seed):
     val = length & 0x03
     k = 0
     if val == 3:
-        k = (ord(data[rounded_end + 2]) & 0xFF) << 16
+        k = buf[rounded_end + 2] << 16
     if val in [2, 3]:
-        k |= (ord(data[rounded_end + 1]) & 0xFF) << 8
+        k |= buf[rounded_end + 1] << 8
     if val in [1, 2, 3]:
-        k |= ord(data[rounded_end]) & 0xFF
+        k |= buf[rounded_end]
         h ^= k
         h = (h * m) & 0xFFFFFFFF
 

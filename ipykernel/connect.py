@@ -58,8 +58,8 @@ def get_connection_info(
     ----------
     connection_file : str [optional]
         The connection file to be used. Can be given by absolute path, or
-        IPython will search in the security directory.
-        If run from IPython,
+        searched for in the Jupyter runtime directory via
+        ``jupyter_client.find_connection_file``.
 
         If unspecified, the connection file for the currently running
         IPython Kernel will be used, which is only allowed from inside a kernel.
@@ -99,8 +99,8 @@ def connect_qtconsole(
     ----------
     connection_file : str [optional]
         The connection file to be used. Can be given by absolute path, or
-        IPython will search in the security directory.
-        If run from IPython,
+        searched for in the Jupyter runtime directory via
+        ``jupyter_client.find_connection_file``.
 
         If unspecified, the connection file for the currently running
         IPython Kernel will be used, which is only allowed from inside a kernel.

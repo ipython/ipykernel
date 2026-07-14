@@ -177,7 +177,7 @@ class IPythonKernel(KernelBase):
             },
             {
                 "text": "NumPy Reference",
-                "url": "https://docs.scipy.org/doc/numpy/reference/",
+                "url": "https://numpy.org/doc/stable/reference/",
             },
             {
                 "text": "SciPy Reference",
@@ -185,11 +185,11 @@ class IPythonKernel(KernelBase):
             },
             {
                 "text": "Matplotlib Reference",
-                "url": "https://matplotlib.org/contents.html",
+                "url": "https://matplotlib.org/stable/",
             },
             {
                 "text": "SymPy Reference",
-                "url": "http://docs.sympy.org/latest/index.html",
+                "url": "https://docs.sympy.org/latest/index.html",
             },
             {
                 "text": "pandas Reference",
@@ -659,8 +659,9 @@ class IPythonKernel(KernelBase):
         """Handle an apply request."""
         try:
             from ipyparallel.serialize import serialize_object, unpack_apply_message
-        except ImportError:
-            from .serialize import serialize_object, unpack_apply_message
+        except ImportError as e:
+            msg = "apply requests require ipyparallel to be installed"
+            raise ModuleNotFoundError(msg) from e
 
         shell = self.shell
         assert shell is not None

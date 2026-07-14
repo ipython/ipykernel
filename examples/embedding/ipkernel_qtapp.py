@@ -19,18 +19,22 @@ they will notice that their kernel died.
 # -----------------------------------------------------------------------------
 
 from internal_ipkernel import InternalIPKernel
-from PyQt4 import Qt
+
+try:
+    from PyQt5.QtWidgets import QApplication, QPushButton, QWidget
+except ImportError:
+    from PySide6.QtWidgets import QApplication, QPushButton, QWidget
 
 
 # -----------------------------------------------------------------------------
 # Functions and classes
 # -----------------------------------------------------------------------------
-class SimpleWindow(Qt.QWidget, InternalIPKernel):
+class SimpleWindow(QWidget, InternalIPKernel):
     """A custom Qt widget for IPykernel."""
 
     def __init__(self, app):
         """Initialize the widget."""
-        Qt.QWidget.__init__(self)
+        QWidget.__init__(self)
         self.app = app
         self.add_widgets()
         self.init_ipkernel("qt")
@@ -41,25 +45,24 @@ class SimpleWindow(Qt.QWidget, InternalIPKernel):
         self.setWindowTitle("IPython in your app")
 
         # Add simple buttons:
-        console = Qt.QPushButton("Qt Console", self)
+        console = QPushButton("Qt Console", self)
         console.setGeometry(10, 10, 100, 35)
-        self.connect(console, Qt.SIGNAL("clicked()"), self.new_qt_console)
+        console.clicked.connect(self.new_qt_console)
 
-        namespace = Qt.QPushButton("Namespace", self)
+        namespace = QPushButton("Namespace", self)
         namespace.setGeometry(120, 10, 100, 35)
-        self.connect(namespace, Qt.SIGNAL("clicked()"), self.print_namespace)
+        namespace.clicked.connect(self.print_namespace)
 
-        count = Qt.QPushButton("Count++", self)
+        count = QPushButton("Count++", self)
         count.setGeometry(230, 10, 80, 35)
-        self.connect(count, Qt.SIGNAL("clicked()"), self.count)
+        count.clicked.connect(self.count)
 
         # Quit and cleanup
-        quit = Qt.QPushButton("Quit", self)
-        quit.setGeometry(320, 10, 60, 35)
-        self.connect(quit, Qt.SIGNAL("clicked()"), Qt.qApp, Qt.SLOT("quit()"))
+        quit_button = QPushButton("Quit", self)
+        quit_button.setGeometry(320, 10, 60, 35)
+        quit_button.clicked.connect(self.app.quit)
 
-        self.app.connect(self.app, Qt.SIGNAL("lastWindowClosed()"), self.app, Qt.SLOT("quit()"))
-
+        self.app.lastWindowClosed.connect(self.app.quit)
         self.app.aboutToQuit.connect(self.cleanup_consoles)
 
 
@@ -68,7 +71,7 @@ class SimpleWindow(Qt.QWidget, InternalIPKernel):
 # -----------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app = Qt.QApplication([])
+    app = QApplication([])
     # Create our window
     win = SimpleWindow(app)
     win.show()

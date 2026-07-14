@@ -86,7 +86,7 @@ kernel_flags.update(
         the default matplotlib backend.""",
         ),
         "trio-loop": (
-            {"InteractiveShell": {"trio_loop": False}},
+            {"IPKernelApp": {"trio_loop": True}},
             "Enable Trio as main event loop.",
         ),
     }
@@ -177,7 +177,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     # streams, etc.
     no_stdout = Bool(False, help="redirect stdout to the null device").tag(config=True)
     no_stderr = Bool(False, help="redirect stderr to the null device").tag(config=True)
-    trio_loop = Bool(False, help="Set main event loop.").tag(config=True)
+    trio_loop = Bool(False, help="Run the kernel on a Trio event loop.").tag(config=True)
     quiet = Bool(True, help="Only send stdout/stderr to output stream").tag(config=True)
     outstream_class = DottedObjectName(
         "ipykernel.iostream.OutStream",

@@ -38,12 +38,15 @@ def make_ipkernel_cmd(
 
     Parameters
     ----------
-    mod : str, optional (default 'ipykernel')
+    mod : str, optional (default 'ipykernel_launcher')
         A string of an IPython module whose __main__ starts an IPython kernel
     executable : str, optional (default sys.executable)
         The Python executable to use for the kernel process.
     extra_arguments : list, optional
         A list of extra arguments to pass when executing the launch code.
+    python_arguments : list, optional
+        A list of interpreter arguments inserted before the ``-m`` switch
+        (e.g. ``-Xfrozen_modules=off``).
 
     Returns
     -------

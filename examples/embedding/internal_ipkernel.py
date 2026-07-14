@@ -5,8 +5,7 @@
 
 import sys
 
-from IPython.lib.kernel import connect_qtconsole
-
+from ipykernel.connect import connect_qtconsole
 from ipykernel.kernelapp import IPKernelApp
 
 
@@ -53,7 +52,7 @@ class InternalIPKernel:
 
     def new_qt_console(self, evt=None):
         """start a new qtconsole connected to our kernel"""
-        return connect_qtconsole(self.ipkernel.abs_connection_file, profile=self.ipkernel.profile)
+        return connect_qtconsole(self.ipkernel.abs_connection_file)
 
     def count(self, evt=None):
         """Get the app counter value."""

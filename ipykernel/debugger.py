@@ -1,5 +1,6 @@
 """Debugger implementation for the IPython kernel."""
 
+import importlib.util
 import os
 import re
 import sys
@@ -16,26 +17,11 @@ from zmq.utils import jsonapi
 
 from .compiler import get_file_name, get_tmp_directory, get_tmp_hash_seed
 
-try:
-    # This import is required to have the next ones working...
-    from debugpy.server import api  # noqa: F401
-
-    from _pydevd_bundle import pydevd_frame_utils  # isort: skip
-    from _pydevd_bundle.pydevd_suspended_frames import (  # isort: skip
-        SuspendedFramesManager,
-        _FramesTracker,
-    )
-
-    _is_debugpy_available = True
-except ImportError:
-    _is_debugpy_available = False
-except Exception as e:
-    # We cannot import the module where the DebuggerInitializationError
-    # is defined
-    if e.__class__.__name__ == "DebuggerInitializationError":
-        _is_debugpy_available = False
-    else:
-        raise e
+# Availability is determined without importing debugpy: importing the
+# debugpy/pydevd stack takes hundreds of milliseconds and tens of MB, and
+# would otherwise be paid at every kernel startup, debugger or not. The
+# actual import happens on first use (VariableExplorer/_DummyPyDB).
+_is_debugpy_available = importlib.util.find_spec("debugpy") is not None
 
 
 class _FakeCode:
@@ -73,6 +59,17 @@ class VariableExplorer:
 
     def __init__(self):
         """Initialize the explorer."""
+        # deferred (heavy) import of the pydevd bits bundled with debugpy;
+        # the debugpy.server.api import is required for the next ones to work
+        from debugpy.server import api  # noqa: F401
+
+        from _pydevd_bundle import pydevd_frame_utils  # isort: skip
+        from _pydevd_bundle.pydevd_suspended_frames import (  # isort: skip
+            SuspendedFramesManager,
+            _FramesTracker,
+        )
+
+        self._pydevd_frame_utils = pydevd_frame_utils
         self.suspended_frame_manager = SuspendedFramesManager()
         self.py_db = _DummyPyDB()
         self.tracker = _FramesTracker(self.suspended_frame_manager, self.py_db)
@@ -82,7 +79,9 @@ class VariableExplorer:
         """Start tracking."""
         var = get_ipython().user_ns
         self.frame = _FakeFrame(_FakeCode("<module>", get_file_name("sys._getframe()")), var, var)
-        self.tracker.track("thread1", pydevd_frame_utils.create_frames_list_from_frame(self.frame))
+        self.tracker.track(
+            "thread1", self._pydevd_frame_utils.create_frames_list_from_frame(self.frame)
+        )
 
     def untrack_all(self):
         """Stop tracking."""
@@ -328,7 +327,16 @@ class Debugger:
         self.debugpy_port = 0
         self.endpoint = None
 
-        self.variable_explorer = VariableExplorer()
+        # created lazily on first use: instantiating the explorer imports
+        # the debugpy/pydevd stack, which should not happen at kernel startup
+        self._variable_explorer = None
+
+    @property
+    def variable_explorer(self):
+        """The variable explorer, created on first use."""
+        if self._variable_explorer is None:
+            self._variable_explorer = VariableExplorer()
+        return self._variable_explorer
 
     def _handle_event(self, msg):
         if msg["event"] == "stopped":
@@ -576,7 +584,7 @@ class Debugger:
         # looks like the implementation of untrack_all in ptvsd
         # destroys objects we nee din track. We have no choice but
         # reinstantiate the object
-        self.variable_explorer = VariableExplorer()
+        self._variable_explorer = VariableExplorer()
         self.variable_explorer.track()
         variables = self.variable_explorer.get_children_variables()
         return self._build_variables_response(message, variables)

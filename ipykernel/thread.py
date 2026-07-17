@@ -28,8 +28,8 @@ def make_selector_io_loop() -> IOLoop:
     platforms the default loop is already selector-based, so this is a no-op there.
     """
     if sys.platform == "win32":
-        return IOLoop(make_current=False, asyncio_loop=asyncio.SelectorEventLoop())  # type: ignore[return-value]
-    return IOLoop(make_current=False)  # type: ignore[return-value]
+        return IOLoop(make_current=False, asyncio_loop=asyncio.SelectorEventLoop())  # type: ignore[no-any-return]
+    return IOLoop(make_current=False)  # type: ignore[no-any-return]
 
 
 class BaseThread(Thread):

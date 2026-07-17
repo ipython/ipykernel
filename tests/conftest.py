@@ -38,11 +38,6 @@ if resource is not None:
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
 
 
-# Enforce selector event loop on Windows.
-if os.name == "nt":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type:ignore
-
-
 class KernelMixin:
     log = logging.getLogger()
 

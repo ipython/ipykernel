@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import os
+import signal
 import warnings
 
 import pytest
@@ -150,6 +151,32 @@ async def test_publish_debug_event(kernel):
 
 async def test_connect_request(kernel):
     await kernel.connect_request(kernel.shell_stream, "foo", {})
+
+
+async def test_usage_request_without_psutil(kernel, monkeypatch):
+    import ipykernel.kernelbase as kernelbase
+
+    monkeypatch.setattr(kernelbase, "psutil", None)
+    reply = await kernel.test_control_message("usage_request", {})
+    content = reply["content"]
+
+    assert reply["header"]["msg_type"] == "usage_reply"
+    assert content["hostname"]
+    assert content["pid"] == os.getpid()
+    assert content["cpu_count"] == os.cpu_count()
+    assert "host_cpu_percent" not in content
+    assert "host_virtual_memory" not in content
+    assert "kernel_memory" not in content
+
+
+async def test_child_process_fallbacks_without_psutil(kernel, monkeypatch):
+    import ipykernel.kernelbase as kernelbase
+
+    monkeypatch.setattr(kernelbase, "psutil", None)
+
+    assert kernel._process_children() == []
+    kernel._signal_children(signal.SIGTERM)
+    await kernel._progressively_terminate_all_children()
 
 
 async def test_send_interrupt_children(kernel):

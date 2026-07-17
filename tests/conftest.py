@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from typing import no_type_check
 from unittest.mock import MagicMock
 

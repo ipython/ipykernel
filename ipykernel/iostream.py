@@ -22,8 +22,9 @@ from typing import Any
 
 import zmq
 from jupyter_client.session import extract_header
-from tornado.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
+
+from .thread import make_selector_io_loop
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -67,7 +68,7 @@ class IOPubThread:
         self.background_socket = BackgroundSocket(self)
         self._master_pid = os.getpid()
         self._pipe_flag = pipe
-        self.io_loop = IOLoop(make_current=False)
+        self.io_loop = make_selector_io_loop()
         if pipe:
             self._setup_pipe_in()
         self._local = threading.local()

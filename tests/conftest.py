@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 from typing import no_type_check
 from unittest.mock import MagicMock
 
@@ -36,11 +35,6 @@ if resource is not None:
         hard = soft
 
     resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
-
-
-# Enforce selector event loop on Windows.
-if os.name == "nt":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # type:ignore
 
 
 class KernelMixin:

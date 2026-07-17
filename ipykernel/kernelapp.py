@@ -588,7 +588,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             def enable(file=sys.__stderr__, all_threads=True, **kwargs):
                 return faulthandler_enable(file=file, all_threads=all_threads, **kwargs)
 
-            faulthandler.enable = enable  # type:ignore[assignment]
+            faulthandler.enable = enable
 
             if hasattr(faulthandler, "register"):
                 faulthandler_register = faulthandler.register
@@ -743,7 +743,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             # Only available in newer IPython releases:
             debugger.Pdb = debugger.InterruptiblePdb  # type:ignore[misc]
             pdb.Pdb = debugger.Pdb  # type:ignore[assignment,misc]
-            pdb.set_trace = debugger.set_trace  # type:ignore[assignment]
+            pdb.set_trace = debugger.set_trace
 
     @catch_config_error
     def initialize(self, argv=None):

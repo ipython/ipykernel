@@ -845,7 +845,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         else:
-            warnings.warn(
+            warnings.warn(  # type:ignore[unreachable]
                 _AWAITABLE_MESSAGE.format(func_name="do_execute", target=self.do_execute),
                 PendingDeprecationWarning,
                 stacklevel=1,
@@ -907,7 +907,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(matches):
             matches = await matches
         else:
-            warnings.warn(
+            warnings.warn(  # type:ignore[unreachable]
                 _AWAITABLE_MESSAGE.format(func_name="do_complete", target=self.do_complete),
                 PendingDeprecationWarning,
                 stacklevel=1,
@@ -941,7 +941,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         else:
-            warnings.warn(
+            warnings.warn(  # type:ignore[unreachable]
                 _AWAITABLE_MESSAGE.format(func_name="do_inspect", target=self.do_inspect),
                 PendingDeprecationWarning,
                 stacklevel=1,
@@ -966,7 +966,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         else:
-            warnings.warn(
+            warnings.warn(  # type:ignore[unreachable]
                 _AWAITABLE_MESSAGE.format(func_name="do_history", target=self.do_history),
                 PendingDeprecationWarning,
                 stacklevel=1,
@@ -1094,7 +1094,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(content):
             content = await content
         else:
-            warnings.warn(
+            warnings.warn(  # type:ignore[unreachable]
                 _AWAITABLE_MESSAGE.format(func_name="do_shutdown", target=self.do_shutdown),
                 PendingDeprecationWarning,
                 stacklevel=1,
@@ -1133,7 +1133,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         else:
-            warnings.warn(
+            warnings.warn(  # type:ignore[unreachable]
                 _AWAITABLE_MESSAGE.format(func_name="do_is_complete", target=self.do_is_complete),
                 PendingDeprecationWarning,
                 stacklevel=1,
@@ -1155,7 +1155,7 @@ class Kernel(SingletonConfigurable):
         if inspect.isawaitable(reply_content):
             reply_content = await reply_content
         else:
-            warnings.warn(
+            warnings.warn(  # type:ignore[unreachable]
                 _AWAITABLE_MESSAGE.format(
                     func_name="do_debug_request", target=self.do_debug_request
                 ),

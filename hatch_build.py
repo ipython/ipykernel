@@ -22,7 +22,7 @@ class CustomHook(BuildHookInterface):
         if version == "standard":
             overrides["metadata"] = {
                 "debugger": True,
-                "supported_encryption": "curve",
+                "supported_encryption": ["curve"],
             }
             argv = make_ipkernel_cmd(executable="python")
 

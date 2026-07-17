@@ -426,7 +426,7 @@ class Debugger:
         if not self.debugpy_initialized:
             tmp_dir = get_tmp_directory()
             if not Path(tmp_dir).exists():
-                Path(tmp_dir).mkdir(parents=True)
+                Path(tmp_dir).mkdir(mode=0o700, parents=True)
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy;"
             code += 'debugpy.listen(("' + host + '",' + port + "))"

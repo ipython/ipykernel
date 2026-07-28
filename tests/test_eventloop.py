@@ -78,7 +78,7 @@ def test_tk_loop(kernel):
     # guard for tk failing to start (if there is no display)
     try:
         loop_tk(kernel)
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     t.join()
 

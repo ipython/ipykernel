@@ -107,7 +107,7 @@ class InProcessKernel(IPythonKernel):
                 frontend.stdin_channel.call_handlers(msg)
                 break
         else:
-            logging.error("No frontend found for raw_input request")
+            logging.error("No frontend found for raw_input request")  # noqa: LOG015
             return ""
 
         # Await a response.

@@ -116,7 +116,7 @@ def connect_qtconsole(
 
     cf = _find_connection_file(connection_file)
 
-    cmd = ";".join(["from qtconsole import qtconsoleapp", "qtconsoleapp.main()"])
+    cmd = "from qtconsole import qtconsoleapp; qtconsoleapp.main()"
 
     kwargs: dict[str, Any] = {}
     # Launch the Qt console in a separate session & process group, so

@@ -261,6 +261,7 @@ ignore = [
   "UP031", # Use format specifiers instead of percent format
   "PT023", # Use `@pytest.mark.skip` over `@pytest.mark.skip()`
   "PT001", # autofixable: Use `@pytest.fixture` over `@pytest.fixture()`
+  "BLE001" # Do not catch blind exception: `Exception`
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -272,7 +273,24 @@ ignore = [
 # PLC1901 `stderr == ""` can be simplified to `not stderr` as an empty string is falsey
 # B018 Found useless expression. Either assign it to a variable or remove it.
 # S603 `subprocess` call: check for execution of untrusted input
-"tests/*" = ["B011", "C408", "T201", "B007", "EM", "PTH", "PLW", "PLC1901", "B018", "S603", "ARG", "RET", "PGH"]
+"tests/*" = [
+  "ARG",
+  "B007",
+  "B011",
+  "B018",
+  "BLE001",
+  "C408",
+  "DTZ001",
+  "EM",
+  "FLY002",
+  "PGH",
+  "PLC1901",
+  "PLW",
+  "PTH",
+  "RET",
+  "S603",
+  "T201",
+]
 "*/__init__.py" = ["F401"]
 
 [tool.interrogate]

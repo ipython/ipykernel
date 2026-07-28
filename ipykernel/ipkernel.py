@@ -691,7 +691,7 @@ class IPythonKernel(KernelBase):
             working.update(ns)
             code = f"{resultname} = {fname}(*{argname},**{kwargname})"
             try:
-                exec(code, shell.user_global_ns, shell.user_ns)
+                exec(code, shell.user_global_ns, shell.user_ns)  # noqa: S102
                 result = working.get(resultname)
             finally:
                 for key in ns:

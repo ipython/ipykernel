@@ -487,8 +487,11 @@ def test_copy_to_globals_rejects_non_identifier(kernel_with_debug):
     )
     # The request is rejected locally instead of being forwarded to
     # setExpression, so the response still carries the copyToGlobals command.
-    assert reply["success"] is False
-    assert reply["command"] == "copyToGlobals"
+    if debugpy:
+        assert reply["success"] is False
+        assert reply["command"] == "copyToGlobals"
+    else:
+        assert reply == {}
 
 
 def test_debug_requests_sequential(kernel_with_debug):

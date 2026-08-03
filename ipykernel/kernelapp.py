@@ -755,6 +755,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.poller.start()
         self.kernel.start()
         self.io_loop = ioloop.IOLoop.current()
+        if os.environ.get("IPYKERNEL_BENCHMARK_STARTUP_SHUTDOWN"):
+            # Shut down immediately after entering the event loop, for
+            # benchmarking kernel startup time end-to-end.
+            self.io_loop.add_callback(self.io_loop.stop)
         if self.trio_loop:
             from ipykernel.trio_runner import TrioRunner
 

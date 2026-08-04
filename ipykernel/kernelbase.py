@@ -61,18 +61,29 @@ from ._version import kernel_protocol_version
 from .iostream import OutStream
 from .utils import LazyDict, _async_in_context
 
-psutil: t.Any | None
-try:
-    import psutil as _psutil
-except ImportError:
-    psutil = None
-else:
-    psutil = _psutil
+psutil: t.Any | None = None
+_NO_SUCH_PROCESS: tuple[type[BaseException], ...] = ()
+_psutil_import_attempted = False
 
-if psutil is None:
-    _NO_SUCH_PROCESS: tuple[type[BaseException], ...] = ()
-else:
-    _NO_SUCH_PROCESS = (psutil.NoSuchProcess,)
+
+def _get_psutil() -> t.Any | None:
+    """Import psutil on first use, caching the (possibly None) result.
+
+    psutil is optional and its import is not cheap, so we avoid paying for
+    it unless something actually needs process/resource-usage information.
+    """
+    global psutil, _NO_SUCH_PROCESS, _psutil_import_attempted  # noqa: PLW0603
+    if not _psutil_import_attempted:
+        _psutil_import_attempted = True
+        try:
+            import psutil as _psutil
+        except ImportError:
+            pass
+        else:
+            psutil = _psutil
+            _NO_SUCH_PROCESS = (psutil.NoSuchProcess,)
+    return psutil
+
 
 _AWAITABLE_MESSAGE: str = (
     "For consistency across implementations, it is recommended that `{func_name}`"
@@ -1184,6 +1195,7 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
+        psutil = _get_psutil()
         if psutil is None:
             reply_content["cpu_count"] = os.cpu_count()
             reply_msg = self.session.send(stream, "usage_reply", reply_content, parent, ident)
@@ -1503,6 +1515,7 @@ class Kernel(SingletonConfigurable):
         - including parents and self with killpg
         - including all children that may have forked-off a new group
         """
+        psutil = _get_psutil()
         if psutil is None:
             return []
 

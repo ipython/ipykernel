@@ -165,6 +165,7 @@ filterwarnings= [
 
   # Ignore our own warnings
   "ignore:The `stream` parameter of `getpass.getpass` will have no effect:UserWarning",
+  "ignore:The `echo_char` parameter of `getpass.getpass` will have no effect:UserWarning",
 
   # IPython warnings
   "ignore: `Completer.complete` is pending deprecation since IPython 6.0 and will be replaced by `Completer.completions`:PendingDeprecationWarning",

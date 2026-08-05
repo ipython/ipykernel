@@ -115,6 +115,15 @@ def test_getpass_stream(kc):
     kernel.getpass(stream="non empty")
 
 
+def test_getpass_echo_char(kc):
+    """Tests that kernel getpass accepts the echo_char parameter"""
+    kernel = InProcessKernel()
+    kernel._allow_stdin = True
+    kernel._input_request = lambda *args, **kwargs: None  # type:ignore
+
+    kernel.getpass(echo_char="*")
+
+
 async def test_do_execute(kc):
     kernel = InProcessKernel()
     await kernel.do_execute("a=1", True)

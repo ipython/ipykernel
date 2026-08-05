@@ -1382,8 +1382,18 @@ class Kernel(SingletonConfigurable):
         msg = "raw_input was called, but this frontend does not support stdin."
         raise StdinNotImplementedError(msg)
 
-    def getpass(self, prompt="", stream=None):
+    def getpass(
+        self,
+        prompt: str = "",
+        stream: t.TextIO | None = None,
+        *,
+        echo_char: str | None = None,
+    ) -> str:
         """Forward getpass to frontends
+
+        The signature mirrors :func:`getpass.getpass`, which this replaces on
+        the kernel side; the parameters that only make sense for a local
+        terminal are accepted but ignored.
 
         Raises
         ------
@@ -1392,14 +1402,16 @@ class Kernel(SingletonConfigurable):
         if not self._allow_stdin:
             msg = "getpass was called, but this frontend does not support input requests."
             raise StdinNotImplementedError(msg)
-        if stream is not None:
-            import warnings
+        for name, value in (("stream", stream), ("echo_char", echo_char)):
+            if value is not None:
+                import warnings
 
-            warnings.warn(
-                "The `stream` parameter of `getpass.getpass` will have no effect when using ipykernel",
-                UserWarning,
-                stacklevel=2,
-            )
+                warnings.warn(
+                    f"The `{name}` parameter of `getpass.getpass` will have no effect"
+                    " when using ipykernel",
+                    UserWarning,
+                    stacklevel=2,
+                )
         return self._input_request(
             prompt,
             self._get_shell_context_var(self._shell_parent_ident),
@@ -1424,7 +1436,7 @@ class Kernel(SingletonConfigurable):
             password=False,
         )
 
-    def _input_request(self, prompt, ident, parent, password=False):
+    def _input_request(self, prompt, ident, parent, password=False) -> str:
         # Flush output before making the request.
         if sys.stdout is not None:
             sys.stdout.flush()
@@ -1467,7 +1479,7 @@ class Kernel(SingletonConfigurable):
                 self.log.warning("Invalid Message:", exc_info=True)
 
         try:
-            value = reply["content"]["value"]  # type:ignore[index]
+            value: str = reply["content"]["value"]  # type:ignore[index]
         except Exception:
             self.log.error("Bad input_reply: %s", parent)
             value = ""

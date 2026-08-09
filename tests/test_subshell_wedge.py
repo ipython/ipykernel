@@ -102,7 +102,7 @@ def test_concurrent_request_not_stranded_by_reply_send():
                 got_message.set()
 
             _stream.on_recv(on_recv, copy=True)
-            _manager = SubshellManager(context, loop, shell_socket, _stream)
+            _manager = SubshellManager(context, loop, _stream)
             return _stream, _manager
 
         stream, manager = _run_on_loop(loop, setup)

@@ -5,6 +5,7 @@
 
 import os
 import signal
+import sys
 import warnings
 
 import pytest
@@ -187,3 +188,25 @@ async def test_send_interrupt_children(kernel):
 # async def test_direct_usage_request(kernel):
 #     reply = await kernel.test_control_message("usage_request", {})
 #     assert reply['header']['msg_type'] == 'usage_reply'
+
+
+@pytest.mark.parametrize(
+    ("setting", "advertised"),
+    [("true", True), ("false", False)],
+)
+def test_advertise_debugger_explicit(kernel, monkeypatch, setting, advertised):
+    """ "true"/"false" answer kernel_info without importing the debugger."""
+    # Poisoning the entry makes any `from .debugger import ...` raise.
+    monkeypatch.setitem(sys.modules, "ipykernel.debugger", None)
+    kernel.advertise_debugger = setting
+
+    assert ("debugger" in kernel.kernel_info["supported_features"]) is advertised
+
+
+def test_advertise_debugger_auto(kernel):
+    """ "auto" (the default) reports what the debugger module says."""
+    from ipykernel.debugger import _is_debugpy_available
+
+    assert kernel.advertise_debugger == "auto"
+    features = kernel.kernel_info["supported_features"]
+    assert ("debugger" in features) is _is_debugpy_available

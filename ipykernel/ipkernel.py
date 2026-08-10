@@ -394,7 +394,7 @@ class IPythonKernel(KernelBase):
             should_run_async = shell.should_run_async
             accepts_params = _accepts_parameters(run_cell, ["cell_id", "cell_meta"])
         else:
-            should_run_async = lambda cell: False  # noqa: ARG005, E731
+            should_run_async = lambda cell: False  # noqa: ARG005
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
 

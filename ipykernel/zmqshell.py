@@ -20,6 +20,7 @@ import sys
 import threading
 import typing
 import warnings
+from contextlib import contextmanager
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -83,11 +84,22 @@ class ZMQDisplayPublisher(DisplayPublisher):
         except LookupError:
             return self._parent_header_global
 
+    @parent_header.setter
+    def parent_header(self, value):
+        self._parent_header.set(value)
+        self._parent_header_global = value
+
+    def set_thread_parent(self, parent):
+        """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
+        return self._parent_header.set(extract_header(parent))
+
+    def reset_thread_parent(self, token):
+        """Reset the parent header to undo the set_thread_parent call that returned the token."""
+        self._parent_header.reset(token)
+
     def set_parent(self, parent):
-        """Set the parent for outbound messages."""
-        parent_header = extract_header(parent)
-        self._parent_header.set(parent_header)
-        self._parent_header_global = parent_header
+        """Set the global and thread parent header."""
+        self.parent_header = extract_header(parent)
 
     def _flush_streams(self):
         """flush IO Streams prior to display"""
@@ -725,15 +737,11 @@ class ZMQInteractiveShell(InteractiveShell):
 
     @parent_header.setter
     def parent_header(self, value):
-        self._parent_header_global = value
         self._parent_header.set(value)
+        self._parent_header_global = value
 
     def set_parent(self, parent):
-        """Set the parent header for associating output with its triggering input
-
-        When called from a thread, sets the thread-local value, which persists
-        until the next call from this thread.
-        """
+        """Set the global and thread parent header for associating output with its triggering input."""
         self.parent_header = parent
         self.displayhook.set_parent(parent)  # type:ignore[attr-defined]
         self.display_pub.set_parent(parent)  # type:ignore[attr-defined]
@@ -752,6 +760,33 @@ class ZMQInteractiveShell(InteractiveShell):
         (typically the currently running cell).
         """
         return self.parent_header
+
+    def set_thread_parent(self, parent):
+        """Set the parent header for only the current thread associating output with its triggering input"""
+        tokens = [(self._parent_header.reset, self._parent_header.set(parent))]
+        objs = [self.displayhook, self.display_pub]
+        if hasattr(self, "_data_pub"):
+            objs.append(self.data_pub)
+        objs += [sys.stdout, sys.stderr]
+        for obj in objs:
+            set_thread = getattr(obj, "set_thread_parent", None)
+            if set_thread is not None:
+                tokens.append((obj.reset_thread_parent, set_thread(parent)))
+        return tuple(tokens)
+
+    def reset_thread_parent(self, tokens):
+        """Reset the parent header to undo the set_thread_parent call that returned the token."""
+        for reset, token in reversed(tokens):
+            reset(token)
+
+    @contextmanager
+    def parent_override(self, parent):
+        """Context manager to temporarily set the thread's parent header"""
+        tokens = self.set_thread_parent(parent)
+        try:
+            yield
+        finally:
+            self.reset_thread_parent(tokens)
 
     def init_magics(self):
         """Initialize magics."""

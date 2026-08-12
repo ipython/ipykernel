@@ -698,7 +698,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         With the non-interruptible version, stopping pdb() locks up the kernel in a
         non-recoverable state.
         """
-        import pdb
+        import pdb  # noqa: T100
 
         from IPython.core import debugger
 

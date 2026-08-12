@@ -860,7 +860,7 @@ class Kernel(SingletonConfigurable):
         # clients... This seems to mitigate the problem, but we definitely need
         # to better understand what's going on.
         if self._execute_sleep:
-            time.sleep(self._execute_sleep)
+            time.sleep(self._execute_sleep)  # noqa: ASYNC251
 
         # Send the reply.
         reply_content = json_clean(reply_content)
@@ -1559,8 +1559,8 @@ class Kernel(SingletonConfigurable):
         """Actions taken at shutdown by the kernel, called by python's atexit."""
         try:
             await self._progressively_terminate_all_children()
-        except Exception as e:
-            self.log.exception("Exception during subprocesses termination %s", e)
+        except Exception:
+            self.log.exception("Exception during subprocesses termination")
 
         finally:
             if self._shutdown_message is not None and self.session:

@@ -318,7 +318,7 @@ class IOPubThread:
         # close *all* event pipes, created in any thread
         # event pipes can only be used from other threads while self.thread.is_alive()
         # so after thread.join, this should be safe
-        for _thread, event_pipe in self._event_pipes.items():
+        for event_pipe in self._event_pipes.values():
             event_pipe.close()
 
     def close(self):

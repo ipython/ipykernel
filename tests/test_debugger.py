@@ -11,7 +11,7 @@ seq = 0
 # functionally as the debug message replies are usually empty dictionaries, but they confirm that
 # ipykernel doesn't block, or segfault, or raise an exception.
 try:
-    import debugpy
+    import debugpy  # noqa: T100
 except ImportError:
     debugpy = None
 

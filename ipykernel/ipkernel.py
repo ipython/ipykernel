@@ -10,6 +10,7 @@ import signal
 import sys
 import threading
 import typing as t
+import warnings
 from contextlib import contextmanager
 from functools import partial
 
@@ -17,6 +18,7 @@ import comm
 from IPython.core import release
 from IPython.utils.tokenutil import line_at_cursor, token_at_cursor
 from traitlets import Any, Bool, HasTraits, Instance, List, Type, default, observe, observe_compat
+from traitlets.utils.importstring import import_item
 from zmq.eventloop.zmqstream import ZMQStream
 
 from .comm.comm import BaseComm
@@ -74,9 +76,15 @@ class IPythonKernel(KernelBase):
     shell = Instance("IPython.core.interactiveshell.InteractiveShellABC", allow_none=True)
     shell_class = Type(ZMQInteractiveShell)
 
-    # use fully-qualified name to ensure lazy import and prevent the issue from
-    # https://github.com/ipython/ipykernel/issues/1198
-    debugger_class = Type("ipykernel.debugger.Debugger")
+    # Do not use a Type() trait: traitlets resolves (and thus imports) a Type
+    # trait's string default as soon as the owning HasTraits instance is
+    # created, which would force the expensive debugpy import on every
+    # kernel startup. Resolved lazily instead, see the `debugger` property.
+    debugger_class_name = "ipykernel.debugger.Debugger"
+
+    # Set by the deprecated `debugger_class` setter, takes precedence over
+    # `debugger_class_name` when not None.
+    _debugger_class: type | None = None
 
     compiler_class = Type(XCachingCompiler)
 
@@ -117,24 +125,14 @@ class IPythonKernel(KernelBase):
         """Initialize the kernel."""
         super().__init__(**kwargs)
 
-        from .debugger import _is_debugpy_available
-
         self._kernel_modules = [
             m.__file__ for m in sys.modules.copy().values() if hasattr(m, "__file__") and m.__file__
         ]
 
-        # Initialize the Debugger
-        if _is_debugpy_available:
-            self.debugger = self.debugger_class(
-                self.log,
-                self.debugpy_stream,
-                self._publish_debug_event,
-                self.debug_shell_socket,
-                self.session,
-                self._kernel_modules,
-                self.debug_just_my_code,
-                self.filter_internal_frames,
-            )
+        # The debugger itself (and the debugpy import it requires) is
+        # created lazily on first use, see the `debugger` property below.
+        self._debugger = None
+        self._debugger_init_attempted = False
 
         # Initialize the InteractiveShell subclass
         self.shell = self.shell_class.instance(
@@ -216,10 +214,101 @@ class IPythonKernel(KernelBase):
         "file_extension": ".py",
     }
 
-    def dispatch_debugpy(self, msg):
-        from .debugger import _is_debugpy_available
+    @property
+    def debugger_class(self):
+        """Deprecated, use :attr:`debugger_class_name` instead.
 
-        if _is_debugpy_available:
+        .. deprecated:: 7.4
+            Accessing this attribute imports the debugger module (and thus
+            debugpy), which is exactly what ``debugger_class_name`` exists to
+            avoid.
+        """
+        warnings.warn(
+            "IPythonKernel.debugger_class is deprecated in ipykernel 7.4,"
+            " use IPythonKernel.debugger_class_name instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._resolve_debugger_class()
+
+    @debugger_class.setter
+    def debugger_class(self, value):
+        warnings.warn(
+            "IPythonKernel.debugger_class is deprecated in ipykernel 7.4,"
+            " set IPythonKernel.debugger_class_name to the fully qualified"
+            " name of the class instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._debugger_class = value
+
+    def _resolve_debugger_class(self):
+        """Return the class to instantiate the debugger from.
+
+        Honors the deprecated ``debugger_class`` attribute, whether it was set
+        on an instance or overridden by a subclass, before falling back to
+        ``debugger_class_name``.
+        """
+        if self._debugger_class is not None:
+            return self._debugger_class
+        for klass in type(self).__mro__:
+            if klass is IPythonKernel:
+                break
+            if "debugger_class" in klass.__dict__:
+                warnings.warn(
+                    f"{klass.__module__}.{klass.__qualname__} overrides"
+                    " `debugger_class`, which is deprecated in ipykernel 7.4;"
+                    " override `debugger_class_name` with the fully qualified"
+                    " name of the class instead.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
+                # The subclass attribute shadows the property defined here, so
+                # this resolves the override (a plain class or a Type trait).
+                return self.debugger_class
+        return import_item(self.debugger_class_name)
+
+    @property
+    def debugger(self):
+        """The debugger instance, created lazily on first use.
+
+        Importing debugpy is expensive, so we avoid it until a debug
+        request actually comes in.
+        """
+        if self._debugger is None and not self._debugger_init_attempted:
+            self._debugger_init_attempted = True
+            from .debugger import _is_debugpy_available
+
+            if _is_debugpy_available:
+                debugger_class = self._resolve_debugger_class()
+                self._debugger = debugger_class(
+                    self.log,
+                    self.debugpy_stream,
+                    self._publish_debug_event,
+                    self.debug_shell_socket,
+                    self.session,
+                    self._kernel_modules,
+                    self.debug_just_my_code,
+                    self.filter_internal_frames,
+                )
+                # Mirrors the guard that used to live in `start()`: without a
+                # debugpy stream or a control thread there is nothing to poll
+                # on, and no loop to poll from.
+                if self.debugpy_stream is not None and self.control_thread is not None:
+                    asyncio.run_coroutine_threadsafe(
+                        self.poll_stopped_queue(), self.control_thread.io_loop.asyncio_loop
+                    )
+        return self._debugger
+
+    @debugger.setter
+    def debugger(self, value):
+        # `debugger` used to be a plain instance attribute assigned in
+        # __init__; keep it writable for subclasses that replace it.
+        self._debugger = value
+        self._debugger_init_attempted = True
+
+    def dispatch_debugpy(self, msg):
+        if self.debugger is not None:
             # The first frame is the socket id, we can drop it
             frame = msg[1].bytes.decode("utf-8")
             self.log.debug("Debugpy received: %s", frame)
@@ -245,10 +334,6 @@ class IPythonKernel(KernelBase):
         else:
             self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
         super().start()
-        if self.debugpy_stream:
-            asyncio.run_coroutine_threadsafe(
-                self.poll_stopped_queue(), self.control_thread.io_loop.asyncio_loop
-            )
 
     def set_parent(self, ident, parent, channel="shell"):
         """Overridden from parent to tell the display hook and output streams
@@ -535,9 +620,7 @@ class IPythonKernel(KernelBase):
 
     async def do_debug_request(self, msg):
         """Handle a debug request."""
-        from .debugger import _is_debugpy_available
-
-        if _is_debugpy_available:
+        if self.debugger is not None:
             return await self.debugger.process_request(msg)
         return None
 

@@ -25,6 +25,7 @@ on Windows, and CI confirms the other platforms.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import threading
 import time
 
@@ -150,17 +151,13 @@ def test_concurrent_request_not_stranded_by_reply_send():
 
         def teardown():
             if manager is not None:
-                try:
+                with contextlib.suppress(Exception):
                     manager.close()
-                except Exception:
-                    pass
             if stream is not None:
                 stream.close()
 
-        try:
+        with contextlib.suppress(Exception):
             _run_on_loop(loop, teardown)
-        except Exception:
-            pass
         loop.add_callback(loop.stop)
         thread.join(timeout=TIMEOUT)
         client.close()

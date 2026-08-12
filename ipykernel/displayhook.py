@@ -77,7 +77,6 @@ class ZMQDisplayHook:
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
         self._parent_header.reset(token)
 
-
     def set_parent(self, parent):
         """Set the global and thread parent header."""
         self.parent_header = extract_header(parent)
@@ -140,7 +139,6 @@ class ZMQShellDisplayHook(DisplayHook):
     def parent_header(self, value):
         self._parent_header.set(value)
         self._parent_header_global = value
-
 
     def set_thread_parent(self, parent):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""

@@ -764,7 +764,7 @@ class ZMQInteractiveShell(InteractiveShell):
     def set_thread_parent(self, parent):
         """Set the parent header for only the current thread associating output with its triggering input"""
         tokens = [(self._parent_header.reset, self._parent_header.set(parent))]
-        objs = [self.displayhook, self.display_pub]
+        objs: list[typing.Any] = [self.displayhook, self.display_pub]
         if hasattr(self, "_data_pub"):
             objs.append(self.data_pub)
         objs += [sys.stdout, sys.stderr]

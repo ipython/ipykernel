@@ -22,16 +22,12 @@ class ShellChannelThread(BaseThread):
     def __init__(
         self,
         context: zmq.Context[Any],
-        shell_socket: zmq.Socket[Any],
         **kwargs,
     ):
         """Initialize the thread."""
         super().__init__(name=SHELL_CHANNEL_THREAD_NAME, **kwargs)
         self._manager: SubshellManager | None = None
         self._zmq_context = context  # Avoid use of self._context
-        # No longer passed on to SubshellManager, which now sends on the shell channel
-        # through the stream and never touches the socket. Nothing else reads this.
-        self._shell_socket = shell_socket
         # Set by kernelapp.init_kernel after it builds the shell ZMQStream, since this
         # thread is created before the stream exists.
         self.shell_stream: ZMQStream | None = None

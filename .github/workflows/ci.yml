@@ -163,7 +163,7 @@ jobs:
 
       - name: Install the Python dependencies without debugpy
         run: |
-          pip install .[test]
+          pip install . --group test
           pip uninstall --yes debugpy
 
       - name: List installed packages

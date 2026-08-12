@@ -9,7 +9,7 @@ This package provides the IPython kernel for Jupyter.
 
 1. `git clone`
 1. `cd ipykernel`
-1. `pip install -e ".[test]"`
+1. `pip install -e . --group test`
 
 After that, all normal `ipython` commands will use this newly-installed version of the kernel.
 

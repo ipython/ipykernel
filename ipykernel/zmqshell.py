@@ -547,14 +547,16 @@ class ZMQInteractiveShell(InteractiveShell):
         if "IPKernelApp" not in self.config:
             self.config.IPKernelApp.tqdm = "dummy value for https://github.com/tqdm/tqdm/pull/1628"
 
-        self._parent_header = contextvars.ContextVar("parent_header")
+        self._parent_header: contextvars.ContextVar[dict[str, typing.Any]] = contextvars.ContextVar(
+            "parent_header"
+        )
         self._parent_header.set({})
+        self._parent_header_global = {}
 
     displayhook_class = Type(ZMQShellDisplayHook)
     display_pub_class = Type(ZMQDisplayPublisher)
     data_pub_class = Any()
     kernel = Any()
-    _parent_header: contextvars.ContextVar[dict[str, Any]]
 
     @default("banner1")
     def _default_banner1(self):

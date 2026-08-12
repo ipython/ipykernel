@@ -125,10 +125,10 @@ def collect_outputs(get_iopub_msg, parent_msg_id, timeout=5):
 def test_print_to_correct_cell_from_thread(explicit_parent: str):
     """should print to the current cell unless
 
-    get_ipython().set_parent sets the thread-local value and global value,
-    which supersedes the default.
+    get_ipython().set_parent sets the thread-local parent and the global parent,
+    which supersedes the default parent set by the current shell execution.
 
-    get_ipython().set_thread_parent sets the thread-local value for only the thread.
+    get_ipython().set_thread_parent sets the thread-local parent for only the thread.
     """
     code = f"""\
         from threading import Event, Thread
@@ -232,7 +232,7 @@ def test_print_to_correct_cell_from_child_thread():
     parent = get_ipython().get_parent()
 
     def child_target():
-        get_ipython().set_parent(parent)
+        get_ipython().set_thread_parent(parent)
         for i in range({iterations}):
             print(i, end='', flush=True)
             sleep({interval})

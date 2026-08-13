@@ -20,7 +20,6 @@ import sys
 import threading
 import typing
 import warnings
-from contextlib import contextmanager
 from pathlib import Path
 from subprocess import CalledProcessError
 
@@ -766,29 +765,20 @@ class ZMQInteractiveShell(InteractiveShell):
     def set_thread_parent(self, parent):
         """Set the parent header for only the current thread associating output with its triggering input"""
         tokens = [(self._parent_header.reset, self._parent_header.set(parent))]
-        objs: list[typing.Any] = [self.displayhook, self.display_pub]
+        objs = [self.displayhook, self.display_pub, sys.stdout, sys.stderr]
         if hasattr(self, "_data_pub"):
             objs.append(self.data_pub)
-        objs += [sys.stdout, sys.stderr]
         for obj in objs:
             set_thread = getattr(obj, "set_thread_parent", None)
-            if set_thread is not None:
-                tokens.append((obj.reset_thread_parent, set_thread(parent)))
+            reset_thread = getattr(obj, "reset_thread_parent", None)
+            if set_thread is not None and reset_thread is not None:
+                tokens.append((reset_thread, set_thread(parent)))
         return tuple(tokens)
 
     def reset_thread_parent(self, tokens):
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
         for reset, token in reversed(tokens):
             reset(token)
-
-    @contextmanager
-    def parent_override(self, parent):
-        """Context manager to temporarily set the thread's parent header"""
-        tokens = self.set_thread_parent(parent)
-        try:
-            yield
-        finally:
-            self.reset_thread_parent(tokens)
 
     def init_magics(self):
         """Initialize magics."""

@@ -52,26 +52,26 @@ def _async_in_context(
     if context is None:
         context = copy_context()
 
+    # Keep the context created by one shell request for subsequent requests. This is
+    # needed because an async cell runs in a task context, and changes made after an
+    # await would otherwise be discarded when that task finishes.
+    context_holder = [context]
+
+    async def preserve_context(f, *args, **kwargs):
+        """Call a coroutine in a persistent ContextVar context."""
+        try:
+            return await f(*args, **kwargs)
+        finally:
+            context_holder[0] = copy_context()
+
     if sys.version_info >= (3, 11):
 
         @wraps(f)
         async def run_in_context(*args, **kwargs):
-            coro = f(*args, **kwargs)
-            return await asyncio.create_task(coro, context=context)
+            coro = preserve_context(f, *args, **kwargs)
+            return await asyncio.create_task(coro, context=context_holder[0])
 
         return run_in_context
-
-    # don't need this backport when we require 3.11
-    # context_holder so we have a modifiable container for later calls
-    context_holder = [context]  # type: ignore[unreachable]
-
-    async def preserve_context(f, *args, **kwargs):
-        """call a coroutine, preserving the context after it is called"""
-        try:
-            return await f(*args, **kwargs)
-        finally:
-            # persist changes to the context for future calls
-            context_holder[0] = copy_context()
 
     @wraps(f)
     async def run_in_context_pre311(*args, **kwargs):

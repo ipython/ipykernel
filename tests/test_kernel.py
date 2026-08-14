@@ -910,7 +910,13 @@ def test_context_vars():
 
         msg_id, _ = execute(
             kc=kc,
+            code="async def produce_result():\n    return 'set after await'\nresult = await produce_result(); ctxvar.set(result)",
+        )
+        stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
+
+        msg_id, _ = execute(
+            kc=kc,
             code="print(ctxvar.get())",
         )
         stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
-        assert stdout.strip() == "set"
+        assert stdout.strip() == "set after await"

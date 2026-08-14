@@ -438,7 +438,8 @@ class IPythonKernel(KernelBase):
                     **do_execute_args,
                 )
 
-                coro_future = asyncio.ensure_future(coro)
+                coro_future = asyncio.current_task()
+                assert coro_future is not None
 
                 cm = (
                     self._cancel_on_sigint
@@ -448,7 +449,7 @@ class IPythonKernel(KernelBase):
                 with cm(coro_future):
                     res = None
                     try:
-                        res = await coro_future
+                        res = await coro
                     finally:
                         shell.events.trigger("post_execute")
                         if not silent:

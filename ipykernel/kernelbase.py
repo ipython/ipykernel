@@ -44,6 +44,7 @@ from traitlets.config.configurable import SingletonConfigurable
 from traitlets.traitlets import (
     Any,
     Bool,
+    CaselessStrEnum,
     Dict,
     Float,
     Instance,
@@ -200,6 +201,24 @@ class Kernel(SingletonConfigurable):
     filter_internal_frames = Bool(
         True,
         help="""Set to False if you want to debug kernel modules.
+        """,
+    ).tag(config=True)
+
+    advertise_debugger = CaselessStrEnum(
+        ["auto", "true", "false"],
+        default_value="auto",
+        help="""Whether to advertise "debugger" in the kernel_info_reply's
+        supported_features.
+
+        "auto" (the default) imports the debugger module to find out whether
+        debugpy is actually usable. That import is not cheap, and every
+        frontend sends a kernel_info_request at startup, so a deployment that
+        already knows the answer can set this to "true" or "false" to answer
+        kernel_info without touching debugpy at all.
+
+        Note that this only controls what is advertised. Setting it to "true"
+        where debugpy is unavailable does not make debugging work: debug
+        requests will still fail.
         """,
     ).tag(config=True)
 
@@ -1001,13 +1020,26 @@ class Kernel(SingletonConfigurable):
         self.log.debug("%s", msg)
 
     @property
-    def kernel_info(self):
+    def _debugger_advertised(self) -> bool:
+        """Whether to list "debugger" in kernel_info's supported_features.
+
+        Only the "auto" setting has to import the debugger module (and so
+        debugpy) to answer; see the ``advertise_debugger`` trait.
+        """
+        if self.advertise_debugger == "true":
+            return True
+        if self.advertise_debugger == "false":
+            return False
         from .debugger import _is_debugpy_available
 
+        return _is_debugpy_available
+
+    @property
+    def kernel_info(self):
         supported_features: list[str] = []
         if self._supports_kernel_subshells:
             supported_features.append("kernel subshells")
-        if _is_debugpy_available:
+        if self._debugger_advertised:
             supported_features.append("debugger")
 
         return {

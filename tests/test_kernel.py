@@ -121,28 +121,31 @@ def collect_outputs(get_iopub_msg, parent_msg_id, timeout=5):
             print(msg["msg_type"])
 
 
-@pytest.mark.parametrize("explicit_parent", [True, False])
-def test_print_to_correct_cell_from_thread(explicit_parent: bool):
+@pytest.mark.parametrize("explicit_parent", ["global", "thread-local", "none"])
+def test_print_to_correct_cell_from_thread(explicit_parent: str):
     """should print to the current cell unless
 
-    get_ipython().set_parent sets the thread-local value,
-    which supersedes the default.
+    get_ipython().set_parent sets the thread-local parent and the global parent,
+    which supersedes the default parent set by the current shell execution.
 
+    get_ipython().set_thread_parent sets the thread-local parent for only the thread.
     """
     code = f"""\
         from threading import Event, Thread
         from time import sleep
         from IPython.display import display
 
-        explicit_parent = {explicit_parent}
+        explicit_parent = "{explicit_parent}"
         parent = get_ipython().get_parent()
 
         cell_start_event = Event()
         cell_end_event = Event()
 
         def thread_target():
-            if explicit_parent:
+            if explicit_parent == "global":
                 get_ipython().set_parent(parent)
+            elif explicit_parent == "thread-local":
+                reset_parent_token = get_ipython().set_thread_parent(parent)
 
             print("before", flush=True)
             display(1)
@@ -151,6 +154,8 @@ def test_print_to_correct_cell_from_thread(explicit_parent: bool):
 
             print("during", flush=True)
             display(2)
+            if explicit_parent == "thread-local":
+                get_ipython().reset_thread_parent(reset_parent_token)
             cell_end_event.set()
             cell_start_event.wait(timeout=10)
             cell_start_event.clear()
@@ -190,13 +195,20 @@ def test_print_to_correct_cell_from_thread(explicit_parent: bool):
         last_cell_msg_id = kc.execute("cell_start_event.set()\nthread.join()")
         for msg in collect_outputs(kc.get_iopub_msg, last_cell_msg_id):
             add_output(msg)
-    print(outputs)
-    if explicit_parent:
-        # assert next_cell_msg_id not in outputs
-        # assert last_cell_msg_id not in outputs
+    if explicit_parent == "global":
+        assert next_cell_msg_id not in outputs
+        assert last_cell_msg_id not in outputs
         thread_cell_output = outputs[thread_msg_id]
         assert thread_cell_output["stdout"] == "before\nduring\nafter\n"
         assert thread_cell_output["display_data"] == ["1", "2", "3"]
+    elif explicit_parent == "thread-local":
+        assert next_cell_msg_id not in outputs
+        thread_cell_output = outputs[thread_msg_id]
+        assert thread_cell_output["stdout"] == "before\nduring\n"
+        assert thread_cell_output["display_data"] == ["1", "2"]
+        last_cell_output = outputs[last_cell_msg_id]
+        assert last_cell_output["stdout"] == "after\n"
+        assert last_cell_output["display_data"] == ["3"]
     else:
         thread_cell_output = outputs[thread_msg_id]
         assert thread_cell_output["stdout"] == "before\n"
@@ -220,7 +232,7 @@ def test_print_to_correct_cell_from_child_thread():
     parent = get_ipython().get_parent()
 
     def child_target():
-        get_ipython().set_parent(parent)
+        get_ipython().set_thread_parent(parent)
         for i in range({iterations}):
             print(i, end='', flush=True)
             sleep({interval})

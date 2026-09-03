@@ -174,7 +174,7 @@ def install(
     python_arguments = None
 
     # addresses the debugger warning from debugpy about frozen modules
-    if sys.version_info >= (3, 11) and platform.python_implementation() == "CPython":
+    if platform.python_implementation() == "CPython":
         if not frozen_modules:
             # disable frozen modules
             python_arguments = ["-Xfrozen_modules=off"]

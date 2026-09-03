@@ -551,10 +551,6 @@ class Kernel(SingletonConfigurable):
         # begin polling the eventloop
         schedule_next()
 
-    async def _create_control_lock(self):
-        # This can be removed when minimum python increases to 3.10
-        self._control_lock = asyncio.Lock()
-
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
@@ -562,13 +558,7 @@ class Kernel(SingletonConfigurable):
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
 
-        if self.control_thread and sys.version_info < (3, 10):
-            # Before Python 3.10 we need to ensure the _control_lock is created in the
-            # thread that uses it. When our minimum python is 3.10 we can remove this
-            # and always use the else below, or just assign it where it is declared.
-            self.control_thread.io_loop.add_callback(self._create_control_lock)
-        else:
-            self._control_lock = asyncio.Lock()
+        self._control_lock = asyncio.Lock()
 
         if self.shell_stream:
             if self.shell_channel_thread:

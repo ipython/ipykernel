@@ -8,11 +8,7 @@ Run directly or via pre-commit (check-mypy-deps hook).
 from __future__ import annotations
 
 import sys
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib  # type: ignore[no-reuse-def]
+import tomllib
 
 import yaml
 from packaging.requirements import Requirement

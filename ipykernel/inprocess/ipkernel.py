@@ -12,7 +12,6 @@ from IPython.core.interactiveshell import InteractiveShellABC
 from traitlets import Any, Enum, Instance, List, Type, default
 
 from ipykernel.ipkernel import IPythonKernel
-from ipykernel.jsonutil import json_clean
 from ipykernel.zmqshell import ZMQInteractiveShell
 
 from ..iostream import BackgroundSocket, IOPubThread, OutStream
@@ -98,7 +97,7 @@ class InProcessKernel(IPythonKernel):
             sys.stderr.flush()
 
         # Send the input request.
-        content = json_clean(dict(prompt=prompt, password=password))
+        content = dict(prompt=prompt, password=password)
         assert self.session is not None
         msg = self.session.msg("input_request", content, parent)
         for frontend in self.frontends:

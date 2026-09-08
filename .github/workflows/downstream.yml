@@ -14,13 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
         with:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
@@ -29,13 +31,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
         with:
           package_name: ipywidgets
           test_command: pytest -vv -raXxs -W default --durations 10 --color=yes
@@ -44,13 +48,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
         with:
           package_name: jupyter_client
           test_command: "pytest -vv -raXxs -W default --durations 10 --color=yes -k 'not (test_input_request or signal_kernel_subprocess)'"
@@ -60,13 +66,15 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
         with:
           package_name: ipyparallel
           package_spec: ".[test]"
@@ -75,10 +83,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
 
       - name: Run Test
         run: |

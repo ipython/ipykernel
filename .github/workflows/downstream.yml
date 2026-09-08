@@ -9,6 +9,9 @@ concurrency:
   group: downstream-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   nbclient:
     runs-on: ubuntu-latest

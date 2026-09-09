@@ -39,7 +39,7 @@ repos:
         types_or: [yaml, html, json]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v2.3.0"
+    rev: "v2.3.1"
     hooks:
       - id: mypy
         files: ipykernel
@@ -94,7 +94,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.2
+    rev: v0.16.6
     hooks:
       - id: ruff-check
         types_or: [python, jupyter]
@@ -103,7 +103,7 @@ repos:
         types_or: [python, jupyter]
 
   - repo: https://github.com/scientific-python/cookie
-    rev: "2026.06.18"
+    rev: "2026.08.14"
     hooks:
       - id: sp-repo-review
         additional_dependencies: ["repo-review[cli]"]

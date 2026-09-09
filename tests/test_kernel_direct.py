@@ -157,6 +157,7 @@ async def test_usage_request_without_psutil(kernel, monkeypatch):
     import ipykernel.kernelbase as kernelbase
 
     monkeypatch.setattr(kernelbase, "psutil", None)
+    monkeypatch.setattr(kernelbase, "_psutil_import_attempted", True)
     reply = await kernel.test_control_message("usage_request", {})
     content = reply["content"]
 
@@ -173,6 +174,7 @@ async def test_child_process_fallbacks_without_psutil(kernel, monkeypatch):
     import ipykernel.kernelbase as kernelbase
 
     monkeypatch.setattr(kernelbase, "psutil", None)
+    monkeypatch.setattr(kernelbase, "_psutil_import_attempted", True)
 
     assert kernel._process_children() == []
     kernel._signal_children(signal.SIGTERM)

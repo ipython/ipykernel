@@ -207,7 +207,7 @@ def loop_wx(kernel):
             try:
                 if self.shell_stream.flush(limit=1):
                     self.kernel.app.ExitMainLoop()
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         def on_timer(self, event):
@@ -409,7 +409,7 @@ def loop_cocoa(kernel):
                 if shell_stream.flush(limit=1):
                     # events to process, return control to kernel
                     return
-            except BaseException:
+            except BaseException:  # noqa: TRY203
                 raise
         except KeyboardInterrupt:
             # Ctrl-C shouldn't crash the kernel

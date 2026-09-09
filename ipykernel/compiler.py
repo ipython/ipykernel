@@ -46,7 +46,7 @@ def murmur2_x86(data, seed):
     return h
 
 
-convert_to_long_pathname = lambda filename: filename  # noqa: E731
+convert_to_long_pathname = lambda filename: filename
 
 if sys.platform == "win32":
     try:
@@ -66,7 +66,7 @@ if sys.platform == "win32":
 
         # test that it works so if there are any issues we fail just once here
         _convert_to_long_pathname(__file__)
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     else:
         convert_to_long_pathname = _convert_to_long_pathname

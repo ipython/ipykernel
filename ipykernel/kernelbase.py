@@ -61,18 +61,29 @@ from ._version import kernel_protocol_version
 from .iostream import OutStream
 from .utils import LazyDict, _async_in_context
 
-psutil: t.Any | None
-try:
-    import psutil as _psutil
-except ImportError:
-    psutil = None
-else:
-    psutil = _psutil
+psutil: t.Any | None = None
+_NO_SUCH_PROCESS: tuple[type[BaseException], ...] = ()
+_psutil_import_attempted = False
 
-if psutil is None:
-    _NO_SUCH_PROCESS: tuple[type[BaseException], ...] = ()
-else:
-    _NO_SUCH_PROCESS = (psutil.NoSuchProcess,)
+
+def _get_psutil() -> t.Any | None:
+    """Import psutil on first use, caching the (possibly None) result.
+
+    psutil is optional and its import is not cheap, so we avoid paying for
+    it unless something actually needs process/resource-usage information.
+    """
+    global psutil, _NO_SUCH_PROCESS, _psutil_import_attempted  # noqa: PLW0603
+    if not _psutil_import_attempted:
+        _psutil_import_attempted = True
+        try:
+            import psutil as _psutil
+        except ImportError:
+            pass
+        else:
+            psutil = _psutil
+            _NO_SUCH_PROCESS = (psutil.NoSuchProcess,)
+    return psutil
+
 
 _AWAITABLE_MESSAGE: str = (
     "For consistency across implementations, it is recommended that `{func_name}`"
@@ -551,10 +562,6 @@ class Kernel(SingletonConfigurable):
         # begin polling the eventloop
         schedule_next()
 
-    async def _create_control_lock(self):
-        # This can be removed when minimum python increases to 3.10
-        self._control_lock = asyncio.Lock()
-
     def start(self):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
@@ -562,13 +569,7 @@ class Kernel(SingletonConfigurable):
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
 
-        if self.control_thread and sys.version_info < (3, 10):
-            # Before Python 3.10 we need to ensure the _control_lock is created in the
-            # thread that uses it. When our minimum python is 3.10 we can remove this
-            # and always use the else below, or just assign it where it is declared.
-            self.control_thread.io_loop.add_callback(self._create_control_lock)
-        else:
-            self._control_lock = asyncio.Lock()
+        self._control_lock = asyncio.Lock()
 
         if self.shell_stream:
             if self.shell_channel_thread:
@@ -860,7 +861,7 @@ class Kernel(SingletonConfigurable):
         # clients... This seems to mitigate the problem, but we definitely need
         # to better understand what's going on.
         if self._execute_sleep:
-            time.sleep(self._execute_sleep)
+            time.sleep(self._execute_sleep)  # noqa: ASYNC251
 
         # Send the reply.
         reply_content = json_clean(reply_content)
@@ -1184,6 +1185,7 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         reply_content = {"hostname": socket.gethostname(), "pid": os.getpid()}
+        psutil = _get_psutil()
         if psutil is None:
             reply_content["cpu_count"] = os.cpu_count()
             reply_msg = self.session.send(stream, "usage_reply", reply_content, parent, ident)
@@ -1515,6 +1517,7 @@ class Kernel(SingletonConfigurable):
         - including parents and self with killpg
         - including all children that may have forked-off a new group
         """
+        psutil = _get_psutil()
         if psutil is None:
             return []
 
@@ -1559,8 +1562,8 @@ class Kernel(SingletonConfigurable):
         """Actions taken at shutdown by the kernel, called by python's atexit."""
         try:
             await self._progressively_terminate_all_children()
-        except Exception as e:
-            self.log.exception("Exception during subprocesses termination %s", e)
+        except Exception:
+            self.log.exception("Exception during subprocesses termination")
 
         finally:
             if self._shutdown_message is not None and self.session:

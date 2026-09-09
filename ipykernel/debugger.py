@@ -39,7 +39,7 @@ except Exception as e:
     if e.__class__.__name__ == "DebuggerInitializationError":
         _is_debugpy_available = False
     else:
-        raise e
+        raise
 
 if t.TYPE_CHECKING:
     from IPython.core.interactiveshell import InteractiveShell
@@ -470,7 +470,7 @@ class Debugger:
         code = message["arguments"]["code"]
         file_name = get_file_name(code)
 
-        with open(file_name, "w", encoding="utf-8") as f:
+        with open(file_name, "w", encoding="utf-8") as f:  # noqa: ASYNC230
             f.write(code)
 
         return {
@@ -500,7 +500,7 @@ class Debugger:
         reply = {"type": "response", "request_seq": message["seq"], "command": message["command"]}
         source_path = message["arguments"]["source"]["path"]
         if Path(source_path).is_file():
-            with open(source_path, encoding="utf-8") as f:
+            with open(source_path, encoding="utf-8") as f:  # noqa: ASYNC230
                 reply["success"] = True
                 reply["body"] = {"content": f.read()}
         else:
@@ -680,6 +680,15 @@ class Debugger:
         dst_var_name = message["arguments"]["dstVariableName"]
         src_var_name = message["arguments"]["srcVariableName"]
         src_frame_id = message["arguments"]["srcFrameId"]
+
+        if not str.isidentifier(dst_var_name) or not str.isidentifier(src_var_name):
+            return {
+                "type": "response",
+                "request_seq": message["seq"],
+                "success": False,
+                "command": message["command"],
+                "message": "dstVariableName and srcVariableName must be valid identifiers",
+            }
 
         expression = f"globals()['{dst_var_name}']"
         seq = message["seq"]

@@ -97,5 +97,7 @@ jobs:
         run: |
           git clone https://github.com/jupyter/jupyter_kernel_test.git
           cd jupyter_kernel_test
+          pip install ..
           pip install -e ".[test]"
+          python -c "import importlib.metadata as m; assert m.distribution('ipykernel').read_text('direct_url.json'), 'ipykernel under test is not this checkout'"
           python test_ipykernel.py

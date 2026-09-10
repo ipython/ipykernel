@@ -391,3 +391,45 @@ def test_silent_flag_in_subshells():
             # Ensure subshell is always deleted
             if subshell_id:
                 delete_subshell_helper(kc, subshell_id)
+
+
+def test_unknown_subshell_id():
+    # A request for a subshell that does not exist is answered with an error rather
+    # than dropped, so that a client waiting for it does not wait forever.
+    with new_kernel() as kc:
+        subshell_id = create_subshell_helper(kc)["subshell_id"]
+        delete_subshell_helper(kc, subshell_id)
+        flush_channels(kc)
+
+        msg = execute_request(kc, "a = 1", subshell_id)
+        msg_id = msg["header"]["msg_id"]
+
+        reply = get_reply(kc, msg_id, TIMEOUT)
+        assert reply["content"]["status"] == "error"
+        assert subshell_id in reply["content"]["evalue"]
+
+        states = []
+        while True:
+            iopub_msg = kc.get_iopub_msg(timeout=TIMEOUT)
+            if iopub_msg["parent_header"].get("msg_id") != msg_id:
+                continue
+            assert iopub_msg["msg_type"] == "status"
+            states.append(iopub_msg["content"]["execution_state"])
+            if states[-1] == "idle":
+                break
+        assert states == ["busy", "idle"]
+
+
+def test_comm_close_on_deleted_subshell():
+    # A comm message has no reply of its own, so the idle status is the only thing
+    # that tells the client the kernel is done with it.
+    with new_kernel() as kc:
+        subshell_id = create_subshell_helper(kc)["subshell_id"]
+        delete_subshell_helper(kc, subshell_id)
+        flush_channels(kc)
+
+        msg = kc.session.msg("comm_close", {"comm_id": "comm-1", "data": {}})
+        msg["header"]["subshell_id"] = subshell_id
+        kc.shell_channel.send(msg)
+
+        wait_for_idle(kc, msg["header"]["msg_id"])

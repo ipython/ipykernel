@@ -59,6 +59,7 @@ from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
 from .iostream import OutStream
+from .subshell_manager import UnknownSubshellError
 from .utils import LazyDict, _async_in_context
 
 psutil: t.Any | None = None
@@ -603,8 +604,8 @@ class Kernel(SingletonConfigurable):
                 subshell_manager = self.shell_channel_thread.manager
                 try:
                     socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
-                except KeyError:
-                    self._send_unknown_subshell_reply(idents, msg3, subshell_id)
+                except UnknownSubshellError as err:
+                    self._send_unknown_subshell_reply(idents, msg3, err)
                     return
                 assert socket is not None
                 socket.send_multipart(msg, copy=False)
@@ -1382,7 +1383,7 @@ class Kernel(SingletonConfigurable):
             ident=idents,
         )
 
-    def _send_unknown_subshell_reply(self, idents, msg, subshell_id) -> None:
+    def _send_unknown_subshell_reply(self, idents, msg, err: UnknownSubshellError) -> None:
         """Send an error reply to a request addressed to a subshell that is not there.
 
         Runs in the shell channel thread, so it writes to the shell socket
@@ -1396,17 +1397,12 @@ class Kernel(SingletonConfigurable):
         if not self.session:
             return
         msg_type = msg["header"]["msg_type"]
-        self.log.warning(
-            "Cannot handle %s %s: unknown subshell_id %r",
-            msg_type,
-            msg["header"]["msg_id"],
-            subshell_id,
-        )
+        self.log.warning("Cannot handle %s %s: %s", msg_type, msg["header"]["msg_id"], err)
         self._publish_status("busy", "shell", parent=msg)
         content = {
             "status": "error",
-            "ename": "KeyError",
-            "evalue": f"Unknown subshell_id {subshell_id!r}",
+            "ename": type(err).__name__,
+            "evalue": str(err),
             "traceback": [],
         }
         md = self.init_metadata(msg)

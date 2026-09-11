@@ -399,6 +399,11 @@ def test_unknown_subshell_id():
     with new_kernel() as kc:
         subshell_id = create_subshell_helper(kc)["subshell_id"]
         delete_subshell_helper(kc, subshell_id)
+
+        # Deleting it again names the missing subshell in the same way.
+        content = delete_subshell_helper(kc, subshell_id)
+        assert content["status"] == "error"
+        assert content["evalue"] == f"Unknown subshell_id {subshell_id!r}"
         flush_channels(kc)
 
         msg = execute_request(kc, "a = 1", subshell_id)
@@ -406,7 +411,8 @@ def test_unknown_subshell_id():
 
         reply = get_reply(kc, msg_id, TIMEOUT)
         assert reply["content"]["status"] == "error"
-        assert subshell_id in reply["content"]["evalue"]
+        assert reply["content"]["ename"] == "UnknownSubshellError"
+        assert reply["content"]["evalue"] == f"Unknown subshell_id {subshell_id!r}"
 
         states = []
         while True:

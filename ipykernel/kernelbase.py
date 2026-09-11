@@ -59,6 +59,7 @@ from ipykernel.jsonutil import json_clean
 
 from ._version import kernel_protocol_version
 from .iostream import OutStream
+from .subshell_manager import UnknownSubshellError
 from .utils import LazyDict, _async_in_context
 
 psutil: t.Any | None = None
@@ -594,14 +595,18 @@ class Kernel(SingletonConfigurable):
 
             # deserialize only the header to get subshell_id
             # Keep original message to send to subshell_id unmodified.
-            _, msg2 = self.session.feed_identities(msg, copy=False)
+            idents, msg2 = self.session.feed_identities(msg, copy=False)
             try:
                 msg3 = self.session.deserialize(msg2, content=False, copy=False)
                 subshell_id = msg3["header"].get("subshell_id")
 
                 # Find inproc pair socket to use to send message to correct subshell.
                 subshell_manager = self.shell_channel_thread.manager
-                socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
+                try:
+                    socket = subshell_manager.get_shell_channel_to_subshell_socket(subshell_id)
+                except UnknownSubshellError as err:
+                    self._send_unknown_subshell_reply(idents, msg3, err)
+                    return
                 assert socket is not None
                 socket.send_multipart(msg, copy=False)
             except Exception:
@@ -1377,6 +1382,41 @@ class Kernel(SingletonConfigurable):
             parent=msg,
             ident=idents,
         )
+
+    def _send_unknown_subshell_reply(self, idents, msg, err: UnknownSubshellError) -> None:
+        """Send an error reply to a request addressed to a subshell that is not there.
+
+        Runs in the shell channel thread, so it writes to the shell socket
+        directly instead of going through a subshell.
+
+        The busy and idle status messages matter as much as the reply here.
+        A client tracks the completion of a request by the idle status that
+        carries it as parent, and for message types that have no reply, such as
+        the comm messages, that status is all it has to go on.
+        """
+        if not self.session:
+            return
+        msg_type = msg["header"]["msg_type"]
+        self.log.warning("Cannot handle %s %s: %s", msg_type, msg["header"]["msg_id"], err)
+        self._publish_status("busy", "shell", parent=msg)
+        content = {
+            "status": "error",
+            "ename": type(err).__name__,
+            "evalue": str(err),
+            "traceback": [],
+        }
+        md = self.init_metadata(msg)
+        md = self.finish_metadata(msg, md, content)
+        md.update({"status": "error"})
+        self.session.send(
+            self.shell_stream,
+            msg_type.rsplit("_", 1)[0] + "_reply",
+            metadata=md,
+            content=content,
+            parent=msg,
+            ident=idents,
+        )
+        self._publish_status("idle", "shell", parent=msg)
 
     def _no_raw_input(self):
         """Raise StdinNotImplementedError if active frontend doesn't support

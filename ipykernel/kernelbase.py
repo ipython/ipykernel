@@ -1384,7 +1384,7 @@ class Kernel(SingletonConfigurable):
         )
 
     def _send_unknown_subshell_reply(
-        self, idents, msg: dict[str, Any], err: UnknownSubshellError
+        self, idents, msg: dict[str, t.Any], err: UnknownSubshellError
     ) -> None:
         """Send an error reply to a request addressed to a subshell that is not there.
 

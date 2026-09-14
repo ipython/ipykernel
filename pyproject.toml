@@ -41,35 +41,40 @@ Source = "https://github.com/ipython/ipykernel"
 Tracker = "https://github.com/ipython/ipykernel/issues"
 
 [project.optional-dependencies]
+pyqt5 = ["pyqt5"]
+pyside6 = ["pyside6"]
+
+[dependency-groups]
 docs = [
-  "sphinx",
-  "myst_parser",
-  "pydata_sphinx_theme",
-  "sphinxcontrib_github_alt",
-  "sphinxcontrib-spelling",
-  "sphinx-autodoc-typehints",
-  "intersphinx_registry",
-  "trio"
+    "intersphinx_registry",
+    "myst_parser",
+    "pydata_sphinx_theme",
+    "sphinx",
+    "sphinxcontrib_github_alt",
+    "sphinxcontrib-spelling",
+    "sphinx-autodoc-typehints",
+    "trio"
 ]
 test = [
-    "pytest>=7.0,<10",
-    "pytest-cov",
     # 'pytest-xvfb; platform_system == "Linux"',
     "flaky",
     "ipyparallel",
-    "pre-commit",
     "psutil>=5.7",
+    "pytest>=7.0,<10",
+    "pytest-cov",
     "pytest-asyncio>=0.23.5",
     "pytest-timeout"
 ]
 cov = [
-  "coverage[toml]",
-  "pytest-cov",
-  "matplotlib",
-  "trio",
+    "coverage[toml]",
+    "matplotlib",
+    "pytest-cov",
+    "trio",
 ]
-pyqt5 = ["pyqt5"]
-pyside6 = ["pyside6"]
+dev = [
+    "pre-commit",
+    {include-group = "test"},
+]
 
 [tool.hatch.version]
 path = "ipykernel/_version.py"
@@ -84,20 +89,20 @@ path = "ipykernel/_version.py"
 "./ipykernel_launcher.py" = "ipykernel_launcher.py"
 
 [tool.hatch.envs.docs]
-features = ["docs"]
+dependency-groups = ["docs"]
 [tool.hatch.envs.docs.scripts]
 build = "make -C docs html SPHINXOPTS='-W'"
 api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab ipykernel/utils.py"
 
 [tool.hatch.envs.test]
-features = ["test"]
+dependency-groups = ["test"]
 [tool.hatch.envs.test.scripts]
 list = "python -m pip freeze"
 test = "python -m pytest -vv {args}"
 nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
-features = ["test", "cov"]
+dependency-groups = ["test", "cov"]
 [tool.hatch.envs.cov.scripts]
 test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"

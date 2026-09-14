@@ -14,7 +14,7 @@ ipykernel is a pure Python package, so setting up for development is the same as
 git clone https://github.com/ipython/ipykernel
 cd ipykernel
 # do a 'development' or 'editable' install with pip:
-pip install -e .
+pip install -e . --group dev
 ```
 
 ## Code Styling

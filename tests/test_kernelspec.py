@@ -154,7 +154,7 @@ def test_install_env(tmp_path, env):
         assert "env" not in spec
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11) or not is_cpython, reason="requires cPython 3.11")
+@pytest.mark.skipif(not is_cpython, reason="requires CPython")
 def test_install_frozen_modules_on():
     system_jupyter_dir = tempfile.mkdtemp()
 
@@ -168,7 +168,7 @@ def test_install_frozen_modules_on():
     assert "-Xfrozen_modules=off" not in spec["argv"]
 
 
-@pytest.mark.skipif(sys.version_info < (3, 11) or not is_cpython, reason="requires cPython 3.11")
+@pytest.mark.skipif(not is_cpython, reason="requires CPython")
 def test_install_frozen_modules_off():
     system_jupyter_dir = tempfile.mkdtemp()
 
@@ -182,13 +182,9 @@ def test_install_frozen_modules_off():
     assert spec["argv"][1] == "-Xfrozen_modules=off"
 
 
-@pytest.mark.skipif(
-    sys.version_info >= (3, 11) or is_cpython,
-    reason="checks versions older than 3.11 and other Python implementations",
-)
+@pytest.mark.skipif(is_cpython, reason="checks non-CPython implementations")
 def test_install_frozen_modules_no_op():
-    # ensure we do not add add Xfrozen_modules on older Python versions
-    # (although cPython does not error out on unknown X options as of 3.8)
+    # ensure we do not add -Xfrozen_modules on non-CPython implementations
     system_jupyter_dir = tempfile.mkdtemp()
 
     with mock.patch("jupyter_client.kernelspec.SYSTEM_JUPYTER_PATH", [system_jupyter_dir]):

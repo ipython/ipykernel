@@ -394,7 +394,7 @@ class IPythonKernel(KernelBase):
             should_run_async = shell.should_run_async
             accepts_params = _accepts_parameters(run_cell, ["cell_id", "cell_meta"])
         else:
-            should_run_async = lambda cell: False  # noqa: ARG005, E731
+            should_run_async = lambda cell: False  # noqa: ARG005
             # older IPython,
             # use blocking run_cell and wrap it in coroutine
 
@@ -691,7 +691,7 @@ class IPythonKernel(KernelBase):
             working.update(ns)
             code = f"{resultname} = {fname}(*{argname},**{kwargname})"
             try:
-                exec(code, shell.user_global_ns, shell.user_ns)
+                exec(code, shell.user_global_ns, shell.user_ns)  # noqa: S102
                 result = working.get(resultname)
             finally:
                 for key in ns:

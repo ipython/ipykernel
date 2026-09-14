@@ -76,7 +76,7 @@ version_ns: dict[str, Any] = {}
 here = Path(__file__).parent.resolve()
 version_py = Path(here) / os.pardir / "ipykernel" / "_version.py"
 with open(version_py) as f:
-    exec(compile(f.read(), version_py, "exec"), version_ns)
+    exec(compile(f.read(), version_py, "exec"), version_ns)  # noqa: S102
 
 # The short X.Y version.
 version = "%i.%i" % version_ns["version_info"][:2]

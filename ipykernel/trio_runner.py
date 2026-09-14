@@ -35,7 +35,7 @@ class TrioRunner:
             self._cell_cancel_scope.cancel()
         else:
             msg = "Kernel interrupted but no cell is running"
-            raise Exception(msg)
+            raise Exception(msg)  # noqa: TRY002
 
     def run(self):
         """Run the loop."""
@@ -43,7 +43,7 @@ class TrioRunner:
 
         def log_nursery_exc(exc):
             exc = "\n".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
-            logging.error("An exception occurred in a global nursery task.\n%s", exc)
+            logging.error("An exception occurred in a global nursery task.\n%s", exc)  # noqa: LOG015
 
         async def trio_main():
             """Run the main loop."""

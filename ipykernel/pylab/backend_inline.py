@@ -5,7 +5,7 @@
 
 import warnings
 
-from matplotlib_inline.backend_inline import *  # noqa: F403  # analysis: ignore
+from matplotlib_inline.backend_inline import *  # analysis: ignore
 
 warnings.warn(
     "`ipykernel.pylab.backend_inline` is deprecated, directly "

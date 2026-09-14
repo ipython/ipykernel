@@ -15,7 +15,7 @@ class InProcessChannel:
 
     proxy_methods: list[object] = []
 
-    def __init__(self, client=None):
+    def __init__(self, client=None) -> None:
         """Initialize the channel."""
         super().__init__()
         self.client = client
@@ -25,11 +25,11 @@ class InProcessChannel:
         """Test if the channel is alive."""
         return self._is_alive
 
-    def start(self):
+    def start(self) -> None:
         """Start the channel."""
         self._is_alive = True
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the channel."""
         self._is_alive = False
 
@@ -41,10 +41,10 @@ class InProcessChannel:
         msg = "call_handlers must be defined in a subclass."
         raise NotImplementedError(msg)
 
-    def flush(self, timeout=1.0):
+    def flush(self, timeout=1.0) -> None:
         """Flush the channel."""
 
-    def call_handlers_later(self, *args, **kwds):
+    def call_handlers_later(self, *args, **kwds) -> None:
         """Call the message handlers later.
 
         The default implementation just calls the handlers immediately, but this
@@ -72,7 +72,7 @@ class InProcessHBChannel:
 
     time_to_dead = 3.0
 
-    def __init__(self, client=None):
+    def __init__(self, client=None) -> None:
         """Initialize the channel."""
         super().__init__()
         self.client = client
@@ -83,23 +83,23 @@ class InProcessHBChannel:
         """Test if the channel is alive."""
         return self._is_alive
 
-    def start(self):
+    def start(self) -> None:
         """Start the channel."""
         self._is_alive = True
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the channel."""
         self._is_alive = False
 
-    def pause(self):
+    def pause(self) -> None:
         """Pause the channel."""
         self._pause = True
 
-    def unpause(self):
+    def unpause(self) -> None:
         """Unpause the channel."""
         self._pause = False
 
-    def is_beating(self):
+    def is_beating(self) -> bool:
         """Test if the channel is beating."""
         return not self._pause
 

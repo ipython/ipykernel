@@ -123,7 +123,7 @@ class Kernel(SingletonConfigurable):
     processes: dict[int, t.Any] = {}
 
     @observe("eventloop")
-    def _update_eventloop(self, change):
+    def _update_eventloop(self, change) -> None:
         """schedule call to eventloop from IOLoop"""
         loop = ioloop.IOLoop.current()
         if change.new is not None:
@@ -157,7 +157,7 @@ class Kernel(SingletonConfigurable):
         return []
 
     @observe("shell_streams")
-    def _shell_streams_changed(self, change):  # pragma: no cover
+    def _shell_streams_changed(self, change) -> None:  # pragma: no cover
         warnings.warn(
             "Kernel.shell_streams is deprecated in ipykernel 6.0. Use Kernel.shell_stream",
             DeprecationWarning,
@@ -320,7 +320,7 @@ class Kernel(SingletonConfigurable):
         "list_subshell_request",
     ]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Initialize the kernel."""
         super().__init__(**kwargs)
 
@@ -364,13 +364,13 @@ class Kernel(SingletonConfigurable):
 
         self._main_asyncio_lock = asyncio.Lock()
 
-    async def dispatch_control(self, msg):
+    async def dispatch_control(self, msg) -> None:
         """Dispatch a control request, ensuring only one message is processed at a time."""
         # Ensure only one control message is processed at a time
         async with self._control_lock:
             await self.process_control(msg)
 
-    async def process_control(self, msg):
+    async def process_control(self, msg) -> None:
         """dispatch control requests"""
         if not self.session:
             return
@@ -407,7 +407,7 @@ class Kernel(SingletonConfigurable):
             sys.stderr.flush()
         self._publish_status_and_flush("idle", "control", self.control_stream)
 
-    def should_handle(self, stream, msg, idents):
+    def should_handle(self, stream, msg, idents) -> bool:
         """Check whether a shell-channel message should be handled
 
         Allows subclasses to prevent handling of certain messages (e.g. aborted requests).
@@ -418,7 +418,7 @@ class Kernel(SingletonConfigurable):
         """
         return True
 
-    async def dispatch_shell(self, msg, /, subshell_id: str | None = None):
+    async def dispatch_shell(self, msg, /, subshell_id: str | None = None) -> None:
         """dispatch shell requests"""
         if len(msg) == 1 and msg[0].buffer == b"stop aborting":
             # Dummy "stop aborting" message to stop aborting execute requests on this subshell.
@@ -516,16 +516,16 @@ class Kernel(SingletonConfigurable):
             sys.stderr.flush()
         self._publish_status_and_flush("idle", "shell", stream)
 
-    def pre_handler_hook(self):
+    def pre_handler_hook(self) -> None:
         """Hook to execute before calling message handler"""
         # ensure default_int_handler during handler call
         self.saved_sigint_handler = signal(SIGINT, default_int_handler)
 
-    def post_handler_hook(self):
+    def post_handler_hook(self) -> None:
         """Hook to execute after calling message handler"""
         signal(SIGINT, self.saved_sigint_handler)
 
-    def enter_eventloop(self):
+    def enter_eventloop(self) -> None:
         """enter eventloop"""
         self.log.info("Entering eventloop %s", self.eventloop)
         # record handle, so we can check when this changes
@@ -534,7 +534,7 @@ class Kernel(SingletonConfigurable):
             self.log.info("Exiting as there is no eventloop")
             return
 
-        async def advance_eventloop():
+        async def advance_eventloop() -> None:
             # check if eventloop changed:
             if self.eventloop is not eventloop:
                 self.log.info("exiting eventloop %s", eventloop)
@@ -549,7 +549,7 @@ class Kernel(SingletonConfigurable):
                 # schedule advance again
                 schedule_next()
 
-        def schedule_next():
+        def schedule_next() -> None:
             """Schedule the next advance of the eventloop"""
             # call_later allows the io_loop to process other events if needed.
             # Going through schedule_dispatch ensures all other dispatches on msg_queue
@@ -562,7 +562,7 @@ class Kernel(SingletonConfigurable):
         # begin polling the eventloop
         schedule_next()
 
-    def start(self):
+    def start(self) -> None:
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
 
@@ -584,7 +584,7 @@ class Kernel(SingletonConfigurable):
         # publish idle status
         self._publish_status("starting", "shell")
 
-    async def shell_channel_thread_main(self, msg):
+    async def shell_channel_thread_main(self, msg) -> None:
         """Handler for shell messages received on shell_channel_thread"""
         assert threading.current_thread() == self.shell_channel_thread
 
@@ -607,7 +607,7 @@ class Kernel(SingletonConfigurable):
             except Exception:
                 self.log.error("Invalid message", exc_info=True)  # noqa: G201
 
-    async def shell_main(self, subshell_id: str | None, msg):
+    async def shell_main(self, subshell_id: str | None, msg) -> None:
         """Handler of shell messages for a single subshell"""
         if self._supports_kernel_subshells:
             if subshell_id is None:
@@ -633,7 +633,7 @@ class Kernel(SingletonConfigurable):
         async with asyncio_lock:
             await self.dispatch_shell(msg, subshell_id=subshell_id)
 
-    def record_ports(self, ports):
+    def record_ports(self, ports) -> None:
         """Record the ports that this kernel is using.
 
         The creator of the Kernel instance must call this methods if they
@@ -645,7 +645,7 @@ class Kernel(SingletonConfigurable):
     # Kernel request handlers
     # ---------------------------------------------------------------------------
 
-    def _publish_execute_input(self, code, parent, execution_count):
+    def _publish_execute_input(self, code, parent, execution_count) -> None:
         """Publish the code request on the iopub stream."""
         if not self.session:
             return
@@ -657,7 +657,7 @@ class Kernel(SingletonConfigurable):
             ident=self._topic("execute_input"),
         )
 
-    def _publish_status(self, status, channel, parent=None):
+    def _publish_status(self, status, channel, parent=None) -> None:
         """send status (busy/idle) on IOPub"""
         if not self.session:
             return
@@ -669,13 +669,13 @@ class Kernel(SingletonConfigurable):
             ident=self._topic("status"),
         )
 
-    def _publish_status_and_flush(self, status, channel, stream, parent=None):
+    def _publish_status_and_flush(self, status, channel, stream, parent=None) -> None:
         """send status on IOPub and flush specified stream to ensure reply is sent before handling the next reply"""
         self._publish_status(status, channel, parent)
         if stream and hasattr(stream, "flush") and not self._supports_kernel_subshells:
             stream.flush(zmq.POLLOUT)
 
-    def _publish_debug_event(self, event):
+    def _publish_debug_event(self, event) -> None:
         if not self.session:
             return
         self.session.send(
@@ -686,7 +686,7 @@ class Kernel(SingletonConfigurable):
             ident=self._topic("debug_event"),
         )
 
-    def set_parent(self, ident, parent, channel="shell"):
+    def set_parent(self, ident, parent, channel="shell") -> None:
         """Set the current parent request
 
         Side effects (IOPub messages) and replies are associated with
@@ -796,7 +796,7 @@ class Kernel(SingletonConfigurable):
         """
         return metadata
 
-    async def execute_request(self, stream, ident, parent):
+    async def execute_request(self, stream, ident, parent) -> None:
         """handle an execute_request"""
         if not self.session:
             return
@@ -896,7 +896,7 @@ class Kernel(SingletonConfigurable):
         """Execute user code. Must be overridden by subclasses."""
         raise NotImplementedError
 
-    async def complete_request(self, stream, ident, parent):
+    async def complete_request(self, stream, ident, parent) -> None:
         """Handle a completion request."""
         if not self.session:
             return
@@ -927,7 +927,7 @@ class Kernel(SingletonConfigurable):
             "status": "ok",
         }
 
-    async def inspect_request(self, stream, ident, parent):
+    async def inspect_request(self, stream, ident, parent) -> None:
         """Handle an inspect request."""
         if not self.session:
             return
@@ -957,7 +957,7 @@ class Kernel(SingletonConfigurable):
         """Override in subclasses to allow introspection."""
         return {"status": "ok", "data": {}, "metadata": {}, "found": False}
 
-    async def history_request(self, stream, ident, parent):
+    async def history_request(self, stream, ident, parent) -> None:
         """Handle a history request."""
         if not self.session:
             return
@@ -992,7 +992,7 @@ class Kernel(SingletonConfigurable):
         """Override in subclasses to access history."""
         return {"status": "ok", "history": []}
 
-    async def connect_request(self, stream, ident, parent):
+    async def connect_request(self, stream, ident, parent) -> None:
         """Handle a connect request."""
         if not self.session:
             return
@@ -1021,7 +1021,7 @@ class Kernel(SingletonConfigurable):
             "supported_features": supported_features,
         }
 
-    async def kernel_info_request(self, stream, ident, parent):
+    async def kernel_info_request(self, stream, ident, parent) -> None:
         """Handle a kernel info request."""
         if not self.session:
             return
@@ -1030,7 +1030,7 @@ class Kernel(SingletonConfigurable):
         msg = self.session.send(stream, "kernel_info_reply", content, parent, ident)
         self.log.debug("%s", msg)
 
-    async def comm_info_request(self, stream, ident, parent):
+    async def comm_info_request(self, stream, ident, parent) -> None:
         """Handle a comm info request."""
         if not self.session:
             return
@@ -1067,7 +1067,7 @@ class Kernel(SingletonConfigurable):
             else:
                 os.kill(pid, SIGINT)
 
-    async def interrupt_request(self, stream, ident, parent):
+    async def interrupt_request(self, stream, ident, parent) -> None:
         """Handle an interrupt request."""
         if not self.session:
             return
@@ -1087,7 +1087,7 @@ class Kernel(SingletonConfigurable):
         self.session.send(stream, "interrupt_reply", content, parent, ident=ident)
         return
 
-    async def shutdown_request(self, stream, ident, parent):
+    async def shutdown_request(self, stream, ident, parent) -> None:
         """Handle a shutdown request."""
         if not self.session:
             return
@@ -1123,7 +1123,7 @@ class Kernel(SingletonConfigurable):
         """
         return {"status": "ok", "restart": restart}
 
-    async def is_complete_request(self, stream, ident, parent):
+    async def is_complete_request(self, stream, ident, parent) -> None:
         """Handle an is_complete request."""
         if not self.session:
             return
@@ -1147,7 +1147,7 @@ class Kernel(SingletonConfigurable):
         """Override in subclasses to find completions."""
         return {"status": "unknown"}
 
-    async def debug_request(self, stream, ident, parent):
+    async def debug_request(self, stream, ident, parent) -> None:
         """Handle a debug request."""
         if not self.session:
             return
@@ -1180,7 +1180,7 @@ class Kernel(SingletonConfigurable):
         except BaseException:
             return 0
 
-    async def usage_request(self, stream, ident, parent):
+    async def usage_request(self, stream, ident, parent) -> None:
         """Handle a usage request."""
         if not self.session:
             return
@@ -1317,7 +1317,7 @@ class Kernel(SingletonConfigurable):
         msg = b"stop aborting"  # Magic string for dummy message.
         socket.send(msg, copy=False)
 
-    def _abort_queues(self, subshell_id: str | None = None):
+    def _abort_queues(self, subshell_id: str | None = None) -> None:
         # while this flag is true,
         # execute requests will be aborted
 
@@ -1341,7 +1341,7 @@ class Kernel(SingletonConfigurable):
 
         # Callback to signal that we are done aborting
         # dispatch functions _must_ be async
-        async def stop_aborting():
+        async def stop_aborting() -> None:
             self.log.info("Finishing abort")
             self._aborting = False
 
@@ -1358,7 +1358,7 @@ class Kernel(SingletonConfigurable):
         else:
             self.io_loop.add_callback(stop_aborting)
 
-    def _send_abort_reply(self, stream, msg, idents):
+    def _send_abort_reply(self, stream, msg, idents) -> None:
         """Send a reply to an aborted request"""
         if not self.session:
             return
@@ -1490,7 +1490,7 @@ class Kernel(SingletonConfigurable):
             raise EOFError
         return value
 
-    def _signal_children(self, signum):
+    def _signal_children(self, signum) -> None:
         """
         Send a signal to all our children
 
@@ -1537,7 +1537,7 @@ class Kernel(SingletonConfigurable):
                     process_group_children.append(child)
         return process_group_children
 
-    async def _progressively_terminate_all_children(self):
+    async def _progressively_terminate_all_children(self) -> None:
         sleeps = (0.01, 0.03, 0.1, 0.3, 1, 3, 10)
         if not self._process_children():
             self.log.debug("Kernel has no children.")
@@ -1558,7 +1558,7 @@ class Kernel(SingletonConfigurable):
                 )
                 await asyncio.sleep(delay)
 
-    async def _at_shutdown(self):
+    async def _at_shutdown(self) -> None:
         """Actions taken at shutdown by the kernel, called by python's atexit."""
         try:
             await self._progressively_terminate_all_children()
@@ -1577,5 +1577,5 @@ class Kernel(SingletonConfigurable):
                 self.control_stream.flush(zmq.POLLOUT)
 
     @property
-    def _supports_kernel_subshells(self):
+    def _supports_kernel_subshells(self) -> bool:
         return self.shell_channel_thread is not None

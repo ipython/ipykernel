@@ -41,7 +41,7 @@ class SubshellManager:
         context: zmq.Context[t.Any],
         shell_channel_io_loop: IOLoop,
         shell_stream: ZMQStream,
-    ):
+    ) -> None:
         """Initialize the subshell manager."""
         self._parent_thread = current_thread()
 
@@ -128,7 +128,7 @@ class SubshellManager:
         with self._lock_cache:
             return list(self._cache)
 
-    def set_on_recv_callback(self, on_recv_callback):
+    def set_on_recv_callback(self, on_recv_callback) -> None:
         """Set the callback used by the main shell and all subshells to receive
         messages sent from the shell channel thread.
         """

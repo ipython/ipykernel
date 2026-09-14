@@ -83,7 +83,7 @@ def _NSApp():
     return msg(C("NSApplication"), n("sharedApplication"))
 
 
-def _wake(NSApp):
+def _wake(NSApp) -> None:
     """Wake the Application"""
     objc.objc_msgSend.argtypes = [
         void_p,
@@ -121,7 +121,7 @@ def _wake(NSApp):
 _triggered = Event()
 
 
-def stop(timer=None, loop=None):
+def stop(timer=None, loop=None) -> None:
     """Callback to fire when there's input to be read"""
     _triggered.set()
     NSApp = _NSApp()
@@ -140,7 +140,7 @@ _c_callback_func_type = ctypes.CFUNCTYPE(None, void_p, void_p)
 _c_stop_callback = _c_callback_func_type(stop)
 
 
-def _stop_after(delay):
+def _stop_after(delay) -> None:
     """Register callback to stop eventloop after a delay"""
     timer = CFRunLoopTimerCreate(
         None,  # allocator
@@ -158,7 +158,7 @@ def _stop_after(delay):
     )
 
 
-def mainloop(duration=1):
+def mainloop(duration=1) -> None:
     """run the Cocoa eventloop for the specified duration (seconds)"""
 
     _triggered.clear()

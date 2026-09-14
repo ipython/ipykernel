@@ -23,7 +23,7 @@ class ShellChannelThread(BaseThread):
         self,
         context: zmq.Context[Any],
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the thread."""
         super().__init__(name=SHELL_CHANNEL_THREAD_NAME, **kwargs)
         self._manager: SubshellManager | None = None

@@ -23,7 +23,7 @@ class ZMQDisplayHook:
 
     topic = b"execute_result"
 
-    def __init__(self, session, pub_socket):
+    def __init__(self, session, pub_socket) -> None:
         """Initialize the hook."""
         self.session = session
         self.pub_socket = pub_socket
@@ -32,11 +32,11 @@ class ZMQDisplayHook:
         self._parent_header.set({})
         self._parent_header_global = {}
 
-    def get_execution_count(self):
+    def get_execution_count(self) -> int:
         """This method is replaced in kernelapp"""
         return 0
 
-    def __call__(self, obj):
+    def __call__(self, obj) -> None:
         """Handle a hook call."""
         if obj is None:
             return
@@ -65,7 +65,7 @@ class ZMQDisplayHook:
             return self._parent_header_global
 
     @parent_header.setter
-    def parent_header(self, value):
+    def parent_header(self, value) -> None:
         self._parent_header.set(value)
         self._parent_header_global = value
 
@@ -73,11 +73,11 @@ class ZMQDisplayHook:
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
         return self._parent_header.set(extract_header(parent))
 
-    def reset_thread_parent(self, token):
+    def reset_thread_parent(self, token) -> None:
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
         self._parent_header.reset(token)
 
-    def set_parent(self, parent):
+    def set_parent(self, parent) -> None:
         """Set the global and thread parent header."""
         self.parent_header = extract_header(parent)
 
@@ -95,7 +95,7 @@ class ZMQShellDisplayHook(DisplayHook):
     _thread_local = Any()
     msg: dict[str, t.Any] | None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._parent_header = ContextVar("parent_header")
         self._parent_header.set({})
@@ -111,7 +111,7 @@ class ZMQShellDisplayHook(DisplayHook):
             self._thread_local.hooks = []
         return self._thread_local.hooks
 
-    def register_hook(self, hook):
+    def register_hook(self, hook) -> None:
         """Register a transform hook on the execute_result message.
 
         Mirrors ``ZMQDisplayPublisher.register_hook``. Each hook receives the
@@ -120,7 +120,7 @@ class ZMQShellDisplayHook(DisplayHook):
         """
         self._hooks.append(hook)
 
-    def unregister_hook(self, hook):
+    def unregister_hook(self, hook) -> bool:
         """Remove a previously registered hook. Returns True on success."""
         try:
             self._hooks.remove(hook)
@@ -136,7 +136,7 @@ class ZMQShellDisplayHook(DisplayHook):
             return self._parent_header_global
 
     @parent_header.setter
-    def parent_header(self, value):
+    def parent_header(self, value) -> None:
         self._parent_header.set(value)
         self._parent_header_global = value
 
@@ -144,15 +144,15 @@ class ZMQShellDisplayHook(DisplayHook):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
         return self._parent_header.set(extract_header(parent))
 
-    def reset_thread_parent(self, token):
+    def reset_thread_parent(self, token) -> None:
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
         self._parent_header.reset(token)
 
-    def set_parent(self, parent):
+    def set_parent(self, parent) -> None:
         """Set the global and thread parent header."""
         self.parent_header = extract_header(parent)
 
-    def start_displayhook(self):
+    def start_displayhook(self) -> None:
         """Start the display hook."""
         if self.session:
             self.msg = self.session.msg(
@@ -164,18 +164,18 @@ class ZMQShellDisplayHook(DisplayHook):
                 parent=self.parent_header,
             )
 
-    def write_output_prompt(self):
+    def write_output_prompt(self) -> None:
         """Write the output prompt."""
         if self.msg:
             self.msg["content"]["execution_count"] = self.prompt_count
 
-    def write_format_data(self, format_dict, md_dict=None):
+    def write_format_data(self, format_dict, md_dict=None) -> None:
         """Write format data to the message."""
         if self.msg:
             self.msg["content"]["data"] = json_clean(encode_images(format_dict))
             self.msg["content"]["metadata"] = md_dict
 
-    def finish_displayhook(self):
+    def finish_displayhook(self) -> None:
         """Finish up all displayhook activities.
 
         Runs the registered hook chain before ``session.send``. Each hook

@@ -21,7 +21,7 @@ class BaseComm(comm.base_comm.BaseComm):
 
     kernel: Optional["Kernel"] = None
 
-    def publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys):
+    def publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys) -> None:
         """Helper for sending a comm message on IOPub"""
         if not Kernel.initialized():
             return
@@ -75,7 +75,7 @@ class Comm(BaseComm, traitlets.config.LoggingConfigurable):
 
     def __init__(
         self, target_name="", data=None, metadata=None, buffers=None, show_warning=True, **kwargs
-    ):
+    ) -> None:
         """Initialize a comm."""
         if show_warning:
             warn(

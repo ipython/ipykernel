@@ -24,12 +24,12 @@ from .client import InProcessKernelClient
 class BlockingInProcessChannel(InProcessChannel):
     """A blocking in-process channel."""
 
-    def __init__(self, *args, **kwds):
+    def __init__(self, *args, **kwds) -> None:
         """Initialize the channel."""
         super().__init__(*args, **kwds)
         self._in_queue: Queue[object] = Queue()
 
-    def call_handlers(self, msg):
+    def call_handlers(self, msg) -> None:
         """Call the handlers for a message."""
         self._in_queue.put(msg)
 
@@ -51,7 +51,7 @@ class BlockingInProcessChannel(InProcessChannel):
                 break
         return msgs
 
-    def msg_ready(self):
+    def msg_ready(self) -> bool:
         """Is there a message that has been received?"""
         return not self._in_queue.empty()
 
@@ -59,7 +59,7 @@ class BlockingInProcessChannel(InProcessChannel):
 class BlockingInProcessStdInChannel(BlockingInProcessChannel):
     """A blocking in-process stdin channel."""
 
-    def call_handlers(self, msg):
+    def call_handlers(self, msg) -> None:
         """Overridden for the in-process channel.
 
         This methods simply calls raw_input directly.
@@ -82,7 +82,7 @@ class BlockingInProcessKernelClient(InProcessKernelClient):
     iopub_channel_class = Type(BlockingInProcessChannel)
     stdin_channel_class = Type(BlockingInProcessStdInChannel)
 
-    def wait_for_ready(self):
+    def wait_for_ready(self) -> None:
         """Wait for kernel info reply on shell channel."""
         while True:
             self.kernel_info()

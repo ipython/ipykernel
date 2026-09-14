@@ -13,12 +13,12 @@ import trio
 class TrioRunner:
     """A trio loop runner."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the runner."""
         self._cell_cancel_scope = None
         self._trio_token = None
 
-    def initialize(self, kernel, io_loop):
+    def initialize(self, kernel, io_loop) -> None:
         """Initialize the runner."""
         kernel.shell.set_trio_runner(self)
         kernel.shell.run_line_magic("autoawait", "trio")
@@ -37,15 +37,15 @@ class TrioRunner:
             msg = "Kernel interrupted but no cell is running"
             raise Exception(msg)  # noqa: TRY002
 
-    def run(self):
+    def run(self) -> None:
         """Run the loop."""
         old_sig = signal.signal(signal.SIGINT, self.interrupt)
 
-        def log_nursery_exc(exc):
+        def log_nursery_exc(exc) -> None:
             exc = "\n".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
             logging.error("An exception occurred in a global nursery task.\n%s", exc)  # noqa: LOG015
 
-        async def trio_main():
+        async def trio_main() -> None:
             """Run the main loop."""
             self._trio_token = trio.lowlevel.current_trio_token()
             async with trio.open_nursery() as nursery:

@@ -79,7 +79,7 @@ def get_tmp_directory():
     return tmp_dir + os.sep + "ipykernel_" + str(pid)
 
 
-def get_tmp_hash_seed():
+def get_tmp_hash_seed() -> int:
     """Get a temp hash seed."""
     return 0xC70F6907
 
@@ -96,7 +96,7 @@ def get_file_name(code):
 class XCachingCompiler(CachingCompiler):
     """A custom caching compiler."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize the compiler."""
         super().__init__(*args, **kwargs)
         self.log = None

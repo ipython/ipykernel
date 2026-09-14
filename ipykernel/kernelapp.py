@@ -208,11 +208,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         """,
     ).tag(config=True)
 
-    def init_crash_handler(self):
+    def init_crash_handler(self) -> None:
         """Initialize the crash handler."""
         sys.excepthook = self.excepthook
 
-    def excepthook(self, etype, evalue, tb):
+    def excepthook(self, etype, evalue, tb) -> None:
         """Handle an exception."""
         # write uncaught traceback to 'real' stderr, not zmq-forwarder
         traceback.print_exception(etype, evalue, tb, file=sys.__stderr__)
@@ -236,7 +236,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             socket.curve_secretkey = self.curve_secretkey
             socket.curve_publickey = self.curve_publickey
 
-    def init_poller(self):
+    def init_poller(self) -> None:
         """Initialize the poller."""
         if sys.platform == "win32":
             if self.interrupt or self.parent_handle:
@@ -317,7 +317,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         write_connection_file(cf, **connection_info)
 
-    def cleanup_connection_file(self):
+    def cleanup_connection_file(self) -> None:
         """Clean up our connection file."""
         cf = self.abs_connection_file
         self.log.debug("Cleaning up connection file: %s", cf)
@@ -328,7 +328,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         self.cleanup_ipc_files()
 
-    def init_connection_file(self):
+    def init_connection_file(self) -> None:
         """Initialize our connection file."""
         if not self.connection_file:
             self.connection_file = "kernel-%s.json" % os.getpid()
@@ -349,7 +349,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             )
             self.exit(1)
 
-    def init_sockets(self):
+    def init_sockets(self) -> None:
         """Create a context, a session, and the kernel sockets."""
         self.log.info("Starting the kernel at pid: %i", os.getpid())
         assert self.context is None, "init_sockets cannot be called twice!"
@@ -388,7 +388,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.init_control(context)
         self.init_iopub(context)
 
-    def init_control(self, context):
+    def init_control(self, context) -> None:
         """Initialize the control channel."""
         self.control_socket = context.socket(zmq.ROUTER)
         self.control_socket.linger = 1000
@@ -414,7 +414,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.control_thread = ControlThread(daemon=True)
         self.shell_channel_thread = ShellChannelThread(context, daemon=True)
 
-    def init_iopub(self, context):
+    def init_iopub(self, context) -> None:
         """Initialize the iopub channel."""
         self.iopub_socket = context.socket(zmq.XPUB)
         self.iopub_socket.linger = 1000
@@ -427,7 +427,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         # backward-compat: wrap iopub socket API in background thread
         self.iopub_socket = self.iopub_thread.background_socket
 
-    def init_heartbeat(self):
+    def init_heartbeat(self) -> None:
         """start the heart beating"""
         # heartbeat doesn't share context, because it mustn't be blocked
         # by the GIL, which is accessed by libzmq when freeing zero-copy messages
@@ -442,7 +442,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         self.log.debug("Heartbeat REP Channel on port: %i", self.hb_port)
         self.heartbeat.start()
 
-    def close(self):
+    def close(self) -> None:
         """Close zmq sockets in an orderly fashion"""
         # un-capture IO before we start closing channels
         self.reset_io()
@@ -478,7 +478,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.context.term()
         self.log.debug("Terminated zmq context")
 
-    def log_connection_info(self):
+    def log_connection_info(self) -> None:
         """display connection info, and store ports"""
         basename = Path(self.connection_file).name
         if (
@@ -514,7 +514,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             control=self.control_port,
         )
 
-    def init_blackhole(self):
+    def init_blackhole(self) -> None:
         """redirects stdout/stderr to devnull if necessary"""
         if self.no_stdout or self.no_stderr:
             blackhole = open(os.devnull, "w")  # noqa: SIM115
@@ -523,7 +523,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             if self.no_stderr:
                 sys.stderr = sys.__stderr__ = blackhole  # type:ignore[misc]
 
-    def init_io(self):
+    def init_io(self) -> None:
         """Redirect input streams and set a display hook."""
         if self.outstream_class:
             outstream_factory = import_item(str(self.outstream_class))
@@ -558,7 +558,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
         self.patch_io()
 
-    def reset_io(self):
+    def reset_io(self) -> None:
         """restore original io
 
         restores state after init_io
@@ -567,7 +567,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         sys.stderr = sys.__stderr__
         sys.displayhook = sys.__displayhook__
 
-    def patch_io(self):
+    def patch_io(self) -> None:
         """Patch important libraries that can't handle sys.stdout forwarding"""
         try:
             import faulthandler
@@ -596,11 +596,11 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 
                 faulthandler.register = register
 
-    def init_signal(self):
+    def init_signal(self) -> None:
         """Initialize the signal handler."""
         signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-    def init_kernel(self):
+    def init_kernel(self) -> None:
         """Create the Kernel object itself"""
         if self.shell_channel_thread:
             shell_stream = ZMQStream(self.shell_socket, self.shell_channel_thread.io_loop)
@@ -640,7 +640,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         # Allow the displayhook to get the execution count
         self.displayhook.get_execution_count = lambda: kernel.execution_count
 
-    def init_gui_pylab(self):
+    def init_gui_pylab(self) -> None:
         """Enable GUI event loop integration, taking pylab into account."""
 
         # Register inline backend as default
@@ -661,7 +661,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         _showtraceback = shell._showtraceback
         try:
             # replace error-sending traceback with stderr
-            def print_tb(etype, evalue, stb):
+            def print_tb(etype, evalue, stb) -> None:
                 print("GUI event loop or pylab initialization failed", file=sys.stderr)
                 assert shell is not None
                 print(shell.InteractiveTB.stb2text(stb), file=sys.stderr)
@@ -671,13 +671,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         finally:
             shell._showtraceback = _showtraceback
 
-    def init_shell(self):
+    def init_shell(self) -> None:
         """Initialize the shell channel."""
         self.shell = getattr(self.kernel, "shell", None)
         if self.shell:
             self.shell.configurables.append(self)
 
-    def configure_tornado_logger(self):
+    def configure_tornado_logger(self) -> None:
         """Configure the tornado logging.Logger.
 
         Must set up the tornado logger or else tornado will call
@@ -691,7 +691,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    def init_pdb(self):
+    def init_pdb(self) -> None:
         """Replace pdb with IPython's version that is interruptible.
 
         With the non-interruptible version, stopping pdb() locks up the kernel in a
@@ -708,7 +708,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             pdb.set_trace = debugger.set_trace
 
     @catch_config_error
-    def initialize(self, argv=None):
+    def initialize(self, argv=None) -> None:
         """Initialize the application."""
         super().initialize(argv)
         if self.subapp is not None:
@@ -773,7 +773,7 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
 launch_new_instance = IPKernelApp.launch_instance
 
 
-def main():  # pragma: no cover
+def main() -> None:  # pragma: no cover
     """Run an IPKernel as an application"""
     app = IPKernelApp.instance()
     app.initialize()

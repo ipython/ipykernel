@@ -66,7 +66,7 @@ class InProcessKernelClient(KernelClient):
         d["kernel"] = self.kernel  # type: ignore[typeddict-unknown-key]
         return d
 
-    def start_channels(self, *args, **kwargs):
+    def start_channels(self, *args, **kwargs) -> None:
         """Start the channels on the client."""
         super().start_channels()
         if self.kernel:

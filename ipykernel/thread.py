@@ -35,7 +35,7 @@ def make_selector_io_loop() -> IOLoop:
 class BaseThread(Thread):
     """Base class for threads."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Initialize the thread."""
         super().__init__(**kwargs)
         self.io_loop = make_selector_io_loop()

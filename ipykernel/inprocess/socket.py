@@ -31,11 +31,11 @@ class DummySocket(HasTraits):
         """Recv a multipart message."""
         return self.queue.get_nowait()
 
-    def send_multipart(self, msg_parts, flags=0, copy=True, track=False):
+    def send_multipart(self, msg_parts, flags=0, copy=True, track=False) -> None:
         """Send a multipart message."""
         msg_parts = list(map(zmq.Message, msg_parts))
         self.queue.put_nowait(msg_parts)
         self.message_sent += 1
 
-    def flush(self, timeout=1.0):
+    def flush(self, timeout=1.0) -> None:
         """no-op to comply with stream API"""

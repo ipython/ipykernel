@@ -51,7 +51,7 @@ ROUTING_ID = getattr(zmq, "ROUTING_ID", None) or zmq.IDENTITY
 class _FakeCode:
     """Fake code class."""
 
-    def __init__(self, co_filename, co_name):
+    def __init__(self, co_filename, co_name) -> None:
         """Init."""
         self.co_filename = co_filename
         self.co_name = co_name
@@ -60,7 +60,7 @@ class _FakeCode:
 class _FakeFrame:
     """Fake frame class."""
 
-    def __init__(self, f_code, f_globals, f_locals):
+    def __init__(self, f_code, f_globals, f_locals) -> None:
         """Init."""
         self.f_code = f_code
         self.f_globals = f_globals
@@ -71,7 +71,7 @@ class _FakeFrame:
 class _DummyPyDB:
     """Fake PyDb class."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init."""
         from _pydevd_bundle.pydevd_api import PyDevdAPI
 
@@ -81,20 +81,20 @@ class _DummyPyDB:
 class VariableExplorer:
     """A variable explorer."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the explorer."""
         self.suspended_frame_manager = SuspendedFramesManager()
         self.py_db = _DummyPyDB()
         self.tracker = _FramesTracker(self.suspended_frame_manager, self.py_db)
         self.frame = None
 
-    def track(self):
+    def track(self) -> None:
         """Start tracking."""
         var = t.cast("InteractiveShell", get_ipython()).user_ns
         self.frame = _FakeFrame(_FakeCode("<module>", get_file_name("sys._getframe()")), var, var)
         self.tracker.track("thread1", pydevd_frame_utils.create_frames_list_from_frame(self.frame))
 
-    def untrack_all(self):
+    def untrack_all(self) -> None:
         """Stop tracking."""
         self.tracker.untrack_all()
 
@@ -115,7 +115,7 @@ class DebugpyMessageQueue:
     SEPARATOR = "\r\n\r\n"
     SEPARATOR_LENGTH = 4
 
-    def __init__(self, event_callback, log):
+    def __init__(self, event_callback, log) -> None:
         """Init the queue."""
         self.tcp_buffer = ""
         self._reset_tcp_pos()
@@ -123,13 +123,13 @@ class DebugpyMessageQueue:
         self.message_queue: Queue[t.Any] = Queue()
         self.log = log
 
-    def _reset_tcp_pos(self):
+    def _reset_tcp_pos(self) -> None:
         self.header_pos = -1
         self.separator_pos = -1
         self.message_size = 0
         self.message_pos = -1
 
-    def _put_message(self, raw_msg):
+    def _put_message(self, raw_msg) -> None:
         self.log.debug("QUEUE - _put_message:")
         msg = t.cast(dict[str, t.Any], jsonapi.loads(raw_msg))
         if msg["type"] == "event":
@@ -141,7 +141,7 @@ class DebugpyMessageQueue:
             self.log.debug(msg)
             self.message_queue.put_nowait(msg)
 
-    def put_tcp_frame(self, frame):
+    def put_tcp_frame(self, frame) -> None:
         """Put a tcp frame in the queue."""
         self.tcp_buffer += frame
 
@@ -196,7 +196,7 @@ class DebugpyMessageQueue:
 class DebugpyClient:
     """A client for debugpy."""
 
-    def __init__(self, log, debugpy_stream, event_callback):
+    def __init__(self, log, debugpy_stream, event_callback) -> None:
         """Initialize the client."""
         self.log = log
         self.debugpy_stream = debugpy_stream
@@ -213,13 +213,13 @@ class DebugpyClient:
         host, port = self.get_host_port()
         return "tcp://" + host + ":" + str(port)
 
-    def _forward_event(self, msg):
+    def _forward_event(self, msg) -> None:
         if msg["event"] == "initialized":
             self.init_event.set()
             self.init_event_seq = msg["seq"]
         self.event_callback(msg)
 
-    def _send_request(self, msg):
+    def _send_request(self, msg) -> None:
         if self.routing_id is None:
             self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
         content = jsonapi.dumps(
@@ -273,12 +273,12 @@ class DebugpyClient:
             self.debugpy_port = self.endpoint[index + 1 :]
         return self.debugpy_host, self.debugpy_port
 
-    def connect_tcp_socket(self):
+    def connect_tcp_socket(self) -> None:
         """Connect to the tcp socket."""
         self.debugpy_stream.socket.connect(self._get_endpoint())
         self.routing_id = self.debugpy_stream.socket.getsockopt(ROUTING_ID)
 
-    def disconnect_tcp_socket(self):
+    def disconnect_tcp_socket(self) -> None:
         """Disconnect from the tcp socket."""
         self.debugpy_stream.socket.disconnect(self._get_endpoint())
         self.routing_id = None
@@ -286,7 +286,7 @@ class DebugpyClient:
         self.init_event_seq = -1
         self.wait_for_attach = True
 
-    def receive_dap_frame(self, frame):
+    def receive_dap_frame(self, frame) -> None:
         """Receive a dap frame."""
         self.message_queue.put_tcp_frame(frame)
 
@@ -337,7 +337,7 @@ class Debugger:
         kernel_modules,
         just_my_code=False,
         filter_internal_frames=True,
-    ):
+    ) -> None:
         """Initialize the debugger."""
         self.log = log
         self.debugpy_client = DebugpyClient(log, debugpy_stream, self._handle_event)
@@ -370,7 +370,7 @@ class Debugger:
 
         self.variable_explorer = VariableExplorer()
 
-    def _handle_event(self, msg):
+    def _handle_event(self, msg) -> None:
         if msg["event"] == "stopped":
             if msg["body"]["allThreadsStopped"]:
                 self.stopped_queue.put_nowait(msg)
@@ -401,13 +401,13 @@ class Debugger:
             "body": {"variables": var_list},
         }
 
-    def _accept_stopped_thread(self, thread_name):
+    def _accept_stopped_thread(self, thread_name) -> bool:
         # TODO: identify Thread-2, Thread-3 and Thread-4. These are NOT
         # Control, IOPub or Heartbeat threads
         forbid_list = ["IPythonHistorySavingThread", "Thread-2", "Thread-3", "Thread-4"]
         return thread_name not in forbid_list
 
-    async def handle_stopped_event(self):
+    async def handle_stopped_event(self) -> None:
         """Handle a stopped event."""
         # Wait for a stopped event message in the stopped queue
         # This message is used for triggering the 'threads' request
@@ -454,7 +454,7 @@ class Debugger:
         self.debugpy_client.connect_tcp_socket()
         return self.debugpy_initialized
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the debugger."""
         self.debugpy_client.disconnect_tcp_socket()
 

@@ -16,13 +16,13 @@ class EnginePUBHandler(PUBHandler):
 
     engine = None
 
-    def __init__(self, engine, *args, **kwargs):
+    def __init__(self, engine, *args, **kwargs) -> None:
         """Initialize the handler."""
         PUBHandler.__init__(self, *args, **kwargs)
         self.engine = engine
 
     @property  # type:ignore[misc]
-    def root_topic(self):
+    def root_topic(self) -> str:
         """this is a property, in case the handler is created
         before the engine gets registered with an id"""
         if isinstance(getattr(self.engine, "id", None), int):

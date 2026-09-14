@@ -1383,7 +1383,9 @@ class Kernel(SingletonConfigurable):
             ident=idents,
         )
 
-    def _send_unknown_subshell_reply(self, idents, msg, err: UnknownSubshellError) -> None:
+    def _send_unknown_subshell_reply(
+        self, idents, msg: dict[str, Any], err: UnknownSubshellError
+    ) -> None:
         """Send an error reply to a request addressed to a subshell that is not there.
 
         Runs in the shell channel thread, so it writes to the shell socket

@@ -107,6 +107,10 @@ class IPythonKernel(KernelBase):
     # now costs nothing. See also the `debugger` property.
     debugger_class = LazyType("ipykernel.debugger.Debugger")
 
+    _debugger: Any | None = None
+    _debugger_init_attempted: bool | None = None
+    _stopped_queue_poll_started: bool = False
+
     compiler_class = Type(XCachingCompiler)
 
     use_experimental_completions = Bool(
@@ -150,18 +154,14 @@ class IPythonKernel(KernelBase):
             m.__file__ for m in sys.modules.copy().values() if hasattr(m, "__file__") and m.__file__
         ]
 
-        # The debugger itself (and the debugpy import it requires) is
-        # created lazily on first use, see the `debugger` property below.
-        self._debugger = None
-        self._debugger_init_attempted = False
-        self._stopped_queue_poll_started = False
-
         if "debugger_class" in self._trait_values:
             # Someone explicitly picked a debugger class, via kwargs or config.
             # The class is therefore already imported, so there is nothing left
             # to defer: build the debugger now, as pre-7.4 versions did. This
             # also keeps the failure mode of a bad `debugger_class` at
             # construction time rather than at the first debug request.
+            # todo: maybe just delete that and move it to lazy at a future date
+            # if we think is it ok
             _ = self.debugger
 
         # Initialize the InteractiveShell subclass
@@ -251,44 +251,46 @@ class IPythonKernel(KernelBase):
         Importing debugpy is expensive, so we avoid it until a debug
         request actually comes in.
         """
-        if self._debugger is None and not self._debugger_init_attempted:
-            from .debugger import _is_debugpy_available
+        if self._debugger is not None or self._debugger_init_attempted:
+            return self._debugger
 
-            if not _is_debugpy_available:
-                # A module-level constant: it will not become True later, so
-                # this is the one answer worth caching.
-                self._debugger_init_attempted = True
-                return None
+        # keep lazy import because of side effects and slow import
+        # or move to lazy import once python 3.15+
+        from .debugger import _is_debugpy_available
 
-            debugger_class = self.debugger_class
-            try:
-                debugger = debugger_class(
-                    self.log,
-                    self.debugpy_stream,
-                    self._publish_debug_event,
-                    self.debug_shell_socket,
-                    self.session,
-                    self._kernel_modules,
-                    self.debug_just_my_code,
-                    self.filter_internal_frames,
-                )
-            except Exception:
-                # Deliberately do not set `_debugger_init_attempted`: a
-                # failure here must not silently turn every later debug
-                # request into a `None` reply. Let it raise (so the request
-                # gets a proper error reply) and retry next time.
-                self.log.exception("Failed to initialize the debugger from %r", debugger_class)
-                raise
-
-            self._debugger = debugger
+        if not _is_debugpy_available:
+            # A module-level constant: it will not become True later, so
+            # this is the one answer worth caching.
             self._debugger_init_attempted = True
-            self._ensure_stopped_queue_poll()
+            return None
+
+        debugger_class = self.debugger_class
+        try:
+            debugger = debugger_class(
+                self.log,
+                self.debugpy_stream,
+                self._publish_debug_event,
+                self.debug_shell_socket,
+                self.session,
+                self._kernel_modules,
+                self.debug_just_my_code,
+                self.filter_internal_frames,
+            )
+        except Exception:
+            # Deliberately do not set `_debugger_init_attempted`: a
+            # failure here must not silently turn every later debug
+            # request into a `None` reply. Let it raise (so the request
+            # gets a proper error reply) and retry next time.
+            self.log.exception("Failed to initialize the debugger from %r", debugger_class)
+            raise
+
+        self._debugger = debugger
+        self._debugger_init_attempted = True
+        self._ensure_stopped_queue_poll()
         return self._debugger
 
     @debugger.setter
     def debugger(self, value):
-        # `debugger` used to be a plain instance attribute assigned in
-        # __init__; keep it writable for subclasses that replace it.
         self._debugger = value
         self._debugger_init_attempted = True
         if value is not None:
@@ -297,7 +299,7 @@ class IPythonKernel(KernelBase):
             # picks it up.
             self._ensure_stopped_queue_poll()
 
-    def _ensure_stopped_queue_poll(self):
+    def _ensure_stopped_queue_poll(self) -> None:
         """Schedule `poll_stopped_queue` once, as soon as it can run.
 
         Called both when the debugger is created (or assigned) and from
@@ -341,10 +343,6 @@ class IPythonKernel(KernelBase):
         else:
             self.debugpy_stream.on_recv(self.dispatch_debugpy, copy=False)
         super().start()
-        # Deliberately checks `_debugger` rather than the `debugger` property:
-        # a kernel that has not needed the debugger yet must not import debugpy
-        # just to start. If the debugger appears later, its own setter/lazy
-        # init schedules the poll.
         self._ensure_stopped_queue_poll()
 
     def set_parent(self, ident, parent, channel="shell"):

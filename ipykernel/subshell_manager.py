@@ -19,6 +19,20 @@ from .thread import SHELL_CHANNEL_THREAD_NAME
 from .utils import _async_in_context
 
 
+class UnknownSubshellError(KeyError):
+    """A subshell_id that does not name an existing subshell.
+
+    .. versionadded:: 7.4
+    """
+
+    def __init__(self, subshell_id: str) -> None:
+        super().__init__(subshell_id)
+        self.subshell_id = subshell_id
+
+    def __str__(self) -> str:
+        return f"Unknown subshell_id {self.subshell_id!r}"
+
+
 class SubshellManager:
     """A manager of subshells.
 
@@ -87,13 +101,24 @@ class SubshellManager:
         self._main_to_shell_channel.close()
         self._shell_channel_to_main.close()
 
+    def _get_subshell(self, subshell_id: str) -> SubshellThread:
+        """Return the thread of the specified subshell.
+
+        The caller must hold ``_lock_cache``.  Raises ``UnknownSubshellError`` if
+        there is no such subshell.
+        """
+        try:
+            return self._cache[subshell_id]
+        except KeyError:
+            raise UnknownSubshellError(subshell_id) from None
+
     def get_shell_channel_to_subshell_pair(self, subshell_id: str | None) -> SocketPair:
         """Return the inproc socket pair used to send messages from the shell channel
         to a particular subshell or main shell."""
         if subshell_id is None:
             return self._shell_channel_to_main
         with self._lock_cache:
-            return self._cache[subshell_id].shell_channel_to_subshell
+            return self._get_subshell(subshell_id).shell_channel_to_subshell
 
     def get_subshell_to_shell_channel_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
         """Return the socket used by a particular subshell or main shell to send
@@ -102,7 +127,7 @@ class SubshellManager:
         if subshell_id is None:
             return self._main_to_shell_channel.from_socket
         with self._lock_cache:
-            return self._cache[subshell_id].subshell_to_shell_channel.from_socket
+            return self._get_subshell(subshell_id).subshell_to_shell_channel.from_socket
 
     def get_shell_channel_to_subshell_socket(self, subshell_id: str | None) -> zmq.Socket[t.Any]:
         """Return the socket used by the shell channel to send messages to a particular
@@ -113,12 +138,12 @@ class SubshellManager:
     def get_subshell_aborting(self, subshell_id: str) -> bool:
         """Get the boolean aborting flag of the specified subshell."""
         with self._lock_cache:
-            return self._cache[subshell_id].aborting
+            return self._get_subshell(subshell_id).aborting
 
     def get_subshell_asyncio_lock(self, subshell_id: str) -> asyncio.Lock:
         """Return the asyncio lock belonging to the specified subshell."""
         with self._lock_cache:
-            return self._cache[subshell_id].asyncio_lock
+            return self._get_subshell(subshell_id).asyncio_lock
 
     def list_subshell(self) -> list[str]:
         """Return list of current subshell ids.
@@ -141,7 +166,7 @@ class SubshellManager:
     def set_subshell_aborting(self, subshell_id: str, aborting: bool) -> None:
         """Set the aborting flag of the specified subshell."""
         with self._lock_cache:
-            self._cache[subshell_id].aborting = aborting
+            self._get_subshell(subshell_id).aborting = aborting
 
     def subshell_id_from_thread_id(self, thread_id: int) -> str | None:
         """Return subshell_id of the specified thread_id.
@@ -185,14 +210,15 @@ class SubshellManager:
     def _delete_subshell(self, subshell_id: str) -> None:
         """Delete subshell identified by subshell_id.
 
-        Raises key error if subshell_id not in cache.
+        Raises ``UnknownSubshellError`` if subshell_id not in cache.
         """
         assert current_thread().name == SHELL_CHANNEL_THREAD_NAME
 
         with self._lock_cache:
-            subshell_threwad = self._cache.pop(subshell_id)
+            subshell_thread = self._get_subshell(subshell_id)
+            del self._cache[subshell_id]
 
-        self._stop_subshell(subshell_threwad)
+        self._stop_subshell(subshell_thread)
 
     def _process_control_request(
         self,

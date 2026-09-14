@@ -13,10 +13,8 @@ import trio
 class TrioRunner:
     """A trio loop runner."""
 
-    def __init__(self) -> None:
-        """Initialize the runner."""
-        self._cell_cancel_scope = None
-        self._trio_token = None
+    _cell_cancel_scope: trio.CancelScope | None = None
+    _trio_token: trio.lowlevel.TrioToken | None = None
 
     def initialize(self, kernel, io_loop) -> None:
         """Initialize the runner."""

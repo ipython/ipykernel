@@ -448,6 +448,9 @@ class OutStream(TextIOBase):
     topic = None
     encoding = "UTF-8"
     _exc: Any | None = None
+    _parent_header: contextvars.ContextVar[dict[str, Any]]
+    _parent_header_global: dict[str, Any]
+    _buffers: defaultdict[frozenset[tuple[str, Any]], StringIO]
 
     def fileno(self):
         """
@@ -539,9 +542,7 @@ class OutStream(TextIOBase):
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()
-        self._parent_header: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-            "parent_header"
-        )
+        self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
         self._parent_header_global = {}
         self._master_pid = os.getpid()

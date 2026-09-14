@@ -12,6 +12,8 @@
 # stdlib
 import sys
 import warnings
+from collections.abc import Callable
+from typing import Any
 
 # Third-party
 import gi
@@ -32,12 +34,13 @@ warnings.warn(
 class GTKEmbed:
     """A class to embed a kernel into the GTK main event loop."""
 
+    # These two will later store the real gtk functions when we hijack them
+    gtk_main = None
+    gtk_main_quit: Callable[..., Any] | None = None
+
     def __init__(self, kernel) -> None:
         """Initialize the embed."""
         self.kernel = kernel
-        # These two will later store the real gtk functions when we hijack them
-        self.gtk_main = None
-        self.gtk_main_quit = None
 
     def start(self) -> None:
         """Starts the GTK main event loop and sets our kernel startup routine."""

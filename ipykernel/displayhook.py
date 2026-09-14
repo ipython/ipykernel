@@ -23,12 +23,15 @@ class ZMQDisplayHook:
 
     topic = b"execute_result"
 
+    _parent_header: ContextVar[dict[str, Any]]
+    _parent_header_global: dict[str, t.Any]
+
     def __init__(self, session, pub_socket) -> None:
         """Initialize the hook."""
         self.session = session
         self.pub_socket = pub_socket
 
-        self._parent_header: ContextVar[dict[str, Any]] = ContextVar("parent_header")
+        self._parent_header = ContextVar("parent_header")
         self._parent_header.set({})
         self._parent_header_global = {}
 
@@ -92,6 +95,7 @@ class ZMQShellDisplayHook(DisplayHook):
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
     _parent_header: ContextVar[dict[str, Any]]
+    _parent_header_global: dict[str, t.Any]
     _thread_local = Any()
     msg: dict[str, t.Any] | None
 

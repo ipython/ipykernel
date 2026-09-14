@@ -81,12 +81,13 @@ class _DummyPyDB:
 class VariableExplorer:
     """A variable explorer."""
 
+    frame: _FakeFrame | None = None
+
     def __init__(self) -> None:
         """Initialize the explorer."""
         self.suspended_frame_manager = SuspendedFramesManager()
         self.py_db = _DummyPyDB()
         self.tracker = _FramesTracker(self.suspended_frame_manager, self.py_db)
-        self.frame = None
 
     def track(self) -> None:
         """Start tracking."""
@@ -306,6 +307,10 @@ class DebugpyClient:
 
 class Debugger:
     """The debugger class."""
+
+    breakpoint_list: dict[str, t.Any]
+    stopped_threads: set[int]
+    _removed_cleanup: dict[int, t.Any]
 
     # Requests that requires that the debugger has started
     started_debug_msg_types = [

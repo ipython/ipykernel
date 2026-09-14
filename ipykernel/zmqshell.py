@@ -58,6 +58,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
     _parent_header: contextvars.ContextVar[dict[str, Any]]
+    _parent_header_global: dict[str, Any]
     topic = CBytes(b"display_data")
 
     store_display_history = Bool(
@@ -526,6 +527,9 @@ class KernelMagics(Magics):
 class ZMQInteractiveShell(InteractiveShell):
     """A subclass of InteractiveShell for ZMQ."""
 
+    _parent_header: contextvars.ContextVar[dict[str, typing.Any]]
+    _parent_header_global: dict[str, typing.Any]
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -546,9 +550,7 @@ class ZMQInteractiveShell(InteractiveShell):
         if "IPKernelApp" not in self.config:
             self.config.IPKernelApp.tqdm = "dummy value for https://github.com/tqdm/tqdm/pull/1628"
 
-        self._parent_header: contextvars.ContextVar[dict[str, typing.Any]] = contextvars.ContextVar(
-            "parent_header"
-        )
+        self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
         self._parent_header_global = {}
 

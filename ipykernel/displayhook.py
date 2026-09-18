@@ -28,8 +28,8 @@ class ZMQDisplayHook:
         self.session = session
         self.pub_socket = pub_socket
 
-        self._parent_header: ContextVar[dict[str, Any]] = ContextVar("parent_header")
-        self._parent_header.set({})
+        self._parent_header: ContextVar[tuple[int, dict[str, Any]]] = ContextVar("parent_header")
+        self._parent_header.set((threading.get_ident(), {}))
         self._parent_header_global = {}
 
     def get_execution_count(self):
@@ -60,18 +60,21 @@ class ZMQDisplayHook:
     @property
     def parent_header(self):
         try:
-            return self._parent_header.get()
+            thread_id, parent_header = self._parent_header.get()
         except LookupError:
             return self._parent_header_global
+        if thread_id != threading.get_ident():
+            return self._parent_header_global
+        return parent_header
 
     @parent_header.setter
     def parent_header(self, value):
-        self._parent_header.set(value)
+        self._parent_header.set((threading.get_ident(), value))
         self._parent_header_global = value
 
     def set_thread_parent(self, parent):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
-        return self._parent_header.set(extract_header(parent))
+        return self._parent_header.set((threading.get_ident(), extract_header(parent)))
 
     def reset_thread_parent(self, token):
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
@@ -91,14 +94,14 @@ class ZMQShellDisplayHook(DisplayHook):
 
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
-    _parent_header: ContextVar[dict[str, Any]]
+    _parent_header: ContextVar[tuple[int, dict[str, Any]]]
     _thread_local = Any()
     msg: dict[str, t.Any] | None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._parent_header = ContextVar("parent_header")
-        self._parent_header.set({})
+        self._parent_header.set((threading.get_ident(), {}))
         self._parent_header_global = {}
 
     @default("_thread_local")
@@ -131,18 +134,21 @@ class ZMQShellDisplayHook(DisplayHook):
     @property
     def parent_header(self):
         try:
-            return self._parent_header.get()
+            thread_id, parent_header = self._parent_header.get()
         except LookupError:
             return self._parent_header_global
+        if thread_id != threading.get_ident():
+            return self._parent_header_global
+        return parent_header
 
     @parent_header.setter
     def parent_header(self, value):
-        self._parent_header.set(value)
+        self._parent_header.set((threading.get_ident(), value))
         self._parent_header_global = value
 
     def set_thread_parent(self, parent):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
-        return self._parent_header.set(extract_header(parent))
+        return self._parent_header.set((threading.get_ident(), extract_header(parent)))
 
     def reset_thread_parent(self, token):
         """Reset the parent header to undo the set_thread_parent call that returned the token."""

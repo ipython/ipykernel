@@ -131,6 +131,7 @@ def test_print_to_correct_cell_from_thread(explicit_parent: str):
     get_ipython().set_thread_parent sets the thread-local parent for only the thread.
     """
     code = f"""\
+        from contextvars import copy_context
         from threading import Event, Thread
         from time import sleep
         from IPython.display import display
@@ -162,7 +163,8 @@ def test_print_to_correct_cell_from_thread(explicit_parent: str):
             print("after", flush=True)
             display(3)
 
-        thread = Thread(target=thread_target)
+        # Free-threaded Python inherits the caller's context by default.
+        thread = Thread(target=copy_context().run, args=(thread_target,))
         thread.start()
     """
     outputs = {}

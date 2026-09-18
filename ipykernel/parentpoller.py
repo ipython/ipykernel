@@ -22,7 +22,7 @@ class ParentPollerUnix(Thread):
     when the parent process no longer exists.
     """
 
-    def __init__(self, parent_pid=0):
+    def __init__(self, parent_pid=0) -> None:
         """Initialize the poller.
 
         Parameters
@@ -72,7 +72,7 @@ class ParentPollerWindows(Thread):
     when the parent process no longer exists.
     """
 
-    def __init__(self, interrupt_handle=None, parent_handle=None):
+    def __init__(self, interrupt_handle=None, parent_handle=None) -> None:
         """Create the poller. At least one of the optional parameters must be
         provided.
 
@@ -94,7 +94,7 @@ class ParentPollerWindows(Thread):
         self.interrupt_handle = interrupt_handle
         self.parent_handle = parent_handle
 
-    def run(self):
+    def run(self) -> None:
         """Run the poll loop. This method never returns."""
         try:
             from _winapi import INFINITE, WAIT_OBJECT_0  # type:ignore[attr-defined]

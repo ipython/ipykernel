@@ -21,13 +21,13 @@ class CommManager(comm.base_comm.CommManager, traitlets.config.LoggingConfigurab
     comms = traitlets.Dict()
     targets = traitlets.Dict()
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Initialize the manager."""
         # CommManager doesn't take arguments, so we explicitly forward arguments
         comm.base_comm.CommManager.__init__(self)
         traitlets.config.LoggingConfigurable.__init__(self, **kwargs)
 
-    def comm_open(self, stream, ident, msg):
+    def comm_open(self, stream, ident, msg) -> None:
         """Handler for comm_open messages"""
         # This is for backward compatibility, the comm_open creates a a new ipykernel.comm.Comm
         # but we should let the base class create the comm with comm.create_comm in a major release

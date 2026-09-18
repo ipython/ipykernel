@@ -68,7 +68,7 @@ class InProcessKernel(IPythonKernel):
 
     stdin_socket = Instance(DummySocket, ())
 
-    def __init__(self, **traits):
+    def __init__(self, **traits) -> None:
         """Initialize the kernel."""
         super().__init__(**traits)
 
@@ -76,17 +76,17 @@ class InProcessKernel(IPythonKernel):
         if self.shell:
             self.shell.kernel = self
 
-    async def execute_request(self, stream, ident, parent):
+    async def execute_request(self, stream, ident, parent) -> None:
         """Override for temporary IO redirection."""
         with self._redirected_io():
             await super().execute_request(stream, ident, parent)
 
-    def start(self):
+    def start(self) -> None:
         """Override registration of dispatchers for streams."""
         if self.shell:
             self.shell.exit_now = False
 
-    def _abort_queues(self, subshell_id: str | None = ...):
+    def _abort_queues(self, subshell_id: str | None = ...) -> None:
         """The in-process kernel doesn't abort requests."""
 
     def _input_request(self, prompt, ident, parent, password=False):
@@ -131,7 +131,7 @@ class InProcessKernel(IPythonKernel):
 
     # ------ Trait change handlers --------------------------------------------
 
-    def _io_dispatch(self, change):
+    def _io_dispatch(self, change) -> None:
         """Called when a message is sent to the IO socket."""
         assert self.iopub_socket.io_thread is not None
         assert self.session is not None
@@ -181,7 +181,7 @@ class InProcessInteractiveShell(ZMQInteractiveShell):
     # InteractiveShell interface
     # -------------------------------------------------------------------------
 
-    def enable_gui(self, gui=None):
+    def enable_gui(self, gui=None) -> None:
         """Enable GUI integration for the kernel."""
         if not gui:
             gui = self.kernel.gui

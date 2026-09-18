@@ -91,7 +91,7 @@ class IPythonKernel(KernelBase):
 
     @observe("user_module")
     @observe_compat
-    def _user_module_changed(self, change):
+    def _user_module_changed(self, change) -> None:
         if self.shell is not None:
             self.shell.user_module = change["new"]
 
@@ -103,7 +103,7 @@ class IPythonKernel(KernelBase):
 
     @observe("user_ns")
     @observe_compat
-    def _user_ns_changed(self, change):
+    def _user_ns_changed(self, change) -> None:
         if self.shell is not None:
             self.shell.user_ns = change["new"]
             self.shell.init_user_ns()
@@ -113,7 +113,7 @@ class IPythonKernel(KernelBase):
     _sys_raw_input = Any()
     _sys_eval_input = Any()
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Initialize the kernel."""
         super().__init__(**kwargs)
 
@@ -216,7 +216,7 @@ class IPythonKernel(KernelBase):
         "file_extension": ".py",
     }
 
-    def dispatch_debugpy(self, msg):
+    def dispatch_debugpy(self, msg) -> None:
         from .debugger import _is_debugpy_available
 
         if _is_debugpy_available:
@@ -231,12 +231,12 @@ class IPythonKernel(KernelBase):
             return self.shell.banner
         return None
 
-    async def poll_stopped_queue(self):
+    async def poll_stopped_queue(self) -> None:
         """Poll the stopped queue."""
         while True:
             await self.debugger.handle_stopped_event()
 
-    def start(self):
+    def start(self) -> None:
         """Start the kernel."""
         if self.shell:
             self.shell.exit_now = False
@@ -250,7 +250,7 @@ class IPythonKernel(KernelBase):
                 self.poll_stopped_queue(), self.control_thread.io_loop.asyncio_loop
             )
 
-    def set_parent(self, ident, parent, channel="shell"):
+    def set_parent(self, ident, parent, channel="shell") -> None:
         """Overridden from parent to tell the display hook and output streams
         about the parent message.
         """
@@ -287,7 +287,7 @@ class IPythonKernel(KernelBase):
 
         return metadata
 
-    def _forward_input(self, allow_stdin=False):
+    def _forward_input(self, allow_stdin=False) -> None:
         """Forward raw_input and getpass to the current frontend.
 
         via input_request
@@ -300,7 +300,7 @@ class IPythonKernel(KernelBase):
         self._save_getpass = getpass.getpass
         getpass.getpass = self.getpass
 
-    def _restore_input(self):
+    def _restore_input(self) -> None:
         """Restore raw_input, getpass"""
         builtins.input = self._sys_raw_input
 
@@ -313,7 +313,7 @@ class IPythonKernel(KernelBase):
         return None
 
     @execution_count.setter
-    def execution_count(self, value):
+    def execution_count(self, value) -> None:
         # Ignore the incrementing done by KernelBase, in favour of our shell's
         # execution counter.
         pass
@@ -333,7 +333,7 @@ class IPythonKernel(KernelBase):
 
         # whichever future finishes first,
         # cancel the other one
-        def cancel_unless_done(f, _ignored):
+        def cancel_unless_done(f, _ignored) -> None:
             if f.cancelled() or f.done():
                 return
             f.cancel()
@@ -345,8 +345,8 @@ class IPythonKernel(KernelBase):
         # stop watching for SIGINT events
         future.add_done_callback(partial(cancel_unless_done, sigint_future))
 
-        def handle_sigint(*args):
-            def set_sigint_result():
+        def handle_sigint(*args) -> None:
+            def set_sigint_result() -> None:
                 if sigint_future.cancelled() or sigint_future.done():
                     return
                 sigint_future.set_result(1)
@@ -367,7 +367,7 @@ class IPythonKernel(KernelBase):
         # Signals only work in main thread, so cannot use _cancel_on_sigint in subshells.
         yield
 
-    async def execute_request(self, stream, ident, parent):
+    async def execute_request(self, stream, ident, parent) -> None:
         """Override for cell output - cell reconciliation."""
         await super().execute_request(stream, ident, parent)
 
@@ -743,7 +743,7 @@ class IPythonKernel(KernelBase):
 class Kernel(IPythonKernel):
     """DEPRECATED.  An alias for the IPython kernel class."""
 
-    def __init__(self, *args, **kwargs):  # pragma: no cover
+    def __init__(self, *args, **kwargs) -> None:  # pragma: no cover
         """DEPRECATED."""
         import warnings
 

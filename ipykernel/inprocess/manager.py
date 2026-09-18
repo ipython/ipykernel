@@ -41,28 +41,28 @@ class InProcessKernelManager(KernelManager):
     # Kernel management methods
     # --------------------------------------------------------------------------
 
-    def start_kernel(self, **kwds):
+    def start_kernel(self, **kwds) -> None:
         """Start the kernel."""
         from ipykernel.inprocess.ipkernel import InProcessKernel
 
         self.kernel = InProcessKernel(parent=self, session=self.session)
 
-    def shutdown_kernel(self):
+    def shutdown_kernel(self) -> None:
         """Shutdown the kernel."""
         if self.kernel:
             self.kernel.iopub_thread.stop()
             self._kill_kernel()
 
-    def restart_kernel(self, now=False, **kwds):
+    def restart_kernel(self, now=False, **kwds) -> None:
         """Restart the kernel."""
         self.shutdown_kernel()
         self.start_kernel(**kwds)
 
     @property
-    def has_kernel(self):
+    def has_kernel(self) -> bool:
         return self.kernel is not None
 
-    def _kill_kernel(self):
+    def _kill_kernel(self) -> None:
         self.kernel = None
 
     def interrupt_kernel(self):
@@ -75,7 +75,7 @@ class InProcessKernelManager(KernelManager):
         msg = "Cannot signal in-process kernel."
         raise NotImplementedError(msg)
 
-    def is_alive(self):
+    def is_alive(self) -> bool:
         """Test if the kernel is alive."""
         return self.kernel is not None
 

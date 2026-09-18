@@ -51,7 +51,7 @@ class IOPubThread:
     whose IO is always run in a thread.
     """
 
-    def __init__(self, socket, pipe=False, session=False):
+    def __init__(self, socket, pipe=False, session=False) -> None:
         """Create IOPub thread
 
         Parameters
@@ -85,7 +85,7 @@ class IOPubThread:
         self.thread.is_pydev_daemon_thread = True  # type:ignore[attr-defined]
         self.thread.name = "IOPub"
 
-    def _setup_xpub_listener(self):
+    def _setup_xpub_listener(self) -> None:
         """Setup listener for XPUB subscription events"""
 
         # Checks the socket is not a DummySocket
@@ -97,7 +97,7 @@ class IOPubThread:
             self._xpub_stream = ZMQStream(self.socket, self.io_loop)
             self._xpub_stream.on_recv(self._handle_subscription)
 
-    def _handle_subscription(self, frames):
+    def _handle_subscription(self, frames) -> None:
         """Handle subscription/unsubscription events from XPUB socket
 
         XPUB sockets receive:
@@ -115,7 +115,7 @@ class IOPubThread:
                     continue
                 self._send_welcome_message(subscription_str)
 
-    def _send_welcome_message(self, subscription):
+    def _send_welcome_message(self, subscription) -> None:
         """Send iopub_welcome message for new subscription
 
         Parameters
@@ -154,10 +154,10 @@ class IOPubThread:
         # Send directly on socket (we're already in IO thread context)
         self.socket.send_multipart(full_msg)
 
-    def _thread_main(self):
+    def _thread_main(self) -> None:
         """The inner loop that's actually run in a thread"""
 
-        def _start_event_gc():
+        def _start_event_gc() -> None:
             self._event_pipe_gc_task = asyncio.ensure_future(self._run_event_pipe_gc())
 
         self.io_loop.run_sync(_start_event_gc)
@@ -169,7 +169,7 @@ class IOPubThread:
 
         if self._event_pipe_gc_task is not None:
             # cancel gc task to avoid pending task warnings
-            async def _cancel():
+            async def _cancel() -> None:
                 self._event_pipe_gc_task.cancel()  # type:ignore[union-attr]
 
             if not self._stopped:
@@ -179,7 +179,7 @@ class IOPubThread:
 
         self.io_loop.close(all_fds=True)
 
-    def _setup_event_pipe(self):
+    def _setup_event_pipe(self) -> None:
         """Create the PULL socket listening for events that should fire in this thread."""
         ctx = self.socket.context
         pipe_in = ctx.socket(zmq.PULL)
@@ -191,7 +191,7 @@ class IOPubThread:
         self._event_puller = ZMQStream(pipe_in, self.io_loop)
         self._event_puller.on_recv(self._handle_event)
 
-    async def _run_event_pipe_gc(self):
+    async def _run_event_pipe_gc(self) -> None:
         """Task to run event pipe gc continuously"""
         while True:
             await asyncio.sleep(self._event_pipe_gc_seconds)
@@ -200,7 +200,7 @@ class IOPubThread:
             except Exception as e:
                 print(f"Exception in IOPubThread._event_pipe_gc: {e}", file=sys.__stderr__)
 
-    async def _event_pipe_gc(self):
+    async def _event_pipe_gc(self) -> None:
         """run a single garbage collection on event pipes"""
         if not self._event_pipes:
             # don't acquire the lock if there's nothing to do
@@ -230,7 +230,7 @@ class IOPubThread:
                 self._event_pipes[threading.current_thread()] = event_pipe
         return event_pipe
 
-    def _handle_event(self, msg):
+    def _handle_event(self, msg) -> None:
         """Handle an event on the event pipe
 
         Content of the message is ignored.
@@ -245,7 +245,7 @@ class IOPubThread:
             event_f = self._events.popleft()
             event_f()
 
-    def _setup_pipe_in(self):
+    def _setup_pipe_in(self) -> None:
         """setup listening pipe for IOPub from forked subprocesses"""
         ctx = self.socket.context
 
@@ -269,7 +269,7 @@ class IOPubThread:
         self._pipe_in = ZMQStream(pipe_in, self.io_loop)
         self._pipe_in.on_recv(self._handle_pipe_msg)
 
-    def _handle_pipe_msg(self, msg):
+    def _handle_pipe_msg(self, msg) -> None:
         """handle a pipe message from a subprocess"""
         if not self._pipe_flag or not self._is_master_process():
             return
@@ -295,7 +295,7 @@ class IOPubThread:
             return MASTER
         return CHILD
 
-    def start(self):
+    def start(self) -> None:
         """Start the IOPub thread"""
         self.thread.name = "IOPub"
         self.thread.start()
@@ -321,7 +321,7 @@ class IOPubThread:
         for event_pipe in self._event_pipes.values():
             event_pipe.close()
 
-    def close(self):
+    def close(self) -> None:
         """Close the IOPub thread."""
         if self.closed:
             return
@@ -329,10 +329,10 @@ class IOPubThread:
         self.socket = None
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return self.socket is None
 
-    def schedule(self, f):
+    def schedule(self, f) -> None:
         """Schedule a function to be called in our IO thread.
 
         If the thread is not running, call immediately.
@@ -344,7 +344,7 @@ class IOPubThread:
         else:
             f()
 
-    def send_multipart(self, *args, **kwargs):
+    def send_multipart(self, *args, **kwargs) -> None:
         """send_multipart schedules actual zmq send in my thread.
 
         If my thread isn't running (e.g. forked process), send immediately.
@@ -388,7 +388,7 @@ class BackgroundSocket:
 
     io_thread = None
 
-    def __init__(self, io_thread):
+    def __init__(self, io_thread) -> None:
         """Initialize the socket."""
         self.io_thread = io_thread
 
@@ -409,7 +409,7 @@ class BackgroundSocket:
             return getattr(self.io_thread.socket, attr)
         return super().__getattr__(attr)  # type:ignore[misc]
 
-    def __setattr__(self, attr, value):
+    def __setattr__(self, attr, value) -> None:
         """Set an attribute on the socket."""
         if attr == "io_thread" or (attr.startswith("__") and attr.endswith("__")):
             super().__setattr__(attr, value)
@@ -448,6 +448,9 @@ class OutStream(TextIOBase):
     topic = None
     encoding = "UTF-8"
     _exc: Any | None = None
+    _parent_header: contextvars.ContextVar[dict[str, Any]]
+    _parent_header_global: dict[str, Any]
+    _buffers: defaultdict[frozenset[tuple[str, Any]], StringIO]
 
     def fileno(self):
         """
@@ -458,7 +461,7 @@ class OutStream(TextIOBase):
         msg = "fileno"
         raise io.UnsupportedOperation(msg)
 
-    def _watch_pipe_fd(self):
+    def _watch_pipe_fd(self) -> None:
         """
         We've redirected standards streams 0 and 1 into a pipe.
 
@@ -493,7 +496,7 @@ class OutStream(TextIOBase):
         *,
         watchfd=True,
         isatty=False,
-    ):
+    ) -> None:
         """
         Parameters
         ----------
@@ -539,9 +542,7 @@ class OutStream(TextIOBase):
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()
-        self._parent_header: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-            "parent_header"
-        )
+        self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
         self._parent_header_global = {}
         self._master_pid = os.getpid()
@@ -604,7 +605,7 @@ class OutStream(TextIOBase):
             return self._parent_header_global
 
     @parent_header.setter
-    def parent_header(self, value):
+    def parent_header(self, value) -> None:
         self._parent_header.set(value)
         self._parent_header_global = value
 
@@ -616,7 +617,7 @@ class OutStream(TextIOBase):
         """
         return self._isatty
 
-    def _setup_stream_redirects(self, name):
+    def _setup_stream_redirects(self, name) -> None:
         pr, pw = os.pipe()
         fno = self._original_stdstream_fd = getattr(sys, name).fileno()
         self._original_stdstream_copy = os.dup(fno)
@@ -636,15 +637,15 @@ class OutStream(TextIOBase):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
         return self._parent_header.set(extract_header(parent))
 
-    def reset_thread_parent(self, token):
+    def reset_thread_parent(self, token) -> None:
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
         self._parent_header.reset(token)
 
-    def set_parent(self, parent):
+    def set_parent(self, parent) -> None:
         """Set the global and thread parent header."""
         self.parent_header = extract_header(parent)
 
-    def close(self):
+    def close(self) -> None:
         """Close the stream."""
         if self._should_watch:
             self._should_watch = False
@@ -661,10 +662,10 @@ class OutStream(TextIOBase):
         self.pub_thread = None
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return self.pub_thread is None
 
-    def _schedule_flush(self):
+    def _schedule_flush(self) -> None:
         """schedule a flush in the IO thread
 
         call this on write, to indicate that flush should be called soon.
@@ -674,12 +675,12 @@ class OutStream(TextIOBase):
         self._flush_pending = True
 
         # add_timeout has to be handed to the io thread via event pipe
-        def _schedule_in_thread():
+        def _schedule_in_thread() -> None:
             self._io_loop.call_later(self.flush_interval, self._flush)
 
         self.pub_thread.schedule(_schedule_in_thread)
 
-    def flush(self):
+    def flush(self) -> None:
         """trigger actual zmq send
 
         send will happen in the background thread
@@ -703,7 +704,7 @@ class OutStream(TextIOBase):
         else:
             self._flush()
 
-    def _flush(self):
+    def _flush(self) -> None:
         """This is where the actual send happens.
 
         _flush should generally be called in the IO thread,
@@ -793,7 +794,7 @@ class OutStream(TextIOBase):
         for string in sequence:
             self.write(string)
 
-    def writable(self):
+    def writable(self) -> bool:
         """Test whether the stream is writable."""
         return True
 
@@ -819,7 +820,7 @@ class OutStream(TextIOBase):
             self._local.hooks = []
         return self._local.hooks
 
-    def register_hook(self, hook):
+    def register_hook(self, hook) -> None:
         """
         Registers a hook with the thread-local storage.
 
@@ -838,7 +839,7 @@ class OutStream(TextIOBase):
         """
         self._hooks.append(hook)
 
-    def unregister_hook(self, hook):
+    def unregister_hook(self, hook) -> bool:
         """
         Un-registers a hook with the thread-local storage.
 

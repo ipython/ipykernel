@@ -12,6 +12,8 @@
 # stdlib
 import sys
 import warnings
+from collections.abc import Callable
+from typing import Any
 
 # Third-party
 import gi
@@ -32,20 +34,21 @@ warnings.warn(
 class GTKEmbed:
     """A class to embed a kernel into the GTK main event loop."""
 
-    def __init__(self, kernel):
+    # These two will later store the real gtk functions when we hijack them
+    gtk_main = None
+    gtk_main_quit: Callable[..., Any] | None = None
+
+    def __init__(self, kernel) -> None:
         """Initialize the embed."""
         self.kernel = kernel
-        # These two will later store the real gtk functions when we hijack them
-        self.gtk_main = None
-        self.gtk_main_quit = None
 
-    def start(self):
+    def start(self) -> None:
         """Starts the GTK main event loop and sets our kernel startup routine."""
         # Register our function to initiate the kernel and start gtk
         GObject.idle_add(self._wire_kernel)
         Gtk.main()
 
-    def _wire_kernel(self):
+    def _wire_kernel(self) -> bool:
         """Initializes the kernel inside GTK.
 
         This is meant to run only once at startup, so it does its job and
@@ -55,7 +58,7 @@ class GTKEmbed:
         GObject.timeout_add(int(1000 * self.kernel._poll_interval), self.iterate_kernel)
         return False
 
-    def iterate_kernel(self):
+    def iterate_kernel(self) -> bool:
         """Run one iteration of the kernel and return True.
 
         GTK timer functions must return True to be called again, so we make the
@@ -64,7 +67,7 @@ class GTKEmbed:
         self.kernel.do_one_iteration()
         return True
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the embed."""
         # FIXME: this one isn't getting called because we have no reliable
         # kernel shutdown.  We need to fix that: once the kernel has a
@@ -88,7 +91,7 @@ class GTKEmbed:
         - Gtk.main_quit
         """
 
-        def dummy(*args, **kw):
+        def dummy(*args, **kw) -> None:
             """No-op."""
 
         # save and trap main and main_quit from gtk

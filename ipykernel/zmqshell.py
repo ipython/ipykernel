@@ -58,6 +58,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
     _parent_header: contextvars.ContextVar[dict[str, Any]]
+    _parent_header_global: dict[str, Any]
     topic = CBytes(b"display_data")
 
     store_display_history = Bool(
@@ -70,7 +71,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
     # is processed. See ipykernel Issue 113 for a discussion.
     _thread_local = Any()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
@@ -84,7 +85,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
             return self._parent_header_global
 
     @parent_header.setter
-    def parent_header(self, value):
+    def parent_header(self, value) -> None:
         self._parent_header.set(value)
         self._parent_header_global = value
 
@@ -92,15 +93,15 @@ class ZMQDisplayPublisher(DisplayPublisher):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
         return self._parent_header.set(extract_header(parent))
 
-    def reset_thread_parent(self, token):
+    def reset_thread_parent(self, token) -> None:
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
         self._parent_header.reset(token)
 
-    def set_parent(self, parent):
+    def set_parent(self, parent) -> None:
         """Set the global and thread parent header."""
         self.parent_header = extract_header(parent)
 
-    def _flush_streams(self):
+    def _flush_streams(self) -> None:
         """flush IO Streams prior to display"""
         sys.stdout.flush()
         sys.stderr.flush()
@@ -127,7 +128,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         transient=None,
         update=False,
         **kwargs,
-    ):
+    ) -> None:
         """Publish a display-data message
 
         Parameters
@@ -191,7 +192,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
             ident=self.topic,
         )
 
-    def clear_output(self, wait=False):
+    def clear_output(self, wait=False) -> None:
         """Clear output associated with the current execution (cell).
 
         Parameters
@@ -219,7 +220,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
             ident=self.topic,
         )
 
-    def register_hook(self, hook):
+    def register_hook(self, hook) -> None:
         """
         Registers a hook with the thread-local storage.
 
@@ -238,7 +239,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
         """
         self._hooks.append(hook)
 
-    def unregister_hook(self, hook):
+    def unregister_hook(self, hook) -> bool:
         """
         Un-registers a hook with the thread-local storage.
 
@@ -272,7 +273,7 @@ class KernelMagics(Magics):
     # class, or that are unique to it.
 
     @line_magic
-    def edit(self, parameter_s="", last_call=None):
+    def edit(self, parameter_s="", last_call=None) -> None:
         """Bring up an editor and execute the resulting code.
 
         Usage:
@@ -370,7 +371,7 @@ class KernelMagics(Magics):
     # remote terminal
 
     @line_magic
-    def clear(self, arg_s):
+    def clear(self, arg_s) -> None:
         """Clear the terminal."""
         assert self.shell is not None
         if os.name == "posix":
@@ -407,13 +408,13 @@ class KernelMagics(Magics):
     if os.name == "posix":
 
         @line_magic
-        def man(self, arg_s):
+        def man(self, arg_s) -> None:
             """Find the man page for the given command and display in pager."""
             assert self.shell is not None
             page.page(self.shell.getoutput("man %s | col -b" % arg_s, split=False))
 
     @line_magic
-    def connect_info(self, arg_s):
+    def connect_info(self, arg_s) -> None:
         """Print information for connecting other clients to this kernel
 
         It will print the contents of this session's connection file, as well as
@@ -450,7 +451,7 @@ class KernelMagics(Magics):
         )
 
     @line_magic
-    def qtconsole(self, arg_s):
+    def qtconsole(self, arg_s) -> None:
         """Open a qtconsole connected to this kernel.
 
         Useful for connecting a qtconsole to running notebooks, for better
@@ -526,7 +527,10 @@ class KernelMagics(Magics):
 class ZMQInteractiveShell(InteractiveShell):
     """A subclass of InteractiveShell for ZMQ."""
 
-    def __init__(self, *args, **kwargs):
+    _parent_header: contextvars.ContextVar[dict[str, typing.Any]]
+    _parent_header_global: dict[str, typing.Any]
+
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         # Suppress Trio's signal handling warning on Windows with ProactorEventLoop
@@ -546,9 +550,7 @@ class ZMQInteractiveShell(InteractiveShell):
         if "IPKernelApp" not in self.config:
             self.config.IPKernelApp.tqdm = "dummy value for https://github.com/tqdm/tqdm/pull/1628"
 
-        self._parent_header: contextvars.ContextVar[dict[str, typing.Any]] = contextvars.ContextVar(
-            "parent_header"
-        )
+        self._parent_header = contextvars.ContextVar("parent_header")
         self._parent_header.set({})
         self._parent_header_global = {}
 
@@ -576,7 +578,7 @@ class ZMQInteractiveShell(InteractiveShell):
         return ZMQExitAutocall(self)
 
     @observe("exit_now")
-    def _update_exit_now(self, change):
+    def _update_exit_now(self, change) -> None:
         """stop eventloop when exit_now fires"""
         if change["new"]:
             if hasattr(self.kernel, "io_loop"):
@@ -601,7 +603,7 @@ class ZMQInteractiveShell(InteractiveShell):
         except ValueError as e:
             raise UsageError("%s" % e) from e
 
-    def init_environment(self):
+    def init_environment(self) -> None:
         """Configure the user's environment."""
         env = os.environ
         # These two ensure 'ls' produces nice coloring on BSD-derived systems
@@ -616,7 +618,7 @@ class ZMQInteractiveShell(InteractiveShell):
         env["PAGER"] = "cat"
         env["GIT_PAGER"] = "cat"
 
-    def payloadpage_page(self, strg, start=0, screen_lines=0, pager_cmd=None):
+    def payloadpage_page(self, strg, start=0, screen_lines=0, pager_cmd=None) -> None:
         """Print a string, piping through a pager.
 
         This version ignores the screen_lines and pager_cmd arguments and uses
@@ -644,12 +646,12 @@ class ZMQInteractiveShell(InteractiveShell):
         assert self.payload_manager is not None
         self.payload_manager.write_payload(payload)
 
-    def init_hooks(self):
+    def init_hooks(self) -> None:
         """Initialize hooks."""
         super().init_hooks()
         self.set_hook("show_in_pager", page.as_hook(self.payloadpage_page), 99)
 
-    def init_data_pub(self):
+    def init_data_pub(self) -> None:
         """Delay datapub init until request, for deprecation warnings"""
 
     @property
@@ -667,10 +669,10 @@ class ZMQInteractiveShell(InteractiveShell):
         return self._data_pub
 
     @data_pub.setter
-    def data_pub(self, pub):
+    def data_pub(self, pub) -> None:
         self._data_pub = pub
 
-    def ask_exit(self):
+    def ask_exit(self) -> None:
         """Engage the exit actions."""
         self.exit_now = not self.keepkernel_on_exit
         payload = dict(
@@ -685,7 +687,7 @@ class ZMQInteractiveShell(InteractiveShell):
         self._last_traceback_during_displayhook = False
         return super().run_cell(*args, **kwargs)
 
-    def _showtraceback(self, etype, evalue, stb):
+    def _showtraceback(self, etype, evalue, stb) -> None:
         # try to preserve ordering of tracebacks and print statements
         sys.stdout.flush()
         sys.stderr.flush()
@@ -719,7 +721,7 @@ class ZMQInteractiveShell(InteractiveShell):
         # exception object, so we shouldn't need to store it here.
         self._last_traceback = stb
 
-    def set_next_input(self, text, replace=False):
+    def set_next_input(self, text, replace=False) -> None:
         """Send the specified text to the frontend to be presented at the next
         input cell."""
         payload = dict(
@@ -737,11 +739,11 @@ class ZMQInteractiveShell(InteractiveShell):
             return self._parent_header_global
 
     @parent_header.setter
-    def parent_header(self, value):
+    def parent_header(self, value) -> None:
         self._parent_header.set(value)
         self._parent_header_global = value
 
-    def set_parent(self, parent):
+    def set_parent(self, parent) -> None:
         """Set the global and thread parent header for associating output with its triggering input."""
         self.parent_header = parent
         self.displayhook.set_parent(parent)  # type:ignore[attr-defined]
@@ -775,18 +777,18 @@ class ZMQInteractiveShell(InteractiveShell):
                 tokens.append((reset_thread, set_thread(parent)))
         return tuple(tokens)
 
-    def reset_thread_parent(self, tokens):
+    def reset_thread_parent(self, tokens) -> None:
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
         for reset, token in reversed(tokens):
             reset(token)
 
-    def init_magics(self):
+    def init_magics(self) -> None:
         """Initialize magics."""
         super().init_magics()
         self.register_magics(KernelMagics)
         self.magics_manager.register_alias("ed", "edit")
 
-    def init_virtualenv(self):
+    def init_virtualenv(self) -> None:
         """Initialize virtual environment."""
         # Overridden not to do virtualenv detection, because it's probably
         # not appropriate in a kernel. To use a kernel in a virtualenv, install

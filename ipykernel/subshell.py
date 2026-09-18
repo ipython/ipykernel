@@ -20,7 +20,7 @@ class SubshellThread(BaseThread):
         subshell_id: str,
         context: zmq.Context[Any],
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the thread."""
         super().__init__(name=f"subshell-{subshell_id}", **kwargs)
 

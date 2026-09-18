@@ -128,7 +128,7 @@ build = [
 [tool.mypy]
 files = "ipykernel"
 strict = true
-disable_error_code = ["no-untyped-def", "no-untyped-call", "import-not-found"]
+disable_error_code = ["no-untyped-def", "no-untyped-call", "import-not-found", "untyped-decorator"]
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 follow_imports = "normal"
 pretty = true

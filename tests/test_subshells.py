@@ -144,24 +144,27 @@ def test_comm_reply_follows_requesting_subshell():
 
         msg = execute_request(
             kc,
-            """import anyio, threading
-reply = anyio.Future()
+            """import asyncio, threading
+reply = asyncio.get_running_loop().create_future()
 request_thread = threading.get_ident()
 def on_reply(message):
     global callback_thread
     callback_thread = threading.get_ident()
-    reply.return_value = message['content']['data']['content']['value']
+    reply.set_result(message['content']['data']['content']['value'])
 widget.on_msg(on_reply)
 widget.send({'method': 'custom', 'content': {'id': 'request-1', 'operation': 'get'}})
-with anyio.fail_after(2):
-    await reply.wait()
-assert reply.return_value == 42
+assert await asyncio.wait_for(reply, 2) == 42
 assert callback_thread == request_thread
 """,
             None,
         )
         while True:
             outgoing = kc.get_iopub_msg(timeout=10)
+            if (
+                outgoing["msg_type"] == "error"
+                and outgoing["parent_header"].get("msg_id") == msg["header"]["msg_id"]
+            ):
+                raise AssertionError("\n".join(outgoing["content"]["traceback"]))
             if (
                 outgoing["msg_type"] == "comm_msg"
                 and outgoing["parent_header"].get("msg_id") == msg["header"]["msg_id"]

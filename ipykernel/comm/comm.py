@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import uuid
+from threading import Lock
 from typing import Optional
 from warnings import warn
 
@@ -15,11 +16,31 @@ from ipykernel.jsonutil import json_clean
 from ipykernel.kernelbase import Kernel
 
 
+def _request_id(data):
+    if isinstance(data, dict):
+        content = data.get("content")
+        if isinstance(content, dict) and isinstance(content.get("id"), str):
+            return content["id"]
+    return None
+
+
 # this is the class that will be created if we do comm.create_comm
 class BaseComm(comm.base_comm.BaseComm):
     """The base class for comms."""
 
     kernel: Optional["Kernel"] = None
+
+    def __init__(self, *args, **kwargs):
+        self._reply_subshell_lock = Lock()
+        self._reply_subshell_ids = {}
+        super().__init__(*args, **kwargs)
+
+    def _reply_subshell_for(self, data, default):
+        request_id = _request_id(data)
+        with self._reply_subshell_lock:
+            if request_id is not None and request_id in self._reply_subshell_ids:
+                return self._reply_subshell_ids.pop(request_id)
+            return getattr(self, "_reply_subshell_id", default)
 
     def publish_msg(self, msg_type, data=None, metadata=None, buffers=None, **keys):
         """Helper for sending a comm message on IOPub"""
@@ -34,12 +55,22 @@ class BaseComm(comm.base_comm.BaseComm):
             self.kernel = Kernel.instance()
 
         assert self.kernel.session is not None
+        parent = self.kernel.get_parent()
+        if parent.get("header"):
+            # A comm can be used from a different subshell than the one that
+            # created it. Route the frontend reply to the loop that sent it.
+            subshell_id = parent["header"].get("subshell_id")
+            request_id = _request_id(data)
+            with self._reply_subshell_lock:
+                self._reply_subshell_id = subshell_id
+                if request_id is not None:
+                    self._reply_subshell_ids[request_id] = subshell_id
         self.kernel.session.send(
             self.kernel.iopub_socket,
             msg_type,
             content,
             metadata=json_clean(metadata),
-            parent=self.kernel.get_parent(),
+            parent=parent,
             ident=self.topic,
             buffers=buffers,
         )

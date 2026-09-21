@@ -33,7 +33,7 @@ repos:
         additional_dependencies: [mdformat-footnote]
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: "v3.9.6"
+    rev: "v3.9.8"
     hooks:
       - id: prettier
         types_or: [yaml, html, json]
@@ -94,7 +94,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.7
+    rev: v0.16.8
     hooks:
       - id: ruff-check
         types_or: [python, jupyter]

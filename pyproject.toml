@@ -40,7 +40,7 @@ Documentation = "https://ipykernel.readthedocs.io"
 Source = "https://github.com/ipython/ipykernel"
 Tracker = "https://github.com/ipython/ipykernel/issues"
 
-[project.optional-dependencies]
+[dependency-groups]
 docs = [
   "sphinx",
   "myst_parser",
@@ -84,26 +84,26 @@ path = "ipykernel/_version.py"
 "./ipykernel_launcher.py" = "ipykernel_launcher.py"
 
 [tool.hatch.envs.docs]
-features = ["docs"]
+dependency-groups = ["docs"]
 [tool.hatch.envs.docs.scripts]
 build = "make -C docs html SPHINXOPTS='-W'"
 api = "sphinx-apidoc -o docs/api -f -E ipykernel tests ipykernel/datapub.py ipykernel/pickleutil.py ipykernel/serialize.py ipykernel/gui ipykernel/pylab ipykernel/utils.py"
 
 [tool.hatch.envs.test]
-features = ["test"]
+dependency-groups = ["test"]
 [tool.hatch.envs.test.scripts]
 list = "python -m pip freeze"
 test = "python -m pytest -vv {args}"
 nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov]
-features = ["test", "cov"]
+dependency-groups = ["test", "cov"]
 [tool.hatch.envs.cov.scripts]
 test = "python -m pytest -vv --cov ipykernel --cov-branch --cov-report term-missing:skip-covered {args}"
 nowarn = "test -W default {args}"
 
 [tool.hatch.envs.cov.overrides]
-env.QT.features = [
+env.QT.dependency-groups = [
     { value = "pyqt5", if = ["qt5"] },
     { value = "pyside6", if = ["qt6"] },
 ]

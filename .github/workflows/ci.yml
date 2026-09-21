@@ -177,7 +177,7 @@ jobs:
 
       - name: Install the Python dependencies without debugpy
         run: |
-          pip install .[test]
+          pip install . --group test
           pip uninstall --yes debugpy
 
       - name: List installed packages
@@ -253,6 +253,8 @@ jobs:
     steps:
       - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
       - uses: jupyterlab/maintainer-tools/.github/actions/test-sdist@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        with:
+          package_spec: ". --group test"
 
   link_check:
     runs-on: ubuntu-latest

@@ -567,10 +567,11 @@ class Kernel(SingletonConfigurable):
         """register dispatchers for streams"""
         self.io_loop = ioloop.IOLoop.current()
 
+        # Create the lock before the control_stream, so the lock is guaranteed to be available.
+        self._control_lock = asyncio.Lock()
+
         if self.control_stream:
             self.control_stream.on_recv(self.dispatch_control, copy=False)
-
-        self._control_lock = asyncio.Lock()
 
         if self.shell_stream:
             if self.shell_channel_thread:

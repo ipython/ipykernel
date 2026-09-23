@@ -2,10 +2,12 @@
 
 import asyncio
 import os
+from unittest import mock
 
 import pytest
 import zmq
 from IPython.core.history import DummyDB
+from zmq.eventloop.zmqstream import ZMQStream
 
 from ipykernel.comm.comm import BaseComm
 from ipykernel.ipkernel import IPythonKernel, _create_comm
@@ -211,3 +213,106 @@ async def test_do_debug_request(ipkernel: IPythonKernel) -> None:
     msg = ipkernel.session.msg("debug_request", {})
     ipkernel.session.serialize(msg)
     await ipkernel.do_debug_request(msg)
+
+
+# The `debugger` property short-circuits to None without debugpy, and
+# `debugger_class` validates against the real Debugger, so these need it.
+debugpy = pytest.importorskip("debugpy", reason="debugpy is not installed")
+
+
+def fake_debugger_class(record=None):
+    """A Debugger subclass that records its args instead of touching debugpy."""
+    from ipykernel.debugger import Debugger
+
+    class FakeDebugger(Debugger):
+        def __init__(self, *args):
+            if record is not None:
+                record.append(args)
+            self.args = args
+
+    return FakeDebugger
+
+
+def test_debugger_class_is_still_a_trait() -> None:
+    """Subclasses and callers that set `debugger_class` must keep working."""
+    assert IPythonKernel.class_traits()["debugger_class"] is not None
+
+    fake = fake_debugger_class()
+    kernel = MockIPyKernel(debugger_class=fake)
+    assert kernel.debugger_class is fake
+    # Explicitly chosen, so built eagerly: the class is already imported.
+    assert isinstance(kernel._debugger, fake)
+    kernel.destroy()
+
+
+def test_debugger_class_default_is_lazy() -> None:
+    """Merely creating a kernel must not resolve the default debugger class."""
+    kernel = MockIPyKernel()
+    assert "debugger_class" not in kernel._trait_values
+    assert kernel._debugger is None
+
+    from ipykernel.debugger import Debugger
+
+    assert kernel.debugger_class is Debugger
+    kernel.destroy()
+
+
+def test_debugger_class_subclass_override() -> None:
+    fake = fake_debugger_class()
+
+    class MyKernel(MockIPyKernel):
+        debugger_class = fake
+
+    kernel = MyKernel()
+    assert kernel.debugger_class is fake
+    assert isinstance(kernel.debugger, fake)
+    kernel.destroy()
+
+
+def test_assigned_debugger_gets_its_stopped_queue_polled(ipkernel, monkeypatch) -> None:
+    """Assigning `kernel.debugger` must not skip the poll_stopped_queue task."""
+    scheduled = []
+    monkeypatch.setattr(
+        "ipykernel.ipkernel.asyncio.run_coroutine_threadsafe",
+        lambda coro, loop: scheduled.append(coro) or coro.close(),
+    )
+
+    # The poll needs something to poll from and a loop to run on.
+    ipkernel.debugpy_stream = mock.MagicMock(spec=ZMQStream)
+    ipkernel.control_thread = mock.MagicMock()
+
+    fake = fake_debugger_class()
+    ipkernel.debugger = fake.__new__(fake)
+    assert len(scheduled) == 1
+
+    # Idempotent: reassigning does not stack up a second poll task.
+    ipkernel.debugger = fake.__new__(fake)
+    assert len(scheduled) == 1
+
+
+def test_debugger_init_failure_is_neither_sticky_nor_silent(ipkernel, caplog) -> None:
+    """A failing debugger class must not silently disable debugging forever."""
+    from ipykernel.debugger import Debugger
+
+    attempts = []
+
+    class BrokenDebugger(Debugger):
+        def __init__(self, *args):
+            attempts.append(args)
+            msg = "boom"
+            raise RuntimeError(msg)
+
+    ipkernel.debugger_class = BrokenDebugger
+
+    with pytest.raises(RuntimeError, match="boom"):
+        _ = ipkernel.debugger
+    assert "Failed to initialize the debugger" in caplog.text
+
+    # Not sticky: a second request retries rather than quietly returning None.
+    with pytest.raises(RuntimeError, match="boom"):
+        _ = ipkernel.debugger
+    assert len(attempts) == 2
+
+    # And it recovers once the cause is gone.
+    ipkernel.debugger_class = fake_debugger_class()
+    assert isinstance(ipkernel.debugger, ipkernel.debugger_class)

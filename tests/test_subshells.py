@@ -133,6 +133,60 @@ def test_thread_ids():
         delete_subshell_helper(kc, subshell_id)
 
 
+def test_comm_reply_follows_requesting_subshell():
+    with new_kernel() as kc:
+        subshell_id = create_subshell_helper(kc)["subshell_id"]
+        comm_id = execute_request_subshell_id(
+            kc,
+            "import comm; widget = comm.create_comm(target_name='comm-thread-test'); print(widget.comm_id)",
+            subshell_id,
+        )
+
+        msg = execute_request(
+            kc,
+            """import asyncio, threading
+reply = asyncio.get_running_loop().create_future()
+request_thread = threading.get_ident()
+def on_reply(message):
+    global callback_thread
+    callback_thread = threading.get_ident()
+    reply.set_result(message['content']['data']['content']['value'])
+widget.on_msg(on_reply)
+widget.send({'method': 'custom', 'content': {'id': 'request-1', 'operation': 'get'}})
+assert await asyncio.wait_for(reply, 2) == 42
+assert callback_thread == request_thread
+""",
+            None,
+        )
+        while True:
+            outgoing = kc.get_iopub_msg(timeout=10)
+            if (
+                outgoing["msg_type"] == "error"
+                and outgoing["parent_header"].get("msg_id") == msg["header"]["msg_id"]
+            ):
+                raise AssertionError("\n".join(outgoing["content"]["traceback"]))
+            if (
+                outgoing["msg_type"] == "comm_msg"
+                and outgoing["parent_header"].get("msg_id") == msg["header"]["msg_id"]
+            ):
+                break
+        assert outgoing["content"]["comm_id"] == comm_id
+
+        response = kc.session.msg(
+            "comm_msg",
+            {
+                "comm_id": comm_id,
+                "data": {"method": "custom", "content": {"id": "request-1", "value": 42}},
+            },
+        )
+        response["header"]["subshell_id"] = subshell_id
+        kc.shell_channel.send(response)
+        reply_msg = get_reply(kc, msg["header"]["msg_id"], timeout=5)
+        assert reply_msg["content"]["status"] == "ok", reply_msg["content"]
+        wait_for_idle(kc, msg["header"]["msg_id"])
+        delete_subshell_helper(kc, subshell_id)
+
+
 @pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
 @pytest.mark.parametrize("overlap", [True, False])
 def test_run_concurrently_sequence(are_subshells, overlap, request):

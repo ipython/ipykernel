@@ -58,6 +58,35 @@ def test_simple_print():
         _check_master(kc, expected=True)
 
 
+def test_async_cell_waiting_for_comm_reply():
+    with new_kernel() as kc:
+        msg_id = kc.execute(
+            """import asyncio, comm
+reply = asyncio.get_running_loop().create_future()
+widget = comm.create_comm(target_name='comm-reply-test')
+widget.on_msg(lambda msg: reply.set_result(msg['content']['data']['value']))
+result = await asyncio.wait_for(reply, 5)
+assert result == 42
+"""
+        )
+        while True:
+            msg = kc.get_iopub_msg(timeout=10)
+            if msg["msg_type"] == "error" and msg["parent_header"].get("msg_id") == msg_id:
+                raise AssertionError("\n".join(msg["content"]["traceback"]))
+            if msg["msg_type"] == "comm_open" and msg["parent_header"].get("msg_id") == msg_id:
+                comm_id = msg["content"]["comm_id"]
+                break
+
+        next_msg_id = kc.execute("assert result == 42")
+        kc.shell_channel.send(
+            kc.session.msg("comm_msg", {"comm_id": comm_id, "data": {"value": 42}})
+        )
+        reply_msg = get_reply(kc, msg_id, timeout=10)
+        assert reply_msg["content"]["status"] == "ok", reply_msg["content"]
+        next_reply = get_reply(kc, next_msg_id, timeout=10)
+        assert next_reply["content"]["status"] == "ok", next_reply["content"]
+
+
 @pytest.mark.parametrize(
     ("code", "expect_error_status"),
     [

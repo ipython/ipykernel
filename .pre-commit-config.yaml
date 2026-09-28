@@ -22,7 +22,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.38.0
+    rev: 0.38.2
     hooks:
       - id: check-github-workflows
 
@@ -33,7 +33,7 @@ repos:
         additional_dependencies: [mdformat-footnote]
 
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: "v3.9.8"
+    rev: "v3.9.9"
     hooks:
       - id: prettier
         types_or: [yaml, html, json]
@@ -94,7 +94,7 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.8
+    rev: v0.16.9
     hooks:
       - id: ruff-check
         types_or: [python, jupyter]

@@ -2,6 +2,53 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 7.4.0
+
+([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.3.0...e0658fdb9bc0a0659cbe43ef22a58293e2bf917c))
+
+### New features added
+
+- Enable setting and resetting a thread-local parent header [#1546](https://github.com/ipython/ipykernel/pull/1546) ([@jasongrout](https://github.com/jasongrout), [@minrk](https://github.com/minrk))
+
+### Enhancements made
+
+- Allow async cell to process Comm messages [#1565](https://github.com/ipython/ipykernel/pull/1565) ([@davidbrochart](https://github.com/davidbrochart), [@JohanMabille](https://github.com/JohanMabille), [@kylebarron](https://github.com/kylebarron))
+- Bump minimum Python to 3.11, update linting, drop dead branches [#1553](https://github.com/ipython/ipykernel/pull/1553) ([@Carreau](https://github.com/Carreau), [@minrk](https://github.com/minrk))
+- Defer the psutil import until it is actually needed [#1551](https://github.com/ipython/ipykernel/pull/1551) ([@Carreau](https://github.com/Carreau), [@minrk](https://github.com/minrk))
+- validate variable names in copyToGlobals debug handler [#1537](https://github.com/ipython/ipykernel/pull/1537) ([@sahvx655-wq](https://github.com/sahvx655-wq), [@JohanMabille](https://github.com/JohanMabille))
+- create debugger tmp directory with 0o700 permissions [#1530](https://github.com/ipython/ipykernel/pull/1530) ([@sahvx655-wq](https://github.com/sahvx655-wq), [@JohanMabille](https://github.com/JohanMabille), [@minrk](https://github.com/minrk))
+- Update the `supported_encryption` to use a list as per JEP latest state [#1528](https://github.com/ipython/ipykernel/pull/1528) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau), [@JohanMabille](https://github.com/JohanMabille))
+- Make psutil optional at runtime [#1527](https://github.com/ipython/ipykernel/pull/1527) ([@yves-surrel](https://github.com/yves-surrel), [@ianthomas23](https://github.com/ianthomas23))
+
+### Bugs fixed
+
+- Create \_control_lock before its users [#1568](https://github.com/ipython/ipykernel/pull/1568) ([@tovrstra](https://github.com/tovrstra), [@minrk](https://github.com/minrk))
+- Reply with busy -> error -> idle if subshell unknown [#1558](https://github.com/ipython/ipykernel/pull/1558) ([@krassowski](https://github.com/krassowski), [@Carreau](https://github.com/Carreau), [@JohanMabille](https://github.com/JohanMabille))
+- Send the shell reply through the ZMQStream instead of raw on its socket [#1529](https://github.com/ipython/ipykernel/pull/1529) ([@BoykoNeov](https://github.com/BoykoNeov), [@ZupoLlask](https://github.com/ZupoLlask), [@claude](https://github.com/claude), [@ianthomas23](https://github.com/ianthomas23), [@practicusai](https://github.com/practicusai), [@thomasjm](https://github.com/thomasjm))
+- Enable ProactorEventLoop on windows for ipykernel [#1469](https://github.com/ipython/ipykernel/pull/1469) ([@NewUserHa](https://github.com/NewUserHa), [@BoykoNeov](https://github.com/BoykoNeov), [@Gravifer](https://github.com/Gravifer), [@ZupoLlask](https://github.com/ZupoLlask), [@claude](https://github.com/claude), [@ianthomas23](https://github.com/ianthomas23))
+
+### Maintenance and upkeep improvements
+
+- try to fix publish workflow [#1571](https://github.com/ipython/ipykernel/pull/1571) ([@minrk](https://github.com/minrk))
+- chore: update pre-commit hooks [#1570](https://github.com/ipython/ipykernel/pull/1570) ([@davidbrochart](https://github.com/davidbrochart))
+- Use dependency groups instead of extras [#1563](https://github.com/ipython/ipykernel/pull/1563) ([@davidbrochart](https://github.com/davidbrochart))
+- MAINT: Switch zizmor to the github action [#1561](https://github.com/ipython/ipykernel/pull/1561) ([@Carreau](https://github.com/Carreau), [@Yann-P](https://github.com/Yann-P))
+- Fix downstream test: install ipykernel from source for `jupyter_kernel_test` [#1560](https://github.com/ipython/ipykernel/pull/1560) ([@glaziermag](https://github.com/glaziermag), [@Carreau](https://github.com/Carreau), [@claude](https://github.com/claude))
+- Add Zizmor [#1556](https://github.com/ipython/ipykernel/pull/1556) ([@Carreau](https://github.com/Carreau), [@Yann-P](https://github.com/Yann-P))
+- [CI] remove type:ignore, likely due to new pyzmq [#1552](https://github.com/ipython/ipykernel/pull/1552) ([@Carreau](https://github.com/Carreau), [@minrk](https://github.com/minrk))
+- Fix typing issue due to new releases [#1544](https://github.com/ipython/ipykernel/pull/1544) ([@Carreau](https://github.com/Carreau), [@krassowski](https://github.com/krassowski))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2026-06-10&to=2026-09-29&type=c))
+
+@BoykoNeov ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ABoykoNeov+updated%3A2026-06-10..2026-09-29&type=Issues)) | @Carreau ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2026-06-10..2026-09-29&type=Issues)) | @davidbrochart ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Adavidbrochart+updated%3A2026-06-10..2026-09-29&type=Issues)) | @glaziermag ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aglaziermag+updated%3A2026-06-10..2026-09-29&type=Issues)) | @Gravifer ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AGravifer+updated%3A2026-06-10..2026-09-29&type=Issues)) | @ianthomas23 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2026-06-10..2026-09-29&type=Issues)) | @jasongrout ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ajasongrout+updated%3A2026-06-10..2026-09-29&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2026-06-10..2026-09-29&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2026-06-10..2026-09-29&type=Issues)) | @kylebarron ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akylebarron+updated%3A2026-06-10..2026-09-29&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2026-06-10..2026-09-29&type=Issues)) | @NewUserHa ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ANewUserHa+updated%3A2026-06-10..2026-09-29&type=Issues)) | @practicusai ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apracticusai+updated%3A2026-06-10..2026-09-29&type=Issues)) | @sahvx655-wq ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Asahvx655-wq+updated%3A2026-06-10..2026-09-29&type=Issues)) | @Scott5S ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AScott5S+updated%3A2026-06-10..2026-09-29&type=Issues)) | @thomasjm ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Athomasjm+updated%3A2026-06-10..2026-09-29&type=Issues)) | @tovrstra ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Atovrstra+updated%3A2026-06-10..2026-09-29&type=Issues)) | @Yann-P ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AYann-P+updated%3A2026-06-10..2026-09-29&type=Issues)) | @yves-surrel ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Ayves-surrel+updated%3A2026-06-10..2026-09-29&type=Issues)) | @ZupoLlask ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AZupoLlask+updated%3A2026-06-10..2026-09-29&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 7.3.0
 
 ([Full Changelog](https://github.com/ipython/ipykernel/compare/v7.2.0...28e9cf822f3f3fd4f92c58db1213f7a54cf43a96))
@@ -51,8 +98,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/ipython/ipykernel/graphs/contributors?from=2026-02-06&to=2026-06-10&type=c))
 
 @adityawasudeo ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aadityawasudeo+updated%3A2026-02-06..2026-06-10&type=Issues)) | @Carreau ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3ACarreau+updated%3A2026-02-06..2026-06-10&type=Issues)) | @erawn ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aerawn+updated%3A2026-02-06..2026-06-10&type=Issues)) | @goelakash ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Agoelakash+updated%3A2026-02-06..2026-06-10&type=Issues)) | @ianthomas23 ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aianthomas23+updated%3A2026-02-06..2026-06-10&type=Issues)) | @JohanMabille ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AJohanMabille+updated%3A2026-02-06..2026-06-10&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Akrassowski+updated%3A2026-02-06..2026-06-10&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Aminrk+updated%3A2026-02-06..2026-06-10&type=Issues)) | @P4X-ng ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3AP4X-ng+updated%3A2026-02-06..2026-06-10&type=Issues)) | @pelson ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Apelson+updated%3A2026-02-06..2026-06-10&type=Issues)) | @rgbkrk ([activity](https://github.com/search?q=repo%3Aipython%2Fipykernel+involves%3Argbkrk+updated%3A2026-02-06..2026-06-10&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 7.2.0
 

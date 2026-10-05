@@ -361,6 +361,69 @@ f(2, 3)"""
     assert reply["body"]["data"] == {"text/plain": locals_[0]["value"]}
 
 
+def test_rich_inspect_at_breakpoint_non_literal_repr(kernel_with_debug):
+    # The rich representation comes back from debugpy as a string. A value in
+    # it whose repr is an expression must be read as data, not evaluated.
+    code = """class Expr:
+    def __repr__(self):
+        return "len('abc')"
+
+class Rich:
+    def _repr_mimebundle_(self, include=None, exclude=None):
+        return {"text/plain": Expr()}
+
+def f(a):
+    b = a
+    return b
+
+f(Rich())"""
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "some path"
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 10}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
+
+    kernel_with_debug.execute(code)
+
+    if not debugpy:
+        # Cannot stop on breakpoint if debugpy not installed
+        return
+
+    # Wait for stop on breakpoint
+    msg: dict = {"msg_type": "", "content": {}}
+    while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+
+    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})["body"][
+        "stackFrames"
+    ]
+
+    reply = wait_for_debug_request(
+        kernel_with_debug,
+        "richInspectVariables",
+        {"variableName": "a", "frameId": stacks[0]["id"]},
+    )
+
+    assert reply["success"]
+    assert reply["body"] == {"data": {}, "metadata": {}}
+
+
 def test_convert_to_long_pathname():
     if sys.platform == "win32":
         from ipykernel.compiler import _convert_to_long_pathname

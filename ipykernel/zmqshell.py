@@ -57,7 +57,7 @@ class ZMQDisplayPublisher(DisplayPublisher):
 
     session = Instance(Session, allow_none=True)
     pub_socket = Any(allow_none=True)
-    _parent_header: contextvars.ContextVar[dict[str, Any]]
+    _parent_header: contextvars.ContextVar[tuple[int, dict[str, Any]]]
     topic = CBytes(b"display_data")
 
     store_display_history = Bool(
@@ -73,24 +73,27 @@ class ZMQDisplayPublisher(DisplayPublisher):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._parent_header = contextvars.ContextVar("parent_header")
-        self._parent_header.set({})
+        self._parent_header.set((threading.get_ident(), {}))
         self._parent_header_global = {}
 
     @property
     def parent_header(self):
         try:
-            return self._parent_header.get()
+            thread_id, parent_header = self._parent_header.get()
         except LookupError:
             return self._parent_header_global
+        if thread_id != threading.get_ident():
+            return self._parent_header_global
+        return parent_header
 
     @parent_header.setter
     def parent_header(self, value):
-        self._parent_header.set(value)
+        self._parent_header.set((threading.get_ident(), value))
         self._parent_header_global = value
 
     def set_thread_parent(self, parent):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
-        return self._parent_header.set(extract_header(parent))
+        return self._parent_header.set((threading.get_ident(), extract_header(parent)))
 
     def reset_thread_parent(self, token):
         """Reset the parent header to undo the set_thread_parent call that returned the token."""
@@ -546,10 +549,10 @@ class ZMQInteractiveShell(InteractiveShell):
         if "IPKernelApp" not in self.config:
             self.config.IPKernelApp.tqdm = "dummy value for https://github.com/tqdm/tqdm/pull/1628"
 
-        self._parent_header: contextvars.ContextVar[dict[str, typing.Any]] = contextvars.ContextVar(
-            "parent_header"
+        self._parent_header: contextvars.ContextVar[tuple[int, dict[str, typing.Any]]] = (
+            contextvars.ContextVar("parent_header")
         )
-        self._parent_header.set({})
+        self._parent_header.set((threading.get_ident(), {}))
         self._parent_header_global = {}
 
     displayhook_class = Type(ZMQShellDisplayHook)
@@ -732,13 +735,16 @@ class ZMQInteractiveShell(InteractiveShell):
     @property
     def parent_header(self):
         try:
-            return self._parent_header.get()
+            thread_id, parent_header = self._parent_header.get()
         except LookupError:
             return self._parent_header_global
+        if thread_id != threading.get_ident():
+            return self._parent_header_global
+        return parent_header
 
     @parent_header.setter
     def parent_header(self, value):
-        self._parent_header.set(value)
+        self._parent_header.set((threading.get_ident(), value))
         self._parent_header_global = value
 
     def set_parent(self, parent):
@@ -764,7 +770,12 @@ class ZMQInteractiveShell(InteractiveShell):
 
     def set_thread_parent(self, parent):
         """Set the parent header for only the current thread associating output with its triggering input"""
-        tokens = [(self._parent_header.reset, self._parent_header.set(parent))]
+        tokens = [
+            (
+                self._parent_header.reset,
+                self._parent_header.set((threading.get_ident(), parent)),
+            )
+        ]
         objs = [self.displayhook, self.display_pub, sys.stdout, sys.stderr]
         if hasattr(self, "_data_pub"):
             objs.append(self.data_pub)

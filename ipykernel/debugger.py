@@ -2,6 +2,7 @@
 
 import os
 import re
+import stat
 import sys
 import typing as t
 from pathlib import Path
@@ -304,6 +305,18 @@ class DebugpyClient:
         return rep
 
 
+def _is_own_directory(path):
+    """Whether path is a directory, and not a symlink, belonging to this user."""
+    try:
+        st = os.lstat(path)
+    except OSError:
+        return False
+    if not stat.S_ISDIR(st.st_mode):
+        return False
+    getuid = getattr(os, "getuid", None)
+    return getuid is None or st.st_uid == getuid()
+
+
 class Debugger:
     """The debugger class."""
 
@@ -427,8 +440,16 @@ class Debugger:
         """Start the debugger."""
         if not self.debugpy_initialized:
             tmp_dir = get_tmp_directory()
-            if not Path(tmp_dir).exists():
+            try:
                 Path(tmp_dir).mkdir(mode=0o700, parents=True)
+            except FileExistsError:
+                if not _is_own_directory(tmp_dir):
+                    self.log.error(
+                        "Not starting the debugger: %s already exists and is not a"
+                        " directory belonging to this user",
+                        tmp_dir,
+                    )
+                    return False
             host, port = self.debugpy_client.get_host_port()
             code = "import debugpy;"
             code += 'debugpy.listen(("' + host + '",' + port + "))"
@@ -470,7 +491,9 @@ class Debugger:
         code = message["arguments"]["code"]
         file_name = get_file_name(code)
 
-        with open(file_name, "w", encoding="utf-8") as f:  # noqa: ASYNC230
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(file_name, flags, 0o600)
+        with open(fd, "w", encoding="utf-8") as f:  # noqa: ASYNC230
             f.write(code)
 
         return {

@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import pytest
@@ -366,6 +367,41 @@ def test_convert_to_long_pathname():
         from ipykernel.compiler import _convert_to_long_pathname
 
         _convert_to_long_pathname(__file__)
+
+
+@pytest.mark.skipif(debugpy is None, reason="requires debugpy")
+@pytest.mark.skipif(sys.platform == "win32", reason="symlinks need privileges on windows")
+def test_start_rejects_foreign_tmp_directory(tmp_path, monkeypatch):
+    from ipykernel.debugger import Debugger
+
+    # <tempdir>/ipykernel_<pid> is predictable, so on a shared temp directory
+    # another user can get there first and point it at a path they own.
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    planted = tmp_path / "ipykernel_1"
+    planted.symlink_to(elsewhere, target_is_directory=True)
+    monkeypatch.setattr("ipykernel.debugger.get_tmp_directory", lambda: str(planted))
+
+    debugger = Debugger(logging.getLogger(__name__), None, lambda event: None, None, None, [])
+    assert debugger.start() is False
+
+
+@pytest.mark.skipif(debugpy is None, reason="requires debugpy")
+@pytest.mark.skipif(sys.platform == "win32", reason="O_NOFOLLOW is posix only")
+async def test_dump_cell_does_not_follow_symlink(tmp_path, monkeypatch):
+    from ipykernel.debugger import Debugger
+
+    outside = tmp_path / "outside.py"
+    outside.write_text("# untouched\n")
+    cell_file = tmp_path / "cell.py"
+    cell_file.symlink_to(outside)
+    monkeypatch.setenv("IPYKERNEL_CELL_NAME", str(cell_file))
+
+    debugger = Debugger(logging.getLogger(__name__), None, lambda event: None, None, None, [])
+    message = {"seq": 1, "command": "dumpCell", "arguments": {"code": "x = 1\n"}}
+    with pytest.raises(OSError, match="symbolic link"):
+        await debugger.dumpCell(message)
+    assert outside.read_text() == "# untouched\n"
 
 
 def test_copy_to_globals(kernel_with_debug):

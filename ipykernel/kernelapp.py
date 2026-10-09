@@ -331,7 +331,13 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
     def init_connection_file(self):
         """Initialize our connection file."""
         if not self.connection_file:
+            # Nobody gave us a name, so this file is ours to create. Don't go
+            # looking for the name we just invented: a file carrying it in the
+            # working directory is not this kernel's connection info.
             self.connection_file = "kernel-%s.json" % os.getpid()
+            Path(self.abs_connection_file).parent.mkdir(mode=0o700, exist_ok=True, parents=True)
+            atexit.register(self.cleanup_connection_file)
+            return
         try:
             self.connection_file = filefind(self.connection_file, [".", self.connection_dir])
         except OSError:

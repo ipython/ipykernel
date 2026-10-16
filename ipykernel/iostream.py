@@ -539,10 +539,10 @@ class OutStream(TextIOBase):
         self.pub_thread = pub_thread
         self.name = name
         self.topic = b"stream." + name.encode()
-        self._parent_header: contextvars.ContextVar[dict[str, Any]] = contextvars.ContextVar(
-            "parent_header"
+        self._parent_header: contextvars.ContextVar[tuple[int, dict[str, Any]]] = (
+            contextvars.ContextVar("parent_header")
         )
-        self._parent_header.set({})
+        self._parent_header.set((threading.get_ident(), {}))
         self._parent_header_global = {}
         self._master_pid = os.getpid()
         self._flush_pending = False
@@ -598,14 +598,19 @@ class OutStream(TextIOBase):
     def parent_header(self):
         try:
             # asyncio or thread-specific
-            return self._parent_header.get()
+            thread_id, parent_header = self._parent_header.get()
         except LookupError:
             # global (fallback)
             return self._parent_header_global
+        if thread_id != threading.get_ident():
+            # Contexts can be inherited by a new thread, but the parent is
+            # thread-specific unless explicitly set in that thread.
+            return self._parent_header_global
+        return parent_header
 
     @parent_header.setter
     def parent_header(self, value):
-        self._parent_header.set(value)
+        self._parent_header.set((threading.get_ident(), value))
         self._parent_header_global = value
 
     def isatty(self):
@@ -634,7 +639,7 @@ class OutStream(TextIOBase):
 
     def set_thread_parent(self, parent):
         """Set the parent header for the calling thread only. Returns a reset token that can be used with reset_thread_parent."""
-        return self._parent_header.set(extract_header(parent))
+        return self._parent_header.set((threading.get_ident(), extract_header(parent)))
 
     def reset_thread_parent(self, token):
         """Reset the parent header to undo the set_thread_parent call that returned the token."""

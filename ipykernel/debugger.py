@@ -1,5 +1,6 @@
 """Debugger implementation for the IPython kernel."""
 
+import ast
 import os
 import re
 import sys
@@ -665,7 +666,12 @@ class Debugger:
                 }
             )
             if reply["success"]:
-                repr_data, repr_metadata = eval(reply["body"]["result"], {}, {})
+                # The result is the repr of a (data, metadata) tuple, read it
+                # as a literal so nothing in it gets evaluated here.
+                try:
+                    repr_data, repr_metadata = ast.literal_eval(reply["body"]["result"])
+                except (ValueError, TypeError, SyntaxError):
+                    self.log.debug("Could not parse rich representation of %s", var_name)
 
         body = {
             "data": repr_data,

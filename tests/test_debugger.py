@@ -1,3 +1,4 @@
+import logging
 import sys
 
 import pytest
@@ -361,11 +362,109 @@ f(2, 3)"""
     assert reply["body"]["data"] == {"text/plain": locals_[0]["value"]}
 
 
+def test_rich_inspect_at_breakpoint_non_literal_repr(kernel_with_debug):
+    # The rich representation comes back from debugpy as a string. A value in
+    # it whose repr is an expression must be read as data, not evaluated.
+    code = """class Expr:
+    def __repr__(self):
+        return "len('abc')"
+
+class Rich:
+    def _repr_mimebundle_(self, include=None, exclude=None):
+        return {"text/plain": Expr()}
+
+def f(a):
+    b = a
+    return b
+
+f(Rich())"""
+
+    r = wait_for_debug_request(kernel_with_debug, "dumpCell", {"code": code})
+    if debugpy:
+        source = r["body"]["sourcePath"]
+    else:
+        assert r == {}
+        source = "some path"
+
+    wait_for_debug_request(
+        kernel_with_debug,
+        "setBreakpoints",
+        {
+            "breakpoints": [{"line": 10}],
+            "source": {"path": source},
+            "sourceModified": False,
+        },
+    )
+
+    wait_for_debug_request(kernel_with_debug, "debugInfo")
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone")
+
+    kernel_with_debug.execute(code)
+
+    if not debugpy:
+        # Cannot stop on breakpoint if debugpy not installed
+        return
+
+    # Wait for stop on breakpoint
+    msg: dict = {"msg_type": "", "content": {}}
+    while msg.get("msg_type") != "debug_event" or msg["content"].get("event") != "stopped":
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+
+    stacks = wait_for_debug_request(kernel_with_debug, "stackTrace", {"threadId": 1})["body"][
+        "stackFrames"
+    ]
+
+    reply = wait_for_debug_request(
+        kernel_with_debug,
+        "richInspectVariables",
+        {"variableName": "a", "frameId": stacks[0]["id"]},
+    )
+
+    assert reply["success"]
+    assert reply["body"] == {"data": {}, "metadata": {}}
+
+
 def test_convert_to_long_pathname():
     if sys.platform == "win32":
         from ipykernel.compiler import _convert_to_long_pathname
 
         _convert_to_long_pathname(__file__)
+
+
+@pytest.mark.skipif(debugpy is None, reason="requires debugpy")
+@pytest.mark.skipif(sys.platform == "win32", reason="symlinks need privileges on windows")
+def test_start_rejects_foreign_tmp_directory(tmp_path, monkeypatch):
+    from ipykernel.debugger import Debugger
+
+    # <tempdir>/ipykernel_<pid> is predictable, so on a shared temp directory
+    # another user can get there first and point it at a path they own.
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    planted = tmp_path / "ipykernel_1"
+    planted.symlink_to(elsewhere, target_is_directory=True)
+    monkeypatch.setattr("ipykernel.debugger.get_tmp_directory", lambda: str(planted))
+
+    debugger = Debugger(logging.getLogger(__name__), None, lambda event: None, None, None, [])
+    assert debugger.start() is False
+
+
+@pytest.mark.skipif(debugpy is None, reason="requires debugpy")
+@pytest.mark.skipif(sys.platform == "win32", reason="O_NOFOLLOW is posix only")
+async def test_dump_cell_does_not_follow_symlink(tmp_path, monkeypatch):
+    from ipykernel.debugger import Debugger
+
+    outside = tmp_path / "outside.py"
+    outside.write_text("# untouched\n")
+    cell_file = tmp_path / "cell.py"
+    cell_file.symlink_to(outside)
+    monkeypatch.setenv("IPYKERNEL_CELL_NAME", str(cell_file))
+
+    debugger = Debugger(logging.getLogger(__name__), None, lambda event: None, None, None, [])
+    message = {"seq": 1, "command": "dumpCell", "arguments": {"code": "x = 1\n"}}
+    with pytest.raises(OSError, match="symbolic link"):
+        await debugger.dumpCell(message)
+    assert outside.read_text() == "# untouched\n"
 
 
 def test_copy_to_globals(kernel_with_debug):

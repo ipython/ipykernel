@@ -10,6 +10,7 @@ from jupyter_client.kernelspec import KernelSpecManager
 from jupyter_core.paths import secure_write
 from traitlets.config.loader import Config
 
+from ipykernel.connect import get_connection_file
 from ipykernel.kernelapp import IPKernelApp
 
 from .conftest import MockKernel
@@ -181,3 +182,36 @@ def test_init_sockets_tcp_without_curve_logs_warning():
     assert any("Kernel is running over TCP without encryption" in m for m in messages), (
         "Expected a warning about missing encryption when transport=tcp without curve keys"
     )
+
+
+def test_default_connection_file_ignores_working_directory():
+    planted = {
+        "ip": "127.0.0.1",
+        "transport": "tcp",
+        "signature_scheme": "hmac-sha256",
+        "key": "planted-key",
+        "shell_port": 51111,
+        "iopub_port": 51112,
+        "stdin_port": 51113,
+        "control_port": 51114,
+        "hb_port": 51115,
+    }
+    basename = "kernel-%s.json" % os.getpid()
+    with TemporaryWorkingDirectory() as d:
+        with open(os.path.join(d, basename), "w") as f:
+            json.dump(planted, f)
+
+        app = IPKernelApp(connection_dir=os.path.join(d, "runtime"))
+        app.init_connection_file()
+
+        # the kernel owns the file of that name in connection_dir and took
+        # nothing from the one sitting in the working directory
+        assert app.connection_file == basename
+        assert app.abs_connection_file == os.path.join(app.connection_dir, basename)
+        assert app.session.key != b"planted-key"
+        assert app.shell_port == 0
+
+        # and that is the file handed out to other clients
+        with open(app.abs_connection_file, "w") as f:
+            json.dump({"key": "real-key"}, f)
+        assert get_connection_file(app) == app.abs_connection_file

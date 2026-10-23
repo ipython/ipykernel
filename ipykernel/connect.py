@@ -34,7 +34,9 @@ def get_connection_file(app: IPKernelApp | None = None) -> str:
             raise RuntimeError(msg)
 
         app = IPKernelApp.instance()
-    return filefind(app.connection_file, [".", app.connection_dir])
+    # The kernel's own file lives in connection_dir; the working directory is
+    # only a fallback for a relative name that was passed on the command line.
+    return filefind(app.connection_file, [app.connection_dir, "."])
 
 
 def _find_connection_file(connection_file):

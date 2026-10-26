@@ -375,8 +375,8 @@ class Kernel(SingletonConfigurable):
         """dispatch control requests"""
         if not self.session:
             return
-        idents, msg = self.session.feed_identities(msg, copy=False)
         try:
+            idents, msg = self.session.feed_identities(msg, copy=False)
             msg = self.session.deserialize(msg, content=True, copy=False)
         except Exception:
             self.log.error("Invalid Control Message", exc_info=True)  # noqa: G201
@@ -443,8 +443,8 @@ class Kernel(SingletonConfigurable):
                 self.shell_channel_thread,
             )
 
-        idents, msg = self.session.feed_identities(msg, copy=False)
         try:
+            idents, msg = self.session.feed_identities(msg, copy=False)
             msg = self.session.deserialize(msg, content=True, copy=False)
         except Exception:
             self.log.error("Invalid Message", exc_info=True)  # noqa: G201
@@ -604,8 +604,8 @@ class Kernel(SingletonConfigurable):
 
             # deserialize only the header to get subshell_id
             # Keep original message to send to subshell_id unmodified.
-            idents, msg2 = self.session.feed_identities(msg, copy=False)
             try:
+                idents, msg2 = self.session.feed_identities(msg, copy=False)
                 msg3 = self.session.deserialize(msg2, content=False, copy=False)
                 subshell_id = msg3["header"].get("subshell_id")
 

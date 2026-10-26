@@ -116,12 +116,17 @@ async def test_deprecated_features(kernel):
         kernel.shell_streams = [kernel.shell_stream, kernel.shell_stream]
 
 
-async def test_process_control(kernel):
+async def test_process_control(kernel, caplog):
     from jupyter_client.session import DELIM
 
     class FakeMsg:
         def __init__(self, bytes):
             self.bytes = bytes
+
+    caplog.clear()
+    await kernel.process_control([FakeMsg(b"bad")])
+    assert "Invalid Control Message" in caplog.text
+    assert "DELIM not in msg_list" in caplog.text
 
     await kernel.process_control([FakeMsg(DELIM), 1])
     msg = kernel._prep_msg("does_not_exist")
@@ -133,16 +138,46 @@ def test_should_handle(kernel):
     assert kernel.should_handle(kernel.control_stream, msg, []) is True
 
 
-async def test_dispatch_shell(kernel):
+async def test_dispatch_shell(kernel, caplog):
+    from jupyter_client.session import DELIM
+
+    class FakeMsg:
+        def __init__(self, bytes):
+            self.bytes = bytes
+            self.buffer = bytes
+
+    caplog.clear()
+    await kernel.dispatch_shell([FakeMsg(b"bad")])
+    assert "Invalid Message" in caplog.text
+    assert "DELIM not in msg_list" in caplog.text
+
+    await kernel.dispatch_shell([FakeMsg(DELIM), 1])
+    msg = kernel._prep_msg("does_not_exist")
+    await kernel.dispatch_shell(msg)
+
+
+async def test_shell_channel_thread_main(kernel, monkeypatch, caplog):
+    import asyncio
+    import threading
+
     from jupyter_client.session import DELIM
 
     class FakeMsg:
         def __init__(self, bytes):
             self.bytes = bytes
 
-    await kernel.dispatch_shell([FakeMsg(DELIM), 1])
-    msg = kernel._prep_msg("does_not_exist")
-    await kernel.dispatch_shell(msg)
+    current = threading.current_thread()
+    monkeypatch.setattr(current, "asyncio_lock", asyncio.Lock(), raising=False)
+    monkeypatch.setattr(kernel, "shell_channel_thread", current)
+
+    caplog.clear()
+    await kernel.shell_channel_thread_main([FakeMsg(b"bad")])
+    assert "Invalid message" in caplog.text
+    assert "DELIM not in msg_list" in caplog.text
+
+    caplog.clear()
+    await kernel.shell_channel_thread_main([FakeMsg(DELIM), 1])
+    assert "Invalid message" in caplog.text
 
 
 async def test_publish_debug_event(kernel):

@@ -663,6 +663,8 @@ def test_shutdown():
 
 @pytest.mark.parametrize("restart", [False, True])
 def test_lifecycle_with_warnings_as_errors(monkeypatch, restart):
+    # Avoid jupyter_core's unrelated path-migration warning in the child.
+    monkeypatch.setenv("JUPYTER_PLATFORM_DIRS", "1")
     monkeypatch.setenv("PYTHONWARNINGS", "error")
     with new_kernel() as kc:
         _msg_id, content = execute("answer = 6 * 7", kc=kc)

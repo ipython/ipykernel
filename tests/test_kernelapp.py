@@ -58,7 +58,9 @@ def test_start_app():
 
 
 @pytest.mark.parametrize("loop_state", ["unset", "cleared", "existing"])
-def test_start_app_event_loop(loop_state):
+def test_start_app_event_loop(loop_state, monkeypatch):
+    # Avoid jupyter_core's unrelated path-migration warning in the child.
+    monkeypatch.setenv("JUPYTER_PLATFORM_DIRS", "1")
     code = dedent(
         """
         import asyncio

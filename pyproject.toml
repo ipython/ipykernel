@@ -155,6 +155,7 @@ testpaths = [
     "tests",
 ]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 #timeout = 300
 timeout = 30
 # Restore this setting to debug failures

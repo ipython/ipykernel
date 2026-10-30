@@ -108,6 +108,12 @@ async def test_direct_interrupt_request(ipkernel):
     assert len(reply["content"]["traceback"]) > 0
 
 
+@pytest.mark.parametrize("restart", [False, True])
+async def test_do_shutdown(ipkernel, restart):
+    assert await ipkernel.do_shutdown(restart) == {"status": "ok", "restart": restart}
+    assert ipkernel.shell.exit_now
+
+
 # TODO: this causes deadlock
 # async def test_direct_shutdown_request(ipkernel):
 #     reply = await ipkernel.test_shell_message("shutdown_request", dict(restart=False))

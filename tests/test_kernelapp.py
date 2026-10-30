@@ -1,7 +1,10 @@
 import json
 import os
+import subprocess
+import sys
 import threading
 import time
+from textwrap import dedent
 from unittest.mock import patch
 
 import pytest
@@ -52,6 +55,40 @@ def test_start_app():
     app.cleanup_connection_file()
     app.kernel.destroy()
     app.close()
+
+
+@pytest.mark.parametrize("loop_state", ["unset", "cleared", "existing"])
+def test_start_app_event_loop(loop_state, monkeypatch):
+    # Avoid jupyter_core's unrelated path-migration warning in the child.
+    monkeypatch.setenv("JUPYTER_PLATFORM_DIRS", "1")
+    code = dedent(
+        """
+        import asyncio
+        import sys
+        from unittest.mock import Mock
+        from tornado.ioloop import IOLoop
+        from ipykernel.kernelapp import IPKernelApp
+
+        expected = None
+        if sys.argv[1] == "cleared":
+            asyncio.set_event_loop(None)
+        elif sys.argv[1] == "existing":
+            expected = asyncio.new_event_loop()
+            asyncio.set_event_loop(expected)
+        app = IPKernelApp()
+        app.kernel = Mock()
+        def start_kernel():
+            loop = IOLoop.current().asyncio_loop
+            loop.call_soon(loop.stop)
+        app.kernel.start.side_effect = start_kernel
+        app.start()
+        assert app.io_loop.asyncio_loop is asyncio.get_event_loop()
+        if expected is not None:
+            assert app.io_loop.asyncio_loop is expected
+        app.io_loop.close()
+        """
+    )
+    subprocess.run([sys.executable, "-Werror", "-c", code, loop_state], check=True, timeout=10)
 
 
 @pytest.mark.skipif(os.name == "nt", reason="permission errors on windows")

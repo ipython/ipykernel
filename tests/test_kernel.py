@@ -661,6 +661,22 @@ def test_shutdown():
         assert not km.is_alive()
 
 
+@pytest.mark.parametrize("restart", [False, True])
+def test_lifecycle_with_warnings_as_errors(monkeypatch, restart):
+    # Avoid jupyter_core's unrelated path-migration warning in the child.
+    monkeypatch.setenv("JUPYTER_PLATFORM_DIRS", "1")
+    monkeypatch.setenv("PYTHONWARNINGS", "error")
+    with new_kernel() as kc:
+        _msg_id, content = execute("answer = 6 * 7", kc=kc)
+        assert content["status"] == "ok"
+        wait_for_idle(kc)
+        msg_id = kc.shutdown(restart=restart)
+        reply = get_reply(kc, msg_id, timeout=10, channel="control")
+        assert reply["content"] == {"status": "ok", "restart": restart}
+        kc.parent.provisioner.process.wait(timeout=10)
+        assert kc.parent.provisioner.process.returncode == 0
+
+
 def test_interrupt_during_input():
     """
     The kernel exits after being interrupted while waiting in input().

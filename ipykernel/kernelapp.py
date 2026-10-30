@@ -4,6 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 from __future__ import annotations
 
+import asyncio
 import atexit
 import errno
 import logging
@@ -12,6 +13,7 @@ import signal
 import sys
 import traceback
 import typing as t
+import warnings
 from functools import partial
 from io import FileIO, TextIOWrapper
 from logging import StreamHandler
@@ -758,6 +760,12 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             return self.subapp.start()
         if self.poller is not None:
             self.poller.start()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error", "There is no current event loop", DeprecationWarning)
+            try:
+                asyncio.get_event_loop()
+            except (RuntimeError, DeprecationWarning):
+                asyncio.set_event_loop(asyncio.new_event_loop())
         self.kernel.start()
         self.io_loop = ioloop.IOLoop.current()
         if self.trio_loop:

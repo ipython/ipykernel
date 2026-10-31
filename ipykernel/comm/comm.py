@@ -35,7 +35,7 @@ class BaseComm(comm.base_comm.BaseComm):
         self._reply_subshell_ids = {}
         super().__init__(*args, **kwargs)
 
-    def handle_msg(self, msg: comm.base_comm.MessageType) -> None:
+    def handle_msg(self, msg: "comm.base_comm.MessageType") -> None:
         """Handle a comm_msg message.
 
         When a comm is dispatched concurrently while an async cell holds the

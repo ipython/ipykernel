@@ -233,6 +233,11 @@ class Kernel(SingletonConfigurable):
     _shell_parent: ContextVar[dict[str, Any]]
     _shell_parent_ident: ContextVar[bytes]
     _shell_context: Context
+    # Set while a comm is dispatched concurrently during a running cell
+    # (see shell_main). Comm callbacks then run under the comm_msg's parent
+    # header, so firing pre_execute/post_execute for them would parent any
+    # hook output to the comm_msg instead of the cell.
+    _in_concurrent_comm_dispatch: ContextVar[bool]
     # Kept for backward-compatibility, accesses _control_parent_ident and _shell_parent_ident,
     # see https://github.com/jupyterlab/jupyterlab/issues/17785
     _parent_ident: Mapping[str, bytes]
@@ -352,6 +357,9 @@ class Kernel(SingletonConfigurable):
         self._shell_parent.set({})
         self._shell_parent_ident = ContextVar("shell_parent_ident")
         self._shell_parent_ident.set(b"")
+        self._in_concurrent_comm_dispatch: ContextVar[bool] = ContextVar(
+            "in_concurrent_comm_dispatch", default=False
+        )
         self._shell_context = copy_context()
 
         # For backward compatibility so that _parent_ident["shell"] and _parent_ident["control"]
@@ -665,6 +673,13 @@ class Kernel(SingletonConfigurable):
                 # channel. Dispatch comms without waiting for the cell's lock.
                 shell_parent = self.get_parent("shell")
                 shell_ident = self._get_shell_context_var(self._shell_parent_ident)
+                # The comm callback runs under the comm_msg's parent header, not
+                # the cell's execute_request. Mark the dispatch so BaseComm
+                # does not fire pre_execute/post_execute for it: any output a
+                # post_execute hook publishes would be parented to the comm_msg
+                # and dropped by frontends, and the hook's queue would be
+                # drained before the cell's own post_execute fires (#1564).
+                token = self._in_concurrent_comm_dispatch.set(True)
                 try:
                     comm_task = asyncio.create_task(
                         self.dispatch_shell(msg, subshell_id=subshell_id, concurrent=True),
@@ -672,6 +687,7 @@ class Kernel(SingletonConfigurable):
                     )
                     await comm_task
                 finally:
+                    self._in_concurrent_comm_dispatch.reset(token)
                     self.set_parent(shell_ident, shell_parent, channel="shell")
                 return
         async with asyncio_lock:

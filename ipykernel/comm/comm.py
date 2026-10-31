@@ -35,6 +35,25 @@ class BaseComm(comm.base_comm.BaseComm):
         self._reply_subshell_ids = {}
         super().__init__(*args, **kwargs)
 
+    def handle_msg(self, msg: comm.base_comm.MessageType) -> None:
+        """Handle a comm_msg message.
+
+        When a comm is dispatched concurrently while an async cell holds the
+        shell lock, the pre_execute/post_execute events are not fired for its
+        callback: the callback runs under the comm_msg's parent header, so any
+        output a post_execute hook publishes would be parented to the comm_msg
+        and dropped by frontends instead of reaching the cell, and the hook's
+        queue would be drained before the cell's own post_execute fires
+        (see ipython/ipykernel#1564). Comms handled while no cell is running
+        keep the previous behaviour.
+        """
+        kernel = Kernel.instance() if Kernel.initialized() else None
+        if kernel is not None and kernel._in_concurrent_comm_dispatch.get():
+            if self._msg_callback:
+                self._msg_callback(msg)
+            return
+        super().handle_msg(msg)
+
     def _reply_subshell_for(self, data, default):
         request_id = _request_id(data)
         with self._reply_subshell_lock:

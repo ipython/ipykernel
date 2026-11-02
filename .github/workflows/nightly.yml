@@ -25,14 +25,14 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
 
       - name: Build
         run: |
           python -m pip install build
           python -m build
       - name: Upload wheel
-        uses: scientific-python/upload-nightly-action@16fa02eacee1655195143de09f03676e60ef2bf5 # 0.6.5
+        uses: scientific-python/upload-nightly-action@5a74a2a4ec19d7ab8b5317c1cdd356c150d92cd0 # 0.6.6
         with:
           artifacts_path: dist
           anaconda_nightly_upload_token: ${{secrets.UPLOAD_TOKEN}}

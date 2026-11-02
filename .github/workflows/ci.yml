@@ -53,7 +53,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -91,7 +91,7 @@ jobs:
           cd $HOME
           python -m ipykernel_launcher --help
 
-      - uses: jupyterlab/maintainer-tools/.github/actions/upload-coverage@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/upload-coverage@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
 
   coverage:
     runs-on: ubuntu-latest
@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jupyterlab/maintainer-tools/.github/actions/report-coverage@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/report-coverage@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
         with:
           fail_under: 80
 
@@ -113,7 +113,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
       - name: Check mypy deps are in sync with project deps
         run: hatch run typing:check
 
@@ -131,7 +131,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
 
       - uses: jupyter-server/jupyter_releaser/.github/actions/check-release@70e58c50c736ad496cca11fe4f2446033b68b027 # v2
         with:
@@ -144,7 +144,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
         with:
           python_version: "3.14"
 
@@ -173,7 +173,7 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
 
       - name: Install the Python dependencies without debugpy
         run: |
@@ -197,12 +197,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
         with:
           dependency_type: minimum
           python_version: ${{ matrix.python-version }}
@@ -226,7 +226,7 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
         with:
           dependency_type: pre
 
@@ -242,8 +242,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
-      - uses: jupyterlab/maintainer-tools/.github/actions/make-sdist@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
+      - uses: jupyterlab/maintainer-tools/.github/actions/make-sdist@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
 
   test_sdist:
     runs-on: ubuntu-latest
@@ -251,8 +251,8 @@ jobs:
     name: Install from SDist and Test
     timeout-minutes: 20
     steps:
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
-      - uses: jupyterlab/maintainer-tools/.github/actions/test-sdist@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
+      - uses: jupyterlab/maintainer-tools/.github/actions/test-sdist@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
         with:
           package_spec: ". --group test"
 
@@ -262,5 +262,5 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
-      - uses: jupyterlab/maintainer-tools/.github/actions/check-links@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
+      - uses: jupyterlab/maintainer-tools/.github/actions/base-setup@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1
+      - uses: jupyterlab/maintainer-tools/.github/actions/check-links@4016d4e69656e13e662d629ee3c30dc31e68628f # v1.1.1

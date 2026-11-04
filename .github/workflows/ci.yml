@@ -29,22 +29,21 @@ jobs:
           - qt5
           - qt6
         python-version:
-          - "3.11"
           - "3.12"
           - "3.13"
           - "3.14"
           # 3.14t needs a jupyter-core release
           # - "3.14t"
-          - "pypy-3.11"
+          - "3.15"
         exclude:
           # qt6 not supported on 3.14 yet
+          - python-version: "3.15"
+            qt: qt6
           - python-version: "3.14"
             qt: qt6
           - python-version: "3.13"
             qt: qt5
           - python-version: "3.12"
-            qt: qt5
-          - python-version: "3.11"
             qt: qt5
 
     steps:
@@ -69,19 +68,13 @@ jobs:
 
       - name: Run the tests
         timeout-minutes: 15
-        if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
+        if: ${{ !startsWith(matrix.os, 'windows') }}
         run: |
           hatch run cov:test --cov-fail-under 50
 
-      - name: Run the tests on pypy
-        timeout-minutes: 15
-        if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
-        run: |
-          hatch run test:nowarn --ignore=tests/test_debugger.py
-
       - name: Run the tests on Windows
         timeout-minutes: 15
-        if: ${{ !startsWith( matrix.python-version, 'pypy' ) && startsWith(matrix.os, 'windows') }}
+        if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
           hatch run cov:nowarn
 
@@ -165,7 +158,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.11"]
+        python-version: ["3.12"]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -199,7 +192,7 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0

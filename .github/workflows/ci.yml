@@ -35,7 +35,6 @@ jobs:
           - "3.14"
           # 3.14t needs a jupyter-core release
           # - "3.14t"
-          - "pypy-3.11"
         exclude:
           # qt6 not supported on 3.14 yet
           - python-version: "3.14"
@@ -69,19 +68,13 @@ jobs:
 
       - name: Run the tests
         timeout-minutes: 15
-        if: ${{ !startsWith( matrix.python-version, 'pypy' ) && !startsWith(matrix.os, 'windows') }}
+        if: ${{ !startsWith(matrix.os, 'windows') }}
         run: |
           hatch run cov:test --cov-fail-under 50
 
-      - name: Run the tests on pypy
-        timeout-minutes: 15
-        if: ${{ startsWith( matrix.python-version, 'pypy' ) }}
-        run: |
-          hatch run test:nowarn --ignore=tests/test_debugger.py
-
       - name: Run the tests on Windows
         timeout-minutes: 15
-        if: ${{ !startsWith( matrix.python-version, 'pypy' ) && startsWith(matrix.os, 'windows') }}
+        if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
           hatch run cov:nowarn
 

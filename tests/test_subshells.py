@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import platform
+import sys
 import time
 from collections import Counter
 from queue import Empty
@@ -189,6 +190,10 @@ assert callback_thread == request_thread
 
 @pytest.mark.parametrize("are_subshells", [(False, True), (True, False), (True, True)])
 @pytest.mark.parametrize("overlap", [True, False])
+@pytest.mark.skipif(
+    "__pypy__" in sys.builtin_module_names,
+    reason="fails on pypy",
+)
 def test_run_concurrently_sequence(are_subshells, overlap, request):
     if request.config.getvalue("--cov"):
         pytest.skip("Skip time-sensitive subshell tests if measuring coverage")

@@ -543,6 +543,14 @@ class Kernel(SingletonConfigurable):
             self.log.info("Exiting as there is no eventloop")
             return
 
+        from .eventloops import loop_asyncio
+
+        if eventloop is loop_asyncio:
+            # The kernel already runs on asyncio, so there is nothing to poll.
+            # Polling every millisecond would only burn CPU (#1532).
+            self.log.info("Kernel already runs on asyncio; no polling needed")
+            return
+
         async def advance_eventloop():
             # check if eventloop changed:
             if self.eventloop is not eventloop:

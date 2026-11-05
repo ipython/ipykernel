@@ -94,6 +94,26 @@ def test_asyncio_loop(kernel):
 
 
 @windows_skip
+async def test_asyncio_gui_does_not_poll(kernel):
+    # The kernel already runs on asyncio, so `%gui asyncio` has nothing to poll (#1532).
+    calls = []
+    call_later = kernel.io_loop.call_later
+
+    def counting_call_later(delay, callback, *args, **kwargs):
+        calls.append(callback)
+        return call_later(delay, callback, *args, **kwargs)
+
+    kernel.io_loop.call_later = counting_call_later
+    try:
+        kernel.eventloop = loop_asyncio
+        await asyncio.sleep(0.1)
+    finally:
+        kernel.eventloop = None
+        del kernel.io_loop.call_later
+    assert len(calls) <= 1
+
+
+@windows_skip
 def test_enable_gui(kernel):
     enable_gui("tk", kernel)
 

@@ -1,10 +1,13 @@
+import atexit
 import json
 import os
+import socket
 import threading
 import time
 from unittest.mock import patch
 
 import pytest
+import zmq
 from jupyter_client import KernelManager
 from jupyter_client.kernelspec import KernelSpecManager
 from jupyter_core.paths import secure_write
@@ -28,6 +31,21 @@ def test_init_ipc_socket():
     app.init_sockets()
     app.cleanup_connection_file()
     app.close()
+
+
+def test_close_after_iopub_port_in_use():
+    app = IPKernelApp(transport="tcp")
+    with socket.socket() as taken:
+        taken.bind((app.ip, 0))
+        taken.listen(1)
+        app.iopub_port = taken.getsockname()[1]
+        with pytest.raises(zmq.ZMQError):
+            app.init_sockets()
+    atexit.unregister(app.close)
+    closing = threading.Thread(target=app.close, daemon=True)
+    closing.start()
+    closing.join(timeout=10)
+    assert not closing.is_alive(), "close() is still waiting for the zmq context to terminate"
 
 
 def test_blackhole():

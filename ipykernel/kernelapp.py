@@ -460,6 +460,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             self.log.debug("Closing iopub channel")
             self.iopub_thread.stop()
             self.iopub_thread.close()
+        elif self.iopub_socket is not None and not self.iopub_socket.closed:
+            # The iopub port could not be bound, so no IOPub thread owns the socket.
+            # Left open, it would block context.term() below.
+            self.iopub_socket.close()
         if self.control_thread and self.control_thread.is_alive():
             self.log.debug("Closing control thread")
             self.control_thread.stop()

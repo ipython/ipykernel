@@ -104,3 +104,37 @@ def test_comm_in_manager(ipkernel: IPythonKernel) -> None:
         comm = Comm()
 
     assert comm.comm_id in ipkernel.comm_manager.comms
+
+
+def test_handle_msg_skips_events_when_dispatched_concurrently(
+    kernel: Kernel, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """handle_msg must not fire pre/post_execute for a concurrently dispatched comm.
+
+    Regression test for ipython/ipykernel#1564: when a comm_msg is dispatched
+    while an async cell holds the shell lock, its callback runs under the
+    comm_msg's parent header, so output a post_execute hook publishes would be
+    parented to the comm_msg and dropped by frontends.
+    """
+    Kernel._instance = kernel  # type: ignore[attr-defined]
+    try:
+        events: list[str] = []
+        shell = unittest.mock.Mock()
+        shell.events.trigger.side_effect = lambda name: events.append(name)
+        monkeypatch.setattr("IPython.get_ipython", lambda: shell)
+        with pytest.deprecated_call():
+            comm = Comm(kernel=kernel, target_name="test")
+        comm.on_msg(lambda msg: events.append("callback"))
+
+        token = kernel._in_concurrent_comm_dispatch.set(True)
+        try:
+            comm.handle_msg({})
+        finally:
+            kernel._in_concurrent_comm_dispatch.reset(token)
+        assert events == ["callback"]
+
+        events.clear()
+        comm.handle_msg({})
+        assert events == ["pre_execute", "callback", "post_execute"]
+    finally:
+        Kernel.clear_instance()

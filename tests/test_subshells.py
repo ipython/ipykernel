@@ -493,3 +493,70 @@ def test_comm_close_on_deleted_subshell():
         kc.shell_channel.send(msg)
 
         wait_for_idle(kc, msg["header"]["msg_id"])
+
+
+@pytest.mark.parametrize("use_subshell", [True, False])
+def test_comm_msg_during_async_cell_does_not_fire_post_execute(use_subshell, request):
+    """A comm_msg arriving during an async cell must not fire post_execute.
+
+    Regression test for #1564: the hook runs under the comm_msg's parent
+    header, so output it publishes is parented to the comm_msg and dropped by
+    frontends, and the hook's queue is drained before the cell's own
+    post_execute fires. Both the subshell and the plain (no-subshell) routes
+    go through the concurrent dispatch in shell_main.
+    """
+    if request.config.getvalue("--cov"):
+        pytest.skip("Skip time-sensitive subshell tests if measuring coverage")
+
+    with new_kernel() as kc:
+        setup = (
+            "import time\n"
+            "from IPython.display import display\n"
+            "import comm\n"
+            "_pending = []\n"
+            "def _post_execute():\n"
+            "    while _pending:\n"
+            "        display(_pending.pop())\n"
+            "get_ipython().events.register('post_execute', _post_execute)\n"
+            "_comm = comm.create_comm(target_name='repro')\n"
+            "_comm.on_msg(lambda msg: None)\n"
+            "print('COMM_ID', _comm.comm_id)\n"
+        )
+        comm_id = execute_request_subshell_id(kc, setup, None).split()[1]
+
+        subshell_id = create_subshell_helper(kc)["subshell_id"] if use_subshell else None
+        try:
+            cell = kc.session.msg(
+                "execute_request",
+                {"code": "_pending.append('PAYLOAD')\nimport asyncio\nawait asyncio.sleep(3)\n"},
+            )
+            kc.shell_channel.send(cell)
+            time.sleep(1.0)
+            comm_msg = kc.session.msg(
+                "comm_msg",
+                {"comm_id": comm_id, "data": {"method": "custom", "content": {}}},
+            )
+            if subshell_id:
+                comm_msg["header"]["subshell_id"] = subshell_id
+            kc.shell_channel.send(comm_msg)
+
+            cell_id = cell["header"]["msg_id"]
+            display_parent = None
+            while True:
+                msg = kc.get_iopub_msg(timeout=TIMEOUT)
+                if msg["msg_type"] == "display_data":
+                    display_parent = msg["parent_header"].get("msg_id")
+                if (
+                    msg["msg_type"] == "status"
+                    and msg["content"]["execution_state"] == "idle"
+                    and msg["parent_header"].get("msg_id") == cell_id
+                ):
+                    break
+        finally:
+            if subshell_id:
+                delete_subshell_helper(kc, subshell_id)
+
+        assert display_parent is not None, "no display_data observed"
+        assert display_parent == cell_id, (
+            "display_data parented to the comm_msg, not the cell's execute_request"
+        )

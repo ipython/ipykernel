@@ -13,6 +13,7 @@
 
 import errno
 import socket
+from concurrent.futures import Future
 from pathlib import Path
 from threading import Thread
 
@@ -46,6 +47,7 @@ class Heartbeat(Thread):
             addr = ("tcp", localhost(), 0)
         Thread.__init__(self, name="Heartbeat")
         self.context = context
+        self._bind_future: Future[None] = Future()
         self.transport, self.ip, self.port = addr
         self.original_port = self.port
         self._curve_publickey = curve_publickey
@@ -104,6 +106,11 @@ class Heartbeat(Thread):
             else:
                 return
 
+    def start(self):
+        """Start the heartbeat thread and wait for its socket to bind."""
+        super().start()
+        self._bind_future.result()
+
     def run(self):
         """Run the heartbeat thread."""
         self.name = "Heartbeat"
@@ -118,6 +125,9 @@ class Heartbeat(Thread):
         except Exception:
             self.socket.close()
             raise
+
+        self.addr = (self.ip, self.port)
+        self._bind_future.set_result(None)
 
         while True:
             try:

@@ -444,9 +444,10 @@ class IPKernelApp(BaseIPythonApplication, InteractiveShellApp, ConnectionFileMix
             curve_publickey=self.curve_publickey,
             curve_secretkey=self.curve_secretkey,
         )
+        # Binding may select a new port if the original candidate was taken.
+        self.heartbeat.start()
         self.hb_port = self.heartbeat.port
         self.log.debug("Heartbeat REP Channel on port: %i", self.hb_port)
-        self.heartbeat.start()
 
     def close(self):
         """Close zmq sockets in an orderly fashion"""

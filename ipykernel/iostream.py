@@ -550,6 +550,7 @@ class OutStream(TextIOBase):
         self._io_loop = pub_thread.io_loop
         self._buffer_lock = threading.RLock()
         self._buffers = defaultdict(StringIO)
+        self._buffer_keys: dict[int, tuple[dict[str, Any], frozenset[Any]]] = {}
         self.echo = None
         self._isatty = bool(isatty)
         self._should_watch = False
@@ -774,9 +775,13 @@ class OutStream(TextIOBase):
             raise ValueError(msg)
 
         is_child = not self._is_master_process()
+        # frozenset(parent.items()) is slow, so keep the keys of the last few parents
+        entry = self._buffer_keys.get(id(parent))
+        if entry is None or entry[0] is not parent:
+            entry = self._buffer_keys[id(parent)] = (parent, frozenset(parent.items()))
         # only touch the buffer in the IO thread to avoid races
         with self._buffer_lock:
-            self._buffers[frozenset(parent.items())].write(string)
+            self._buffers[entry[1]].write(string)
         if is_child:
             # mp.Pool cannot be trusted to flush promptly (or ever),
             # and this helps.
@@ -815,6 +820,8 @@ class OutStream(TextIOBase):
         with self._buffer_lock:
             old_buffers = self._buffers
             self._buffers = defaultdict(StringIO)
+            if len(self._buffer_keys) > 8:
+                self._buffer_keys = {}
         return old_buffers
 
     @property

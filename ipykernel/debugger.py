@@ -46,6 +46,16 @@ except Exception as e:
 if t.TYPE_CHECKING:
     from IPython.core.interactiveshell import InteractiveShell
 
+# Modules that IPython imports lazily when formatting a traceback (since
+# IPython 9.17, see https://github.com/ipython/ipython/pull/15333): they are
+# not loaded when the kernel starts, so their files are not in
+# `kernel_modules` and the debugger would otherwise stop in them when the
+# `raised` exception filter is on. They are skipped by module name so that
+# submodules imported later, such as the pygments lexers and formatters, are
+# covered too, without importing anything at kernel startup.
+# See https://github.com/ipython/ipykernel/issues/1596
+_TRACEBACK_FORMATTER_MODULES = ("asttokens", "executing", "pure_eval", "pygments", "stack_data")
+
 # Required for backwards compatibility
 ROUTING_ID = getattr(zmq, "ROUTING_ID", None) or zmq.IDENTITY
 
@@ -598,6 +608,12 @@ class Debugger:
         # Dynamic skip rules (computed at kernel startup)
         if self.filter_internal_frames:
             rules = [{"path": path, "include": False} for path in self.kernel_modules]
+            # Modules imported lazily by IPython when formatting a traceback
+            # are not in `kernel_modules`; skip them by module name so that
+            # submodules imported after the debugger attaches are covered too.
+            rules.extend(
+                {"module": module, "include": False} for module in _TRACEBACK_FORMATTER_MODULES
+            )
             message["arguments"]["rules"] = rules
 
         return await self._forward_message(message)

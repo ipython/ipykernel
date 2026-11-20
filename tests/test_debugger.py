@@ -684,3 +684,40 @@ f(2, 3)"""
     assert execution_states.count("busy") == 4
     assert execution_states.count("idle") == 4
     assert execution_states == ["busy", "idle"] * 4
+
+
+def test_no_stop_in_traceback_formatter_on_raised_exception(kernel_with_debug):
+    # With the `raised` exception filter on, the debugger must stop where the
+    # user code raises, but not in the code IPython runs to show the traceback
+    # (pygments, stack_data, executing, asttokens), which IPython imports
+    # lazily when formatting the first traceback.
+    # See https://github.com/ipython/ipykernel/issues/1596
+    if not debugpy:
+        return
+
+    wait_for_debug_request(kernel_with_debug, "setExceptionBreakpoints", {"filters": ["raised"]})
+
+    wait_for_debug_request(kernel_with_debug, "configurationDone", full_reply=True)
+
+    msg_id = kernel_with_debug.execute('import json\njson.loads("x")')
+
+    stops = []
+    msg: dict = {"msg_type": "", "content": {}}
+    while True:
+        msg = kernel_with_debug.get_iopub_msg(timeout=TIMEOUT)
+        if msg["msg_type"] == "debug_event" and msg["content"].get("event") == "stopped":
+            thread_id = msg["content"]["body"]["threadId"]
+            frames = wait_for_debug_request(
+                kernel_with_debug, "stackTrace", {"threadId": thread_id}
+            )["body"]["stackFrames"]
+            stops.append(frames[0])
+            wait_for_debug_request(kernel_with_debug, "continue", {"threadId": thread_id})
+        elif (
+            msg["parent_header"].get("msg_id") == msg_id
+            and msg["content"].get("execution_state") == "idle"
+        ):
+            break
+
+    assert len(stops) == 1
+    assert stops[0]["name"] == "<module>"
+    assert "site-packages" not in stops[0]["source"]["path"]

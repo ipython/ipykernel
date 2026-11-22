@@ -645,7 +645,7 @@ class IPythonKernel(KernelBase):
             "history": list(hist),
         }
 
-    def do_shutdown(self, restart):
+    async def do_shutdown(self, restart):
         """Handle kernel shutdown."""
         if self.shell:
             self.shell.exit_now = True

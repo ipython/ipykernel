@@ -22,10 +22,10 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
         with:
           package_name: nbclient
           env_values: IPYKERNEL_CELL_NAME=\<IPY-INPUT\>
@@ -39,10 +39,10 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
         with:
           package_name: ipywidgets
           test_command: pytest -vv -raXxs -W default --durations 10 --color=yes
@@ -56,10 +56,10 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
         with:
           package_name: jupyter_client
           test_command: "pytest -vv -raXxs -W default --durations 10 --color=yes -k 'not (test_input_request or signal_kernel_subprocess)'"
@@ -74,10 +74,10 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
 
       - name: Run Test
-        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/downstream-test@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
         with:
           package_name: ipyparallel
           package_spec: ".[test]"
@@ -91,7 +91,7 @@ jobs:
           persist-credentials: false
 
       - name: Base Setup
-        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@21b1cac622018fd37ec13a1c8081da814e10d94e # v1.0.0
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@925e40fa6066f4533e0c40803bd4b6d0d2f4a781 # v1.1.0
 
       - name: Run Test
         run: |

@@ -153,9 +153,9 @@ class ZMQDisplayPublisher(DisplayPublisher):
             and HistoryOutput is not None
         ):
             # Reference: github.com/ipython/ipython/pull/14998
-            exec_count = self.shell.execution_count
-            if getattr(self.shell.display_pub, "_in_post_execute", False):
-                exec_count -= 1
+            # run_cell increments execution_count before running the cell, so while a cell runs
+            # (and in its post_execute hooks, e.g. matplotlib's flush) the cell's own count is one less.
+            exec_count = self.shell.execution_count - 1
             outputs = getattr(self.shell.history_manager, "outputs", None)
             if outputs is not None:
                 outputs.setdefault(exec_count, []).append(

@@ -957,3 +957,16 @@ def test_context_vars():
         )
         stdout, _ = assemble_output(kc.get_iopub_msg, parent_msg_id=msg_id)
         assert stdout.strip() == "set"
+
+
+def test_display_history_uses_the_cell_execution_count():
+    """A display published by a cell is stored under that cell's execution count (for %notebook)."""
+    with new_kernel(["--ZMQDisplayPublisher.store_display_history=True"]) as kc:
+        msg_id, content = execute(kc=kc, code="display('shown by this cell')")
+        wait_for_idle(kc, msg_id)
+        stored = f"[o.bundle['text/plain'] for o in get_ipython().history_manager.outputs.get({content['execution_count']}, [])]"
+        _msg_id, reply = execute(kc=kc, code="", user_expressions={"stored": stored})
+        assert (
+            reply["user_expressions"]["stored"]["data"]["text/plain"]
+            == "[\"'shown by this cell'\"]"
+        )

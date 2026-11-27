@@ -221,27 +221,29 @@ class ZMQDisplayPublisherTests(unittest.TestCase):
         for %notebook magic support, and not stored when disabled.
         """
         for enable in [False, True]:
-            # Mock shell with history manager
-            mock_shell = MagicMock()
-            mock_shell.execution_count = 1
-            mock_shell.history_manager.outputs = dict()
-            mock_shell.display_pub._in_post_execute = False
+            for in_post_execute in [False, True]:
+                # Mock shell with history manager, while cell 1 runs: run_cell has already
+                # incremented execution_count to 2.
+                mock_shell = MagicMock()
+                mock_shell.execution_count = 2
+                mock_shell.history_manager.outputs = dict()
+                mock_shell.display_pub._in_post_execute = in_post_execute
 
-            self.disp_pub.shell = mock_shell
-            self.disp_pub.store_display_history = enable
+                self.disp_pub.shell = mock_shell
+                self.disp_pub.store_display_history = enable
 
-            data = {"text/plain": "test output"}
-            self.disp_pub.publish(data)
+                data = {"text/plain": "test output"}
+                self.disp_pub.publish(data)
 
-            if enable:
-                # Check that output was stored in history
-                stored_outputs = mock_shell.history_manager.outputs[1]
-                assert len(stored_outputs) == 1
-                assert stored_outputs[0].output_type == "display_data"
-                assert stored_outputs[0].bundle == data
-            else:
-                # Should not store anything in history
-                assert mock_shell.history_manager.outputs == {}
+                if enable:
+                    # Check that output was stored in history, under cell 1
+                    stored_outputs = mock_shell.history_manager.outputs[1]
+                    assert len(stored_outputs) == 1
+                    assert stored_outputs[0].output_type == "display_data"
+                    assert stored_outputs[0].bundle == data
+                else:
+                    # Should not store anything in history
+                    assert mock_shell.history_manager.outputs == {}
 
 
 def test_magics(tmp_path):

@@ -1597,6 +1597,8 @@ class Kernel(SingletonConfigurable):
         Avoids:
         - including parents and self with killpg
         - including all children that may have forked-off a new group
+        - counting zombies as live, since they will not react to signals
+          and no one in this class calls waitpid on them
         """
         psutil = _get_psutil()
         if psutil is None:
@@ -1604,6 +1606,15 @@ class Kernel(SingletonConfigurable):
 
         kernel_process = psutil.Process()
         all_children = kernel_process.children(recursive=True)
+        alive_children = []
+        for child in all_children:
+            try:
+                if child.status() == psutil.STATUS_ZOMBIE:
+                    continue
+            except _NO_SUCH_PROCESS:
+                continue
+            alive_children.append(child)
+        all_children = alive_children
         if os.name == "nt":
             return all_children
         kernel_pgid = os.getpgrp()
@@ -1618,11 +1629,38 @@ class Kernel(SingletonConfigurable):
                     process_group_children.append(child)
         return process_group_children
 
+    def _stop_multiprocessing_resource_tracker(self):
+        """Stop the multiprocessing resource tracker child, if one is running.
+
+        The tracker is spawned the first time a synchronization primitive is
+        created under the ``forkserver`` or ``spawn`` start methods (the
+        default on Linux from Python 3.14). It installs handlers that ignore
+        SIGINT and SIGTERM and only exits when its control pipe is closed,
+        so sending it signals from the shutdown loop does nothing until the
+        full SIGTERM schedule times out. multiprocessing itself stops the
+        tracker on interpreter exit by closing that pipe; doing the same thing
+        explicitly before we signal children lets the kernel shut down
+        promptly instead of waiting out the schedule.
+        """
+        try:
+            from multiprocessing.resource_tracker import _resource_tracker
+        except ImportError:
+            return
+        try:
+            _resource_tracker._stop()
+        except Exception:
+            self.log.debug("Could not stop multiprocessing resource tracker", exc_info=True)
+
     async def _progressively_terminate_all_children(self):
         sleeps = (0.01, 0.03, 0.1, 0.3, 1, 3, 10)
         if not self._process_children():
             self.log.debug("Kernel has no children.")
             return
+
+        # The multiprocessing resource tracker ignores SIGTERM, so unless we
+        # stop it explicitly the SIGTERM schedule below runs to the end before
+        # we fall through to SIGKILL.
+        self._stop_multiprocessing_resource_tracker()
 
         for signum in (SIGTERM, SIGKILL):
             for delay in sleeps:

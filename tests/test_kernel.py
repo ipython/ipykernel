@@ -661,6 +661,41 @@ def test_shutdown():
         assert not km.is_alive()
 
 
+@pytest.mark.skipif(
+    platform.python_implementation() == "PyPy",
+    reason="does not work on PyPy",
+)
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="multiprocessing resource tracker is POSIX-only",
+)
+def test_shutdown_fast_with_multiprocessing_resource_tracker():
+    """Graceful shutdown returns promptly after a kernel creates a multiprocessing primitive.
+
+    Regression test for https://github.com/ipython/ipykernel/issues/1601.
+    Creating a synchronization primitive under the ``forkserver`` or ``spawn``
+    start method spawns a resource tracker child that ignores SIGTERM. Before
+    the fix, the SIGTERM schedule in ``_progressively_terminate_all_children``
+    would run to completion (~14s) before the shutdown could proceed, and a
+    zombie tracker after SIGKILL would stall the SIGKILL schedule for another
+    ~14s.
+    """
+    with new_kernel() as kc:
+        km = kc.parent
+        execute(
+            "import multiprocessing; "
+            "ctx = multiprocessing.get_context('forkserver'); "
+            "lock = ctx.Lock()",
+            kc=kc,
+        )
+        wait_for_idle(kc)
+        km.shutdown_wait_time = 60
+        t0 = time.monotonic()
+        km.shutdown_kernel(now=False)
+        # 10s cap is a generous ceiling; without the fix shutdown takes >=14s.
+        assert time.monotonic() - t0 < 10
+
+
 def test_interrupt_during_input():
     """
     The kernel exits after being interrupted while waiting in input().

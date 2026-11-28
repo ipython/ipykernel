@@ -40,10 +40,19 @@ class ParentPollerUnix(Thread):
         # We cannot use os.waitpid because it works only for child processes.
         from errno import EINTR
 
-        # before start, check if the passed-in parent pid is valid
         original_ppid = os.getppid()
         if original_ppid != self.parent_pid:
-            self.parent_pid = 0
+            parent_exited = False
+            if self.parent_pid > 0:
+                try:
+                    os.kill(self.parent_pid, 0)
+                except ProcessLookupError:
+                    parent_exited = True
+                except PermissionError:
+                    pass
+            # A live launcher may have started the kernel through a wrapper.
+            if not parent_exited:
+                self.parent_pid = 0
 
         get_logger().debug(
             "%s: poll for parent change with original parent pid=%d",

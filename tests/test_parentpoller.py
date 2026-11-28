@@ -43,6 +43,23 @@ def test_parent_poller_unix_reparent_not_pid1():
             poller.run()
 
 
+@pytest.mark.skipif(os.name == "nt", reason="only works on posix")
+@pytest.mark.parametrize("parent_exists", [False, True])
+def test_parent_poller_unix_parent_changed_before_start(parent_exists):
+    poller = ParentPollerUnix(parent_pid=221)
+    with (
+        mock.patch("os.getppid", side_effect=[220, 220, 1]),
+        mock.patch("os.kill", side_effect=None if parent_exists else ProcessLookupError) as kill,
+        mock.patch("os._exit", side_effect=SystemExit),
+        mock.patch("time.sleep") as sleep,
+        pytest.raises(SystemExit),
+    ):
+        poller.run()
+
+    kill.assert_called_once_with(221, 0)
+    assert sleep.call_count == int(parent_exists)
+
+
 @pytest.mark.skipif(os.name != "nt", reason="only works on windows")
 def test_parent_poller_windows():
     poller = ParentPollerWindows(interrupt_handle=1)
